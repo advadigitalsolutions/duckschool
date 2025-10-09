@@ -370,7 +370,7 @@ All colors MUST be HSL.
   background: rgba(0, 0, 0, 0.7);
   pointer-events: none;
   z-index: 999;
-  transition: opacity 0.3s ease;
+  transition: background 0.3s ease;
 }
 
 /* Lighter overlay for dark mode */
@@ -387,12 +387,12 @@ All colors MUST be HSL.
 /* Cards default state - behind overlay */
 .focus-mode [class*="card"],
 .focus-mode [class*="Card"] {
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.3s ease, z-index 0s;
   position: relative;
   z-index: 1;
 }
 
-/* Hovered card appears on top of overlay with white background */
+/* Hovered card appears on top of overlay with full normal styling */
 .focus-mode [class*="card"]:hover,
 .focus-mode [class*="Card"]:hover {
   z-index: 1000 !important;
@@ -401,21 +401,19 @@ All colors MUST be HSL.
     0 0 30px 10px rgba(255, 215, 0, 0.6),
     0 0 60px 20px rgba(255, 215, 0, 0.3),
     0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
+  /* Ensure card maintains its original colors */
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+/* Ensure all content in hovered card maintains original styling */
+.focus-mode [class*="card"]:hover *,
+.focus-mode [class*="Card"]:hover * {
+  opacity: 1 !important;
 }
 
 /* Keep header above overlay */
 .focus-mode header {
   position: relative;
   z-index: 1000;
-}
-
-/* Ensure all interactive elements in hovered cards work */
-.focus-mode [class*="card"]:hover button,
-.focus-mode [class*="Card"]:hover button,
-.focus-mode [class*="card"]:hover input,
-.focus-mode [class*="Card"]:hover input,
-.focus-mode [class*="card"]:hover a,
-.focus-mode [class*="Card"]:hover a {
-  position: relative;
-  z-index: 1;
 }
