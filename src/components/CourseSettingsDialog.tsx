@@ -249,7 +249,9 @@ export function CourseSettingsDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="goals">Course Goals (Optional)</Label>
+            <Label htmlFor="goals">
+              Course Goals {framework === 'CUSTOM' ? '(Required for Custom Framework)' : '(Optional)'}
+            </Label>
             <textarea
               id="goals"
               className="w-full min-h-[80px] px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -258,7 +260,9 @@ export function CourseSettingsDialog({
               onChange={(e) => setGoals(e.target.value)}
             />
             <p className="text-sm text-muted-foreground">
-              Used for AI curriculum generation when regional standards aren't available
+              {framework === 'CUSTOM' 
+                ? '🤖 AI will automatically generate trackable learning milestones from your goals'
+                : 'Used for AI curriculum generation when regional standards aren\'t available'}
             </p>
           </div>
 
@@ -277,9 +281,15 @@ export function CourseSettingsDialog({
               </SelectContent>
             </Select>
             {framework === 'CUSTOM' && (
-              <p className="text-sm text-muted-foreground">
-                Custom framework will use AI to create curriculum based on your course goals. Learning milestones will be automatically generated.
-              </p>
+              <div className="p-3 mt-2 bg-primary/5 border border-primary/20 rounded-md">
+                <p className="text-sm font-medium mb-1">✨ Custom Framework Features:</p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>AI generates 12-20 learning milestones from your goals</li>
+                  <li>Full progress tracking against milestones</li>
+                  <li>Target date compliance monitoring</li>
+                  <li>AI curriculum generation targets uncovered milestones</li>
+                </ul>
+              </div>
             )}
           </div>
 

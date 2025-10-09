@@ -119,7 +119,7 @@ export function CurriculumGenerationDialog({
             AI Curriculum Generation
           </DialogTitle>
           <DialogDescription>
-            Generate personalized assignments for {courseTitle} based on uncovered standards, student profile, and pedagogy
+            Generate personalized assignments based on uncovered learning objectives, student profile, and pedagogy
           </DialogDescription>
         </DialogHeader>
 

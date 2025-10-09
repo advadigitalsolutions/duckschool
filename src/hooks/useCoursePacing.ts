@@ -165,14 +165,18 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       const missingData: string[] = [];
       const hasStandards = (standards || []).length > 0;
       
-      // Custom framework is valid without standards if goals are set
+      // Custom framework is valid if it has generated standards OR goals set
       const hasGoals = course.goals && course.goals.trim().length > 0;
+      const hasCustomStandards = isCustomFramework && customStandards && customStandards.length > 0;
+      
       const needsConfiguration = isCustomFramework 
-        ? (!hasGoals || !course.grade_level)
+        ? (!hasCustomStandards && !hasGoals) || !course.grade_level
         : (!hasStandards || !course.grade_level);
 
-      if (isCustomFramework && !hasGoals) {
-        missingData.push('Custom framework requires course goals to be configured');
+      if (isCustomFramework && !hasCustomStandards && !hasGoals) {
+        missingData.push('Custom framework requires course goals. Click Edit Settings to configure.');
+      } else if (isCustomFramework && hasGoals && !hasCustomStandards) {
+        missingData.push('Learning milestones not generated yet. Click Edit Settings and save to generate.');
       } else if (!isCustomFramework && !hasStandards) {
         missingData.push(`No ${courseFramework} standards available for ${course.subject} at grade ${course.grade_level}`);
       }
@@ -217,6 +221,11 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
 
       // Use fallback total for calculations if no standards
       const effectiveTotalMinutes = fallbackTotalMinutes || totalRequiredMinutes;
+      
+      // For logging: identify what type of tracking we're using
+      const trackingMode = isCustomFramework 
+        ? (hasCustomStandards ? 'custom-milestones' : 'goals-only')
+        : (hasStandards ? 'official-standards' : 'curriculum-based');
 
       // Calculate progress percentage based on required hours
       const progressPercentage = effectiveTotalMinutes > 0 
@@ -334,7 +343,8 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         needsConfiguration,
         needsMoreCurriculum,
         missingData,
-        framework: courseFramework
+        framework: courseFramework,
+        trackingMode
       } as any);
 
       setStandardsCoverage(standardsCoverage);

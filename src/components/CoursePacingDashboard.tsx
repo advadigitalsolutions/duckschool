@@ -164,7 +164,9 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="font-medium">Work Completed (Standards-Based)</span>
+                <span className="font-medium">
+                  {(metrics as any)?.framework === 'CUSTOM' ? 'Work Completed (Milestone-Based)' : 'Work Completed (Standards-Based)'}
+                </span>
                 <span className="font-bold">{metrics.progressPercentage.toFixed(1)}%</span>
               </div>
               <Progress value={metrics.progressPercentage} className="h-3" />
