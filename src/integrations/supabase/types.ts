@@ -345,6 +345,7 @@ export type Database = {
           created_at: string | null
           credits: number | null
           description: string | null
+          goals: string | null
           grade_level: string | null
           id: string
           pacing_config: Json | null
@@ -361,6 +362,7 @@ export type Database = {
           created_at?: string | null
           credits?: number | null
           description?: string | null
+          goals?: string | null
           grade_level?: string | null
           id?: string
           pacing_config?: Json | null
@@ -377,6 +379,7 @@ export type Database = {
           created_at?: string | null
           credits?: number | null
           description?: string | null
+          goals?: string | null
           grade_level?: string | null
           id?: string
           pacing_config?: Json | null

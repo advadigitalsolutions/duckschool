@@ -62,6 +62,7 @@ serve(async (req) => {
     const pedagogy = pacingConfig.pedagogy || 'eclectic';
     const framework = pacingConfig.framework || course.standards_scope?.[0]?.framework || 'CA-CCSS';
     const gradeLevel = course.grade_level || '10';
+    const courseGoals = course.goals;
 
     // Get all standards for this course
     const { data: allStandards, error: standardsError } = await supabaseClient
@@ -87,9 +88,12 @@ serve(async (req) => {
       (standard: any) => !coveredStandardCodes.has(standard.code)
     );
 
-    if (uncoveredStandards.length === 0) {
+    // Check if we should use standards-based or goals-based generation
+    const useGoalsBasedGeneration = !allStandards || allStandards.length === 0 || uncoveredStandards.length === 0;
+    
+    if (useGoalsBasedGeneration && !courseGoals) {
       return new Response(JSON.stringify({ 
-        message: 'All standards are covered',
+        message: 'No standards available and no course goals set. Please configure course goals in settings.',
         suggestions: []
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -106,13 +110,41 @@ serve(async (req) => {
       specialInterests: student.special_interests,
     };
 
-    // Select top priority uncovered standards (limit to 5 for focused generation)
-    const priorityStandards = uncoveredStandards.slice(0, 5);
-
-    // Build AI prompt
+    // Build AI prompt - different based on whether we have standards or goals
     const pedagogyGuidance = PEDAGOGY_PROMPTS[pedagogy] || PEDAGOGY_PROMPTS.eclectic;
     
-    const systemPrompt = `You are an expert curriculum designer creating assignments for ${course.subject} at grade ${gradeLevel} using ${pedagogy} pedagogy.
+    let systemPrompt: string;
+    let userPrompt: string;
+
+    if (useGoalsBasedGeneration) {
+      // Goals-based generation when standards aren't available
+      systemPrompt = `You are an expert curriculum designer creating assignments for ${course.subject} at grade ${gradeLevel} using ${pedagogy} pedagogy.
+
+PEDAGOGY GUIDANCE:
+${pedagogyGuidance}
+
+STUDENT PROFILE:
+${JSON.stringify(studentContext, null, 2)}
+
+COURSE GOALS:
+${courseGoals}
+
+Your task is to generate assignment recommendations that:
+1. Work toward achieving the stated course goals
+2. Match the student's learning style and interests
+3. Follow the specified pedagogy
+4. Are engaging and developmentally appropriate
+5. Include clear learning objectives and estimated time
+6. Progress logically toward the course goals`;
+
+      userPrompt = `Generate 3-5 high-quality assignment recommendations that will help the student work toward the course goals: "${courseGoals}"
+
+Consider what foundational knowledge and skills the student needs to achieve these goals, and create a logical progression of assignments. Each assignment should build toward the stated goals while matching the student's profile and pedagogy.`;
+    } else {
+      // Standards-based generation
+      const priorityStandards = uncoveredStandards.slice(0, 5);
+      
+      systemPrompt = `You are an expert curriculum designer creating assignments for ${course.subject} at grade ${gradeLevel} using ${pedagogy} pedagogy.
 
 PEDAGOGY GUIDANCE:
 ${pedagogyGuidance}
@@ -127,11 +159,12 @@ Your task is to generate assignment recommendations that:
 4. Are engaging and developmentally appropriate
 5. Include clear learning objectives and estimated time`;
 
-    const userPrompt = `Generate assignment recommendations for the following uncovered standards:
+      userPrompt = `Generate assignment recommendations for the following uncovered standards:
 
 ${priorityStandards.map((s: any, i: number) => `${i + 1}. ${s.code}: ${s.text}`).join('\n\n')}
 
 For each standard, suggest 1-2 high-quality assignments that would effectively cover that standard while matching the student's profile and pedagogy.`;
+    }
 
     // Call Lovable AI with tool calling for structured output
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -211,13 +244,15 @@ For each standard, suggest 1-2 high-quality assignments that would effectively c
 
     const suggestions = JSON.parse(toolCall.function.arguments).suggestions;
 
-    console.log(`Generated ${suggestions.length} assignment suggestions for course ${courseId}`);
+    console.log(`Generated ${suggestions.length} assignment suggestions for course ${courseId} (${useGoalsBasedGeneration ? 'goals-based' : 'standards-based'})`);
 
     return new Response(JSON.stringify({ 
       suggestions,
-      uncoveredCount: uncoveredStandards.length,
+      uncoveredCount: useGoalsBasedGeneration ? 0 : uncoveredStandards.length,
       pedagogy,
-      framework
+      framework,
+      generationType: useGoalsBasedGeneration ? 'goals' : 'standards',
+      goals: useGoalsBasedGeneration ? courseGoals : null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

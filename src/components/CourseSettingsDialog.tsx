@@ -55,6 +55,7 @@ export function CourseSettingsDialog({
   const [pedagogy, setPedagogy] = useState('eclectic');
   const [targetCompletionDate, setTargetCompletionDate] = useState('');
   const [weeklyMinutes, setWeeklyMinutes] = useState('');
+  const [goals, setGoals] = useState('');
 
   // Load existing course data when dialog opens
   useEffect(() => {
@@ -68,7 +69,7 @@ export function CourseSettingsDialog({
     try {
       const { data: course, error } = await supabase
         .from('courses')
-        .select('grade_level, standards_scope, pacing_config')
+        .select('grade_level, standards_scope, pacing_config, goals')
         .eq('id', courseId)
         .single();
 
@@ -76,6 +77,7 @@ export function CourseSettingsDialog({
 
       if (course) {
         setGradeLevel(course.grade_level || currentGradeLevel || '');
+        setGoals(course.goals || '');
         
         // Extract framework from standards_scope or pacing_config
         const pacingConfig = course.pacing_config as any;
@@ -128,6 +130,7 @@ export function CourseSettingsDialog({
     try {
       const updates: any = {
         grade_level: gradeLevel,
+        goals: goals || null,
         standards_scope: [{ 
           framework,
           subject: currentSubject,
@@ -209,6 +212,20 @@ export function CourseSettingsDialog({
             </Select>
             <p className="text-sm text-muted-foreground">
               Influences how AI generates curriculum and assignments
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="goals">Course Goals (Optional)</Label>
+            <textarea
+              id="goals"
+              className="w-full min-h-[80px] px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="e.g., Achieve B2 fluency in Spanish, Master AP Calculus concepts, Develop strong essay writing skills"
+              value={goals}
+              onChange={(e) => setGoals(e.target.value)}
+            />
+            <p className="text-sm text-muted-foreground">
+              Used for AI curriculum generation when regional standards aren't available
             </p>
           </div>
 
