@@ -9,6 +9,8 @@ import { ArrowLeft, Clock, Target, BookOpen, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AssignmentQuestions } from '@/components/AssignmentQuestions';
+import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
+import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -16,6 +18,7 @@ export default function AssignmentDetail() {
   const [assignment, setAssignment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentStudentId, setCurrentStudentId] = useState<string | null>(null);
+  const [isParent, setIsParent] = useState(false);
 
   useEffect(() => {
     fetchAssignment();
@@ -27,16 +30,24 @@ export default function AssignmentDetail() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check if user is a student
+      // Check if user is a student or parent
       const { data: studentData } = await supabase
         .from('students')
-        .select('id')
+        .select('id, parent_id')
         .eq('user_id', user.id)
         .single();
 
       if (studentData) {
         setCurrentStudentId(studentData.id);
       }
+
+      // Check if user is a parent
+      const { data: parentStudents } = await supabase
+        .from('students')
+        .select('id')
+        .eq('parent_id', user.id);
+
+      setIsParent(parentStudents && parentStudents.length > 0);
 
       const { data, error } = await supabase
         .from('assignments')
@@ -143,11 +154,25 @@ export default function AssignmentDetail() {
               </div>
             )}
           </div>
-          {assignment.status === 'draft' && (
-            <Button onClick={handlePublish}>
-              Publish Assignment
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {assignment.status === 'draft' && isParent && (
+              <Button onClick={handlePublish}>
+                Publish Assignment
+              </Button>
+            )}
+            {isParent && (
+              <>
+                <EditAssignmentDialog 
+                  assignment={assignment} 
+                  onAssignmentUpdated={fetchAssignment}
+                />
+                <DeleteAssignmentDialog 
+                  assignment={assignment} 
+                  onAssignmentDeleted={() => navigate(`/student/${studentId}`)}
+                />
+              </>
+            )}
+          </div>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">

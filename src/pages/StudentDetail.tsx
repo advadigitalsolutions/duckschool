@@ -14,13 +14,17 @@ import {
   Calendar,
   FileText,
   ChevronDown,
-  BarChart3
+  BarChart3,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AddCourseDialog } from '@/components/AddCourseDialog';
 import { AddAssignmentDialog } from '@/components/AddAssignmentDialog';
 import { AssignmentAnalytics } from '@/components/AssignmentAnalytics';
+import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
+import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
 
 export default function StudentDetail() {
   const { id } = useParams();
@@ -303,6 +307,24 @@ export default function StudentDetail() {
                                 }>
                                   {assignment.status}
                                 </Badge>
+                                <EditAssignmentDialog 
+                                  assignment={assignment} 
+                                  onAssignmentUpdated={fetchStudentData}
+                                  trigger={
+                                    <Button variant="ghost" size="icon">
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                  }
+                                />
+                                <DeleteAssignmentDialog 
+                                  assignment={assignment} 
+                                  onAssignmentDeleted={fetchStudentData}
+                                  trigger={
+                                    <Button variant="ghost" size="icon">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  }
+                                />
                                 <CollapsibleTrigger asChild>
                                   <Button variant="outline" size="sm">
                                     <BarChart3 className="h-4 w-4 mr-1" />
