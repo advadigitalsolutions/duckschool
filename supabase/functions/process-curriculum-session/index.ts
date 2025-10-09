@@ -95,8 +95,14 @@ serve(async (req) => {
       })
     });
 
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('AI gateway error:', aiResponse.status, errorText);
+      throw new Error(`AI gateway error: ${aiResponse.status}`);
+    }
+
     const aiData = await aiResponse.json();
-    const toolCall = aiData.choices[0].message.tool_calls?.[0];
+    const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
     const aiProfile = toolCall ? JSON.parse(toolCall.function.arguments) : {};
     
     // Merge AI-extracted data with keyword extraction fallback
