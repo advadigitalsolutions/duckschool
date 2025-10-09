@@ -56,21 +56,38 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
         setSpeaking(true);
         setCurrentWordIndex(0);
         
-        // Call OpenAI TTS through edge function
-        const { data, error } = await supabase.functions.invoke('text-to-speech', {
-          body: { text: cleanMarkdown(text) }
-        });
+        console.log('Calling text-to-speech edge function...');
+        
+        // Call OpenAI TTS through edge function - response is ArrayBuffer
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/text-to-speech`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ text: cleanMarkdown(text) }),
+          }
+        );
 
-        if (error) throw error;
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate speech');
+        }
 
-        // Create audio element and play
-        const audioBlob = new Blob([data], { type: 'audio/mpeg' });
+        console.log('Audio received, creating blob...');
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
         const audioUrl = URL.createObjectURL(audioBlob);
         
-        const audio = new Audio(audioUrl);
+        console.log('Creating audio element with URL:', audioUrl);
+        const audio = new Audio();
+        audio.src = audioUrl;
         audioRef.current = audio;
 
         audio.onended = () => {
+          console.log('Audio playback ended');
           setSpeaking(false);
           setPaused(false);
           setCurrentWordIndex(-1);
@@ -80,7 +97,8 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
           URL.revokeObjectURL(audioUrl);
         };
 
-        audio.onerror = () => {
+        audio.onerror = (e) => {
+          console.error('Audio playback error:', e);
           setSpeaking(false);
           setPaused(false);
           setCurrentWordIndex(-1);
@@ -89,6 +107,7 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
           }
         };
 
+        console.log('Starting audio playback...');
         await audio.play();
         startWordTracking();
       } catch (error) {
