@@ -65,6 +65,23 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     }
   }, [loadingDraft]);
 
+  // Debounced auto-save when answers change
+  useEffect(() => {
+    if (!draftSubmissionId || submitted) return;
+
+    const timeoutId = setTimeout(() => {
+      const currentQuestionId = questions[currentQuestionIndex]?.id;
+      const currentAnswer = answers[currentQuestionId];
+      
+      if (currentAnswer !== undefined) {
+        const timeSpent = questionTimes[currentQuestionId] || 0;
+        saveAnswer(currentQuestionId, currentAnswer, timeSpent);
+      }
+    }, 1000); // 1 second debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [answers, draftSubmissionId, submitted]);
+
   const loadProgress = async () => {
     try {
       setLoadingDraft(true);
