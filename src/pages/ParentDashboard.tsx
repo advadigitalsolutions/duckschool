@@ -97,15 +97,22 @@ export default function ParentDashboard() {
 
       setStudents(studentsData || []);
 
-      // Fetch today's attendance
+      // Fetch today's attendance for this parent's students only
       const today = new Date().toISOString().split('T')[0];
-      const { data: attendanceData } = await supabase
-        .from('attendance_logs')
-        .select('minutes')
-        .eq('date', today);
+      const studentIds = studentsData?.map(s => s.id) || [];
+      
+      if (studentIds.length > 0) {
+        const { data: attendanceData } = await supabase
+          .from('attendance_logs')
+          .select('minutes')
+          .eq('date', today)
+          .in('student_id', studentIds);
 
-      const totalMinutes = attendanceData?.reduce((sum, log) => sum + log.minutes, 0) || 0;
-      setTodayMinutes(totalMinutes);
+        const totalMinutes = attendanceData?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
+        setTodayMinutes(totalMinutes);
+      } else {
+        setTodayMinutes(0);
+      }
 
       // Fetch completed assignments today
       const { data: completedData } = await supabase
