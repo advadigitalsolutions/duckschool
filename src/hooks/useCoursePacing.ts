@@ -278,9 +278,17 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       let daysRemaining: number | null = null;
 
       if (averageMinutesPerDay > 0 && remainingMinutes > 0) {
-        daysRemaining = Math.ceil(remainingMinutes / averageMinutesPerDay);
+        const daysToComplete = Math.ceil(remainingMinutes / averageMinutesPerDay);
         projectedCompletionDate = new Date();
-        projectedCompletionDate.setDate(projectedCompletionDate.getDate() + daysRemaining);
+        projectedCompletionDate.setDate(projectedCompletionDate.getDate() + daysToComplete);
+      }
+
+      // If target date is set, calculate days until that target
+      if (targetDate) {
+        daysRemaining = Math.ceil((targetDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+      } else if (projectedCompletionDate) {
+        // Otherwise show days to projected completion
+        daysRemaining = Math.ceil((projectedCompletionDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
       }
 
       // Determine on-track status
