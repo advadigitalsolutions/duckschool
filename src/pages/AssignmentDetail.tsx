@@ -47,6 +47,23 @@ export default function AssignmentDetail() {
     }
   };
 
+  const handlePublish = async () => {
+    try {
+      const { error } = await supabase
+        .from('assignments')
+        .update({ status: 'assigned' })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success('Assignment published! Students can now see it.');
+      fetchAssignment();
+    } catch (error: any) {
+      toast.error('Failed to publish assignment');
+      console.error(error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -109,6 +126,11 @@ export default function AssignmentDetail() {
               </div>
             )}
           </div>
+          {assignment.status === 'draft' && (
+            <Button onClick={handlePublish}>
+              Publish Assignment
+            </Button>
+          )}
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
