@@ -25,7 +25,8 @@ export function PersonalityReportView({ student }: PersonalityReportViewProps) {
       <Card>
         <CardContent className="pt-6 text-center text-muted-foreground">
           <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>No learning profile assessments available yet.</p>
+          <p className="font-medium mb-2">No learning profile available yet</p>
+          <p className="text-sm">Complete the curriculum planning chat or the learning assessment to create your profile.</p>
         </CardContent>
       </Card>
     );
@@ -44,46 +45,39 @@ export function PersonalityReportView({ student }: PersonalityReportViewProps) {
         {hasAdminAssessment && (
           <Card className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white border-0">
             <CardHeader>
-              <CardTitle className="text-xl font-bold mb-2">
-                Administrator Assessment
+              <CardTitle className="text-xl font-bold mb-2 flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                Learning Profile from Curriculum Planning
               </CardTitle>
               <p className="text-white/80 text-sm">
-                Assessment based on curriculum planning conversation
+                Created from your conversation with our curriculum planning assistant
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
               {adminAssessment.pedagogicalApproach && (
                 <div>
-                  <p className="font-semibold mb-1">Pedagogical Approach:</p>
+                  <p className="font-semibold mb-1 flex items-center gap-2">
+                    <Target className="h-4 w-4" />
+                    Recommended Teaching Approach
+                  </p>
                   <p className="text-white/90">{adminAssessment.pedagogicalApproach}</p>
                 </div>
               )}
-              {adminAssessment.strengths && adminAssessment.strengths.length > 0 && (
+              {adminAssessment.goals && (
                 <div>
-                  <p className="font-semibold mb-2">Strengths:</p>
-                  <ul className="space-y-1">
-                    {adminAssessment.strengths.map((strength: string, index: number) => (
-                      <li key={index} className="text-white/90 text-sm flex items-start gap-2">
-                        <Star className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        {strength}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {adminAssessment.challenges && adminAssessment.challenges.length > 0 && (
-                <div>
-                  <p className="font-semibold mb-2">Challenges:</p>
-                  <ul className="space-y-1">
-                    {adminAssessment.challenges.map((challenge: string, index: number) => (
-                      <li key={index} className="text-white/90 text-sm">{challenge}</li>
-                    ))}
-                  </ul>
+                  <p className="font-semibold mb-1 flex items-center gap-2">
+                    <Target className="h-4 w-4" />
+                    Educational Goals
+                  </p>
+                  <p className="text-white/90">{adminAssessment.goals}</p>
                 </div>
               )}
               {adminAssessment.interests && adminAssessment.interests.length > 0 && (
                 <div>
-                  <p className="font-semibold mb-2">Interests:</p>
+                  <p className="font-semibold mb-2 flex items-center gap-2">
+                    <Star className="h-4 w-4" />
+                    Interests & Passions
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {adminAssessment.interests.map((interest: string, index: number) => (
                       <Badge key={index} variant="secondary" className="bg-white/20 text-white">
@@ -93,10 +87,59 @@ export function PersonalityReportView({ student }: PersonalityReportViewProps) {
                   </div>
                 </div>
               )}
-              {adminAssessment.goals && (
+              {adminAssessment.strengths && adminAssessment.strengths.length > 0 && (
                 <div>
-                  <p className="font-semibold mb-1">Goals:</p>
-                  <p className="text-white/90">{adminAssessment.goals}</p>
+                  <p className="font-semibold mb-2 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Strengths
+                  </p>
+                  <ul className="space-y-1">
+                    {adminAssessment.strengths.map((strength: string, index: number) => (
+                      <li key={index} className="text-white/90 text-sm flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        {strength}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {adminAssessment.challenges && adminAssessment.challenges.length > 0 && (
+                <div>
+                  <p className="font-semibold mb-2">Areas to Support</p>
+                  <ul className="space-y-1">
+                    {adminAssessment.challenges.map((challenge: string, index: number) => (
+                      <li key={index} className="text-white/90 text-sm flex items-start gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-white/70 mt-2 flex-shrink-0" />
+                        {challenge}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {adminAssessment.motivators && adminAssessment.motivators.length > 0 && (
+                <div>
+                  <p className="font-semibold mb-2">What Motivates Them</p>
+                  <ul className="space-y-1">
+                    {adminAssessment.motivators.map((motivator: string, index: number) => (
+                      <li key={index} className="text-white/90 text-sm flex items-start gap-2">
+                        <Sparkles className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        {motivator}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {adminAssessment.accommodations && adminAssessment.accommodations.length > 0 && (
+                <div>
+                  <p className="font-semibold mb-2">Recommended Accommodations</p>
+                  <ul className="space-y-1">
+                    {adminAssessment.accommodations.map((accommodation: string, index: number) => (
+                      <li key={index} className="text-white/90 text-sm flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        {accommodation}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </CardContent>

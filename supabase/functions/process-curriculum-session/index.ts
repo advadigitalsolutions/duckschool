@@ -51,11 +51,68 @@ serve(async (req) => {
 
     const extractedData = extractComprehensiveData(conversationText.toLowerCase());
 
+    // Use AI to generate a comprehensive learning profile from the conversation
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert educational psychologist. Extract a comprehensive learning profile from the parent-educator conversation.'
+          },
+          {
+            role: 'user',
+            content: `Analyze this conversation and create a detailed learning profile:\n\n${conversationText}\n\nExtract: pedagogical approach, learning style, interests, challenges, strengths, goals, and accommodations needed.`
+          }
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'create_learning_profile',
+            description: 'Create a comprehensive learning profile',
+            parameters: {
+              type: 'object',
+              properties: {
+                pedagogicalApproach: { type: 'string', description: 'Recommended teaching approach' },
+                interests: { type: 'array', items: { type: 'string' }, description: 'Student interests' },
+                strengths: { type: 'array', items: { type: 'string' }, description: 'Academic and personal strengths' },
+                challenges: { type: 'array', items: { type: 'string' }, description: 'Learning challenges or conditions' },
+                goals: { type: 'string', description: 'Educational and career goals' },
+                accommodations: { type: 'array', items: { type: 'string' }, description: 'Needed accommodations' },
+                motivators: { type: 'array', items: { type: 'string' }, description: 'What motivates the student' }
+              },
+              required: ['pedagogicalApproach', 'interests', 'strengths', 'goals'],
+              additionalProperties: false
+            }
+          }
+        }],
+        tool_choice: { type: 'function', function: { name: 'create_learning_profile' } }
+      })
+    });
+
+    const aiData = await aiResponse.json();
+    const toolCall = aiData.choices[0].message.tool_calls?.[0];
+    const aiProfile = toolCall ? JSON.parse(toolCall.function.arguments) : {};
+    
+    // Merge AI-extracted data with keyword extraction fallback
+    const mergedProfile = {
+      ...extractedData.learningProfile,
+      ...aiProfile,
+      interests: [...new Set([...(aiProfile.interests || []), ...(extractedData.learningProfile.interests || [])])],
+      strengths: [...new Set([...(aiProfile.strengths || []), ...(extractedData.learningProfile.strengths || [])])],
+      challenges: [...new Set([...(aiProfile.challenges || []), ...(extractedData.learningProfile.challenges || [])])]
+    };
+
     // Update student with extracted administrator assessment (separate from student's self-assessment)
     await supabase
       .from('students')
       .update({
-        administrator_assessment: extractedData.learningProfile,
+        administrator_assessment: mergedProfile,
         accommodations: extractedData.accommodations,
         display_name: student.name
       })
@@ -121,9 +178,9 @@ serve(async (req) => {
             standards: ['Common Core'],
             studentProfile: {
               display_name: student.name,
-              learning_profile: extractedData.learningProfile,
+              learning_profile: mergedProfile,
               accommodations: extractedData.accommodations,
-              goals: extractedData.learningProfile.goals
+              goals: mergedProfile.goals
             },
             isInitialAssessment: true
           })
