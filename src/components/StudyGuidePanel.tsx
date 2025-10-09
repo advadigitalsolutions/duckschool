@@ -76,7 +76,21 @@ export function StudyGuidePanel({
 
       if (!cacheError && cachedData && cachedData.study_guide) {
         console.log('Using cached study guide');
-        setStudyGuide(cachedData.study_guide as unknown as Record<string, QuestionStudyGuide>);
+        const cachedGuide = cachedData.study_guide as unknown as Record<string, QuestionStudyGuide>;
+        
+        // Map numeric keys to actual question IDs
+        const mappedGuide: Record<string, QuestionStudyGuide> = {};
+        questions.forEach((q, index) => {
+          const key = (index + 1).toString();
+          if (cachedGuide[key]) {
+            mappedGuide[q.id] = cachedGuide[key];
+          } else if (cachedGuide[q.id]) {
+            mappedGuide[q.id] = cachedGuide[q.id];
+          }
+        });
+        
+        console.log('Mapped cached study guide with', Object.keys(mappedGuide).length, 'questions');
+        setStudyGuide(mappedGuide);
         
         // Initialize hint levels to 1 for all questions
         const initialLevels: Record<string, number> = {};
@@ -112,6 +126,23 @@ export function StudyGuidePanel({
 
       console.log('Study guide generated:', data);
       setStudyGuide(data.study_guide || {});
+      
+      // Map numeric keys to actual question IDs if needed
+      const mappedGuide: Record<string, QuestionStudyGuide> = {};
+      const guideData = data.study_guide || {};
+      
+      questions.forEach((q, index) => {
+        // Check both the question ID and the index-based key (1, 2, 3...)
+        const key = (index + 1).toString();
+        if (guideData[key]) {
+          mappedGuide[q.id] = guideData[key];
+        } else if (guideData[q.id]) {
+          mappedGuide[q.id] = guideData[q.id];
+        }
+      });
+      
+      console.log('Mapped study guide:', mappedGuide);
+      setStudyGuide(mappedGuide);
       
       // Initialize hint levels to 1 for all questions
       const initialLevels: Record<string, number> = {};

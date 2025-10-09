@@ -131,8 +131,8 @@ Student Profile:
 ${reading_materials ? `Reading Material: "${reading_materials.title}"\nPage references: ${JSON.stringify(reading_materials.page_references)}` : ''}
 
 Questions:
-${questions.map((q: any, i: number) => `
-${i + 1}. [${q.type}] ${q.question}
+${questions.map((q: any) => `
+[ID: ${q.id}] [${q.type}] ${q.question}
 ${q.type === 'multiple_choice' ? `Options: ${q.options?.join(', ')}` : ''}
 `).join('\n')}
 
@@ -145,7 +145,7 @@ For EACH question, provide:
 Return JSON format:
 {
   "study_guide": {
-    "[question_id]": {
+    "[actual_question_id]": {
       "hints": [
         {
           "type": "context" | "resource_link" | "reading_reference" | "concept_explanation",
@@ -160,7 +160,9 @@ Return JSON format:
       ]
     }
   }
-}`;
+}
+
+IMPORTANT: Use the actual question IDs from the Questions list above as keys, not numeric indices.`;
     }
 
     console.log('Calling Lovable AI for study guide generation...');
