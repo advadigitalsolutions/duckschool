@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 interface CourseConfigurationPromptProps {
   missingData: string[];
   courseId: string;
+  studentId: string;
   gradeLevel?: string;
   subject?: string;
 }
@@ -14,6 +15,7 @@ interface CourseConfigurationPromptProps {
 export function CourseConfigurationPrompt({ 
   missingData, 
   courseId,
+  studentId,
   gradeLevel,
   subject 
 }: CourseConfigurationPromptProps) {
@@ -59,7 +61,7 @@ export function CourseConfigurationPrompt({
         )}
 
         <div className="flex gap-2">
-          <Button onClick={() => navigate(`/student/${courseId}`)}>
+          <Button onClick={() => navigate(`/student/${studentId}`)}>
             <Settings className="mr-2 h-4 w-4" />
             Configure Course
           </Button>

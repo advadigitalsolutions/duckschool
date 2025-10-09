@@ -17,10 +17,11 @@ interface CoursePacingDashboardProps {
   courseId: string;
   courseTitle: string;
   courseSubject: string;
+  studentId: string;
   gradeLevel?: string;
 }
 
-export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, gradeLevel }: CoursePacingDashboardProps) {
+export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, studentId, gradeLevel }: CoursePacingDashboardProps) {
   const [targetDate, setTargetDate] = useState<Date | undefined>();
   const { loading, metrics, timeBySubject, standardsCoverage, refreshMetrics } = useCoursePacing(
     courseId,
@@ -91,6 +92,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, gr
         <CourseConfigurationPrompt
           missingData={metrics.missingData}
           courseId={courseId}
+          studentId={studentId}
           gradeLevel={gradeLevel}
           subject={courseSubject}
         />
