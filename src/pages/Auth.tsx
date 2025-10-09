@@ -74,7 +74,7 @@ export default function Auth() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary">
             <GraduationCap className="h-8 w-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl">Edutron 5000000</CardTitle>
+          <CardTitle className="text-2xl">Duckschool</CardTitle>
           <CardDescription>Innovation in Education</CardDescription>
         </CardHeader>
         <CardContent>
