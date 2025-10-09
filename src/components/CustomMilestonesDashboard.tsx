@@ -60,12 +60,23 @@ export function CustomMilestonesDashboard({ courseId }: CustomMilestonesDashboar
             submissions (
               id,
               student_id,
-              time_spent_seconds,
-              grades (score)
+              time_spent_seconds
             )
           )
         `)
         .eq('course_id', courseId);
+
+      if (curriculumError) throw curriculumError;
+
+      // Get grades for assignments in this course
+      const assignmentIds = curriculumData?.flatMap(item => 
+        item.assignments?.map((a: any) => a.id) || []
+      ) || [];
+
+      const { data: gradesData } = await supabase
+        .from('grades')
+        .select('assignment_id, score')
+        .in('assignment_id', assignmentIds);
 
       if (curriculumError) throw curriculumError;
 
@@ -87,6 +98,11 @@ export function CustomMilestonesDashboard({ courseId }: CustomMilestonesDashboar
         });
       });
 
+      // Create a map of assignment IDs to grades for quick lookup
+      const gradesMap = new Map(
+        gradesData?.map(g => [g.assignment_id, g.score]) || []
+      );
+
       // Accumulate curriculum and completion data
       curriculumData?.forEach(item => {
         const standardCodes = Array.isArray(item.standards) 
@@ -95,8 +111,8 @@ export function CustomMilestonesDashboard({ courseId }: CustomMilestonesDashboar
           ? [item.standards]
           : [];
         
-        const hasGradedSubmissions = item.assignments?.some(
-          (a: any) => a.submissions?.some((s: any) => s.grades?.length > 0)
+        const hasGradedAssignments = item.assignments?.some(
+          (a: any) => gradesMap.has(a.id)
         );
 
         const itemMinutes = item.est_minutes || 0;
@@ -110,7 +126,7 @@ export function CustomMilestonesDashboard({ courseId }: CustomMilestonesDashboar
           if (existing) {
             existing.curriculumMinutes += itemMinutes;
             existing.completedMinutes += completedMinutes;
-            if (hasGradedSubmissions) {
+            if (hasGradedAssignments) {
               existing.covered = true;
             }
           }
