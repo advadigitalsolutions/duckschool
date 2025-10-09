@@ -50,25 +50,31 @@ export default function StudentDetail() {
 
       setCourses(coursesData || []);
 
+      // Fetch curriculum items for the student's courses
+      const courseIds = coursesData?.map(c => c.id) || [];
+      const { data: curriculumData } = await supabase
+        .from('curriculum_items')
+        .select('id')
+        .in('course_id', courseIds);
+
+      const curriculumItemIds = curriculumData?.map(ci => ci.id) || [];
+
       // Fetch assignments with curriculum items
-      const { data: assignmentsData } = await supabase
-        .from('assignments')
-        .select(`
-          *,
-          curriculum_items (
-            *,
-            courses (
-              title,
-              subject
-            )
-          )
-        `)
-        .in('curriculum_item_id', 
-          coursesData?.flatMap(c => 
-            // This is a placeholder - we'll get actual curriculum items
-            []
-          ) || []
-        );
+      const { data: assignmentsData } = curriculumItemIds.length > 0 
+        ? await supabase
+            .from('assignments')
+            .select(`
+              *,
+              curriculum_items (
+                *,
+                courses (
+                  title,
+                  subject
+                )
+              )
+            `)
+            .in('curriculum_item_id', curriculumItemIds)
+        : { data: [] };
 
       setAssignments(assignmentsData || []);
     } catch (error: any) {
