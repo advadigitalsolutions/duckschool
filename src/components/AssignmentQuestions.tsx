@@ -288,89 +288,119 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
         </Card>
       )}
 
-      {/* Current Question */}
-      <Card className={submitted && results[currentQuestion.id] === false ? 'border-2 border-red-500' : ''}>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between text-base">
-            <span>Question {currentQuestionIndex + 1}</span>
-            <span className="text-sm font-normal text-muted-foreground">
-              {currentQuestion.points} points
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-lg">{currentQuestion.question}</p>
-
-          {/* Multiple Choice */}
-          {currentQuestion.type === 'multiple_choice' && (
-            <RadioGroup
-              value={answers[currentQuestion.id] as string}
-              onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
-              disabled={submitted}
-            >
-              {currentQuestion.options?.map((option, i) => (
-                <div key={i} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={`${currentQuestion.id}-${i}`} />
-                  <Label htmlFor={`${currentQuestion.id}-${i}`}>{option}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          )}
-
-          {/* Numeric Answer */}
-          {currentQuestion.type === 'numeric' && (
-            <Input
-              type="text"
-              value={answers[currentQuestion.id] || ''}
-              onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
-              disabled={submitted}
-              placeholder="Enter your answer (e.g., 3/8 or 0.375)"
-            />
-          )}
-
-          {/* Short Answer */}
-          {currentQuestion.type === 'short_answer' && (
-            <Textarea
-              value={answers[currentQuestion.id] as string || ''}
-              onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
-              disabled={submitted}
-              placeholder="Type your answer here"
-              rows={4}
-            />
-          )}
-
-          {/* Result & Explanation */}
-          {submitted && (
-            <div className={`p-4 rounded-lg ${results[currentQuestion.id] ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950'}`}>
-              <div className="flex items-center gap-2 mb-2">
-                {results[currentQuestion.id] ? (
-                  <>
-                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <span className="font-medium text-green-600 dark:text-green-400">Correct!</span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <span className="font-medium text-red-600 dark:text-red-400">Incorrect</span>
-                  </>
-                )}
-                {questionTimes[currentQuestion.id] && (
-                  <span className="ml-auto text-sm text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    {Math.floor(questionTimes[currentQuestion.id] / 60)}:{(questionTimes[currentQuestion.id] % 60).toString().padStart(2, '0')}
+      {/* All Questions (After Submission) */}
+      {submitted ? (
+        <div className="space-y-4">
+          {questions.map((question, index) => (
+            <Card key={question.id} className={results[question.id] === false ? 'border-2 border-red-500' : ''}>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between text-base">
+                  <span>Question {index + 1}</span>
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {question.points} points
                   </span>
-                )}
-              </div>
-              <p className="text-sm">{currentQuestion.explanation}</p>
-              {!results[currentQuestion.id] && (
-                <p className="text-sm mt-2">
-                  <strong>Correct answer:</strong> {currentQuestion.correct_answer}
-                </p>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-lg">{question.question}</p>
+
+                {/* Display Answer Based on Type */}
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-1">Your answer:</p>
+                  {question.type === 'multiple_choice' && (
+                    <p className="text-base">{answers[question.id]}</p>
+                  )}
+                  {question.type === 'numeric' && (
+                    <p className="text-base">{answers[question.id]}</p>
+                  )}
+                  {question.type === 'short_answer' && (
+                    <p className="text-base whitespace-pre-wrap">{answers[question.id]}</p>
+                  )}
+                </div>
+
+                {/* Result & Explanation */}
+                <div className={`p-4 rounded-lg ${results[question.id] ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    {results[question.id] ? (
+                      <>
+                        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <span className="font-medium text-green-600 dark:text-green-400">Correct!</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                        <span className="font-medium text-red-600 dark:text-red-400">Incorrect</span>
+                      </>
+                    )}
+                    {questionTimes[question.id] && (
+                      <span className="ml-auto text-sm text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {Math.floor(questionTimes[question.id] / 60)}:{(questionTimes[question.id] % 60).toString().padStart(2, '0')}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm">{question.explanation}</p>
+                  {!results[question.id] && (
+                    <p className="text-sm mt-2">
+                      <strong>Correct answer:</strong> {question.correct_answer}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        /* Current Question (During Quiz) */
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between text-base">
+              <span>Question {currentQuestionIndex + 1}</span>
+              <span className="text-sm font-normal text-muted-foreground">
+                {currentQuestion.points} points
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-lg">{currentQuestion.question}</p>
+
+            {/* Multiple Choice */}
+            {currentQuestion.type === 'multiple_choice' && (
+              <RadioGroup
+                value={answers[currentQuestion.id] as string}
+                onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+              >
+                {currentQuestion.options?.map((option, i) => (
+                  <div key={i} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option} id={`${currentQuestion.id}-${i}`} />
+                    <Label htmlFor={`${currentQuestion.id}-${i}`}>{option}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+
+            {/* Numeric Answer */}
+            {currentQuestion.type === 'numeric' && (
+              <Input
+                type="text"
+                value={answers[currentQuestion.id] || ''}
+                onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                placeholder="Enter your answer (e.g., 3/8 or 0.375)"
+              />
+            )}
+
+            {/* Short Answer */}
+            {currentQuestion.type === 'short_answer' && (
+              <Textarea
+                value={answers[currentQuestion.id] as string || ''}
+                onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                placeholder="Type your answer here"
+                rows={4}
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Navigation Buttons */}
       {!submitted && (
