@@ -651,6 +651,7 @@ export type Database = {
           name: string | null
           reading_ruler_enabled: boolean | null
           text_to_speech_enabled: boolean | null
+          text_to_speech_voice: string | null
           timezone: string | null
         }
         Insert: {
@@ -672,6 +673,7 @@ export type Database = {
           name?: string | null
           reading_ruler_enabled?: boolean | null
           text_to_speech_enabled?: boolean | null
+          text_to_speech_voice?: string | null
           timezone?: string | null
         }
         Update: {
@@ -693,6 +695,7 @@ export type Database = {
           name?: string | null
           reading_ruler_enabled?: boolean | null
           text_to_speech_enabled?: boolean | null
+          text_to_speech_voice?: string | null
           timezone?: string | null
         }
         Relationships: []
@@ -937,6 +940,7 @@ export type Database = {
           profile_assessment_completed: boolean | null
           reading_ruler_enabled: boolean | null
           text_to_speech_enabled: boolean | null
+          text_to_speech_voice: string | null
           user_id: string | null
         }
         Insert: {
@@ -966,6 +970,7 @@ export type Database = {
           profile_assessment_completed?: boolean | null
           reading_ruler_enabled?: boolean | null
           text_to_speech_enabled?: boolean | null
+          text_to_speech_voice?: string | null
           user_id?: string | null
         }
         Update: {
@@ -995,6 +1000,7 @@ export type Database = {
           profile_assessment_completed?: boolean | null
           reading_ruler_enabled?: boolean | null
           text_to_speech_enabled?: boolean | null
+          text_to_speech_voice?: string | null
           user_id?: string | null
         }
         Relationships: [

@@ -47,6 +47,7 @@ export default function ParentProfile() {
     focusModeGlowIntensity,
     readingRulerEnabled,
     textToSpeechEnabled,
+    textToSpeechVoice,
     highContrastEnabled,
     setDyslexiaFont,
     setLineSpacing,
@@ -58,6 +59,7 @@ export default function ParentProfile() {
     setFocusModeGlowIntensity,
     setReadingRuler,
     setTextToSpeech,
+    setTextToSpeechVoice,
     setHighContrast,
   } = useAccessibility();
 
@@ -313,6 +315,28 @@ export default function ParentProfile() {
                       onCheckedChange={setTextToSpeech}
                     />
                   </div>
+
+                  {textToSpeechEnabled && (
+                    <div className="p-4 border rounded-lg space-y-2 animate-fade-in">
+                      <Label htmlFor="tts-voice"><BionicText>Voice Selection</BionicText></Label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        <BionicText>Choose your preferred reading voice</BionicText>
+                      </p>
+                      <Select value={textToSpeechVoice} onValueChange={(value: any) => setTextToSpeechVoice(value)}>
+                        <SelectTrigger id="tts-voice">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="alloy">Alloy (Neutral)</SelectItem>
+                          <SelectItem value="echo">Echo (Male)</SelectItem>
+                          <SelectItem value="fable">Fable (British Male)</SelectItem>
+                          <SelectItem value="onyx">Onyx (Deep Male)</SelectItem>
+                          <SelectItem value="nova">Nova (Female)</SelectItem>
+                          <SelectItem value="shimmer">Shimmer (Soft Female)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
 
                 {/* Spacing & Layout */}

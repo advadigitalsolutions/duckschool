@@ -13,7 +13,7 @@ interface TextToSpeechProps {
 }
 
 export function TextToSpeech({ text, children, className = '' }: TextToSpeechProps) {
-  const { textToSpeechEnabled } = useAccessibility();
+  const { textToSpeechEnabled, textToSpeechVoice } = useAccessibility();
   const { toast } = useToast();
   const [speaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -72,7 +72,10 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
             },
-            body: JSON.stringify({ text: cleanMarkdown(text) }),
+            body: JSON.stringify({ 
+              text: cleanMarkdown(text),
+              voice: textToSpeechVoice 
+            }),
           }
         );
 

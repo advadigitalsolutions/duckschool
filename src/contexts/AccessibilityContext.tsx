@@ -13,6 +13,7 @@ interface AccessibilitySettings {
   focusModeGlowIntensity: number;
   readingRulerEnabled: boolean;
   textToSpeechEnabled: boolean;
+  textToSpeechVoice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
   highContrastEnabled: boolean;
 }
 
@@ -27,6 +28,7 @@ interface AccessibilityContextType extends AccessibilitySettings {
   setFocusModeGlowIntensity: (intensity: number) => Promise<void>;
   setReadingRuler: (enabled: boolean) => Promise<void>;
   setTextToSpeech: (enabled: boolean) => Promise<void>;
+  setTextToSpeechVoice: (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => Promise<void>;
   setHighContrast: (enabled: boolean) => Promise<void>;
 }
 
@@ -44,6 +46,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     focusModeGlowIntensity: 100,
     readingRulerEnabled: false,
     textToSpeechEnabled: false,
+    textToSpeechVoice: 'alloy',
     highContrastEnabled: false,
   });
   const { toast } = useToast();
@@ -67,6 +70,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
           focusModeGlowIntensity: 100,
           readingRulerEnabled: false,
           textToSpeechEnabled: false,
+          textToSpeechVoice: 'alloy',
           highContrastEnabled: false,
         });
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -89,7 +93,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // Try student table first
     const { data: student } = await supabase
       .from('students')
-      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, focus_mode_overlay_opacity, focus_mode_glow_color, focus_mode_glow_intensity, reading_ruler_enabled, text_to_speech_enabled, high_contrast_enabled')
+      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, focus_mode_overlay_opacity, focus_mode_glow_color, focus_mode_glow_intensity, reading_ruler_enabled, text_to_speech_enabled, text_to_speech_voice, high_contrast_enabled')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -105,6 +109,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         focusModeGlowIntensity: student.focus_mode_glow_intensity || 100,
         readingRulerEnabled: student.reading_ruler_enabled || false,
         textToSpeechEnabled: student.text_to_speech_enabled || false,
+        textToSpeechVoice: student.text_to_speech_voice as any || 'alloy',
         highContrastEnabled: student.high_contrast_enabled || false,
       });
       return;
@@ -113,7 +118,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // If not a student, try profiles table
     const { data: profile } = await supabase
       .from('profiles')
-      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, focus_mode_overlay_opacity, focus_mode_glow_color, focus_mode_glow_intensity, reading_ruler_enabled, text_to_speech_enabled, high_contrast_enabled')
+      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, focus_mode_overlay_opacity, focus_mode_glow_color, focus_mode_glow_intensity, reading_ruler_enabled, text_to_speech_enabled, text_to_speech_voice, high_contrast_enabled')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -129,6 +134,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         focusModeGlowIntensity: profile.focus_mode_glow_intensity || 100,
         readingRulerEnabled: profile.reading_ruler_enabled || false,
         textToSpeechEnabled: profile.text_to_speech_enabled || false,
+        textToSpeechVoice: profile.text_to_speech_voice as any || 'alloy',
         highContrastEnabled: profile.high_contrast_enabled || false,
       });
     }
@@ -264,6 +270,11 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     await updateSetting('text_to_speech_enabled', enabled);
   };
 
+  const setTextToSpeechVoice = async (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => {
+    setSettings(prev => ({ ...prev, textToSpeechVoice: voice }));
+    await updateSetting('text_to_speech_voice', voice);
+  };
+
   const setHighContrast = async (enabled: boolean) => {
     setSettings(prev => ({ ...prev, highContrastEnabled: enabled }));
     await updateSetting('high_contrast_enabled', enabled);
@@ -283,6 +294,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         setFocusModeGlowIntensity,
         setReadingRuler,
         setTextToSpeech,
+        setTextToSpeechVoice,
         setHighContrast,
       }}
     >
