@@ -13,7 +13,6 @@ import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
 import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
 import { cleanMarkdown } from '@/utils/textFormatting';
 import { BionicText } from '@/components/BionicText';
-import { useFocusMode } from '@/hooks/useFocusMode';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -22,9 +21,6 @@ export default function AssignmentDetail() {
   const [loading, setLoading] = useState(true);
   const [currentStudentId, setCurrentStudentId] = useState<string | null>(null);
   const [isParent, setIsParent] = useState(false);
-  
-  // Activate focus mode for this page
-  useFocusMode();
 
   useEffect(() => {
     fetchAssignment();

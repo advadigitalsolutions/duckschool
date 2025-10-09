@@ -301,30 +301,55 @@ All colors MUST be HSL.
   --input: 0 0% 80% !important;
 }
 
-/* Focus Mode - Dim background and highlight focused content */
-.focus-mode::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  pointer-events: none;
-  z-index: 40;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.focus-mode.has-focus::before {
-  opacity: 1;
-}
-
-.focus-mode-active {
+/* Focus Mode - Hover-based highlighting with yellow glow */
+.focus-mode {
   position: relative;
-  z-index: 50 !important;
-  background: hsl(var(--background)) !important;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.5), 0 0 20px 2px hsl(var(--primary) / 0.3) !important;
+}
+
+/* Dim everything when focus mode is active */
+.focus-mode * {
+  transition: opacity 0.2s ease, filter 0.2s ease;
+  opacity: 0.5;
+  filter: grayscale(30%);
+}
+
+/* Remove dim and add yellow glow on hover */
+.focus-mode *:hover {
+  opacity: 1 !important;
+  filter: grayscale(0%) !important;
+  position: relative;
+  z-index: 10;
+}
+
+/* Yellow halo effect for cards and interactive elements */
+.focus-mode .card:hover,
+.focus-mode [class*="Card"]:hover,
+.focus-mode button:hover,
+.focus-mode a:hover,
+.focus-mode input:hover,
+.focus-mode textarea:hover,
+.focus-mode select:hover {
+  box-shadow: 0 0 30px 8px rgba(255, 215, 0, 0.4), 0 0 60px 15px rgba(255, 215, 0, 0.2) !important;
+  background: hsl(var(--card)) !important;
+}
+
+/* Keep text readable when hovering parent */
+.focus-mode *:hover * {
+  opacity: 1 !important;
+  filter: grayscale(0%) !important;
+}
+
+/* Don't dim fixed elements like headers */
+.focus-mode header,
+.focus-mode header *,
+.focus-mode nav,
+.focus-mode nav * {
+  opacity: 0.8;
+}
+
+.focus-mode header:hover,
+.focus-mode header:hover *,
+.focus-mode nav:hover,
+.focus-mode nav:hover * {
+  opacity: 1 !important;
 }

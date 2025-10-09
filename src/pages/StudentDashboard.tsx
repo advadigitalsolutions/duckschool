@@ -24,7 +24,6 @@ import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { XPDisplay } from '@/components/XPDisplay';
 import { RewardsShop } from '@/components/RewardsShop';
-import { useFocusMode } from '@/hooks/useFocusMode';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -39,8 +38,6 @@ export default function StudentDashboard() {
   const [dailyGoals, setDailyGoals] = useState<any[]>([]);
   const [newGoalText, setNewGoalText] = useState('');
   const navigate = useNavigate();
-  
-  useFocusMode();
 
   const motivationalQuotes = [
     "Your potential is endless. Go do what you were created to do.",

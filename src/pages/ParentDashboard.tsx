@@ -25,7 +25,6 @@ import { EditStudentDialog } from '@/components/EditStudentDialog';
 import { DeleteStudentDialog } from '@/components/DeleteStudentDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Pencil, Trash2, User } from 'lucide-react';
-import { useFocusMode } from '@/hooks/useFocusMode';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -38,8 +37,6 @@ export default function ParentDashboard() {
   const [userName, setUserName] = useState('');
   const [userAvatar, setUserAvatar] = useState('');
   const navigate = useNavigate();
-  
-  useFocusMode();
 
   const getGreeting = () => {
     const hour = new Date().getHours();

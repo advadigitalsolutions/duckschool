@@ -14,7 +14,6 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBionicReading } from '@/contexts/BionicReadingContext';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
-import { useFocusMode } from '@/hooks/useFocusMode';
 
 const defaultAvatars = [
   'https://api.dicebear.com/7.x/adventurer/svg?seed=HappyTeacher&backgroundColor=b6e3f4',
@@ -53,8 +52,6 @@ export default function ParentProfile() {
     setTextToSpeech,
     setHighContrast,
   } = useAccessibility();
-  
-  useFocusMode();
 
   useEffect(() => {
     fetchProfile();

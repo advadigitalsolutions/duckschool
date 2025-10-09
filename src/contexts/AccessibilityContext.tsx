@@ -97,8 +97,6 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     const body = document.body;
     const root = document.documentElement;
     
-    console.log('Applying accessibility settings:', settings);
-    
     // Font
     body.classList.toggle('dyslexia-font', settings.dyslexiaFontEnabled);
     
@@ -121,9 +119,8 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // High contrast
     root.classList.toggle('high-contrast', settings.highContrastEnabled);
     
-    // Focus mode
+    // Focus mode - simple body class toggle
     body.classList.toggle('focus-mode', settings.focusModeEnabled);
-    console.log('Focus mode enabled:', settings.focusModeEnabled, 'Body has focus-mode class:', body.classList.contains('focus-mode'));
   };
 
   const updateSetting = async (field: string, value: any) => {
