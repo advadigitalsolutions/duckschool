@@ -859,6 +859,44 @@ export type Database = {
           },
         ]
       }
+      teacher_notes: {
+        Row: {
+          assignment_id: string
+          created_at: string | null
+          educator_id: string
+          id: string
+          offline_activities: string | null
+          offline_grade: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string | null
+          educator_id: string
+          id?: string
+          offline_activities?: string | null
+          offline_grade?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string | null
+          educator_id?: string
+          id?: string
+          offline_activities?: string | null
+          offline_grade?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_notes_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transcripts: {
         Row: {
           gpa: number | null

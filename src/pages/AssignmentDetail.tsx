@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Clock, Target, BookOpen, CheckCircle2, Brain, TrendingUp } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { ArrowLeft, Clock, Target, BookOpen, CheckCircle2, Brain, TrendingUp, Sparkles, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AssignmentQuestions } from '@/components/AssignmentQuestions';
+import { TeacherQuestionView } from '@/components/TeacherQuestionView';
 import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
 import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
 import { cleanMarkdown } from '@/utils/textFormatting';
@@ -23,6 +25,10 @@ export default function AssignmentDetail() {
   const [isParent, setIsParent] = useState(false);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [generatingRemedial, setGeneratingRemedial] = useState(false);
+  const [teacherNotes, setTeacherNotes] = useState<any>(null);
+  const [offlineActivities, setOfflineActivities] = useState('');
+  const [offlineGrade, setOfflineGrade] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
 
   useEffect(() => {
     fetchAssignment();
@@ -72,7 +78,7 @@ export default function AssignmentDetail() {
       if (error) throw error;
       setAssignment(data);
 
-      // If parent, fetch student submissions
+      // If parent, fetch student submissions and teacher notes
       if (parentStudents && parentStudents.length > 0) {
         const { data: submissionsData } = await supabase
           .from('submissions')
@@ -85,6 +91,20 @@ export default function AssignmentDetail() {
         
         if (submissionsData) {
           setSubmissions(submissionsData);
+        }
+
+        // Fetch teacher notes
+        const { data: notesData } = await supabase
+          .from('teacher_notes')
+          .select('*')
+          .eq('assignment_id', id)
+          .eq('educator_id', user.id)
+          .maybeSingle();
+        
+        if (notesData) {
+          setTeacherNotes(notesData);
+          setOfflineActivities(notesData.offline_activities || '');
+          setOfflineGrade(notesData.offline_grade || '');
         }
       }
     } catch (error: any) {
@@ -137,6 +157,47 @@ export default function AssignmentDetail() {
       console.error(error);
     } finally {
       setGeneratingRemedial(false);
+    }
+  };
+
+  const handleSaveTeacherNotes = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    setSavingNotes(true);
+    try {
+      const noteData = {
+        assignment_id: id,
+        educator_id: user.id,
+        offline_activities: offlineActivities,
+        offline_grade: offlineGrade,
+        updated_at: new Date().toISOString()
+      };
+
+      if (teacherNotes) {
+        const { error } = await supabase
+          .from('teacher_notes')
+          .update(noteData)
+          .eq('id', teacherNotes.id);
+        
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from('teacher_notes')
+          .insert([noteData])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        setTeacherNotes(data);
+      }
+      
+      toast.success('Teacher notes saved successfully!');
+    } catch (error: any) {
+      toast.error('Failed to save notes');
+      console.error(error);
+    } finally {
+      setSavingNotes(false);
     }
   };
 
@@ -224,9 +285,12 @@ export default function AssignmentDetail() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
+            {isParent && (
+              <TabsTrigger value="teacher-guide">Teacher's Guide</TabsTrigger>
+            )}
             {isParent && submissions.length > 0 && (
               <TabsTrigger value="attempts">Student Attempts</TabsTrigger>
             )}
@@ -236,7 +300,9 @@ export default function AssignmentDetail() {
           </TabsList>
 
           <TabsContent value="questions" className="space-y-4">
-            {currentStudentId ? (
+            {isParent ? (
+              <TeacherQuestionView questions={content.questions || []} />
+            ) : currentStudentId ? (
               <AssignmentQuestions assignment={assignment} studentId={currentStudentId} />
             ) : (
               <Card>
@@ -246,6 +312,120 @@ export default function AssignmentDetail() {
               </Card>
             )}
           </TabsContent>
+
+          {isParent && (
+            <TabsContent value="teacher-guide" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Lesson Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">About This Lesson</h4>
+                    <p className="text-muted-foreground">
+                      <BionicText>{content.description || 'This assignment helps students practice and demonstrate their understanding of the topic.'}</BionicText>
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2">How It Fits With Course Goals</h4>
+                    <p className="text-muted-foreground">
+                      <BionicText>
+                        {`This lesson aligns with the ${assignment.curriculum_items?.courses?.subject} curriculum and builds toward mastery of key concepts. It scaffolds student learning by connecting prior knowledge with new material, reinforcing fundamental skills while introducing advanced applications.`}
+                      </BionicText>
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2">Introducing to Students</h4>
+                    <p className="text-muted-foreground">
+                      <BionicText>
+                        Begin by reviewing the learning objectives with your student. Help them understand why this topic matters and how it connects to what they've learned before. Encourage questions and check for understanding before they start. Remind them to read carefully and take their time with each question.
+                      </BionicText>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="h-5 w-5 text-primary" />
+                    Beyond the Screen Activities
+                  </CardTitle>
+                  <CardDescription>Hands-on activities to enhance learning</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="border-l-4 border-primary pl-4 py-2">
+                      <h4 className="font-semibold mb-2">Activity 1: Creative Expression</h4>
+                      <p className="text-sm text-muted-foreground">
+                        <BionicText>
+                          Have your student create a visual representation of what they learned using art supplies, building materials, or even a nature walk. This could be a poster, diagram, comic strip, or 3D model that explains the key concepts in their own way.
+                        </BionicText>
+                      </p>
+                    </div>
+
+                    <div className="border-l-4 border-primary pl-4 py-2">
+                      <h4 className="font-semibold mb-2">Activity 2: Real-World Connection</h4>
+                      <p className="text-sm text-muted-foreground">
+                        <BionicText>
+                          Encourage your student to find real-world examples of the concepts they're learning. This could involve conducting simple experiments, interviewing family members, taking photos of examples in their environment, or writing about how they see these ideas in daily life.
+                        </BionicText>
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Offline Activity Log</CardTitle>
+                  <CardDescription>
+                    Track supplementary work and hands-on activities completed outside the system
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Activities Completed
+                    </label>
+                    <Textarea
+                      placeholder="Describe the offline activities your student completed (e.g., built a model, conducted an experiment, created artwork, had a discussion...)"
+                      value={offlineActivities}
+                      onChange={(e) => setOfflineActivities(e.target.value)}
+                      rows={4}
+                      className="resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Grade / Assessment for Offline Work
+                    </label>
+                    <Textarea
+                      placeholder="Record your assessment of the offline activities (e.g., 'Excellent - showed deep understanding', 'Good effort - needs more practice with...', or a letter/number grade)"
+                      value={offlineGrade}
+                      onChange={(e) => setOfflineGrade(e.target.value)}
+                      rows={3}
+                      className="resize-none"
+                    />
+                  </div>
+
+                  <Button 
+                    onClick={handleSaveTeacherNotes}
+                    disabled={savingNotes}
+                    className="w-full"
+                  >
+                    {savingNotes ? 'Saving...' : 'Save Notes'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           {isParent && submissions.length > 0 && (
             <TabsContent value="attempts" className="space-y-4">
