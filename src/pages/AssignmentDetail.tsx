@@ -11,6 +11,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { AssignmentQuestions } from '@/components/AssignmentQuestions';
 import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
 import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
+import { cleanMarkdown } from '@/utils/textFormatting';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -237,7 +238,7 @@ export default function AssignmentDetail() {
                     <p className="font-medium mb-2">ADHD Accommodations:</p>
                     <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                       {content.adhd_accommodations.map((acc: string, idx: number) => (
-                        <li key={idx}>{acc}</li>
+                        <li key={idx}>{cleanMarkdown(acc)}</li>
                       ))}
                     </ul>
                   </div>
@@ -254,7 +255,7 @@ export default function AssignmentDetail() {
               <CardContent>
                 <div className="prose dark:prose-invert max-w-none">
                   {content.instructions ? (
-                    <p className="whitespace-pre-wrap">{content.instructions}</p>
+                    <p className="whitespace-pre-wrap">{cleanMarkdown(content.instructions)}</p>
                   ) : (
                     <p className="text-muted-foreground">No instructions provided</p>
                   )}
@@ -272,7 +273,7 @@ export default function AssignmentDetail() {
                     {content.activities.map((activity: any, idx: number) => (
                       <div key={idx} className="border-l-2 border-primary pl-4">
                         <p className="font-medium">Step {activity.step || idx + 1}</p>
-                        <p className="text-sm text-muted-foreground">{activity.description}</p>
+                        <p className="text-sm text-muted-foreground">{cleanMarkdown(activity.description)}</p>
                         {activity.duration_minutes && (
                           <p className="text-xs text-muted-foreground mt-1">
                             ~{activity.duration_minutes} minutes
@@ -297,10 +298,10 @@ export default function AssignmentDetail() {
                     {(content.rubric || assignment.rubric || []).map((item: any, idx: number) => (
                       <div key={idx} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium">{item.criteria}</h4>
+                          <h4 className="font-medium">{cleanMarkdown(item.criteria)}</h4>
                           <Badge variant="outline">{item.points} points</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{item.description}</p>
+                        <p className="text-sm text-muted-foreground">{cleanMarkdown(item.description)}</p>
                       </div>
                     ))}
                   </div>

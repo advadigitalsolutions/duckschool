@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { cleanMarkdown } from '@/utils/textFormatting';
 
 interface Question {
   id: string;
@@ -388,7 +389,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
                       </span>
                     )}
                   </div>
-                  <p className="text-sm">{question.explanation}</p>
+                  <p className="text-sm">{cleanMarkdown(question.explanation)}</p>
                   {!results[question.id] && (
                     <p className="text-sm mt-2">
                       <strong>Correct answer:</strong> {question.correct_answer}
@@ -411,7 +412,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-lg">{currentQuestion.question}</p>
+            <p className="text-lg">{cleanMarkdown(currentQuestion.question)}</p>
 
             {/* Multiple Choice */}
             {currentQuestion.type === 'multiple_choice' && (
@@ -422,7 +423,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
                 {currentQuestion.options?.map((option, i) => (
                   <div key={i} className="flex items-center space-x-2">
                     <RadioGroupItem value={option} id={`${currentQuestion.id}-${i}`} />
-                    <Label htmlFor={`${currentQuestion.id}-${i}`}>{option}</Label>
+                    <Label htmlFor={`${currentQuestion.id}-${i}`}>{cleanMarkdown(option)}</Label>
                   </div>
                 ))}
               </RadioGroup>
