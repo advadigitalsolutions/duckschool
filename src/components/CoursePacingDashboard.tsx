@@ -169,7 +169,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
                 </span>
                 <span className="font-bold">{metrics.progressPercentage.toFixed(1)}%</span>
               </div>
-              <Progress value={metrics.progressPercentage} className="h-3" />
+              <Progress value={metrics.progressPercentage} variant="success" className="h-3" />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>{hoursCompleted}h {minutesCompleted}m completed</span>
                 <span>{totalHours}h {totalMinutes}m required</span>
@@ -181,7 +181,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
                 <span className="font-medium">Curriculum Created</span>
                 <span className="font-bold">{((metrics as any).curriculumCoveragePercentage || 0).toFixed(1)}%</span>
               </div>
-              <Progress value={(metrics as any).curriculumCoveragePercentage || 0} className="h-3 opacity-60" />
+              <Progress value={(metrics as any).curriculumCoveragePercentage || 0} variant="success" className="h-3 opacity-60" />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>{curriculumHours}h {curriculumMinutes}m created</span>
                 {(metrics as any).needsMoreCurriculum && (
