@@ -371,15 +371,38 @@ export default function ParentDashboard() {
                                 </p>
                               )}
                             </div>
-                            <Button
-                              onClick={() => {
-                                setResumingSessionId(session.id);
-                                setShowPlanningDialog(true);
-                              }}
-                              variant="outline"
-                            >
-                              Resume
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => {
+                                  setResumingSessionId(session.id);
+                                  setShowPlanningDialog(true);
+                                }}
+                                variant="outline"
+                              >
+                                Resume
+                              </Button>
+                              <Button
+                                onClick={async () => {
+                                  try {
+                                    const { error } = await supabase
+                                      .from('curriculum_planning_sessions')
+                                      .delete()
+                                      .eq('id', session.id);
+                                    
+                                    if (error) throw error;
+                                    
+                                    setPlanningSessions(planningSessions.filter(s => s.id !== session.id));
+                                    toast.success('Planning session deleted');
+                                  } catch (error: any) {
+                                    toast.error('Failed to delete session');
+                                  }
+                                }}
+                                variant="ghost"
+                                size="icon"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
