@@ -21,6 +21,7 @@ import {
 import { Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { StandardsSelector } from './StandardsSelector';
 
 interface AddAssignmentDialogProps {
   courses: any[];
@@ -33,6 +34,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
   const [selectedCourse, setSelectedCourse] = useState('');
   const [topic, setTopic] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,7 +84,8 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
           title: generatedContent.title,
           type: 'assignment',
           body: generatedContent,
-          est_minutes: generatedContent.estimated_minutes || 60
+          est_minutes: generatedContent.estimated_minutes || 60,
+          standards: selectedStandards
         } as any)
         .select()
         .single();
@@ -106,6 +109,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
       setTopic('');
       setSelectedCourse('');
       setDueDate('');
+      setSelectedStandards([]);
       onAssignmentAdded();
     } catch (error: any) {
       toast.error(error.message || 'Failed to create assignment');
@@ -165,6 +169,23 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
               Be specific about what you want students to learn and demonstrate
             </p>
           </div>
+
+          {/* Standards Selector */}
+          {selectedCourse && (
+            <div className="space-y-2">
+              <Label>Tagged Standards (Optional)</Label>
+              <StandardsSelector
+                selectedStandards={selectedStandards}
+                onChange={setSelectedStandards}
+                framework={courses.find(c => c.id === selectedCourse)?.standards_scope?.[0]?.framework}
+                gradeLevel={courses.find(c => c.id === selectedCourse)?.grade_level}
+                subject={courses.find(c => c.id === selectedCourse)?.subject}
+              />
+              <p className="text-xs text-muted-foreground">
+                Select which educational standards this assignment addresses
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="dueDate">Due Date (Optional)</Label>

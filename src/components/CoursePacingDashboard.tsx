@@ -12,6 +12,7 @@ import { CourseMasteryChart } from './CourseMasteryChart';
 import { CourseProgressCharts } from './CourseProgressCharts';
 import { CourseConfigurationPrompt } from './CourseConfigurationPrompt';
 import { CourseSettingsDialog } from './CourseSettingsDialog';
+import { StandardsCoverageDashboard } from './StandardsCoverageDashboard';
 import { cn } from '@/lib/utils';
 
 interface CoursePacingDashboardProps {
@@ -250,6 +251,16 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
         timeBySubject={timeBySubject}
         standardsCoverage={standardsCoverage}
       />
+
+      {/* Standards Coverage Dashboard */}
+      {!metrics?.needsConfiguration && metrics?.framework && (
+        <StandardsCoverageDashboard
+          courseId={courseId}
+          framework={metrics.framework}
+          gradeLevel={gradeLevel || '10'}
+          subject={courseSubject}
+        />
+      )}
 
       {/* Settings Dialog */}
       <CourseSettingsDialog

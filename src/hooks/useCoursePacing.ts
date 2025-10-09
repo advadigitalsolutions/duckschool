@@ -19,6 +19,7 @@ interface PacingMetrics {
   masteryData: MasteryData;
   needsConfiguration: boolean;
   missingData: string[];
+  framework?: string;
 }
 
 interface TimeBySubject {
