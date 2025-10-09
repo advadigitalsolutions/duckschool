@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Question {
   id: string;
@@ -36,6 +36,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
   const [currentQuestionStart, setCurrentQuestionStart] = useState<Record<string, number>>({});
   const [totalScore, setTotalScore] = useState(0);
   const [maxScore, setMaxScore] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const questions: Question[] = assignment?.curriculum_items?.body?.questions || [];
   const maxAttempts = assignment?.max_attempts;
@@ -206,7 +207,20 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     setQuestionTimes({});
     setCurrentQuestionStart({});
     setAttemptNumber(prev => prev + 1);
+    setCurrentQuestionIndex(0);
     loadAttempts();
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    }
   };
 
   if (questions.length === 0) {
@@ -220,6 +234,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
   }
 
   const progress = (Object.keys(answers).length / questions.length) * 100;
+  const currentQuestion = questions[currentQuestionIndex];
 
   return (
     <div className="space-y-6">
@@ -227,7 +242,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Progress</span>
+            <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
             <span className="text-sm font-normal text-muted-foreground">
               {Object.keys(answers).length} / {questions.length} answered
             </span>
@@ -273,92 +288,114 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
         </Card>
       )}
 
-      {/* Questions */}
-      {questions.map((question, index) => (
-        <Card key={question.id} className={submitted && results[question.id] === false ? 'border-2 border-red-500' : ''}>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between text-base">
-              <span>Question {index + 1}</span>
-              <span className="text-sm font-normal text-muted-foreground">
-                {question.points} points
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-lg">{question.question}</p>
+      {/* Current Question */}
+      <Card className={submitted && results[currentQuestion.id] === false ? 'border-2 border-red-500' : ''}>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between text-base">
+            <span>Question {currentQuestionIndex + 1}</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              {currentQuestion.points} points
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-lg">{currentQuestion.question}</p>
 
-            {/* Multiple Choice */}
-            {question.type === 'multiple_choice' && (
-              <RadioGroup
-                value={answers[question.id] as string}
-                onValueChange={(value) => handleAnswerChange(question.id, value)}
-                disabled={submitted}
-              >
-                {question.options?.map((option, i) => (
-                  <div key={i} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option} id={`${question.id}-${i}`} />
-                    <Label htmlFor={`${question.id}-${i}`}>{option}</Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
-
-            {/* Numeric Answer */}
-            {question.type === 'numeric' && (
-              <Input
-                type="number"
-                step="any"
-                value={answers[question.id] || ''}
-                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                disabled={submitted}
-                placeholder="Enter your answer"
-              />
-            )}
-
-            {/* Short Answer */}
-            {question.type === 'short_answer' && (
-              <Textarea
-                value={answers[question.id] as string || ''}
-                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                disabled={submitted}
-                placeholder="Type your answer here"
-                rows={4}
-              />
-            )}
-
-            {/* Result & Explanation */}
-            {submitted && (
-              <div className={`p-4 rounded-lg ${results[question.id] ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  {results[question.id] ? (
-                    <>
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <span className="font-medium text-green-600 dark:text-green-400">Correct!</span>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                      <span className="font-medium text-red-600 dark:text-red-400">Incorrect</span>
-                    </>
-                  )}
-                  {questionTimes[question.id] && (
-                    <span className="ml-auto text-sm text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {Math.floor(questionTimes[question.id] / 60)}:{(questionTimes[question.id] % 60).toString().padStart(2, '0')}
-                    </span>
-                  )}
+          {/* Multiple Choice */}
+          {currentQuestion.type === 'multiple_choice' && (
+            <RadioGroup
+              value={answers[currentQuestion.id] as string}
+              onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+              disabled={submitted}
+            >
+              {currentQuestion.options?.map((option, i) => (
+                <div key={i} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option} id={`${currentQuestion.id}-${i}`} />
+                  <Label htmlFor={`${currentQuestion.id}-${i}`}>{option}</Label>
                 </div>
-                <p className="text-sm">{question.explanation}</p>
-                {!results[question.id] && (
-                  <p className="text-sm mt-2">
-                    <strong>Correct answer:</strong> {question.correct_answer}
-                  </p>
+              ))}
+            </RadioGroup>
+          )}
+
+          {/* Numeric Answer */}
+          {currentQuestion.type === 'numeric' && (
+            <Input
+              type="number"
+              step="any"
+              value={answers[currentQuestion.id] || ''}
+              onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+              disabled={submitted}
+              placeholder="Enter your answer"
+            />
+          )}
+
+          {/* Short Answer */}
+          {currentQuestion.type === 'short_answer' && (
+            <Textarea
+              value={answers[currentQuestion.id] as string || ''}
+              onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+              disabled={submitted}
+              placeholder="Type your answer here"
+              rows={4}
+            />
+          )}
+
+          {/* Result & Explanation */}
+          {submitted && (
+            <div className={`p-4 rounded-lg ${results[currentQuestion.id] ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950'}`}>
+              <div className="flex items-center gap-2 mb-2">
+                {results[currentQuestion.id] ? (
+                  <>
+                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <span className="font-medium text-green-600 dark:text-green-400">Correct!</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    <span className="font-medium text-red-600 dark:text-red-400">Incorrect</span>
+                  </>
+                )}
+                {questionTimes[currentQuestion.id] && (
+                  <span className="ml-auto text-sm text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    {Math.floor(questionTimes[currentQuestion.id] / 60)}:{(questionTimes[currentQuestion.id] % 60).toString().padStart(2, '0')}
+                  </span>
                 )}
               </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+              <p className="text-sm">{currentQuestion.explanation}</p>
+              {!results[currentQuestion.id] && (
+                <p className="text-sm mt-2">
+                  <strong>Correct answer:</strong> {currentQuestion.correct_answer}
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Navigation Buttons */}
+      {!submitted && (
+        <div className="flex items-center justify-between gap-4">
+          <Button
+            variant="outline"
+            onClick={handlePrevious}
+            disabled={currentQuestionIndex === 0}
+            className="flex-1"
+          >
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleNext}
+            disabled={currentQuestionIndex === questions.length - 1}
+            className="flex-1"
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
+      )}
 
       {/* Submit Button */}
       {!submitted && (
