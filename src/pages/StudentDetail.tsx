@@ -45,6 +45,7 @@ export default function StudentDetail() {
   const [loading, setLoading] = useState(true);
   const [expandedAssignments, setExpandedAssignments] = useState<Set<string>>(new Set());
   const [showArchived, setShowArchived] = useState(false);
+  const [processingSession, setProcessingSession] = useState(false);
 
   useEffect(() => {
     fetchStudentData();
@@ -123,6 +124,29 @@ export default function StudentDetail() {
     });
   };
 
+  const handleProcessSession = async () => {
+    if (!window.confirm('This will update the student profile and recreate courses based on the curriculum planning conversation. Continue?')) {
+      return;
+    }
+
+    setProcessingSession(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('process-curriculum-session', {
+        body: { studentId: id }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Successfully updated! Created ${data.coursesCreated} courses with assessments.`);
+      await fetchStudentData();
+    } catch (error) {
+      console.error('Error processing session:', error);
+      toast.error('Failed to process curriculum session');
+    } finally {
+      setProcessingSession(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -172,7 +196,24 @@ export default function StudentDetail() {
         {/* Student Info Card */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Student Information</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Student Information</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleProcessSession}
+                disabled={processingSession}
+              >
+                {processingSession ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                    Processing...
+                  </>
+                ) : (
+                  'Update from Planning Session'
+                )}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
