@@ -30,7 +30,15 @@ export default function ParentDashboard() {
   const [overdueCount, setOverdueCount] = useState(0);
   const [editingStudent, setEditingStudent] = useState<any>(null);
   const [deletingStudent, setDeletingStudent] = useState<any>(null);
+  const [userName, setUserName] = useState('');
   const navigate = useNavigate();
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -40,6 +48,15 @@ export default function ParentDashboard() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Fetch user profile for name
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', user.id)
+        .single();
+
+      setUserName(profileData?.name || 'Educator');
 
       // Fetch students
       const { data: studentsData } = await supabase
@@ -105,7 +122,7 @@ export default function ParentDashboard() {
             <BookOpen className="h-8 w-8 text-primary" />
             <div>
               <h1 className="text-2xl font-bold">Parent Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Isaiah's Homeschool</p>
+              <p className="text-sm text-muted-foreground">{getGreeting()} {userName}!</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
