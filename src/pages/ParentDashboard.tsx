@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -103,6 +104,7 @@ export default function ParentDashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <ThemeToggle />
             <Button variant="outline" size="icon">
               <Settings className="h-4 w-4" />
             </Button>

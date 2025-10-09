@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -144,9 +145,12 @@ export default function StudentDashboard() {
             <h1 className="text-2xl font-bold">Welcome back, {student?.name || 'Student'}!</h1>
             <p className="text-sm text-muted-foreground">Let's make today count 🎯</p>
           </div>
-          <Button variant="outline" size="icon" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center space-x-2">
+            <ThemeToggle />
+            <Button variant="outline" size="icon" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
