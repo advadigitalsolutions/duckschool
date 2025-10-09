@@ -250,7 +250,13 @@ export default function StudentDetail() {
                 ) : (
                   <div className="space-y-4">
                     {assignments.map((assignment) => (
-                      <Card key={assignment.id}>
+                      <Card 
+                        key={assignment.id}
+                        className="cursor-pointer transition-colors hover:bg-accent"
+                        onClick={() => toast.info(`Assignment: ${assignment.curriculum_items?.title}`, {
+                          description: `Status: ${assignment.status}\nDue: ${assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : 'No due date'}`
+                        })}
+                      >
                         <CardHeader>
                           <div className="flex items-start justify-between">
                             <div>
