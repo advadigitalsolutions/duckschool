@@ -90,6 +90,7 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       // Fetch all standards for this course to calculate total required hours
       const pacingConfig = course.pacing_config as any;
       const courseFramework = course.standards_scope?.[0]?.framework || pacingConfig?.framework || 'CA-CCSS';
+      const isCustomFramework = courseFramework === 'CUSTOM';
       
       // Normalize subject names for flexible matching
       const subjectVariations = [
@@ -153,11 +154,19 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       // Check for missing critical configuration
       const missingData: string[] = [];
       const hasStandards = (standards || []).length > 0;
-      const needsConfiguration = !hasStandards || !course.grade_level;
+      
+      // Custom framework is valid without standards if goals are set
+      const hasGoals = course.goals && course.goals.trim().length > 0;
+      const needsConfiguration = isCustomFramework 
+        ? (!hasGoals || !course.grade_level)
+        : (!hasStandards || !course.grade_level);
 
-      if (!hasStandards) {
+      if (isCustomFramework && !hasGoals) {
+        missingData.push('Custom framework requires course goals to be configured');
+      } else if (!isCustomFramework && !hasStandards) {
         missingData.push(`No ${courseFramework} standards available for ${course.subject} at grade ${course.grade_level}`);
       }
+      
       if (!course.grade_level) {
         missingData.push('Grade level');
       }

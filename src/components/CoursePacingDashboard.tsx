@@ -94,6 +94,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
       if (framework === 'TX-TEKS') return 'Texas Essential Knowledge and Skills';
       if (framework === 'FL-BEST') return 'Florida B.E.S.T. Standards';
       if (framework === 'NY-CCLS') return 'New York Common Core Learning Standards';
+      if (framework === 'CUSTOM') return 'Custom Framework (Goals-Based)';
     }
     return null;
   };
@@ -288,7 +289,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
       />
 
       {/* Standards Coverage Dashboard */}
-      {!metrics?.needsConfiguration && metrics?.framework && (
+      {!metrics?.needsConfiguration && metrics?.framework && metrics.framework !== 'CUSTOM' && (
         <StandardsCoverageDashboard
           courseId={courseId}
           framework={metrics.framework}
