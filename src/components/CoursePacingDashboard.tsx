@@ -5,7 +5,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, TrendingUp, TrendingDown, Minus, AlertTriangle, Settings, Sparkles } from 'lucide-react';
+import { CalendarIcon, TrendingUp, TrendingDown, Minus, AlertTriangle, Settings, Sparkles, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCoursePacing } from '@/hooks/useCoursePacing';
 import { CourseMasteryChart } from './CourseMasteryChart';
@@ -13,6 +13,7 @@ import { CourseProgressCharts } from './CourseProgressCharts';
 import { CourseSettingsDialog } from './CourseSettingsDialog';
 import { CurriculumGenerationDialog } from './CurriculumGenerationDialog';
 import { StandardsCoverageDashboard } from './StandardsCoverageDashboard';
+import { CustomMilestonesDashboard } from './CustomMilestonesDashboard';
 import { cn } from '@/lib/utils';
 
 interface CoursePacingDashboardProps {
@@ -144,6 +145,51 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
           </CardContent>
         </Card>
       )}
+
+      {/* How Calculations Work */}
+      <Card className="border-blue-500/20 bg-blue-500/5">
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Info className="h-4 w-4" />
+            How Progress is Calculated
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <div>
+            <span className="font-semibold">Total Required Hours:</span>{' '}
+            <span className="text-muted-foreground">
+              {(metrics as any)?.framework === 'CUSTOM' 
+                ? 'Based on AI-generated learning milestones from your course goals. Each milestone has an estimated time requirement.'
+                : `Based on ${getFrameworkName()} official standards for ${courseSubject} at grade ${gradeLevel}. Each standard has an estimated time requirement.`
+              }
+            </span>
+          </div>
+          <div>
+            <span className="font-semibold">Work Completed:</span>{' '}
+            <span className="text-muted-foreground">
+              Actual time spent on assignments (from student submissions), divided by total required hours.
+            </span>
+          </div>
+          <div>
+            <span className="font-semibold">Curriculum Built:</span>{' '}
+            <span className="text-muted-foreground">
+              Hours of curriculum you've created so far, divided by total required hours.
+            </span>
+          </div>
+          <div>
+            <span className="font-semibold">Average Pace:</span>{' '}
+            <span className="text-muted-foreground">
+              Calculated from student activity over the last 30 days. Used to project completion dates.
+            </span>
+          </div>
+          <div>
+            <span className="font-semibold">Recommended Daily Minutes:</span>{' '}
+            <span className="text-muted-foreground">
+              Remaining work divided by days until your target date. Updates as target date changes.
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Overall Progress Card */}
       <Card>
@@ -313,14 +359,20 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
         standardsCoverage={standardsCoverage}
       />
 
-      {/* Standards Coverage Dashboard */}
-      {!metrics?.needsConfiguration && metrics?.framework && metrics.framework !== 'CUSTOM' && (
-        <StandardsCoverageDashboard
-          courseId={courseId}
-          framework={metrics.framework}
-          gradeLevel={gradeLevel || '10'}
-          subject={courseSubject}
-        />
+      {/* Standards/Milestones Dashboard */}
+      {!metrics?.needsConfiguration && metrics?.framework && (
+        <>
+          {metrics.framework === 'CUSTOM' ? (
+            <CustomMilestonesDashboard courseId={courseId} />
+          ) : (
+            <StandardsCoverageDashboard
+              courseId={courseId}
+              framework={metrics.framework}
+              gradeLevel={gradeLevel || '10'}
+              subject={courseSubject}
+            />
+          )}
+        </>
       )}
 
       {/* Settings Dialog */}
