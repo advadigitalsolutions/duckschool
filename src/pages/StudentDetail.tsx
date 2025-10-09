@@ -35,6 +35,8 @@ import { DeleteCourseDialog } from '@/components/DeleteCourseDialog';
 import { ArchiveCourseDialog } from '@/components/ArchiveCourseDialog';
 import { PersonalityReportView } from '@/components/PersonalityReportView';
 import { StudentGrades } from '@/components/StudentGrades';
+import { GlobalCourseSettingsDialog } from '@/components/GlobalCourseSettingsDialog';
+import { Settings } from 'lucide-react';
 
 export default function StudentDetail() {
   const { id } = useParams();
@@ -46,6 +48,7 @@ export default function StudentDetail() {
   const [expandedAssignments, setExpandedAssignments] = useState<Set<string>>(new Set());
   const [showArchived, setShowArchived] = useState(false);
   const [processingSession, setProcessingSession] = useState(false);
+  const [showGlobalSettings, setShowGlobalSettings] = useState(false);
 
   useEffect(() => {
     fetchStudentData();
@@ -288,9 +291,19 @@ export default function StudentDetail() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Courses</CardTitle>
-                    <CardDescription>Manage courses for {student.name}</CardDescription>
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <CardTitle>Courses</CardTitle>
+                      <CardDescription>Manage courses for {student.name}</CardDescription>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowGlobalSettings(true)}
+                      title="Configure All Courses"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -526,6 +539,13 @@ export default function StudentDetail() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <GlobalCourseSettingsDialog
+        open={showGlobalSettings}
+        onOpenChange={setShowGlobalSettings}
+        studentId={student.id}
+        onUpdate={fetchStudentData}
+      />
     </div>
   );
 }

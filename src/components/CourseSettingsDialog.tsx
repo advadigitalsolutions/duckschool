@@ -65,19 +65,28 @@ export function CourseSettingsDialog({
       if (course) {
         setGradeLevel(course.grade_level || currentGradeLevel || '');
         
-        // Extract framework from standards_scope
+        // Extract framework from standards_scope or pacing_config
+        const pacingConfig = course.pacing_config as any;
+        let extractedFramework = '';
+        
         if (Array.isArray(course.standards_scope) && course.standards_scope.length > 0) {
           const scopeItem = course.standards_scope[0];
           if (typeof scopeItem === 'object' && scopeItem !== null && 'framework' in scopeItem) {
             const scopeFramework = (scopeItem as any).framework;
             if (typeof scopeFramework === 'string') {
-              setFramework(scopeFramework);
+              extractedFramework = scopeFramework;
             }
           }
         }
+        
+        // Fallback to pacing_config if not in standards_scope
+        if (!extractedFramework && pacingConfig?.framework) {
+          extractedFramework = pacingConfig.framework;
+        }
+        
+        setFramework(extractedFramework || 'CA-CCSS');
 
         // Extract pacing config
-        const pacingConfig = course.pacing_config as any;
         if (pacingConfig) {
           if (pacingConfig.target_completion_date) {
             setTargetCompletionDate(pacingConfig.target_completion_date);
@@ -104,15 +113,19 @@ export function CourseSettingsDialog({
     try {
       const updates: any = {
         grade_level: gradeLevel,
-        standards_scope: [{ framework }],
+        standards_scope: [{ 
+          framework,
+          subject: currentSubject,
+          grade_band: gradeLevel
+        }],
       };
 
-      if (targetCompletionDate || weeklyMinutes) {
-        updates.pacing_config = {
-          ...(targetCompletionDate && { target_completion_date: targetCompletionDate }),
-          ...(weeklyMinutes && { weekly_minutes: parseInt(weeklyMinutes) }),
-        };
-      }
+      // Always update pacing_config with framework
+      updates.pacing_config = {
+        framework,
+        ...(targetCompletionDate && { target_completion_date: targetCompletionDate }),
+        ...(weeklyMinutes && { weekly_minutes: parseInt(weeklyMinutes) }),
+      };
 
       const { error } = await supabase
         .from('courses')

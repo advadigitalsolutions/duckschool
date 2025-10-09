@@ -10,7 +10,6 @@ import { format } from 'date-fns';
 import { useCoursePacing } from '@/hooks/useCoursePacing';
 import { CourseMasteryChart } from './CourseMasteryChart';
 import { CourseProgressCharts } from './CourseProgressCharts';
-import { CourseConfigurationPrompt } from './CourseConfigurationPrompt';
 import { CourseSettingsDialog } from './CourseSettingsDialog';
 import { StandardsCoverageDashboard } from './StandardsCoverageDashboard';
 import { cn } from '@/lib/utils';
@@ -116,16 +115,25 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
         </Button>
       </div>
 
-      {/* Configuration Prompt if needed */}
-      {metrics.needsConfiguration && (
-        <CourseConfigurationPrompt
-          missingData={metrics.missingData}
-          courseId={courseId}
-          studentId={studentId}
-          gradeLevel={gradeLevel}
-          subject={courseSubject}
-          onUpdate={refreshMetrics}
-        />
+      {/* Configuration Warning - Only show if truly broken */}
+      {metrics.needsConfiguration && metrics.missingData.length > 0 && (
+        <Card className="border-amber-500 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="text-amber-700 dark:text-amber-500">Configuration Incomplete</CardTitle>
+            <CardDescription>
+              Some settings need to be configured for accurate progress tracking
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {metrics.missingData.map((item, index) => (
+              <p key={index} className="text-sm text-muted-foreground">• {item}</p>
+            ))}
+            <Button variant="outline" onClick={() => setSettingsOpen(true)} className="mt-4">
+              <Settings className="mr-2 h-4 w-4" />
+              Configure Settings
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {/* Overall Progress Card */}
