@@ -7,9 +7,12 @@ import { getPersonalityTypeConfig } from '@/utils/personalityTypeConfig';
 import { 
   Eye, Hand, Ear, BookOpen, Sparkles, Target, TrendingUp, 
   Lightbulb, Users, Brain, Clock, Star, Award, CheckCircle2,
-  Home, Printer
+  Home, Download
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useRef } from 'react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface PersonalityReportProps {
   student: any;
@@ -22,6 +25,7 @@ const iconMap: Record<string, any> = {
 
 export function PersonalityReport({ student, onRetake }: PersonalityReportProps) {
   const navigate = useNavigate();
+  const reportRef = useRef<HTMLDivElement>(null);
   const config = getPersonalityTypeConfig(student?.personality_type || 'Multimodal Learner');
   const IconComponent = iconMap[config.icon] || Sparkles;
   const learningProfile = student?.learning_profile || {};
@@ -104,9 +108,31 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
   
   const personalizedTips = generatePersonalizedTips();
 
+  const handleDownloadPDF = async () => {
+    if (!reportRef.current) return;
+    
+    const canvas = await html2canvas(reportRef.current, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
+    
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+    const imgX = (pdfWidth - imgWidth * ratio) / 2;
+    
+    pdf.addImage(imgData, 'PNG', imgX, 0, imgWidth * ratio, imgHeight * ratio);
+    pdf.save(`${student?.display_name || student?.name}-learning-profile.pdf`);
+  };
+
   return (
     <ScrollArea className="h-[calc(100vh-12rem)]">
-      <div className="space-y-6 pb-8">
+      <div ref={reportRef} className="space-y-6 pb-8">
         {/* Hero Section */}
         <Card className={`bg-gradient-to-br ${config.gradient} text-white border-0 shadow-xl animate-fade-in`}>
           <CardHeader className="text-center pb-8 pt-8">
@@ -369,9 +395,9 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
                   <Home className="h-4 w-4" />
                   Go to Dashboard
                 </Button>
-                <Button variant="outline" onClick={() => window.print()} className="gap-2">
-                  <Printer className="h-4 w-4" />
-                  Print Report
+                <Button variant="outline" onClick={handleDownloadPDF} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Download Report
                 </Button>
                 <Button variant="ghost" onClick={onRetake}>
                   Retake Assessment
