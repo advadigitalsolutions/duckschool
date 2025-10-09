@@ -447,6 +447,7 @@ export type Database = {
           email: string | null
           focus_mode_enabled: boolean | null
           focus_mode_glow_color: string | null
+          focus_mode_glow_intensity: number | null
           focus_mode_overlay_opacity: number | null
           high_contrast_enabled: boolean | null
           id: string
@@ -467,6 +468,7 @@ export type Database = {
           email?: string | null
           focus_mode_enabled?: boolean | null
           focus_mode_glow_color?: string | null
+          focus_mode_glow_intensity?: number | null
           focus_mode_overlay_opacity?: number | null
           high_contrast_enabled?: boolean | null
           id: string
@@ -487,6 +489,7 @@ export type Database = {
           email?: string | null
           focus_mode_enabled?: boolean | null
           focus_mode_glow_color?: string | null
+          focus_mode_glow_intensity?: number | null
           focus_mode_overlay_opacity?: number | null
           high_contrast_enabled?: boolean | null
           id?: string
@@ -718,6 +721,7 @@ export type Database = {
           dyslexia_font_enabled: boolean | null
           focus_mode_enabled: boolean | null
           focus_mode_glow_color: string | null
+          focus_mode_glow_intensity: number | null
           focus_mode_overlay_opacity: number | null
           goals: Json | null
           grade_level: string | null
@@ -745,6 +749,7 @@ export type Database = {
           dyslexia_font_enabled?: boolean | null
           focus_mode_enabled?: boolean | null
           focus_mode_glow_color?: string | null
+          focus_mode_glow_intensity?: number | null
           focus_mode_overlay_opacity?: number | null
           goals?: Json | null
           grade_level?: string | null
@@ -772,6 +777,7 @@ export type Database = {
           dyslexia_font_enabled?: boolean | null
           focus_mode_enabled?: boolean | null
           focus_mode_glow_color?: string | null
+          focus_mode_glow_intensity?: number | null
           focus_mode_overlay_opacity?: number | null
           goals?: Json | null
           grade_level?: string | null

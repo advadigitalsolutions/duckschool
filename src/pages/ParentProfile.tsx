@@ -44,6 +44,7 @@ export default function ParentProfile() {
     focusModeEnabled,
     focusModeOverlayOpacity,
     focusModeGlowColor,
+    focusModeGlowIntensity,
     readingRulerEnabled,
     textToSpeechEnabled,
     highContrastEnabled,
@@ -54,6 +55,7 @@ export default function ParentProfile() {
     setFocusMode,
     setFocusModeOverlayOpacity,
     setFocusModeGlowColor,
+    setFocusModeGlowIntensity,
     setReadingRuler,
     setTextToSpeech,
     setHighContrast,
@@ -423,9 +425,27 @@ export default function ParentProfile() {
                             <SelectItem value="green">Green</SelectItem>
                             <SelectItem value="purple">Purple</SelectItem>
                             <SelectItem value="red">Red</SelectItem>
+                            <SelectItem value="rainbow">🌈 Rainbow</SelectItem>
+                            <SelectItem value="trans">🏳️‍⚧️ Trans Flag</SelectItem>
                             <SelectItem value="none">No Glow</SelectItem>
                           </SelectContent>
                         </Select>
+                      </div>
+
+                      <div className="p-4 border rounded-lg space-y-3">
+                        <Label htmlFor="focus-glow-intensity">Glow Intensity ({focusModeGlowIntensity}%)</Label>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          <BionicText>Adjust the strength of the glow effect</BionicText>
+                        </p>
+                        <Slider
+                          id="focus-glow-intensity"
+                          min={0}
+                          max={100}
+                          step={5}
+                          value={[focusModeGlowIntensity]}
+                          onValueChange={(value) => setFocusModeGlowIntensity(value[0])}
+                          className="w-full"
+                        />
                       </div>
                     </>
                   )}
