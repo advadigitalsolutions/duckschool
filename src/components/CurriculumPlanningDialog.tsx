@@ -28,10 +28,15 @@ export const CurriculumPlanningDialog = ({
 
   const handlePlanningComplete = async (sessionId: string, collectedData: any) => {
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       // Create student profile
       const { data: student, error: studentError } = await supabase
         .from('students')
         .insert({
+          parent_id: user.id,
           name: collectedData.studentName,
           grade_level: collectedData.gradeLevel,
           learning_profile: {
@@ -47,19 +52,20 @@ export const CurriculumPlanningDialog = ({
 
       if (studentError) throw studentError;
 
-      // Create courses based on subject planning
-      if (collectedData.subjectPlanning) {
-        for (const subject of Object.keys(collectedData.subjectPlanning)) {
-          await supabase.from('courses').insert({
-            student_id: student.id,
-            title: `${subject} - Grade ${collectedData.gradeLevel}`,
-            subject: subject,
-            grade_level: collectedData.gradeLevel,
-            description: `${collectedData.pedagogicalApproach} approach to ${subject}`,
-            standards_scope: collectedData.standardsFramework || []
-          });
-        }
-      }
+      // Create initial course based on collected data
+      const subjects = collectedData.subjects || 'core subjects';
+      const goals = collectedData.goals || 'grade-level mastery';
+      
+      await supabase.from('courses').insert({
+        student_id: student.id,
+        title: `${collectedData.gradeLevel} Curriculum`,
+        subject: subjects,
+        grade_level: collectedData.gradeLevel,
+        description: `Personalized curriculum focused on ${subjects} to achieve ${goals}`,
+        standards_scope: Array.isArray(collectedData.standardsFramework) 
+          ? collectedData.standardsFramework 
+          : [collectedData.standardsFramework || 'Common Core']
+      });
 
       // Mark session as completed
       await supabase
