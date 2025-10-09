@@ -95,6 +95,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
           studentId={studentId}
           gradeLevel={gradeLevel}
           subject={courseSubject}
+          onUpdate={refreshMetrics}
         />
       )}
 

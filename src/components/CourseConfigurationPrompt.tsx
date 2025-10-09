@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { CourseSettingsDialog } from './CourseSettingsDialog';
 
 interface CourseConfigurationPromptProps {
   missingData: string[];
@@ -10,6 +11,7 @@ interface CourseConfigurationPromptProps {
   studentId: string;
   gradeLevel?: string;
   subject?: string;
+  onUpdate: () => void;
 }
 
 export function CourseConfigurationPrompt({ 
@@ -17,9 +19,10 @@ export function CourseConfigurationPrompt({
   courseId,
   studentId,
   gradeLevel,
-  subject 
+  subject,
+  onUpdate
 }: CourseConfigurationPromptProps) {
-  const navigate = useNavigate();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <Card className="border-warning">
@@ -61,12 +64,21 @@ export function CourseConfigurationPrompt({
         )}
 
         <div className="flex gap-2">
-          <Button onClick={() => navigate(`/student/${studentId}`)}>
+          <Button onClick={() => setDialogOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
-            Configure Course
+            Configure Course Settings
           </Button>
         </div>
       </CardContent>
+
+      <CourseSettingsDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        courseId={courseId}
+        currentGradeLevel={gradeLevel}
+        currentSubject={subject}
+        onUpdate={onUpdate}
+      />
     </Card>
   );
 }
