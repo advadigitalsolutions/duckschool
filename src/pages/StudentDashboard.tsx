@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { XPDisplay } from '@/components/XPDisplay';
 import { RewardsShop } from '@/components/RewardsShop';
+import { StudentGrades } from '@/components/StudentGrades';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -632,6 +633,19 @@ export default function StudentDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* My Grades */}
+        {student?.id && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>My Grades 📊</CardTitle>
+              <CardDescription>Track your academic performance</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <StudentGrades studentId={student.id} />
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

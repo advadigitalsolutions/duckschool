@@ -34,6 +34,7 @@ import { EditCourseDialog } from '@/components/EditCourseDialog';
 import { DeleteCourseDialog } from '@/components/DeleteCourseDialog';
 import { ArchiveCourseDialog } from '@/components/ArchiveCourseDialog';
 import { PersonalityReportView } from '@/components/PersonalityReportView';
+import { StudentGrades } from '@/components/StudentGrades';
 
 export default function StudentDetail() {
   const { id } = useParams();
@@ -438,16 +439,13 @@ export default function StudentDetail() {
           <TabsContent value="progress" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Progress Tracking</CardTitle>
-                <CardDescription>Coming soon</CardDescription>
+                <CardTitle>Grades & Progress</CardTitle>
+                <CardDescription>
+                  View {student.name}'s academic performance and grade tracking
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    Progress analytics and tracking will be available here
-                  </p>
-                </div>
+                <StudentGrades studentId={student.id} />
               </CardContent>
             </Card>
           </TabsContent>
