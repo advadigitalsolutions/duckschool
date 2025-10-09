@@ -16,7 +16,7 @@ import {
   Undo,
   Redo
 } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 interface RichTextEditorProps {
   content: string;
@@ -84,10 +84,21 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     }
   }, [editor]);
 
+  // Sync content prop with editor
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [editor, content]);
+
   // Add paste listener
-  if (editor?.view.dom) {
-    editor.view.dom.addEventListener('paste', handlePaste as any);
-  }
+  useEffect(() => {
+    if (editor?.view.dom) {
+      const dom = editor.view.dom;
+      dom.addEventListener('paste', handlePaste as any);
+      return () => dom.removeEventListener('paste', handlePaste as any);
+    }
+  }, [editor, handlePaste]);
 
   if (!editor) {
     return null;
