@@ -49,7 +49,33 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   const { toast } = useToast();
 
   useEffect(() => {
+    // Load settings on mount
     loadSettings();
+
+    // Listen for auth changes to reload settings
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        // Reset to defaults when user signs out
+        setSettings({
+          dyslexiaFontEnabled: false,
+          lineSpacing: 'normal',
+          letterSpacing: 'normal',
+          colorOverlay: 'none',
+          focusModeEnabled: false,
+          focusModeOverlayOpacity: 70,
+          focusModeGlowColor: 'yellow',
+          focusModeGlowIntensity: 100,
+          readingRulerEnabled: false,
+          textToSpeechEnabled: false,
+          highContrastEnabled: false,
+        });
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Reload settings when user signs in or token refreshes
+        loadSettings();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
