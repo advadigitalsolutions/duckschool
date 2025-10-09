@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   ArrowLeft,
   BookOpen,
@@ -18,7 +19,8 @@ import {
   Pencil,
   Trash2,
   Archive,
-  ArchiveRestore
+  ArchiveRestore,
+  User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -147,6 +149,12 @@ export default function StudentDetail() {
             <Button variant="ghost" size="icon" onClick={() => navigate('/parent')}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={student.avatar_url || ''} />
+              <AvatarFallback>
+                <User className="h-8 w-8" />
+              </AvatarFallback>
+            </Avatar>
             <div>
               <h1 className="text-2xl font-bold">{student.name}</h1>
               <p className="text-sm text-muted-foreground">

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   PlayCircle, 
   Clock, 
@@ -15,7 +16,8 @@ import {
   Pause,
   RotateCcw,
   Plus,
-  Trash2
+  Trash2,
+  User
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -416,9 +418,17 @@ export default function StudentDashboard() {
       {/* Header */}
       <header className="border-b bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div>
-            <h1 className="text-2xl font-bold">Welcome back, {student?.display_name || student?.name || 'Student'}!</h1>
-            <p className="text-sm text-muted-foreground">{dailyQuote}</p>
+          <div className="flex items-center gap-4">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={student?.avatar_url || ''} />
+              <AvatarFallback>
+                <User className="h-6 w-6" />
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-2xl font-bold">Welcome back, {student?.display_name || student?.name || 'Student'}!</h1>
+              <p className="text-sm text-muted-foreground">{dailyQuote}</p>
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="ghost" onClick={() => navigate('/student/profile')}>

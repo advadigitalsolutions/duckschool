@@ -23,7 +23,8 @@ import { RedemptionApprovals } from '@/components/RedemptionApprovals';
 import { AddStudentDialog } from '@/components/AddStudentDialog';
 import { EditStudentDialog } from '@/components/EditStudentDialog';
 import { DeleteStudentDialog } from '@/components/DeleteStudentDialog';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Pencil, Trash2, User } from 'lucide-react';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -34,6 +35,7 @@ export default function ParentDashboard() {
   const [editingStudent, setEditingStudent] = useState<any>(null);
   const [deletingStudent, setDeletingStudent] = useState<any>(null);
   const [userName, setUserName] = useState('');
+  const [userAvatar, setUserAvatar] = useState('');
   const navigate = useNavigate();
 
   const getGreeting = () => {
@@ -80,11 +82,12 @@ export default function ParentDashboard() {
       // Fetch user profile for name
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('name')
+        .select('name, avatar_url')
         .eq('id', user.id)
         .single();
 
       setUserName(profileData?.name || 'Educator');
+      setUserAvatar(profileData?.avatar_url || '');
 
       // Fetch students
       const { data: studentsData } = await supabase
@@ -147,7 +150,12 @@ export default function ParentDashboard() {
       <header className="border-b bg-card">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center space-x-4">
-            <BookOpen className="h-8 w-8 text-primary" />
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={userAvatar} />
+              <AvatarFallback>
+                <User className="h-6 w-6" />
+              </AvatarFallback>
+            </Avatar>
             <div>
               <h1 className="text-2xl font-bold">Parent Dashboard</h1>
               <p className="text-sm text-muted-foreground">{getGreeting()} {userName}!</p>
@@ -265,11 +273,19 @@ export default function ParentDashboard() {
                       >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
                           <div 
-                            className="flex-1 cursor-pointer"
+                            className="flex items-center gap-4 flex-1 cursor-pointer"
                             onClick={() => navigate(`/student/${student.id}`)}
                           >
-                            <CardTitle className="text-lg">{student.name}</CardTitle>
-                            <CardDescription>Grade {student.grade_level || 'N/A'}</CardDescription>
+                            <Avatar className="h-12 w-12">
+                              <AvatarImage src={student.avatar_url || ''} />
+                              <AvatarFallback>
+                                <User className="h-6 w-6" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <CardTitle className="text-lg">{student.name}</CardTitle>
+                              <CardDescription>Grade {student.grade_level || 'N/A'}</CardDescription>
+                            </div>
                           </div>
                           <div className="flex space-x-2">
                             <Button
