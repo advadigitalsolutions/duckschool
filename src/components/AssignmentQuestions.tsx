@@ -62,7 +62,13 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
 
       if (error) throw error;
       if (data && data.length > 0) {
-        setAttemptNumber(data[0].attempt_no + 1);
+        const nextAttempt = data[0].attempt_no + 1;
+        setAttemptNumber(nextAttempt);
+        
+        // If they've exceeded max attempts, mark as submitted
+        if (maxAttempts && nextAttempt > maxAttempts) {
+          setSubmitted(true);
+        }
       }
     } catch (error) {
       console.error('Error loading attempts:', error);
@@ -228,6 +234,25 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       <Card>
         <CardContent className="py-12 text-center">
           <p className="text-muted-foreground">No questions available for this assignment yet.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Block access if max attempts exceeded
+  if (maxAttempts && attemptNumber > maxAttempts && !submitted) {
+    return (
+      <Card className="border-2 border-destructive">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <XCircle className="h-6 w-6 text-destructive" />
+            Maximum Attempts Reached
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground">
+            You have completed all {maxAttempts} attempts for this assignment.
+          </p>
         </CardContent>
       </Card>
     );
