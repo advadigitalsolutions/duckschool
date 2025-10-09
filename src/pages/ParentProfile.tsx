@@ -16,14 +16,14 @@ import { useBionicReading } from '@/contexts/BionicReadingContext';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 
 const defaultAvatars = [
-  'https://api.dicebear.com/7.x/lorelei/svg?seed=Teacher1',
-  'https://api.dicebear.com/7.x/lorelei/svg?seed=Teacher2',
-  'https://api.dicebear.com/7.x/lorelei/svg?seed=Professor',
-  'https://api.dicebear.com/7.x/lorelei/svg?seed=Parent',
-  'https://api.dicebear.com/7.x/notionists/svg?seed=Educator1',
-  'https://api.dicebear.com/7.x/notionists/svg?seed=Educator2',
-  'https://api.dicebear.com/7.x/thumbs/svg?seed=Parent1',
-  'https://api.dicebear.com/7.x/thumbs/svg?seed=Parent2',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=HappyTeacher&backgroundColor=b6e3f4',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=FunEducator&backgroundColor=c0aede',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=SmileyParent&backgroundColor=ffd5dc',
+  'https://api.dicebear.com/7.x/bottts/svg?seed=RobotTeacher&backgroundColor=ffdfbf',
+  'https://api.dicebear.com/7.x/big-ears/svg?seed=CuteTeacher&backgroundColor=d1d4f9',
+  'https://api.dicebear.com/7.x/big-ears/svg?seed=HappyParent&backgroundColor=ffd5dc',
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Owl',
+  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Bear',
 ];
 
 export default function ParentProfile() {
