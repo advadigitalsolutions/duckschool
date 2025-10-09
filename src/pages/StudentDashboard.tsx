@@ -214,7 +214,11 @@ export default function StudentDashboard() {
             title,
             type,
             est_minutes,
-            body
+            body,
+            course_id,
+            courses (
+              title
+            )
           )
         `)
         .eq('status', 'assigned')
@@ -557,7 +561,12 @@ export default function StudentDashboard() {
                   <Card key={assignment.id} className="border">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
-                        <div>
+                        <div className="flex-1">
+                          {assignment.curriculum_items?.courses?.title && (
+                            <div className="text-xs font-medium text-muted-foreground mb-1">
+                              {assignment.curriculum_items.courses.title}
+                            </div>
+                          )}
                           <CardTitle className="text-base">
                             {assignment.curriculum_items?.title || 'Untitled Assignment'}
                           </CardTitle>
