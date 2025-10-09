@@ -30,6 +30,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<any>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isBreak, setIsBreak] = useState(false);
@@ -226,6 +227,16 @@ export default function StudentDashboard() {
         .limit(5);
 
       setAssignments(assignmentsData || []);
+
+      // Fetch courses
+      const { data: coursesData } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('student_id', studentData?.id)
+        .eq('archived', false)
+        .order('created_at', { ascending: false });
+
+      setCourses(coursesData || []);
 
       // Calculate completed today
       const today = new Date().toISOString().split('T')[0];
@@ -589,6 +600,36 @@ export default function StudentDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* My Courses */}
+        {courses.length > 0 && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>My Courses 📚</CardTitle>
+              <CardDescription>Track your progress in each subject</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                {courses.map((course) => (
+                  <Card key={course.id} className="border-2 hover:border-primary/50 transition-colors">
+                    <CardHeader>
+                      <CardTitle className="text-base">{course.title}</CardTitle>
+                      <CardDescription>{course.subject}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button 
+                        className="w-full"
+                        onClick={() => navigate(`/course/${course.id}`)}
+                      >
+                        View Progress Dashboard
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Micro Goals */}
         <Card className="mt-8">

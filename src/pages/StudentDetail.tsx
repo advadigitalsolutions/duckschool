@@ -325,6 +325,13 @@ export default function StudentDetail() {
                               <CardDescription>{course.subject}</CardDescription>
                             </div>
                             <div className="flex items-center gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => navigate(`/course/${course.id}`)}
+                              >
+                                View Progress
+                              </Button>
                               <Badge>{course.credits} credit{course.credits !== 1 ? 's' : ''}</Badge>
                               <EditCourseDialog
                                 course={course}

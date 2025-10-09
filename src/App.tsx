@@ -12,6 +12,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import StudentDetail from "./pages/StudentDetail";
 import AssignmentDetail from "./pages/AssignmentDetail";
 import StudentProfile from "./pages/StudentProfile";
+import CourseDashboard from "./pages/CourseDashboard";
 import NotFound from "./pages/NotFound";
 import { AuthGuard } from "./components/AuthGuard";
 import { BionicReadingProvider } from "./contexts/BionicReadingContext";
@@ -78,6 +79,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <StudentProfile />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/course/:courseId" 
+              element={
+                <AuthGuard>
+                  <CourseDashboard />
                 </AuthGuard>
               } 
             />

@@ -1,0 +1,209 @@
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { CalendarIcon, TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
+import { format } from 'date-fns';
+import { useCoursePacing } from '@/hooks/useCoursePacing';
+import { CourseMasteryChart } from './CourseMasteryChart';
+import { CourseProgressCharts } from './CourseProgressCharts';
+import { cn } from '@/lib/utils';
+
+interface CoursePacingDashboardProps {
+  courseId: string;
+  courseTitle: string;
+  courseSubject: string;
+}
+
+export function CoursePacingDashboard({ courseId, courseTitle, courseSubject }: CoursePacingDashboardProps) {
+  const [targetDate, setTargetDate] = useState<Date | undefined>();
+  const { loading, metrics, timeBySubject, standardsCoverage, refreshMetrics } = useCoursePacing(
+    courseId,
+    targetDate
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!metrics) {
+    return (
+      <div className="text-center text-muted-foreground p-8">
+        Unable to load pacing data
+      </div>
+    );
+  }
+
+  const getStatusIcon = () => {
+    switch (metrics.onTrackStatus) {
+      case 'ahead':
+        return <TrendingUp className="h-5 w-5 text-green-500" />;
+      case 'behind':
+        return <TrendingDown className="h-5 w-5 text-red-500" />;
+      case 'on-track':
+        return <Minus className="h-5 w-5 text-yellow-500" />;
+      default:
+        return <AlertTriangle className="h-5 w-5 text-muted-foreground" />;
+    }
+  };
+
+  const getStatusBadge = () => {
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      'ahead': 'default',
+      'on-track': 'secondary',
+      'behind': 'destructive',
+      'unknown': 'outline'
+    };
+    return (
+      <Badge variant={variants[metrics.onTrackStatus]}>
+        {metrics.onTrackStatus === 'ahead' && 'Ahead of Schedule'}
+        {metrics.onTrackStatus === 'on-track' && 'On Track'}
+        {metrics.onTrackStatus === 'behind' && 'Behind Schedule'}
+        {metrics.onTrackStatus === 'unknown' && 'Unknown'}
+      </Badge>
+    );
+  };
+
+  const hoursCompleted = Math.floor(metrics.completedMinutes / 60);
+  const minutesCompleted = Math.round(metrics.completedMinutes % 60);
+  const totalHours = Math.floor(metrics.totalEstimatedMinutes / 60);
+  const totalMinutes = Math.round(metrics.totalEstimatedMinutes % 60);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold mb-2">{courseTitle}</h1>
+        <p className="text-muted-foreground">{courseSubject} - Course Progress Dashboard</p>
+      </div>
+
+      {/* Overall Progress Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>Course Progress</CardTitle>
+              <CardDescription>Overall completion and pacing</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              {getStatusIcon()}
+              {getStatusBadge()}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="font-medium">Completion</span>
+              <span className="font-bold">{metrics.progressPercentage.toFixed(1)}%</span>
+            </div>
+            <Progress value={metrics.progressPercentage} className="h-3" />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{hoursCompleted}h {minutesCompleted}m completed</span>
+              <span>{totalHours}h {totalMinutes}m total</span>
+            </div>
+          </div>
+
+          {/* Key Metrics Grid */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-lg border p-4">
+              <div className="text-sm text-muted-foreground mb-1">Average Pace</div>
+              <div className="text-2xl font-bold">
+                {Math.round(metrics.averageMinutesPerDay)} min/day
+              </div>
+            </div>
+            
+            <div className="rounded-lg border p-4">
+              <div className="text-sm text-muted-foreground mb-1">Projected Completion</div>
+              <div className="text-2xl font-bold">
+                {metrics.projectedCompletionDate 
+                  ? format(metrics.projectedCompletionDate, 'MMM dd, yyyy')
+                  : 'Unknown'
+                }
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-4">
+              <div className="text-sm text-muted-foreground mb-1">Days Remaining</div>
+              <div className="text-2xl font-bold">
+                {metrics.daysRemaining !== null ? metrics.daysRemaining : '—'}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Target Date & Recommendations */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Pacing Recommendations</CardTitle>
+          <CardDescription>Adjust your target date to see recommended daily effort</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[280px] justify-start text-left font-normal",
+                    !targetDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {targetDate ? format(targetDate, "PPP") : <span>Pick a target date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={targetDate}
+                  onSelect={setTargetDate}
+                  initialFocus
+                  disabled={(date) => date < new Date()}
+                />
+              </PopoverContent>
+            </Popover>
+            
+            {targetDate && (
+              <Button variant="ghost" onClick={() => setTargetDate(undefined)}>
+                Clear
+              </Button>
+            )}
+          </div>
+
+          {targetDate && (
+            <div className="rounded-lg bg-muted p-4 space-y-2">
+              <div className="font-semibold">
+                To complete by {format(targetDate, 'MMM dd, yyyy')}:
+              </div>
+              <div className="text-2xl font-bold text-primary">
+                {Math.round(metrics.recommendedDailyMinutes)} minutes per day
+              </div>
+              <div className="text-sm text-muted-foreground">
+                ({(metrics.recommendedDailyMinutes / 60).toFixed(1)} hours per day)
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Mastery Chart */}
+      <CourseMasteryChart masteryData={metrics.masteryData} />
+
+      {/* Progress Charts */}
+      <CourseProgressCharts 
+        timeBySubject={timeBySubject}
+        standardsCoverage={standardsCoverage}
+      />
+    </div>
+  );
+}
