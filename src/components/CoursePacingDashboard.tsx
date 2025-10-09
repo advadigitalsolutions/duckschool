@@ -217,9 +217,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
             
             <div className="rounded-lg border p-4">
               <div className="text-sm text-muted-foreground mb-1">
-                {curriculumHours > 0 && curriculumHours < totalHours 
-                  ? 'Current Curriculum Finishes' 
-                  : 'All Work Completes'}
+                Existing Work Est. Completion
               </div>
               <div className="text-2xl font-bold">
                 {metrics.projectedCompletionDate 
