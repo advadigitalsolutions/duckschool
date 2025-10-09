@@ -113,21 +113,37 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
     if (!reportRef.current) return;
     
     const canvas = await html2canvas(reportRef.current, {
-      scale: 2,
+      scale: 3,
       useCORS: true,
       logging: false,
+      windowWidth: 1200,
     });
     
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-    const imgX = (pdfWidth - imgWidth * ratio) / 2;
     
-    pdf.addImage(imgData, 'PNG', imgX, 0, imgWidth * ratio, imgHeight * ratio);
+    // Use full width with margins
+    const margin = 10;
+    const imgWidth = pdfWidth - (2 * margin);
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    let heightLeft = imgHeight;
+    let position = 0;
+    
+    // Add first page
+    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+    heightLeft -= pdfHeight;
+    
+    // Add additional pages if needed
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+    }
+    
     pdf.save(`${student?.display_name || student?.name}-learning-profile.pdf`);
   };
 
