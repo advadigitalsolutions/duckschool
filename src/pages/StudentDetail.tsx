@@ -20,7 +20,8 @@ import {
   Trash2,
   Archive,
   ArchiveRestore,
-  User
+  User,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -208,7 +209,7 @@ export default function StudentDetail() {
             <TabsTrigger value="learning-profile">
               Learning Profile
               {student?.profile_assessment_completed && (
-                <Badge variant="secondary" className="ml-2">✓</Badge>
+                <Check className="ml-2 h-4 w-4 text-success" />
               )}
             </TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
