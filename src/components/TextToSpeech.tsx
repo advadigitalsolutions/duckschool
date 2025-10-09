@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Pause, Play, VolumeX } from 'lucide-react';
+import { Pause, Play, VolumeX, Loader2 } from 'lucide-react';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { cleanMarkdown } from '@/utils/textFormatting';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface TextToSpeechProps {
   text: string;
@@ -13,7 +14,9 @@ interface TextToSpeechProps {
 
 export function TextToSpeech({ text, children, className = '' }: TextToSpeechProps) {
   const { textToSpeechEnabled } = useAccessibility();
+  const { toast } = useToast();
   const [speaking, setSpeaking] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [paused, setPaused] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [words, setWords] = useState<string[]>([]);
@@ -53,8 +56,11 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
       startWordTracking();
     } else {
       try {
-        setSpeaking(true);
-        setCurrentWordIndex(0);
+        setLoading(true);
+        toast({
+          title: "Generating audio...",
+          description: "Please wait while we prepare the audio.",
+        });
         
         console.log('Calling text-to-speech edge function...');
         
@@ -107,13 +113,27 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
         };
 
         console.log('Starting audio playback...');
+        setLoading(false);
+        setSpeaking(true);
+        setCurrentWordIndex(0);
         await audio.play();
         startWordTracking();
+        
+        toast({
+          title: "Playing audio",
+          description: "Audio is now playing with word highlighting.",
+        });
       } catch (error) {
         console.error('Error playing text-to-speech:', error);
+        setLoading(false);
         setSpeaking(false);
         setPaused(false);
         setCurrentWordIndex(-1);
+        toast({
+          title: "Error",
+          description: "Failed to generate or play audio. Please try again.",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -204,10 +224,30 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
           variant="outline"
           size="sm"
           onClick={handleSpeak}
+          disabled={loading}
           className="gap-2 hover-scale"
         >
-          {speaking && !paused ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          {speaking && !paused ? 'Pause' : paused ? 'Resume' : 'Read Aloud'}
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : speaking && !paused ? (
+            <>
+              <Pause className="h-4 w-4" />
+              Pause
+            </>
+          ) : paused ? (
+            <>
+              <Play className="h-4 w-4" />
+              Resume
+            </>
+          ) : (
+            <>
+              <Play className="h-4 w-4" />
+              Read Aloud
+            </>
+          )}
         </Button>
         {speaking && (
           <Button
