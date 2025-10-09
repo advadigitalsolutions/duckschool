@@ -17,6 +17,7 @@ import { cleanMarkdown } from '@/utils/textFormatting';
 import { BionicText } from '@/components/BionicText';
 import { StudyGuidePanel } from '@/components/StudyGuidePanel';
 import { TextToSpeech } from '@/components/TextToSpeech';
+import { AssignmentNotes } from '@/components/AssignmentNotes';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -336,6 +337,9 @@ export default function AssignmentDetail() {
             <TabsTrigger value="instructions">Instructions</TabsTrigger>
             <TabsTrigger value="rubric">Rubric</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
+            {!isParent && currentStudentId && (
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="questions" className="space-y-4">
@@ -786,6 +790,16 @@ export default function AssignmentDetail() {
               </Card>
             )}
           </TabsContent>
+
+          {!isParent && currentStudentId && (
+            <TabsContent value="notes">
+              <AssignmentNotes
+                assignmentId={assignment.id}
+                studentId={currentStudentId}
+                courseId={assignment.curriculum_items?.courses?.id || assignment.curriculum_items?.course_id}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

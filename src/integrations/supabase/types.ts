@@ -136,6 +136,33 @@ export type Database = {
           },
         ]
       }
+      assignment_notes: {
+        Row: {
+          assignment_id: string
+          content: Json
+          created_at: string
+          id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          content?: Json
+          created_at?: string
+          id?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          content?: Json
+          created_at?: string
+          id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assignment_study_guides: {
         Row: {
           assignment_id: string
@@ -278,6 +305,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      course_reference_notes: {
+        Row: {
+          content: Json
+          course_id: string
+          created_at: string
+          id: string
+          source_assignment_id: string | null
+          student_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          course_id: string
+          created_at?: string
+          id?: string
+          source_assignment_id?: string | null
+          student_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          course_id?: string
+          created_at?: string
+          id?: string
+          source_assignment_id?: string | null
+          student_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       courses: {
         Row: {
