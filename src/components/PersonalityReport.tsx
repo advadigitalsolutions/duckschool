@@ -160,8 +160,8 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
         </Card>
 
         {/* Personality Type Overview */}
-        <Card className="animate-fade-in" style={{ animationDelay: '100ms' }}>
-          <CardHeader>
+        <Card className="animate-fade-in overflow-hidden" style={{ animationDelay: '100ms' }}>
+          <CardHeader className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 border-b">
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-primary" />
               Your Learning Personality
@@ -197,8 +197,8 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
         </Card>
 
         {/* Study Strategies */}
-        <Card className="animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <CardHeader>
+        <Card className="animate-fade-in overflow-hidden" style={{ animationDelay: '200ms' }}>
+          <CardHeader className="bg-gradient-to-r from-secondary/10 via-primary/10 to-accent/10 border-b">
             <CardTitle className="flex items-center gap-2">
               <Lightbulb className="h-5 w-5 text-primary" />
               How You Learn Best
@@ -219,8 +219,8 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
         </Card>
 
         {/* Ideal Environment */}
-        <Card className="animate-fade-in" style={{ animationDelay: '300ms' }}>
-          <CardHeader>
+        <Card className="animate-fade-in overflow-hidden" style={{ animationDelay: '300ms' }}>
+          <CardHeader className="bg-gradient-to-r from-accent/10 via-primary/10 to-secondary/10 border-b">
             <CardTitle className="flex items-center gap-2">
               <Home className="h-5 w-5 text-primary" />
               Your Ideal Learning Environment
@@ -232,8 +232,8 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
         </Card>
 
         {/* Strengths */}
-        <Card className="animate-fade-in" style={{ animationDelay: '400ms' }}>
-          <CardHeader>
+        <Card className="animate-fade-in overflow-hidden" style={{ animationDelay: '400ms' }}>
+          <CardHeader className="bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/10 border-b">
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
               Your Strengths
@@ -253,8 +253,8 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
 
         {/* Learning Style Breakdown */}
         {categories.learning_style && (
-          <Card className="animate-fade-in" style={{ animationDelay: '500ms' }}>
-            <CardHeader>
+          <Card className="animate-fade-in overflow-hidden" style={{ animationDelay: '500ms' }}>
+            <CardHeader className="bg-gradient-to-r from-secondary/10 via-accent/10 to-primary/10 border-b">
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-5 w-5 text-primary" />
                 Your Learning Preferences
@@ -291,8 +291,8 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
         )}
 
         {/* Personalized Action Plan */}
-        <Card className="border-primary/20 animate-fade-in" style={{ animationDelay: '600ms' }}>
-          <CardHeader>
+        <Card className="border-primary/20 animate-fade-in overflow-hidden" style={{ animationDelay: '600ms' }}>
+          <CardHeader className="bg-gradient-to-r from-accent/10 via-secondary/10 to-primary/10 border-b">
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
               Your Personalized Action Plan
