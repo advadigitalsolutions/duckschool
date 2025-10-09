@@ -23,8 +23,8 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Call OpenAI's TTS API
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+    // First, get word timestamps
+    const timestampResponse = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -34,25 +34,55 @@ serve(async (req) => {
         model: 'tts-1',
         input: text,
         voice: 'alloy',
-        speed: 0.9, // Slightly slower for better comprehension
+        speed: 0.9,
+        response_format: 'verbose_json',
+        timestamp_granularities: ['word'],
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to generate speech');
+    if (!timestampResponse.ok) {
+      const error = await timestampResponse.json();
+      throw new Error(error.error?.message || 'Failed to generate speech with timestamps');
     }
 
-    // Get the audio as array buffer
-    const audioBuffer = await response.arrayBuffer();
-    
-    // Return the audio data
-    return new Response(audioBuffer, {
+    const timestampData = await timestampResponse.json();
+
+    // Then get the actual audio
+    const audioResponse = await fetch('https://api.openai.com/v1/audio/speech', {
+      method: 'POST',
       headers: {
-        ...corsHeaders,
-        'Content-Type': 'audio/mpeg',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        model: 'tts-1',
+        input: text,
+        voice: 'alloy',
+        speed: 0.9,
+        response_format: 'mp3',
+      }),
     });
+
+    if (!audioResponse.ok) {
+      const error = await audioResponse.json();
+      throw new Error(error.error?.message || 'Failed to generate audio');
+    }
+
+    const audioBuffer = await audioResponse.arrayBuffer();
+    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+    
+    return new Response(
+      JSON.stringify({
+        audio: base64Audio,
+        words: timestampData.words || [],
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error in text-to-speech function:', error);
     return new Response(
