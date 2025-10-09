@@ -939,6 +939,7 @@ export type Database = {
           personality_type: string | null
           profile_assessment_completed: boolean | null
           reading_ruler_enabled: boolean | null
+          special_interests: Json | null
           text_to_speech_enabled: boolean | null
           text_to_speech_voice: string | null
           user_id: string | null
@@ -969,6 +970,7 @@ export type Database = {
           personality_type?: string | null
           profile_assessment_completed?: boolean | null
           reading_ruler_enabled?: boolean | null
+          special_interests?: Json | null
           text_to_speech_enabled?: boolean | null
           text_to_speech_voice?: string | null
           user_id?: string | null
@@ -999,6 +1001,7 @@ export type Database = {
           personality_type?: string | null
           profile_assessment_completed?: boolean | null
           reading_ruler_enabled?: boolean | null
+          special_interests?: Json | null
           text_to_speech_enabled?: boolean | null
           text_to_speech_voice?: string | null
           user_id?: string | null

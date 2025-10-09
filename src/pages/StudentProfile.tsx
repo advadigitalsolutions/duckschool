@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Upload, User } from 'lucide-react';
+import { ArrowLeft, Upload, User, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ProfileAssessment } from '@/components/ProfileAssessment';
 import { Switch } from '@/components/ui/switch';
@@ -56,6 +57,8 @@ export default function StudentProfile() {
   const [selectedAvatar, setSelectedAvatar] = useState('');
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [specialInterests, setSpecialInterests] = useState<string[]>([]);
+  const [newInterest, setNewInterest] = useState('');
   const { enabled: bionicEnabled, setEnabled: setBionicEnabled } = useBionicReading();
   const {
     dyslexiaFontEnabled,
@@ -107,6 +110,7 @@ export default function StudentProfile() {
       setStudent(studentData);
       setDisplayName(studentData.display_name || studentData.name);
       setSelectedAvatar(studentData.avatar_url || defaultAvatars[0]);
+      setSpecialInterests((studentData.special_interests as string[]) || []);
     } catch (error: any) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile');
@@ -154,17 +158,29 @@ export default function StudentProfile() {
         .update({
           display_name: displayName,
           avatar_url: selectedAvatar,
+          special_interests: specialInterests,
         })
         .eq('id', student.id);
 
       if (error) throw error;
       
       toast.success('Profile updated!');
-      setStudent({ ...student, display_name: displayName, avatar_url: selectedAvatar });
+      setStudent({ ...student, display_name: displayName, avatar_url: selectedAvatar, special_interests: specialInterests });
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
     }
+  };
+
+  const handleAddInterest = () => {
+    if (newInterest.trim() && !specialInterests.includes(newInterest.trim())) {
+      setSpecialInterests([...specialInterests, newInterest.trim()]);
+      setNewInterest('');
+    }
+  };
+
+  const handleRemoveInterest = (interest: string) => {
+    setSpecialInterests(specialInterests.filter(i => i !== interest));
   };
 
   if (loading) {
@@ -191,8 +207,9 @@ export default function StudentProfile() {
 
       <div className="container mx-auto p-4 md:p-8 max-w-4xl">
         <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="interests">Special Interests</TabsTrigger>
             <TabsTrigger value="assessment" className="transition-all hover:scale-105 hover:shadow-md">
               Learning Assessment
               {!student?.profile_assessment_completed && (
@@ -514,6 +531,65 @@ export default function StudentProfile() {
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="interests" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Special Interests</CardTitle>
+                <CardDescription>
+                  Add your interests, hobbies, favorite topics, movies, books, or anything you're passionate about. 
+                  Your curriculum will be personalized around these interests to make learning more engaging!
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter an interest (e.g., Basketball, Harry Potter, Space, Cooking...)"
+                    value={newInterest}
+                    onChange={(e) => setNewInterest(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddInterest();
+                      }
+                    }}
+                  />
+                  <Button onClick={handleAddInterest} type="button">
+                    Add
+                  </Button>
+                </div>
+
+                {specialInterests.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {specialInterests.map((interest, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="secondary" 
+                        className="text-sm py-2 px-3 flex items-center gap-2"
+                      >
+                        {interest}
+                        <button
+                          onClick={() => handleRemoveInterest(interest)}
+                          className="hover:text-destructive transition-colors"
+                          type="button"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No interests added yet. Add some to personalize your learning experience!
+                  </p>
+                )}
+
+                <Button onClick={handleSaveProfile} className="w-full">
+                  Save Interests
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
