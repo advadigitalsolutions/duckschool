@@ -375,10 +375,9 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
+                <TextToSpeech text={question.question}>
                   <p className="text-lg"><BionicText>{question.question}</BionicText></p>
-                  <TextToSpeech text={question.question} />
-                </div>
+                </TextToSpeech>
 
                 {/* Display Answer Based on Type */}
                 <div className="p-3 bg-muted rounded-lg">
@@ -438,10 +437,9 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
+            <TextToSpeech text={cleanMarkdown(currentQuestion.question)}>
               <p className="text-lg"><BionicText>{cleanMarkdown(currentQuestion.question)}</BionicText></p>
-              <TextToSpeech text={cleanMarkdown(currentQuestion.question)} />
-            </div>
+            </TextToSpeech>
 
             {/* Multiple Choice */}
             {currentQuestion.type === 'multiple_choice' && (

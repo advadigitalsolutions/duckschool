@@ -1,28 +1,24 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Volume2, VolumeX, Pause, Play } from 'lucide-react';
+import { Pause, Play, VolumeX } from 'lucide-react';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { cleanMarkdown } from '@/utils/textFormatting';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TextToSpeechProps {
   text: string;
+  children?: ReactNode;
   className?: string;
-  showHighlight?: boolean;
 }
 
-export function TextToSpeech({ text, className = '', showHighlight = true }: TextToSpeechProps) {
+export function TextToSpeech({ text, children, className = '' }: TextToSpeechProps) {
   const { textToSpeechEnabled } = useAccessibility();
   const [speaking, setSpeaking] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [supported, setSupported] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [words, setWords] = useState<string[]>([]);
-  const [showText, setShowText] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  useEffect(() => {
-    setSupported('speechSynthesis' in window);
-  }, []);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const cleanText = cleanMarkdown(text);
@@ -32,89 +28,146 @@ export function TextToSpeech({ text, className = '', showHighlight = true }: Tex
 
   useEffect(() => {
     return () => {
-      if (speaking) {
-        window.speechSynthesis.cancel();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      if (timeUpdateIntervalRef.current) {
+        clearInterval(timeUpdateIntervalRef.current);
       }
     };
-  }, [speaking]);
+  }, []);
 
-  if (!textToSpeechEnabled || !supported) return null;
+  if (!textToSpeechEnabled) return <>{children}</> || null;
 
-  const handleSpeak = () => {
+  const handleSpeak = async () => {
     if (speaking && !paused) {
-      window.speechSynthesis.pause();
+      audioRef.current?.pause();
       setPaused(true);
-    } else if (paused) {
-      window.speechSynthesis.resume();
-      setPaused(false);
-    } else {
-      const cleanText = cleanMarkdown(text);
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utteranceRef.current = utterance;
-      
-      // Make it sound more natural
-      utterance.rate = 0.9; // Slightly slower for clarity
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-      
-      // Try to use a more natural voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoices = voices.filter(voice => 
-        voice.lang.startsWith('en') && 
-        (voice.name.includes('Natural') || 
-         voice.name.includes('Premium') || 
-         voice.name.includes('Enhanced') ||
-         voice.name.includes('Google') ||
-         voice.name.includes('Microsoft'))
-      );
-      if (preferredVoices.length > 0) {
-        utterance.voice = preferredVoices[0];
+      if (timeUpdateIntervalRef.current) {
+        clearInterval(timeUpdateIntervalRef.current);
       }
-      
-      let wordIndex = 0;
-      utterance.onboundary = (event) => {
-        if (event.name === 'word') {
-          setCurrentWordIndex(wordIndex);
-          wordIndex++;
-        }
-      };
-      
-      utterance.onstart = () => {
+    } else if (paused && audioRef.current) {
+      audioRef.current.play();
+      setPaused(false);
+      startWordTracking();
+    } else {
+      try {
         setSpeaking(true);
-        setPaused(false);
-        setShowText(true);
         setCurrentWordIndex(0);
-      };
-      
-      utterance.onend = () => {
-        setSpeaking(false);
-        setPaused(false);
-        setCurrentWordIndex(-1);
-        setShowText(false);
-      };
-      
-      utterance.onerror = () => {
-        setSpeaking(false);
-        setPaused(false);
-        setCurrentWordIndex(-1);
-        setShowText(false);
-      };
+        
+        // Call OpenAI TTS through edge function
+        const { data, error } = await supabase.functions.invoke('text-to-speech', {
+          body: { text: cleanMarkdown(text) }
+        });
 
-      window.speechSynthesis.speak(utterance);
+        if (error) throw error;
+
+        // Create audio element and play
+        const audioBlob = new Blob([data], { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+
+        audio.onended = () => {
+          setSpeaking(false);
+          setPaused(false);
+          setCurrentWordIndex(-1);
+          if (timeUpdateIntervalRef.current) {
+            clearInterval(timeUpdateIntervalRef.current);
+          }
+          URL.revokeObjectURL(audioUrl);
+        };
+
+        audio.onerror = () => {
+          setSpeaking(false);
+          setPaused(false);
+          setCurrentWordIndex(-1);
+          if (timeUpdateIntervalRef.current) {
+            clearInterval(timeUpdateIntervalRef.current);
+          }
+        };
+
+        await audio.play();
+        startWordTracking();
+      } catch (error) {
+        console.error('Error playing text-to-speech:', error);
+        setSpeaking(false);
+        setPaused(false);
+        setCurrentWordIndex(-1);
+      }
     }
   };
 
+  const startWordTracking = () => {
+    if (!audioRef.current) return;
+    
+    const audio = audioRef.current;
+    const wordsCount = words.filter(w => !/^\s+$/.test(w)).length;
+    
+    timeUpdateIntervalRef.current = setInterval(() => {
+      if (!audio) return;
+      
+      const progress = audio.currentTime / audio.duration;
+      const wordIndex = Math.floor(progress * wordsCount);
+      setCurrentWordIndex(wordIndex);
+    }, 50);
+  };
+
   const handleStop = () => {
-    window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    if (timeUpdateIntervalRef.current) {
+      clearInterval(timeUpdateIntervalRef.current);
+    }
     setSpeaking(false);
     setPaused(false);
     setCurrentWordIndex(-1);
-    setShowText(false);
+  };
+
+  const renderHighlightedText = () => {
+    if (!children) return null;
+    
+    if (!speaking) return children;
+
+    // If we have children, we need to highlight words in the text
+    let wordCount = 0;
+    return (
+      <span>
+        {words.map((word, index) => {
+          const isWhitespace = /^\s+$/.test(word);
+          
+          if (isWhitespace) {
+            return <span key={index}>{word}</span>;
+          }
+          
+          const isCurrentWord = wordCount === currentWordIndex;
+          wordCount++;
+          
+          return (
+            <span
+              key={index}
+              className={`transition-all duration-200 ${
+                isCurrentWord
+                  ? 'bg-primary text-primary-foreground px-1 rounded font-medium'
+                  : ''
+              }`}
+            >
+              {word}
+            </span>
+          );
+        })}
+      </span>
+    );
   };
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      <div className="flex items-center gap-2">
+    <div className={className}>
+      <div className="flex items-center gap-2 mb-2">
         <Button
           variant="outline"
           size="sm"
@@ -136,34 +189,7 @@ export function TextToSpeech({ text, className = '', showHighlight = true }: Tex
           </Button>
         )}
       </div>
-      
-      {showHighlight && showText && speaking && (
-        <div className="p-4 bg-muted/50 rounded-lg border animate-fade-in">
-          <p className="text-base leading-relaxed">
-            {words.map((word, index) => {
-              const isCurrentWord = Math.floor(index / 2) === currentWordIndex;
-              const isWhitespace = /^\s+$/.test(word);
-              
-              if (isWhitespace) {
-                return <span key={index}>{word}</span>;
-              }
-              
-              return (
-                <span
-                  key={index}
-                  className={`transition-all duration-200 ${
-                    isCurrentWord
-                      ? 'bg-primary text-primary-foreground px-1 rounded font-medium scale-110 inline-block'
-                      : ''
-                  }`}
-                >
-                  {word}
-                </span>
-              );
-            })}
-          </p>
-        </div>
-      )}
+      {renderHighlightedText()}
     </div>
   );
 }

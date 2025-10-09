@@ -586,8 +586,7 @@ export default function AssignmentDetail() {
               </CardHeader>
               <CardContent>
                   {content.objectives?.length > 0 ? (
-                  <div className="space-y-4">
-                    <TextToSpeech text={content.objectives?.join('. ') || ''} />
+                  <TextToSpeech text={content.objectives?.join('. ') || ''}>
                     <ul className="space-y-2">
                       {content.objectives.map((obj: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-2">
@@ -596,7 +595,7 @@ export default function AssignmentDetail() {
                         </li>
                       ))}
                     </ul>
-                  </div>
+                  </TextToSpeech>
                 ) : (
                   <p className="text-muted-foreground">No objectives defined</p>
                 )}
@@ -635,12 +634,11 @@ export default function AssignmentDetail() {
                 <CardTitle>Instructions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="prose dark:prose-invert max-w-none space-y-4">
+                <div className="prose dark:prose-invert max-w-none">
                   {content.instructions ? (
-                    <>
-                      <TextToSpeech text={cleanMarkdown(content.instructions)} />
+                    <TextToSpeech text={cleanMarkdown(content.instructions)}>
                       <p className="whitespace-pre-wrap"><BionicText>{cleanMarkdown(content.instructions)}</BionicText></p>
-                    </>
+                    </TextToSpeech>
                   ) : (
                     <p className="text-muted-foreground">No instructions provided</p>
                   )}

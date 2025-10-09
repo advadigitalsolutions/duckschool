@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.process-curriculum-session]
 verify_jwt = false
+
+[functions.text-to-speech]
+verify_jwt = true
