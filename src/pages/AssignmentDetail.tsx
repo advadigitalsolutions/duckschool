@@ -266,7 +266,7 @@ export default function AssignmentDetail() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
+        <div className="container mx-auto flex items-center justify-between px-4 py-6">
           <div className="flex items-center space-x-4">
             <Button 
               variant="ghost" 
@@ -275,7 +275,7 @@ export default function AssignmentDetail() {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
+            <div className="space-y-1">
               <h1 className="text-2xl font-bold">{content.title || assignment.curriculum_items?.title}</h1>
               <p className="text-sm text-muted-foreground">
                 {assignment.curriculum_items?.courses?.subject}
@@ -286,8 +286,8 @@ export default function AssignmentDetail() {
         </div>
       </header>
 
-      <div className="container mx-auto p-4 md:p-8">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="container mx-auto p-6 md:p-8">
+        <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Badge variant={
               assignment.status === 'graded' ? 'default' :
