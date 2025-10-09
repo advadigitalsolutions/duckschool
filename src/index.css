@@ -359,19 +359,36 @@ All colors MUST be HSL.
   position: relative;
 }
 
+/* Add dark overlay for light mode */
+.focus-mode::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* Lighter overlay for dark mode */
+.dark.focus-mode::before {
+  background: rgba(0, 0, 0, 0.4);
+}
+
 /* Dim all cards when focus mode is active */
 .focus-mode [class*="card"],
 .focus-mode [class*="Card"] {
   transition: opacity 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
-  opacity: 0.4;
-  filter: grayscale(40%);
+  position: relative;
+  z-index: 2;
 }
 
 /* Light up card on hover with yellow glow */
 .focus-mode [class*="card"]:hover,
 .focus-mode [class*="Card"]:hover {
-  opacity: 1 !important;
-  filter: grayscale(0%) !important;
   transform: translateY(-2px);
   box-shadow: 
     0 0 30px 10px rgba(255, 215, 0, 0.5),
@@ -381,23 +398,11 @@ All colors MUST be HSL.
   position: relative;
 }
 
-/* Keep card content at full visibility when hovering */
-.focus-mode [class*="card"]:hover *,
-.focus-mode [class*="Card"]:hover * {
-  opacity: 1 !important;
-  filter: grayscale(0%) !important;
-}
-
-/* Keep header slightly visible */
+/* Keep header visible */
 .focus-mode header,
 .focus-mode header * {
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.focus-mode header:hover,
-.focus-mode header:hover * {
-  opacity: 1 !important;
+  position: relative;
+  z-index: 10;
 }
 
 /* Don't dim buttons, inputs, or interactive elements inside cards */
@@ -406,6 +411,6 @@ All colors MUST be HSL.
 .focus-mode textarea,
 .focus-mode select,
 .focus-mode a {
-  opacity: 1 !important;
-  filter: none !important;
+  position: relative;
+  z-index: 3;
 }
