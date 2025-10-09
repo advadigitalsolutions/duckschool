@@ -200,13 +200,13 @@ export default function StudentProfile() {
                     <Label htmlFor="avatar-upload" className="cursor-pointer">
                       <div className="flex items-center gap-2 text-sm text-primary hover:underline">
                         <Upload className="h-4 w-4" />
-                        Upload Custom Avatar
+                        Upload Custom Avatar (JPG, PNG, GIF)
                       </div>
                     </Label>
                     <Input
                       id="avatar-upload"
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
                       className="hidden"
                       onChange={handleAvatarUpload}
                       disabled={uploading}
