@@ -81,12 +81,20 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
 
       if (!course) return;
 
+      // Calculate total estimated minutes in created curriculum (needed early)
+      const curriculumCreatedMinutes = course.curriculum_items?.reduce(
+        (sum: number, item: any) => sum + (item.est_minutes || 30),
+        0
+      ) || 0;
+
       // Fetch all standards for this course to calculate total required hours
       const pacingConfig = course.pacing_config as any;
+      const courseFramework = course.standards_scope?.[0]?.framework || pacingConfig?.framework || 'CA-CCSS';
+      
       const { data: standards } = await supabase
         .from('standards')
         .select('*')
-        .eq('framework', pacingConfig?.framework || 'CA-CCSS')
+        .eq('framework', courseFramework)
         .eq('subject', course.subject)
         .eq('grade_band', course.grade_level);
 
@@ -99,20 +107,20 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
 
       // Check for missing critical configuration
       const missingData: string[] = [];
-      const needsConfiguration = totalRequiredMinutes === 0 || !course.grade_level;
+      const hasStandards = (standards || []).length > 0;
+      const needsConfiguration = !hasStandards || !course.grade_level;
 
-      if (totalRequiredMinutes === 0) {
-        missingData.push('Regional standards or learning framework');
+      if (!hasStandards) {
+        missingData.push(`No ${courseFramework} standards available for ${course.subject} at grade ${course.grade_level}`);
       }
       if (!course.grade_level) {
         missingData.push('Grade level');
       }
-
-      // Calculate total estimated minutes in created curriculum
-      const curriculumCreatedMinutes = course.curriculum_items?.reduce(
-        (sum: number, item: any) => sum + (item.est_minutes || 30),
-        0
-      ) || 0;
+      
+      // Use curriculum-based calculation if no standards available
+      const fallbackTotalMinutes = !hasStandards && curriculumCreatedMinutes > 0 
+        ? curriculumCreatedMinutes 
+        : totalRequiredMinutes;
 
       // Calculate completed minutes from submissions
       let completedMinutes = 0;
@@ -143,15 +151,20 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         pending: totalQuestions > 0 ? (unansweredQuestions / totalQuestions) * 100 : 0
       };
 
+      // Use fallback total for calculations if no standards
+      const effectiveTotalMinutes = fallbackTotalMinutes || totalRequiredMinutes;
+
       // Calculate progress percentage based on required hours
-      const progressPercentage = totalRequiredMinutes > 0 
-        ? Math.min((completedMinutes / totalRequiredMinutes) * 100, 100)
-        : 0;
+      const progressPercentage = effectiveTotalMinutes > 0 
+        ? Math.min((completedMinutes / effectiveTotalMinutes) * 100, 100)
+        : curriculumCreatedMinutes > 0 
+          ? Math.min((completedMinutes / curriculumCreatedMinutes) * 100, 100)
+          : 0;
 
       // Calculate curriculum creation percentage
-      const curriculumCoveragePercentage = totalRequiredMinutes > 0
-        ? Math.min((curriculumCreatedMinutes / totalRequiredMinutes) * 100, 100)
-        : 0;
+      const curriculumCoveragePercentage = effectiveTotalMinutes > 0
+        ? Math.min((curriculumCreatedMinutes / effectiveTotalMinutes) * 100, 100)
+        : 100; // If no standards, show 100% if any curriculum exists
 
       // Calculate average minutes per day (last 30 days)
       const thirtyDaysAgo = new Date();
@@ -187,11 +200,11 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       }
 
       // Calculate projected completion based on required hours
-      const remainingMinutes = totalRequiredMinutes - completedMinutes;
+      const remainingMinutes = effectiveTotalMinutes - completedMinutes;
       let projectedCompletionDate: Date | null = null;
       let daysRemaining: number | null = null;
 
-      if (averageMinutesPerDay > 0) {
+      if (averageMinutesPerDay > 0 && remainingMinutes > 0) {
         daysRemaining = Math.ceil(remainingMinutes / averageMinutesPerDay);
         projectedCompletionDate = new Date();
         projectedCompletionDate.setDate(projectedCompletionDate.getDate() + daysRemaining);
@@ -242,11 +255,8 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         percentage: allStandards.size > 0 ? (coveredStandards.size / allStandards.size) * 100 : 0
       };
 
-      // Extract framework for display
-      const framework = course.standards_scope?.[0]?.framework || null;
-
       setMetrics({
-        totalMinutes: totalRequiredMinutes,
+        totalMinutes: effectiveTotalMinutes || curriculumCreatedMinutes,
         curriculumCreatedMinutes,
         completedMinutes,
         progressPercentage,
@@ -260,7 +270,7 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         needsConfiguration,
         needsMoreCurriculum,
         missingData,
-        framework
+        framework: courseFramework
       } as any);
 
       setStandardsCoverage(standardsCoverage);
