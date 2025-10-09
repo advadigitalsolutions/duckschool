@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.text-to-speech]
 verify_jwt = true
+
+[functions.detect-standards]
+verify_jwt = false

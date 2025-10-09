@@ -12,7 +12,55 @@ serve(async (req) => {
   }
 
   try {
-    const { courseTitle, courseSubject, topic, gradeLevel, standards, studentProfile, isInitialAssessment } = await req.json();
+    const { courseId, courseTitle, courseSubject, topic, gradeLevel, standards, studentProfile, isInitialAssessment } = await req.json();
+    
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get uncovered standards for this course
+    let uncoveredStandards: Array<{ code: string; text: string }> = [];
+    if (courseId && !isInitialAssessment) {
+      // Get all standards for this framework and grade level
+      const { data: courseData } = await supabase
+        .from('courses')
+        .select('standards_scope, subject, grade_level')
+        .eq('id', courseId)
+        .single();
+
+      if (courseData?.standards_scope?.[0]?.framework) {
+        const framework = courseData.standards_scope[0].framework;
+        
+        // Get all applicable standards
+        const { data: allStandards } = await supabase
+          .from('standards')
+          .select('code, text')
+          .eq('framework', framework)
+          .eq('subject', courseData.subject)
+          .or(`grade_band.eq.${courseData.grade_level},grade_band.like.%${courseData.grade_level}%`);
+
+        // Get covered standards from existing assignments
+        const { data: curriculumItems } = await supabase
+          .from('curriculum_items')
+          .select('standards')
+          .eq('course_id', courseId);
+
+        const coveredStandardCodes = new Set(
+          curriculumItems?.flatMap(item => item.standards || []) || []
+        );
+
+        // Identify uncovered standards
+        uncoveredStandards = (allStandards || []).filter(
+          std => !coveredStandardCodes.has(std.code)
+        );
+
+        console.log('Standards analysis:', {
+          total: allStandards?.length,
+          covered: coveredStandardCodes.size,
+          uncovered: uncoveredStandards.length
+        });
+      }
+    }
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -51,6 +99,19 @@ Make questions diagnostic - covering key concepts and skills from throughout the
 Include questions that assess prerequisite knowledge as well as course content.
 ` : '';
 
+    // Determine pedagogy approach based on framework and student profile
+    const pedagogyContext = buildPedagogyContext(standards, studentProfile);
+    
+    // Add uncovered standards guidance
+    const standardsGuidance = uncoveredStandards.length > 0 ? `
+PRIORITY STANDARDS TO ADDRESS:
+The following educational standards have NOT been covered yet in this course:
+${uncoveredStandards.slice(0, 5).map(s => `- ${s.code}: ${s.text}`).join('\n')}
+
+Please design this assignment to address one or more of these uncovered standards where relevant to the topic.
+Include the standard codes in the alignment section of your response.
+` : '';
+
     const systemPrompt = `You are an expert curriculum designer creating interactive digital assignments for homeschool students. 
 Generate a complete assignment that includes:
 1. Clear learning objectives
@@ -62,9 +123,12 @@ Generate a complete assignment that includes:
 7. Expected time to complete
 8. Differentiation suggestions for ADHD learners
 9. Teacher's guide with lesson-specific content
+10. Standards alignment (specific standard codes addressed)
 
 ${studentContext}
 ${assessmentContext}
+${standardsGuidance}
+${pedagogyContext}
 
 CRITICAL: Every assignment MUST include actual questions that students can answer digitally. Questions should test understanding and allow for mastery-based learning through multiple attempts.
 
@@ -147,7 +211,10 @@ Return a JSON object with this structure:
       "Another discussion prompt specific to this lesson"
     ],
     "assessment_guidance": "How to assess understanding of THIS topic specifically, what mastery looks like for these concepts"
-  }
+  },
+  "standards_alignment": [
+    {"code": "STANDARD.CODE.1", "description": "Brief description of how this assignment addresses this standard"}
+  ]
 }
 
 Include 8-15 questions of varying difficulty. Mix question types appropriately for the subject.
@@ -197,3 +264,72 @@ CRITICAL: The teacher_guide must be 100% specific to this lesson topic and stude
     );
   }
 });
+
+function buildPedagogyContext(standards: any, studentProfile: any): string {
+  // Determine pedagogy approach based on framework
+  let pedagogyApproach = '';
+  
+  if (standards && Array.isArray(standards)) {
+    const framework = standards[0]?.framework;
+    
+    switch (framework) {
+      case 'CA-CCSS':
+      case 'Common Core':
+        pedagogyApproach = `
+PEDAGOGY APPROACH - Standards-Based Learning:
+- Focus on mastery of specific standards through scaffolded instruction
+- Use formative assessment to track progress toward standard mastery
+- Provide clear success criteria aligned to standards
+- Emphasize depth over breadth, ensuring thorough understanding
+- Connect learning objectives explicitly to real-world applications`;
+        break;
+      
+      case 'Montessori':
+        pedagogyApproach = `
+PEDAGOGY APPROACH - Montessori Method:
+- Design self-directed learning activities with clear learning goals
+- Provide hands-on, concrete materials and experiences
+- Allow for student choice and autonomous exploration
+- Emphasize practical life connections and real-world relevance
+- Create multi-sensory learning opportunities
+- Encourage intrinsic motivation over external rewards`;
+        break;
+      
+      case 'Classical':
+        pedagogyApproach = `
+PEDAGOGY APPROACH - Classical Education:
+- Structure content using the trivium (grammar, logic, rhetoric)
+- Emphasize memorization of foundational facts and concepts
+- Include analytical thinking and logical reasoning exercises
+- Incorporate primary sources and original texts where appropriate
+- Focus on mastery through repetition and practice
+- Connect to classical literature and historical context`;
+        break;
+      
+      default:
+        pedagogyApproach = `
+PEDAGOGY APPROACH - Adaptive Learning:
+- Personalize instruction based on student's learning profile
+- Use varied instructional strategies to accommodate different learning styles
+- Provide multiple means of representation, action, and expression
+- Build on prior knowledge and create meaningful connections`;
+    }
+  }
+  
+  // Add student-specific adaptations
+  if (studentProfile?.learning_profile) {
+    const profile = studentProfile.learning_profile;
+    
+    if (profile.learning_style?.includes('visual')) {
+      pedagogyApproach += '\n- Incorporate visual aids, diagrams, and graphic organizers';
+    }
+    if (profile.learning_style?.includes('kinesthetic')) {
+      pedagogyApproach += '\n- Include movement-based activities and hands-on tasks';
+    }
+    if (profile.learning_style?.includes('auditory')) {
+      pedagogyApproach += '\n- Use verbal explanations, discussions, and audio elements';
+    }
+  }
+  
+  return pedagogyApproach;
+}

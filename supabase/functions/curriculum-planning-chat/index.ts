@@ -81,8 +81,14 @@ serve(async (req) => {
     const collectedData = session.collected_data || {};
     const stage = determineStage(collectedData);
 
+    // Analyze standards coverage if we have a student and standards framework
+    let standardsContext = '';
+    if (collectedData.studentId && collectedData.standardsFramework) {
+      standardsContext = await analyzeStandardsCoverage(supabase, collectedData.studentId, collectedData);
+    }
+
     // Build AI prompt
-    const systemPrompt = buildSystemPrompt(stage, collectedData);
+    const systemPrompt = buildSystemPrompt(stage, collectedData, standardsContext);
     
     // Call Lovable AI
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -164,8 +170,10 @@ function determineStage(data: any): string {
   return 'ready';
 }
 
-function buildSystemPrompt(stage: string, data: any): string {
+function buildSystemPrompt(stage: string, data: any, standardsContext?: string): string {
   const basePrompt = `You are an expert educational consultant helping parents create personalized homeschool curriculum plans.
+
+${standardsContext || ''}
 
 CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
 1. Keep ALL responses to 2-3 sentences MAXIMUM
@@ -394,4 +402,110 @@ function isReadyToFinalize(data: any): boolean {
     data.subjects &&
     data.goals
   );
+}
+
+async function analyzeStandardsCoverage(supabase: any, studentId: string, collectedData: any): Promise<string> {
+  try {
+    // Get all courses for this student
+    const { data: courses } = await supabase
+      .from('courses')
+      .select(`
+        id,
+        title,
+        subject,
+        grade_level,
+        standards_scope,
+        curriculum_items(
+          standards,
+          assignments(status)
+        )
+      `)
+      .eq('student_id', studentId);
+
+    if (!courses || courses.length === 0) {
+      return '';
+    }
+
+    // Get all applicable standards from database
+    const framework = collectedData.standardsFramework === 'Common Core' ? 'CA-CCSS' : collectedData.standardsFramework;
+    const { data: allStandards } = await supabase
+      .from('standards')
+      .select('code, text, subject, metadata')
+      .eq('framework', framework)
+      .or(`grade_band.eq.${collectedData.gradeLevel},grade_band.like.%${collectedData.gradeLevel}%`);
+
+    if (!allStandards || allStandards.length === 0) {
+      return '';
+    }
+
+    // Calculate coverage per subject
+    const subjectAnalysis: Record<string, any> = {};
+    
+    courses.forEach((course: any) => {
+      const subject = course.subject;
+      if (!subjectAnalysis[subject]) {
+        subjectAnalysis[subject] = {
+          totalStandards: 0,
+          coveredStandards: new Set(),
+          uncoveredStandards: []
+        };
+      }
+
+      // Get applicable standards for this subject
+      const subjectStandards = allStandards.filter((s: any) => s.subject === subject);
+      subjectAnalysis[subject].totalStandards = subjectStandards.length;
+
+      // Track covered standards
+      course.curriculum_items?.forEach((item: any) => {
+        if (item.standards && Array.isArray(item.standards)) {
+          item.standards.forEach((code: string) => {
+            subjectAnalysis[subject].coveredStandards.add(code);
+          });
+        }
+      });
+
+      // Identify uncovered standards
+      subjectStandards.forEach((std: any) => {
+        if (!subjectAnalysis[subject].coveredStandards.has(std.code)) {
+          subjectAnalysis[subject].uncoveredStandards.push({
+            code: std.code,
+            text: std.text,
+            domain: std.metadata?.domain || 'General'
+          });
+        }
+      });
+    });
+
+    // Build context string
+    let context = '\n\nSTANDARDS COVERAGE ANALYSIS:\n';
+    
+    Object.entries(subjectAnalysis).forEach(([subject, analysis]: [string, any]) => {
+      const coveragePercent = Math.round((analysis.coveredStandards.size / analysis.totalStandards) * 100);
+      context += `\n${subject}: ${coveragePercent}% covered (${analysis.coveredStandards.size}/${analysis.totalStandards} standards)\n`;
+      
+      if (analysis.uncoveredStandards.length > 0) {
+        context += `Priority uncovered standards in ${subject}:\n`;
+        // Group by domain
+        const byDomain: Record<string, any[]> = {};
+        analysis.uncoveredStandards.forEach((std: any) => {
+          if (!byDomain[std.domain]) byDomain[std.domain] = [];
+          byDomain[std.domain].push(std);
+        });
+        
+        Object.entries(byDomain).slice(0, 3).forEach(([domain, stds]) => {
+          context += `  ${domain}:\n`;
+          stds.slice(0, 2).forEach((std: any) => {
+            context += `    - ${std.code}: ${std.text.substring(0, 80)}...\n`;
+          });
+        });
+      }
+    });
+
+    context += '\nWhen suggesting lessons or assignments, prioritize addressing these uncovered standards.\n';
+    
+    return context;
+  } catch (error) {
+    console.error('Error analyzing standards coverage:', error);
+    return '';
+  }
 }

@@ -63,6 +63,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
         'generate-assignment',
         {
           body: {
+            courseId: selectedCourse,
             courseTitle: selectedCourseData.title,
             courseSubject: selectedCourseData.subject,
             topic: topic,
@@ -76,6 +77,35 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
 
       if (generateError) throw generateError;
 
+      // Auto-detect standards if none were manually selected
+      let finalStandards = selectedStandards;
+      if (selectedStandards.length === 0 && generatedContent) {
+        console.log('Auto-detecting standards for generated content');
+        const { data: detectionResult, error: detectionError } = await supabase.functions.invoke(
+          'detect-standards',
+          {
+            body: {
+              content: generatedContent,
+              subject: selectedCourseData.subject,
+              gradeLevel: selectedCourseData.grade_level,
+              framework: selectedCourseData.standards_scope?.[0]?.framework || 'CA-CCSS'
+            }
+          }
+        );
+
+        if (!detectionError && detectionResult?.standardCodes) {
+          finalStandards = detectionResult.standardCodes;
+          console.log('Auto-detected standards:', finalStandards);
+          toast.success(`Auto-detected ${finalStandards.length} relevant standards`);
+        }
+      }
+
+      // Use AI-detected standards from content if available
+      if (generatedContent.standards_alignment && Array.isArray(generatedContent.standards_alignment)) {
+        const alignedCodes = generatedContent.standards_alignment.map((s: any) => s.code);
+        finalStandards = [...new Set([...finalStandards, ...alignedCodes])];
+      }
+
       // Create curriculum item with generated content
       const { data: curriculumItem, error: curriculumError } = await supabase
         .from('curriculum_items')
@@ -85,7 +115,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
           type: 'assignment',
           body: generatedContent,
           est_minutes: generatedContent.estimated_minutes || 60,
-          standards: selectedStandards
+          standards: finalStandards
         } as any)
         .select()
         .single();
