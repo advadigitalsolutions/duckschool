@@ -36,6 +36,43 @@ export default function AssignmentDetail() {
     fetchAssignment();
   }, [id]);
 
+  // Pre-generate study guide in background when assignment loads
+  useEffect(() => {
+    if (assignment && !isParent) {
+      const content = assignment.curriculum_items?.body || {};
+      const questions = content.questions || [];
+      
+      if (questions.length > 0) {
+        console.log('Pre-generating study guide in background for', questions.length, 'questions');
+        
+        // Trigger study guide generation in background
+        supabase.functions.invoke('generate-study-guide', {
+          body: {
+            assignment_id: assignment.id,
+            questions: questions.map((q: any) => ({
+              id: q.id,
+              question: q.question,
+              type: q.type,
+              options: q.options
+            })),
+            student_profile: {
+              grade_level: 'N/A', // Will be fetched by edge function if needed
+              learning_style: undefined,
+              interests: []
+            },
+            reading_materials: content.reading_materials
+          }
+        }).then(({ data, error }) => {
+          if (error) {
+            console.error('Background study guide generation failed:', error);
+          } else {
+            console.log('Study guide pre-generated successfully for all questions');
+          }
+        });
+      }
+    }
+  }, [assignment, isParent]);
+
   const fetchAssignment = async () => {
     try {
       // Get current user to determine student ID

@@ -59,14 +59,37 @@ export function StudyGuidePanel({
   const [openQuestions, setOpenQuestions] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    generateStudyGuide();
+    loadStudyGuide();
   }, [assignmentId]);
 
-  const generateStudyGuide = async () => {
+  const loadStudyGuide = async () => {
     try {
       setLoading(true);
-      console.log('Generating study guide for assignment:', assignmentId);
+      console.log('Loading study guide for assignment:', assignmentId);
 
+      // First check if there's a cached study guide
+      const { data: cachedData, error: cacheError } = await supabase
+        .from('assignment_study_guides')
+        .select('study_guide, generated_at')
+        .eq('assignment_id', assignmentId)
+        .maybeSingle();
+
+      if (!cacheError && cachedData && cachedData.study_guide) {
+        console.log('Using cached study guide');
+        setStudyGuide(cachedData.study_guide as unknown as Record<string, QuestionStudyGuide>);
+        
+        // Initialize hint levels to 1 for all questions
+        const initialLevels: Record<string, number> = {};
+        questions.forEach(q => {
+          initialLevels[q.id] = 1;
+        });
+        setHintLevels(initialLevels);
+        setLoading(false);
+        return;
+      }
+
+      // If no cache, generate new study guide
+      console.log('No cached study guide found, generating new one');
       const { data, error } = await supabase.functions.invoke('generate-study-guide', {
         body: {
           assignment_id: assignmentId,
@@ -83,7 +106,7 @@ export function StudyGuidePanel({
 
       if (error) {
         console.error('Error generating study guide:', error);
-        toast.error('Failed to generate study guide');
+        toast.error('Failed to load study guide');
         return;
       }
 
@@ -98,8 +121,8 @@ export function StudyGuidePanel({
       setHintLevels(initialLevels);
       
     } catch (error) {
-      console.error('Error generating study guide:', error);
-      toast.error('Failed to generate study guide');
+      console.error('Error loading study guide:', error);
+      toast.error('Failed to load study guide');
     } finally {
       setLoading(false);
     }
