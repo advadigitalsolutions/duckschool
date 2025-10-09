@@ -22,11 +22,120 @@ export default function StudentDashboard() {
   const [student, setStudent] = useState<any>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [timerRunning, setTimerRunning] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isBreak, setIsBreak] = useState(false);
   const [completedToday, setCompletedToday] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [dailyQuote, setDailyQuote] = useState('');
   const navigate = useNavigate();
+
+  const motivationalQuotes = [
+    "Your potential is endless. Go do what you were created to do.",
+    "Success is the sum of small efforts repeated day in and day out.",
+    "Don't watch the clock; do what it does. Keep going.",
+    "The expert in anything was once a beginner.",
+    "You are capable of amazing things.",
+    "Believe you can and you're halfway there.",
+    "Start where you are. Use what you have. Do what you can.",
+    "The only way to do great work is to love what you do.",
+    "Your limitation—it's only your imagination.",
+    "Push yourself, because no one else is going to do it for you.",
+    "Great things never come from comfort zones.",
+    "Dream it. Wish it. Do it.",
+    "Success doesn't just find you. You have to go out and get it.",
+    "The harder you work for something, the greater you'll feel when you achieve it.",
+    "Dream bigger. Do bigger.",
+    "Don't stop when you're tired. Stop when you're done.",
+    "Wake up with determination. Go to bed with satisfaction.",
+    "Do something today that your future self will thank you for.",
+    "Little things make big days.",
+    "It's going to be hard, but hard does not mean impossible.",
+    "Don't wait for opportunity. Create it.",
+    "Sometimes we're tested not to show our weaknesses, but to discover our strengths.",
+    "The key to success is to focus on goals, not obstacles.",
+    "Dream it. Believe it. Build it.",
+    "You don't have to be great to start, but you have to start to be great.",
+    "Education is the most powerful weapon you can use to change the world.",
+    "The beautiful thing about learning is that no one can take it away from you.",
+    "Learning is not attained by chance; it must be sought for with ardor.",
+    "Every accomplishment starts with the decision to try.",
+    "Mistakes are proof that you are trying.",
+    "The more that you read, the more things you will know.",
+    "Don't let what you cannot do interfere with what you can do.",
+    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    "You are braver than you believe, stronger than you seem, and smarter than you think.",
+    "It always seems impossible until it's done.",
+    "Keep your face always toward the sunshine—and shadows will fall behind you.",
+    "The future belongs to those who believe in the beauty of their dreams.",
+    "Believe in yourself and all that you are.",
+    "You get what you work for, not what you wish for.",
+    "Your attitude determines your direction.",
+    "Fall seven times, stand up eight.",
+    "The secret of getting ahead is getting started.",
+    "It's not about perfect. It's about effort.",
+    "Stay positive, work hard, make it happen.",
+    "You are capable of more than you know.",
+    "Do what you can, with what you have, where you are.",
+    "Champions keep playing until they get it right.",
+    "If you can dream it, you can do it.",
+    "The only person you should try to be better than is the person you were yesterday.",
+    "Learning never exhausts the mind.",
+    "An investment in knowledge pays the best interest.",
+    "The expert at anything was once a beginner.",
+    "You don't learn to walk by following rules. You learn by doing, and by falling over.",
+    "Study while others are sleeping; work while others are loafing.",
+    "I have not failed. I've just found 10,000 ways that won't work.",
+    "You miss 100% of the shots you don't take.",
+    "Whether you think you can or you think you can't, you're right.",
+    "The only impossible journey is the one you never begin.",
+    "Try not to become a person of success, but rather try to become a person of value.",
+    "Strive not to be a success, but rather to be of value.",
+    "Two roads diverged in a wood, and I—I took the one less traveled by.",
+    "I attribute my success to this: I never gave or took any excuse.",
+    "You may be disappointed if you fail, but you are doomed if you don't try.",
+    "It is during our darkest moments that we must focus to see the light.",
+    "Whoever is happy will make others happy too.",
+    "Do not go where the path may lead, go instead where there is no path and leave a trail.",
+    "You will face many defeats in life, but never let yourself be defeated.",
+    "In the middle of difficulty lies opportunity.",
+    "Don't be pushed around by the fears in your mind. Be led by the dreams in your heart.",
+    "Life is 10% what happens to you and 90% how you react to it.",
+    "Change your thoughts and you change your world.",
+    "All our dreams can come true, if we have the courage to pursue them.",
+    "The only limit to our realization of tomorrow will be our doubts of today.",
+    "It is never too late to be what you might have been.",
+    "What lies behind us and what lies before us are tiny matters compared to what lies within us.",
+    "You are never too old to set another goal or to dream a new dream.",
+    "Everything you've ever wanted is on the other side of fear.",
+    "Believe and act as if it were impossible to fail.",
+    "The way to get started is to quit talking and begin doing.",
+    "Don't be afraid to give up the good to go for the great.",
+    "I find that the harder I work, the more luck I seem to have.",
+    "Concentrate all your thoughts upon the work in hand. The sun's rays do not burn until brought to a focus.",
+    "Either you run the day or the day runs you.",
+    "I'm a greater believer in luck, and I find the harder I work the more I have of it.",
+    "When something is important enough, you do it even if the odds are not in your favor.",
+    "If you are not willing to risk the usual, you will have to settle for the ordinary.",
+    "The people who are crazy enough to think they can change the world are the ones who do.",
+    "Do one thing every day that scares you.",
+    "All progress takes place outside the comfort zone.",
+    "People who are crazy enough to think they can change the world, are the ones who do.",
+    "Knowing is not enough; we must apply. Willing is not enough; we must do.",
+    "We may encounter many defeats but we must not be defeated.",
+    "Challenges are what make life interesting. Overcoming them is what makes life meaningful.",
+    "If you want to lift yourself up, lift up someone else.",
+    "I have learned over the years that when one's mind is made up, this diminishes fear.",
+    "Courage doesn't always roar. Sometimes courage is the quiet voice saying 'I will try again tomorrow.'",
+    "The only way of discovering the limits of the possible is to venture a little way past them into the impossible.",
+    "You are enough just as you are.",
+    "Everything is hard before it is easy.",
+    "Small progress is still progress.",
+  ];
+
+  useEffect(() => {
+    // Set a random quote on mount
+    setDailyQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
+  }, []);
 
   useEffect(() => {
     checkRoleAndFetch();
@@ -167,8 +276,8 @@ export default function StudentDashboard() {
       <header className="border-b bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {student?.name || 'Student'}!</h1>
-            <p className="text-sm text-muted-foreground">Let's make today count 🎯</p>
+            <h1 className="text-2xl font-bold">Welcome back, {student?.display_name || student?.name || 'Student'}!</h1>
+            <p className="text-sm text-muted-foreground">{dailyQuote}</p>
           </div>
           <div className="flex items-center space-x-2">
             <Button variant="ghost" onClick={() => navigate('/student/profile')}>
