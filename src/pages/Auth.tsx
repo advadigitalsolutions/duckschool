@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { GraduationCap } from 'lucide-react';
+import duckGraduation from '@/assets/duck-graduation.png';
 import { ThemeToggle } from '@/components/ThemeToggle';
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -72,7 +72,7 @@ export default function Auth() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary">
-            <GraduationCap className="h-8 w-8 text-primary-foreground" />
+            <img src={duckGraduation} alt="Duck with graduation cap" className="h-10 w-10" />
           </div>
           <CardTitle className="text-2xl">Duckschool</CardTitle>
           <CardDescription>Innovation in Education</CardDescription>
