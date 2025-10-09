@@ -206,7 +206,11 @@ export default function ParentDashboard() {
                 ) : (
                   <div className="space-y-4">
                     {students.map((student) => (
-                      <Card key={student.id}>
+                      <Card 
+                        key={student.id} 
+                        className="cursor-pointer hover:border-primary transition-colors"
+                        onClick={() => navigate(`/student/${student.id}`)}
+                      >
                         <CardHeader>
                           <CardTitle className="text-lg">{student.name}</CardTitle>
                           <CardDescription>Grade {student.grade_level || 'N/A'}</CardDescription>

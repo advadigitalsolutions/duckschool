@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ParentDashboard from "./pages/ParentDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
+import StudentDetail from "./pages/StudentDetail";
 import NotFound from "./pages/NotFound";
 import { AuthGuard } from "./components/AuthGuard";
 
@@ -28,6 +29,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <ParentDashboard />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/student/:id" 
+              element={
+                <AuthGuard>
+                  <StudentDetail />
                 </AuthGuard>
               } 
             />
