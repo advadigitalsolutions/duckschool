@@ -739,7 +739,7 @@ export type Database = {
     Enums: {
       artifact_t: "file" | "link" | "text"
       grader_t: "ai" | "human" | "both"
-      item_t: "lesson" | "quiz" | "project" | "video" | "reading"
+      item_t: "lesson" | "quiz" | "project" | "video" | "reading" | "assignment"
       prog_event_t:
         | "start"
         | "stop"
@@ -879,7 +879,7 @@ export const Constants = {
     Enums: {
       artifact_t: ["file", "link", "text"],
       grader_t: ["ai", "human", "both"],
-      item_t: ["lesson", "quiz", "project", "video", "reading"],
+      item_t: ["lesson", "quiz", "project", "video", "reading", "assignment"],
       prog_event_t: [
         "start",
         "stop",
