@@ -25,6 +25,17 @@ const FRAMEWORKS = [
   { value: 'NY-CCLS', label: 'New York Common Core Learning Standards' },
 ];
 
+const PEDAGOGIES = [
+  { value: 'montessori', label: 'Montessori' },
+  { value: 'classical', label: 'Classical Education' },
+  { value: 'charlotte-mason', label: 'Charlotte Mason' },
+  { value: 'unschooling', label: 'Unschooling' },
+  { value: 'traditional', label: 'Traditional' },
+  { value: 'project-based', label: 'Project-Based Learning' },
+  { value: 'waldorf', label: 'Waldorf' },
+  { value: 'eclectic', label: 'Eclectic' },
+];
+
 const GRADE_LEVELS = [
   'Pre-K', 'Kindergarten', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'
 ];
@@ -41,6 +52,7 @@ export function CourseSettingsDialog({
   const [loading, setLoading] = useState(false);
   const [gradeLevel, setGradeLevel] = useState(currentGradeLevel || '');
   const [framework, setFramework] = useState('');
+  const [pedagogy, setPedagogy] = useState('eclectic');
   const [targetCompletionDate, setTargetCompletionDate] = useState('');
   const [weeklyMinutes, setWeeklyMinutes] = useState('');
 
@@ -88,6 +100,9 @@ export function CourseSettingsDialog({
 
         // Extract pacing config
         if (pacingConfig) {
+          if (pacingConfig.pedagogy) {
+            setPedagogy(pacingConfig.pedagogy);
+          }
           if (pacingConfig.target_completion_date) {
             setTargetCompletionDate(pacingConfig.target_completion_date);
           }
@@ -123,6 +138,7 @@ export function CourseSettingsDialog({
       // Always update pacing_config with framework
       updates.pacing_config = {
         framework,
+        pedagogy,
         ...(targetCompletionDate && { target_completion_date: targetCompletionDate }),
         ...(weeklyMinutes && { weekly_minutes: parseInt(weeklyMinutes) }),
       };
@@ -175,6 +191,25 @@ export function CourseSettingsDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="pedagogy">Educational Pedagogy</Label>
+            <Select value={pedagogy} onValueChange={setPedagogy}>
+              <SelectTrigger id="pedagogy">
+                <SelectValue placeholder="Select pedagogy" />
+              </SelectTrigger>
+              <SelectContent>
+                {PEDAGOGIES.map((ped) => (
+                  <SelectItem key={ped.value} value={ped.value}>
+                    {ped.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              Influences how AI generates curriculum and assignments
+            </p>
           </div>
 
           <div className="space-y-2">

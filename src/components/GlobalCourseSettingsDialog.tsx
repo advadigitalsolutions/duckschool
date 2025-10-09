@@ -22,6 +22,17 @@ const FRAMEWORKS = [
   { value: 'NY-CCLS', label: 'New York CCLS' },
 ];
 
+const PEDAGOGIES = [
+  { value: 'montessori', label: 'Montessori' },
+  { value: 'classical', label: 'Classical Education' },
+  { value: 'charlotte-mason', label: 'Charlotte Mason' },
+  { value: 'unschooling', label: 'Unschooling' },
+  { value: 'traditional', label: 'Traditional' },
+  { value: 'project-based', label: 'Project-Based Learning' },
+  { value: 'waldorf', label: 'Waldorf' },
+  { value: 'eclectic', label: 'Eclectic' },
+];
+
 const GRADE_LEVELS = ['K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 
 interface GlobalCourseSettingsDialogProps {
@@ -43,6 +54,7 @@ export function GlobalCourseSettingsDialog({ open, onOpenChange, studentId, onUp
   // Global settings
   const [gradeLevel, setGradeLevel] = useState('');
   const [framework, setFramework] = useState('CA-CCSS');
+  const [pedagogy, setPedagogy] = useState('eclectic');
   const [targetCompletionDate, setTargetCompletionDate] = useState<Date | undefined>();
   
   // Weekly minutes settings
@@ -79,6 +91,9 @@ export function GlobalCourseSettingsDialog({ open, onOpenChange, studentId, onUp
         }
         if (firstCourse.standards_scope?.[0]?.framework || pacingConfig.framework) {
           setFramework(firstCourse.standards_scope?.[0]?.framework || pacingConfig.framework);
+        }
+        if (pacingConfig.pedagogy) {
+          setPedagogy(pacingConfig.pedagogy);
         }
         if (pacingConfig.target_completion_date) {
           setTargetCompletionDate(new Date(pacingConfig.target_completion_date));
@@ -136,6 +151,7 @@ export function GlobalCourseSettingsDialog({ open, onOpenChange, studentId, onUp
       const updates = courses.map(course => {
         const pacingConfig = {
           framework,
+          pedagogy,
           target_completion_date: targetCompletionDate?.toISOString(),
           weekly_minutes: courseMinutes[course.id] || totalWeeklyMinutes / courses.length,
         };
@@ -230,6 +246,24 @@ export function GlobalCourseSettingsDialog({ open, onOpenChange, studentId, onUp
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Pedagogy */}
+          <div className="space-y-2">
+            <Label>Educational Pedagogy</Label>
+            <Select value={pedagogy} onValueChange={setPedagogy}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PEDAGOGIES.map(ped => (
+                  <SelectItem key={ped.value} value={ped.value}>{ped.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Influences how AI generates curriculum and assignments
+            </p>
           </div>
 
           {/* Target Completion Date */}

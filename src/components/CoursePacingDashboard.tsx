@@ -5,12 +5,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, TrendingUp, TrendingDown, Minus, AlertTriangle, Settings } from 'lucide-react';
+import { CalendarIcon, TrendingUp, TrendingDown, Minus, AlertTriangle, Settings, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCoursePacing } from '@/hooks/useCoursePacing';
 import { CourseMasteryChart } from './CourseMasteryChart';
 import { CourseProgressCharts } from './CourseProgressCharts';
 import { CourseSettingsDialog } from './CourseSettingsDialog';
+import { CurriculumGenerationDialog } from './CurriculumGenerationDialog';
 import { StandardsCoverageDashboard } from './StandardsCoverageDashboard';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +26,7 @@ interface CoursePacingDashboardProps {
 export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, studentId, gradeLevel }: CoursePacingDashboardProps) {
   const [targetDate, setTargetDate] = useState<Date | undefined>();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [generationOpen, setGenerationOpen] = useState(false);
   const { loading, metrics, timeBySubject, standardsCoverage, refreshMetrics } = useCoursePacing(
     courseId,
     targetDate
@@ -109,10 +111,16 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
             </p>
           )}
         </div>
-        <Button variant="outline" onClick={() => setSettingsOpen(true)}>
-          <Settings className="mr-2 h-4 w-4" />
-          Edit Settings
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setGenerationOpen(true)}>
+            <Sparkles className="mr-2 h-4 w-4" />
+            AI Generate
+          </Button>
+          <Button variant="outline" onClick={() => setSettingsOpen(true)}>
+            <Settings className="mr-2 h-4 w-4" />
+            Edit Settings
+          </Button>
+        </div>
       </div>
 
       {/* Configuration Warning - Only show if truly broken */}
@@ -297,6 +305,15 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
         currentGradeLevel={gradeLevel}
         currentSubject={courseSubject}
         onUpdate={refreshMetrics}
+      />
+
+      {/* Curriculum Generation Dialog */}
+      <CurriculumGenerationDialog
+        open={generationOpen}
+        onOpenChange={setGenerationOpen}
+        courseId={courseId}
+        courseTitle={courseTitle}
+        onGenerated={refreshMetrics}
       />
     </div>
   );
