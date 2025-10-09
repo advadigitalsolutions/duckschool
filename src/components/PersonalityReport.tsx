@@ -186,8 +186,87 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
           </Card>
         )}
 
-        {/* Call to Action */}
+        {/* Lifelong Learning Section */}
         <Card className="border-primary/20 animate-fade-in" style={{ animationDelay: '600ms' }}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Becoming a Lifelong Learner
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="p-4 bg-primary/5 rounded-lg">
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <Star className="h-4 w-4 text-primary" />
+                  Use This Knowledge to Deepen Your Learning
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  Understanding your learning style is the first step to becoming a more effective learner. 
+                  Now that you know how you learn best, you can actively choose study methods and environments 
+                  that work with your natural strengths rather than against them.
+                </p>
+              </div>
+
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <h4 className="font-semibold mb-2">Apply Your Style Daily</h4>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Before starting any assignment, ask yourself: "How can I use my learning style to understand this better?"</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Experiment with the strategies listed above and notice which ones help you learn faster and retain more</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Don't be afraid to combine multiple approaches - most successful learners use several modalities</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <h4 className="font-semibold mb-2">Growth Mindset for Lifelong Learning</h4>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Remember: Your learning style is a strength, not a limitation. Great learners:
+                </p>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex gap-2">
+                    <Target className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span><strong>Stay curious:</strong> Ask questions and seek to understand "why" and "how"</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <Target className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span><strong>Reflect regularly:</strong> Think about what you learned and how you can apply it</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <Target className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span><strong>Embrace challenges:</strong> Difficult tasks are opportunities to grow stronger</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <Target className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span><strong>Connect learning:</strong> Link new knowledge to what you already know</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <Target className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span><strong>Teach others:</strong> Explaining concepts to someone else deepens your own understanding</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-sm font-medium">
+                  💡 <strong>Pro Tip:</strong> Share this report with your teachers and family. When they understand 
+                  how you learn best, they can better support your educational journey and help you reach your full potential.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Call to Action */}
+        <Card className="border-primary/20 animate-fade-in" style={{ animationDelay: '700ms' }}>
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center gap-2 text-primary">
@@ -199,7 +278,7 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
                 Your assignments will now be personalized based on your unique learning profile. 
                 This means better engagement and more effective learning!
               </p>
-              <div className="flex flex-wrap gap-3 justify-center pt-2">
+              <div className="flex flex-wrap gap-3 justify-center pt-2 print:hidden">
                 <Button onClick={() => navigate('/student')} className="gap-2">
                   <Home className="h-4 w-4" />
                   Go to Dashboard

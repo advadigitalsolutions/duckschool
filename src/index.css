@@ -2,6 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Print styles for PersonalityReport */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  /* Show only the report content when printing */
+  [class*="PersonalityReport"], 
+  [class*="PersonalityReport"] * {
+    visibility: visible;
+  }
+  
+  [class*="PersonalityReport"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  /* Adjust card styles for printing */
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    margin-bottom: 1rem;
+  }
+  
+  /* Remove shadows and adjust backgrounds */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  /* Ensure gradient backgrounds print */
+  [class*="gradient"] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  /* Adjust spacing for print */
+  .space-y-6 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  /* Hide scroll areas borders */
+  [class*="ScrollArea"] {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

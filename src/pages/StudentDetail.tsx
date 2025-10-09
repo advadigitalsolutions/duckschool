@@ -30,6 +30,7 @@ import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
 import { EditCourseDialog } from '@/components/EditCourseDialog';
 import { DeleteCourseDialog } from '@/components/DeleteCourseDialog';
 import { ArchiveCourseDialog } from '@/components/ArchiveCourseDialog';
+import { PersonalityReportView } from '@/components/PersonalityReportView';
 
 export default function StudentDetail() {
   const { id } = useParams();
@@ -196,6 +197,12 @@ export default function StudentDetail() {
           <TabsList>
             <TabsTrigger value="courses">Courses</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="learning-profile">
+              Learning Profile
+              {student?.profile_assessment_completed && (
+                <Badge variant="secondary" className="ml-2">✓</Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
           </TabsList>
 
@@ -401,6 +408,20 @@ export default function StudentDetail() {
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="learning-profile" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Learning Profile & Personality Type</CardTitle>
+                <CardDescription>
+                  View {student.name}'s learning style assessment results
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PersonalityReportView student={student} />
               </CardContent>
             </Card>
           </TabsContent>

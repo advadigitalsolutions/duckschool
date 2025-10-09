@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Sparkles } from 'lucide-react';
 import { PersonalityReport } from './PersonalityReport';
+import { assessmentQuestions, assessmentMetadata } from '@/utils/assessmentQuestions';
 
 interface ProfileAssessmentProps {
   studentId: string;
@@ -16,8 +17,7 @@ interface ProfileAssessmentProps {
 
 export function ProfileAssessment({ studentId, onComplete }: ProfileAssessmentProps) {
   const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [assessment, setAssessment] = useState<any>(null);
+  const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [completed, setCompleted] = useState(false);
   const [student, setStudent] = useState<any>(null);
@@ -37,27 +37,8 @@ export function ProfileAssessment({ studentId, onComplete }: ProfileAssessmentPr
     setCompleted(data?.profile_assessment_completed || false);
   };
 
-  const generateAssessment = async () => {
-    try {
-      setGenerating(true);
-      
-      const { data, error } = await supabase.functions.invoke('generate-profile-assessment', {
-        body: {
-          studentName: student?.display_name || student?.name,
-          gradeLevel: student?.grade_level || 'K-12'
-        }
-      });
-
-      if (error) throw error;
-      
-      setAssessment(data);
-    } catch (error: any) {
-      console.error('Error generating assessment:', error);
-      toast.error('Failed to generate assessment');
-    } finally {
-      setGenerating(false);
-    }
-  };
+  const currentQuestion = assessmentQuestions[currentStep];
+  const progress = ((currentStep + 1) / assessmentQuestions.length) * 100;
 
   const handleSubmit = async () => {
     try {
@@ -71,7 +52,7 @@ export function ProfileAssessment({ studentId, onComplete }: ProfileAssessmentPr
       };
 
       // Group answers by category
-      assessment.questions.forEach((q: any) => {
+      assessmentQuestions.forEach((q) => {
         if (answers[q.id]) {
           if (!learningProfile.categories[q.category]) {
             learningProfile.categories[q.category] = [];
@@ -80,7 +61,7 @@ export function ProfileAssessment({ studentId, onComplete }: ProfileAssessmentPr
         }
       });
 
-      // Determine personality type based on responses (simplified)
+      // Determine personality type based on responses
       const personalityType = determinePersonalityType(learningProfile.categories);
 
       const { error } = await supabase
@@ -95,6 +76,7 @@ export function ProfileAssessment({ studentId, onComplete }: ProfileAssessmentPr
       if (error) throw error;
 
       toast.success('Assessment completed! Your learning profile is ready.');
+      await fetchStudent();
       setCompleted(true);
       onComplete();
     } catch (error: any) {
@@ -197,87 +179,80 @@ export function ProfileAssessment({ studentId, onComplete }: ProfileAssessmentPr
         student={student}
         onRetake={() => {
           setCompleted(false);
-          setAssessment(null);
           setAnswers({});
+          setCurrentStep(0);
+          fetchStudent();
         }}
       />
     );
   }
 
-  if (!assessment) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Learning Profile Assessment</CardTitle>
-          <CardDescription>
-            Take this one-time assessment to help us understand how you learn best. 
-            This will help create personalized assignments just for you!
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={generateAssessment} disabled={generating} className="w-full">
-            {generating ? (
-              <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                Generating Assessment...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Start Assessment
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleNext = () => {
+    if (currentStep < assessmentQuestions.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{assessment.title}</CardTitle>
-        <CardDescription>{assessment.description}</CardDescription>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          {assessmentMetadata.title}
+        </CardTitle>
+        <CardDescription>
+          Question {currentStep + 1} of {assessmentMetadata.totalQuestions}
+        </CardDescription>
+        <Progress value={progress} className="mt-2" />
       </CardHeader>
-      <CardContent className="space-y-6">
-        {assessment.questions.map((question: any, index: number) => (
-          <div key={question.id} className="space-y-3 p-4 rounded-lg border">
-            <Label className="text-base font-medium">
-              {index + 1}. {question.question}
-            </Label>
+      <CardContent>
+        <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="space-y-6">
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">{currentQuestion.question}</Label>
+            <p className="text-xs text-muted-foreground">Category: {currentQuestion.category.replace(/_/g, ' ')}</p>
             
-            {question.type === 'multiple_choice' ? (
-              <RadioGroup
-                value={answers[question.id] || ''}
-                onValueChange={(value) => setAnswers({ ...answers, [question.id]: value })}
-              >
-                {question.options.map((option: string, optIndex: number) => (
-                  <div key={optIndex} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option} id={`${question.id}-${optIndex}`} />
-                    <Label htmlFor={`${question.id}-${optIndex}`} className="font-normal cursor-pointer">
-                      {option}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            ) : (
-              <Textarea
-                value={answers[question.id] || ''}
-                onChange={(e) => setAnswers({ ...answers, [question.id]: e.target.value })}
-                placeholder="Type your answer here..."
-                className="min-h-[100px]"
-              />
-            )}
+            <RadioGroup
+              value={answers[currentQuestion.id] || ''}
+              onValueChange={(value) => setAnswers({ ...answers, [currentQuestion.id]: value })}
+            >
+              {currentQuestion.options.map((option: string, index: number) => (
+                <div key={index} className="flex items-start space-x-2 p-3 rounded-lg border hover:bg-accent transition-colors">
+                  <RadioGroupItem value={option} id={`${currentQuestion.id}-${index}`} className="mt-1" />
+                  <Label htmlFor={`${currentQuestion.id}-${index}`} className="cursor-pointer flex-1">
+                    {option}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
           </div>
-        ))}
-
-        <Button 
-          onClick={handleSubmit} 
-          disabled={loading || Object.keys(answers).length < assessment.questions.length}
-          className="w-full"
-        >
-          {loading ? 'Saving...' : 'Complete Assessment'}
-        </Button>
+          
+          <div className="flex gap-2">
+            <Button 
+              type="button"
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentStep === 0}
+              className="flex-1"
+            >
+              Previous
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={!answers[currentQuestion.id] || loading}
+              className="flex-1"
+            >
+              {loading ? 'Completing...' : currentStep === assessmentQuestions.length - 1 ? 'Complete' : 'Next'}
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );
