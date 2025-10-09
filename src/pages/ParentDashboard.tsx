@@ -26,6 +26,7 @@ import { DeleteStudentDialog } from '@/components/DeleteStudentDialog';
 import { CurriculumPlanningDialog } from '@/components/CurriculumPlanningDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Pencil, Trash2, User, Sparkles } from 'lucide-react';
+import { ActivityFeed } from '@/components/ActivityFeed';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -263,7 +264,7 @@ export default function ParentDashboard() {
                     <AddStudentDialog onStudentAdded={fetchDashboardData} />
                   </div>
                   ) : (
-                    <p className="text-muted-foreground">Activity feed coming soon...</p>
+                    <ActivityFeed studentIds={students.map(s => s.id)} />
                   )}
                 </div>
               </CardContent>
