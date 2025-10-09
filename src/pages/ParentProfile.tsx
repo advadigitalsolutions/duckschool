@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBionicReading } from '@/contexts/BionicReadingContext';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
+import { BionicText } from '@/components/BionicText';
 
 const defaultAvatars = [
   'https://api.dicebear.com/7.x/adventurer/svg?seed=HappyTeacher&backgroundColor=b6e3f4',
@@ -230,7 +231,7 @@ export default function ParentProfile() {
                     placeholder="Enter your name"
                   />
                   <p className="text-xs text-muted-foreground">
-                    This is how your name will appear throughout the app
+                    <BionicText>This is how your name will appear throughout the app</BionicText>
                   </p>
                 </div>
 
@@ -252,9 +253,9 @@ export default function ParentProfile() {
                   
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-0.5">
-                      <Label htmlFor="bionic">Bionic Reading</Label>
+                      <Label htmlFor="bionic"><BionicText>Bionic Reading</BionicText></Label>
                       <p className="text-xs text-muted-foreground">
-                        Bold the first letters of words to help your brain parse text faster
+                        <BionicText>Bold the first letters of words to help your brain parse text faster</BionicText>
                       </p>
                     </div>
                     <Switch
@@ -266,9 +267,9 @@ export default function ParentProfile() {
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-0.5">
-                      <Label htmlFor="dyslexia-font">Dyslexia-Friendly Font</Label>
+                      <Label htmlFor="dyslexia-font"><BionicText>Dyslexia-Friendly Font</BionicText></Label>
                       <p className="text-xs text-muted-foreground">
-                        Use OpenDyslexic font designed for easier reading
+                        <BionicText>Use OpenDyslexic font designed for easier reading</BionicText>
                       </p>
                     </div>
                     <Switch
@@ -280,9 +281,9 @@ export default function ParentProfile() {
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-0.5">
-                      <Label htmlFor="reading-ruler">Reading Ruler</Label>
+                      <Label htmlFor="reading-ruler"><BionicText>Reading Ruler</BionicText></Label>
                       <p className="text-xs text-muted-foreground">
-                        Follow text with a highlighted line as you read
+                        <BionicText>Follow text with a highlighted line as you read</BionicText>
                       </p>
                     </div>
                     <Switch
@@ -294,9 +295,9 @@ export default function ParentProfile() {
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-0.5">
-                      <Label htmlFor="text-to-speech">Text-to-Speech</Label>
+                      <Label htmlFor="text-to-speech"><BionicText>Text-to-Speech</BionicText></Label>
                       <p className="text-xs text-muted-foreground">
-                        Listen to text read aloud using natural voice
+                        <BionicText>Listen to text read aloud using natural voice</BionicText>
                       </p>
                     </div>
                     <Switch
@@ -312,9 +313,9 @@ export default function ParentProfile() {
                   <h3 className="font-semibold text-lg">Spacing & Layout</h3>
                   
                   <div className="p-4 border rounded-lg space-y-2">
-                    <Label htmlFor="line-spacing">Line Spacing</Label>
+                    <Label htmlFor="line-spacing"><BionicText>Line Spacing</BionicText></Label>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Adjust space between lines for easier reading
+                      <BionicText>Adjust space between lines for easier reading</BionicText>
                     </p>
                     <Select value={lineSpacing} onValueChange={(value: any) => setLineSpacing(value)}>
                       <SelectTrigger id="line-spacing">
@@ -329,9 +330,9 @@ export default function ParentProfile() {
                   </div>
 
                   <div className="p-4 border rounded-lg space-y-2">
-                    <Label htmlFor="letter-spacing">Letter Spacing</Label>
+                    <Label htmlFor="letter-spacing"><BionicText>Letter Spacing</BionicText></Label>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Adjust space between letters
+                      <BionicText>Adjust space between letters</BionicText>
                     </p>
                     <Select value={letterSpacing} onValueChange={(value: any) => setLetterSpacing(value)}>
                       <SelectTrigger id="letter-spacing">
@@ -351,9 +352,9 @@ export default function ParentProfile() {
                   <h3 className="font-semibold text-lg">Visual Comfort</h3>
                   
                   <div className="p-4 border rounded-lg space-y-2">
-                    <Label htmlFor="color-overlay">Color Overlay</Label>
+                    <Label htmlFor="color-overlay"><BionicText>Color Overlay</BionicText></Label>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Add a tinted background to reduce eye strain
+                      <BionicText>Add a tinted background to reduce eye strain</BionicText>
                     </p>
                     <Select value={colorOverlay} onValueChange={(value: any) => setColorOverlay(value)}>
                       <SelectTrigger id="color-overlay">
@@ -372,9 +373,9 @@ export default function ParentProfile() {
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-0.5">
-                      <Label htmlFor="focus-mode">Focus Mode</Label>
+                      <Label htmlFor="focus-mode"><BionicText>Focus Mode</BionicText></Label>
                       <p className="text-xs text-muted-foreground">
-                        Highlight active section and dim surroundings
+                        <BionicText>Highlight active section and dim surroundings</BionicText>
                       </p>
                     </div>
                     <Switch
@@ -386,9 +387,9 @@ export default function ParentProfile() {
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-0.5">
-                      <Label htmlFor="high-contrast">High Contrast Mode</Label>
+                      <Label htmlFor="high-contrast"><BionicText>High Contrast Mode</BionicText></Label>
                       <p className="text-xs text-muted-foreground">
-                        Increase contrast for better visibility
+                        <BionicText>Increase contrast for better visibility</BionicText>
                       </p>
                     </div>
                     <Switch
