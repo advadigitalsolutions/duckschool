@@ -140,11 +140,13 @@ export default function StudentDetail() {
 
       if (error) throw error;
 
-      toast.success(`Successfully updated! Created ${data.coursesCreated} courses with assessments.`);
+      toast.success('Profile updated successfully! Refreshing...');
+      
+      // Reload the student data and courses
       await fetchStudentData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing session:', error);
-      toast.error('Failed to process curriculum session');
+      toast.error('Error processing session: ' + (error?.message || 'Unknown error'));
     } finally {
       setProcessingSession(false);
     }
@@ -245,6 +247,28 @@ export default function StudentDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Processing Overlay */}
+        {processingSession && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+            <Card className="w-96">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  <div className="text-center">
+                    <p className="font-semibold">Processing Curriculum Planning Session</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Creating courses and generating assessments...
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This may take a few minutes
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Tabs */}
         <Tabs defaultValue="courses" className="space-y-4">

@@ -51,14 +51,13 @@ serve(async (req) => {
 
     const extractedData = extractComprehensiveData(conversationText.toLowerCase());
 
-    // Update student with extracted learning profile
+    // Update student with extracted administrator assessment (separate from student's self-assessment)
     await supabase
       .from('students')
       .update({
-        learning_profile: extractedData.learningProfile,
+        administrator_assessment: extractedData.learningProfile,
         accommodations: extractedData.accommodations,
-        display_name: student.name,
-        profile_assessment_completed: true
+        display_name: student.name
       })
       .eq('id', studentId);
 

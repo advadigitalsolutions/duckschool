@@ -852,6 +852,7 @@ export type Database = {
       students: {
         Row: {
           accommodations: Json | null
+          administrator_assessment: Json | null
           avatar_url: string | null
           bionic_reading_enabled: boolean | null
           color_overlay: string | null
@@ -880,6 +881,7 @@ export type Database = {
         }
         Insert: {
           accommodations?: Json | null
+          administrator_assessment?: Json | null
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
           color_overlay?: string | null
@@ -908,6 +910,7 @@ export type Database = {
         }
         Update: {
           accommodations?: Json | null
+          administrator_assessment?: Json | null
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
           color_overlay?: string | null
