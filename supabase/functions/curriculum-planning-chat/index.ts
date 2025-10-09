@@ -47,7 +47,7 @@ serve(async (req) => {
 
       const initialMessage = {
         role: 'assistant',
-        content: "Hi! I'm here to help create the perfect educational plan for your student. Let's start with some basics. What's your student's name and current grade level?"
+        content: "Hi! I'm here to help you create a personalized educational plan for your student.\n\nHere's how this works:\n✨ We'll create an initial assessment to understand your student's current level\n📚 Based on their results, I'll build a custom curriculum that adapts to their needs\n🎯 Together we'll set a timeline to reach their educational goals\n\nLet's get started! What's your student's name and current grade level?"
       };
 
       return new Response(JSON.stringify({
@@ -170,12 +170,20 @@ function determineStage(data: any): string {
 function buildSystemPrompt(stage: string, data: any): string {
   const basePrompt = `You are an expert educational consultant helping parents create personalized homeschool curriculum plans.
 
+CRITICAL: Keep responses CONCISE (2-3 sentences max). Be efficient and focused.
+
 Your goals:
-1. Gather information through natural, warm conversation
-2. Extract structured data about student needs, learning style, and constraints
-3. Recommend appropriate educational standards and frameworks
-4. Ask 1-2 focused questions at a time
-5. Be encouraging and supportive
+1. Gather essential information through brief, focused questions
+2. Extract key data about student needs and educational goals
+3. Recommend appropriate standards based on their location
+4. Ask ONE focused question at a time (not multiple)
+5. Be warm but brief - respect their time
+
+IMPORTANT CONTEXT TO CONVEY:
+- The system will CREATE INITIAL ASSESSMENTS to understand the student's current level
+- The curriculum will ADAPT IN REAL-TIME based on assessment results
+- We'll create a PERSONALIZED TIMELINE to reach their specific goals
+- The plan is flexible and adjusts to the student's progress
 
 Current stage: ${stage}
 Data collected so far: ${JSON.stringify(data, null, 2)}
@@ -183,14 +191,14 @@ Data collected so far: ${JSON.stringify(data, null, 2)}
 `;
 
   const stagePrompts: Record<string, string> = {
-    'initial': 'Ask for student name, age/grade level, and location (country/state). Be warm and welcoming.',
-    'location': 'Now that you know their location, discuss what educational standards they want to follow. Suggest options based on their region (e.g., California → Common Core + NGSS).',
-    'standards': 'Discuss pedagogical approaches. Ask what teaching philosophy resonates with them (Montessori, Classical, Project-based, etc.)',
-    'pedagogy': 'Deep dive into student profile: learning style, interests, strengths, challenges, special needs (IEP/504, giftedness, neurodivergence)',
-    'student_profile': 'Ask about family context: time availability, parent involvement level, resources available, educational goals',
-    'family_context': 'Discuss subject planning. For each core subject, understand current level and goals',
-    'subject_planning': 'Summarize the plan and ask if they want to proceed with course creation',
-    'ready': 'Confirm readiness to create curriculum'
+    'initial': 'Ask for student name, grade level, and their location. Keep it simple and welcoming.',
+    'location': 'Based on their location, suggest appropriate educational standards (e.g., California → Common Core + NGSS). Ask if this sounds good or if they prefer something else. Be brief.',
+    'standards': 'Ask about their teaching philosophy in ONE sentence. Options: Montessori, Classical, Project-based, Charlotte Mason, or eclectic mix. Keep it short.',
+    'pedagogy': 'Ask ONE focused question: What are the student\'s main learning goals and any special considerations (learning differences, interests, challenges)? Brief response expected.',
+    'student_profile': 'Quick question: What subjects should we focus on, and what are their end goals (e.g., college prep, skill mastery, enrichment)? Keep brief.',
+    'family_context': 'IMPORTANT: Provide a brief 2-3 sentence summary showing you understand their needs. Then mention: "I\'ll create an initial assessment to gauge {student name}\'s current level, then build an adaptive curriculum that adjusts to their progress toward {their goal}." Ask if they\'re ready to proceed.',
+    'subject_planning': 'Confirm the plan briefly and emphasize the assessment will help create a perfectly tailored curriculum. Ask if ready to start.',
+    'ready': 'Great! Summarize the plan in 2-3 sentences. Remind them: "We\'ll start with an assessment to understand {student}\'s current level, then create a personalized curriculum that adapts in real-time to help them reach {goal} on your timeline." Confirm they\'re ready.'
   };
 
   return basePrompt + (stagePrompts[stage] || stagePrompts['initial']);

@@ -38,6 +38,8 @@ export default function ParentDashboard() {
   const [userName, setUserName] = useState('');
   const [userAvatar, setUserAvatar] = useState('');
   const [showPlanningDialog, setShowPlanningDialog] = useState(false);
+  const [planningSessions, setPlanningSessions] = useState<any[]>([]);
+  const [resumingSessionId, setResumingSessionId] = useState<string | undefined>();
   const navigate = useNavigate();
 
   const getGreeting = () => {
@@ -133,6 +135,16 @@ export default function ParentDashboard() {
         .lt('due_at', new Date().toISOString());
 
       setOverdueCount(overdueData?.length || 0);
+
+      // Fetch in-progress curriculum planning sessions
+      const { data: sessionsData } = await supabase
+        .from('curriculum_planning_sessions')
+        .select('*')
+        .eq('parent_id', user.id)
+        .eq('status', 'in_progress')
+        .order('updated_at', { ascending: false });
+
+      setPlanningSessions(sessionsData || []);
     } catch (error: any) {
       toast.error('Failed to load dashboard data');
     } finally {
@@ -328,6 +340,55 @@ export default function ParentDashboard() {
           </TabsContent>
 
           <TabsContent value="curriculum" className="space-y-4">
+            {planningSessions.length > 0 && (
+              <Card className="border-orange-500/50 bg-orange-500/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-orange-500" />
+                    Resume Planning Sessions
+                  </CardTitle>
+                  <CardDescription>
+                    You have {planningSessions.length} curriculum planning session{planningSessions.length > 1 ? 's' : ''} in progress
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {planningSessions.map((session) => {
+                    const data = (session.collected_data as unknown as any) || {};
+                    return (
+                      <Card key={session.id} className="bg-background">
+                        <CardContent className="pt-6">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <p className="font-medium">
+                                {data.studentName ? `Planning for ${data.studentName}` : 'Curriculum Planning'}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Last updated: {new Date(session.updated_at).toLocaleDateString()}
+                              </p>
+                              {data.gradeLevel && (
+                                <p className="text-xs text-muted-foreground">
+                                  Grade: {data.gradeLevel}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              onClick={() => {
+                                setResumingSessionId(session.id);
+                                setShowPlanningDialog(true);
+                              }}
+                              variant="outline"
+                            >
+                              Resume
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
+
             <div className="grid gap-4 md:grid-cols-2">
               <Card className="border-primary/50">
                 <CardHeader>
@@ -343,9 +404,15 @@ export default function ParentDashboard() {
                   <p className="text-sm text-muted-foreground">
                     Our AI assistant will guide you through creating a complete curriculum plan tailored to your student's needs, learning style, and educational goals.
                   </p>
-                  <Button onClick={() => setShowPlanningDialog(true)} className="w-full">
+                  <Button 
+                    onClick={() => {
+                      setResumingSessionId(undefined);
+                      setShowPlanningDialog(true);
+                    }} 
+                    className="w-full"
+                  >
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Start AI Planning Session
+                    Start New Planning Session
                   </Button>
                 </CardContent>
               </Card>
@@ -500,11 +567,17 @@ export default function ParentDashboard() {
         onStudentDeleted={fetchDashboardData}
       />
 
-      <CurriculumPlanningDialog
-        open={showPlanningDialog}
-        onOpenChange={setShowPlanningDialog}
-        onComplete={fetchDashboardData}
-      />
+        <CurriculumPlanningDialog
+          open={showPlanningDialog}
+          onOpenChange={(open) => {
+            setShowPlanningDialog(open);
+            if (!open) {
+              setResumingSessionId(undefined);
+            }
+          }}
+          onComplete={fetchDashboardData}
+          existingSessionId={resumingSessionId}
+        />
     </div>
   );
 }

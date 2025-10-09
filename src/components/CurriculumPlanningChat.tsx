@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Send, Sparkles } from 'lucide-react';
+import { Loader2, Send, Sparkles, Bookmark, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,27 +16,81 @@ interface Message {
 
 interface CurriculumPlanningChatProps {
   onComplete?: (sessionId: string, collectedData: any) => void;
+  existingSessionId?: string; // Allow resuming existing sessions
 }
 
-export const CurriculumPlanningChat = ({ onComplete }: CurriculumPlanningChatProps) => {
+export const CurriculumPlanningChat = ({ onComplete, existingSessionId }: CurriculumPlanningChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(existingSessionId || null);
   const [stage, setStage] = useState('');
   const [collectedData, setCollectedData] = useState<any>({});
   const [canFinalize, setCanFinalize] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    startSession();
-  }, []);
+    if (existingSessionId) {
+      loadExistingSession(existingSessionId);
+    } else {
+      startSession();
+    }
+  }, [existingSessionId]);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const loadExistingSession = async (id: string) => {
+    setLoading(true);
+    try {
+      const { data: session, error } = await supabase
+        .from('curriculum_planning_sessions')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      setSessionId(session.id);
+      const history = (session.conversation_history as unknown as Message[]) || [];
+      const data = (session.collected_data as unknown as any) || {};
+      
+      setMessages(history);
+      setCollectedData(data);
+      setStage(determineStage(data));
+      
+      // Check if ready to finalize
+      setCanFinalize(!!(
+        data.studentName &&
+        data.gradeLevel &&
+        data.location &&
+        data.standardsFramework &&
+        data.pedagogicalApproach
+      ));
+
+      toast.success('Resumed your planning session');
+    } catch (error) {
+      console.error('Error loading session:', error);
+      toast.error('Failed to load session, starting fresh');
+      startSession();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const determineStage = (data: any): string => {
+    if (!data.studentName) return 'initial';
+    if (!data.location) return 'location';
+    if (!data.standardsFramework) return 'standards';
+    if (!data.pedagogicalApproach) return 'pedagogy';
+    if (!data.learningProfile) return 'student_profile';
+    if (!data.familyContext) return 'family_context';
+    if (!data.subjectPlanning) return 'subject_planning';
+    return 'ready';
+  };
 
   const startSession = async () => {
     setLoading(true);
@@ -99,76 +154,143 @@ export const CurriculumPlanningChat = ({ onComplete }: CurriculumPlanningChatPro
     }
   };
 
-  return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          AI Curriculum Planning Assistant
-        </CardTitle>
-        {stage && (
-          <p className="text-sm text-muted-foreground">
-            Stage: {stage.replace('_', ' ')}
-          </p>
-        )}
-      </CardHeader>
+  const handleSaveProgress = () => {
+    toast.success('Progress automatically saved!', {
+      description: 'You can close this and return anytime from the Curriculum Planning tab.',
+      duration: 4000
+    });
+  };
 
-      <CardContent>
-        <ScrollArea className="h-[500px] pr-4" ref={scrollRef}>
-          <div className="space-y-4">
+  const getStageLabel = (stage: string): string => {
+    const labels: Record<string, string> = {
+      'initial': 'Getting Started',
+      'location': 'Location & Standards',
+      'standards': 'Educational Framework',
+      'pedagogy': 'Teaching Approach',
+      'student_profile': 'Student Profile',
+      'family_context': 'Family Context',
+      'subject_planning': 'Subject Planning',
+      'ready': 'Ready to Create'
+    };
+    return labels[stage] || stage;
+  };
+
+  return (
+    <div className="w-full h-full flex flex-col">
+      <div className="flex items-center justify-between mb-6 px-6 pt-6">
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            AI Curriculum Planning Assistant
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Let's create a personalized learning plan for your student
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleSaveProgress}>
+          <Bookmark className="h-4 w-4 mr-2" />
+          Save Progress
+        </Button>
+      </div>
+
+      {stage && (
+        <div className="px-6 pb-4">
+          <Badge variant="secondary" className="text-xs">
+            {getStageLabel(stage)}
+          </Badge>
+        </div>
+      )}
+
+      <div className="flex-1 px-6 pb-4">
+        <ScrollArea className="h-[calc(100vh-380px)] pr-4" ref={scrollRef}>
+          <div className="space-y-6">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-3 ${
+                  className={`max-w-[85%] rounded-2xl px-5 py-4 shadow-sm ${
                     msg.role === 'user'
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
+                      : 'bg-card border'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {msg.content}
+                  </p>
+                  {msg.role === 'assistant' && msg.content.includes('**') && (
+                    <div className="mt-3 pt-3 border-t border-border/50">
+                      <p className="text-xs text-muted-foreground">
+                        This information helps us create a personalized curriculum
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-muted rounded-lg px-4 py-3">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="bg-card border rounded-2xl px-5 py-4 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Thinking...</span>
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </ScrollArea>
+      </div>
 
-        {canFinalize && (
-          <div className="mt-4 p-4 bg-primary/10 rounded-lg">
-            <p className="text-sm font-medium mb-2">Ready to create curriculum!</p>
-            <p className="text-sm text-muted-foreground mb-3">
-              I've gathered all the information needed. Click below to generate your personalized curriculum plan.
-            </p>
-            <Button onClick={handleFinalize} className="w-full">
-              Create Curriculum Plan
-            </Button>
-          </div>
-        )}
-      </CardContent>
+      {canFinalize && (
+        <div className="mx-6 mb-4">
+          <Card className="border-primary/50 bg-primary/5">
+            <CardHeader>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-primary mt-1" />
+                <div className="flex-1">
+                  <CardTitle className="text-lg">Ready to Create Your Curriculum!</CardTitle>
+                  <CardDescription className="mt-2">
+                    I've gathered all the information needed. Your student will receive an initial assessment 
+                    to understand their current level, then we'll create a personalized, adaptive curriculum 
+                    that adjusts to their needs in real-time.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleFinalize} size="lg" className="w-full">
+                Create Curriculum & Assessment Plan
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      <CardFooter>
-        <div className="flex w-full gap-2">
+      <div className="px-6 pb-6">
+        <div className="flex gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
             placeholder="Type your response..."
             disabled={loading}
+            className="flex-1"
           />
-          <Button onClick={sendMessage} disabled={loading || !input.trim()}>
+          <Button 
+            onClick={sendMessage} 
+            disabled={loading || !input.trim()}
+            size="icon"
+            className="shrink-0"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>
-      </CardFooter>
-    </Card>
+        <p className="text-xs text-muted-foreground mt-2 text-center">
+          Press Enter to send • Your progress is automatically saved
+        </p>
+      </div>
+    </div>
   );
 };

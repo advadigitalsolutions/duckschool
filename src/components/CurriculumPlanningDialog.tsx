@@ -15,12 +15,14 @@ interface CurriculumPlanningDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onComplete?: () => void;
+  existingSessionId?: string;
 }
 
 export const CurriculumPlanningDialog = ({ 
   open, 
   onOpenChange,
-  onComplete 
+  onComplete,
+  existingSessionId
 }: CurriculumPlanningDialogProps) => {
   const navigate = useNavigate();
 
@@ -85,14 +87,11 @@ export const CurriculumPlanningDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>Create Personalized Curriculum Plan</DialogTitle>
-          <DialogDescription>
-            Let's work together to create the perfect educational plan for your student
-          </DialogDescription>
-        </DialogHeader>
-        <CurriculumPlanningChat onComplete={handlePlanningComplete} />
+      <DialogContent className="max-w-6xl h-[90vh] p-0 flex flex-col">
+        <CurriculumPlanningChat 
+          onComplete={handlePlanningComplete}
+          existingSessionId={existingSessionId}
+        />
       </DialogContent>
     </Dialog>
   );
