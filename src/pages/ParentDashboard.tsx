@@ -155,7 +155,7 @@ export default function ParentDashboard() {
           </div>
           <div className="flex items-center space-x-2">
             <ThemeToggle />
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" onClick={() => navigate('/parent/profile')}>
               <Settings className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="icon" onClick={handleSignOut}>

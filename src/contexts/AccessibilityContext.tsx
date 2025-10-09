@@ -51,6 +51,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Try student table first
     const { data: student } = await supabase
       .from('students')
       .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, reading_ruler_enabled, text_to_speech_enabled, high_contrast_enabled')
@@ -67,6 +68,27 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         readingRulerEnabled: student.reading_ruler_enabled || false,
         textToSpeechEnabled: student.text_to_speech_enabled || false,
         highContrastEnabled: student.high_contrast_enabled || false,
+      });
+      return;
+    }
+
+    // If not a student, try profiles table
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, reading_ruler_enabled, text_to_speech_enabled, high_contrast_enabled')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profile) {
+      setSettings({
+        dyslexiaFontEnabled: profile.dyslexia_font_enabled || false,
+        lineSpacing: profile.line_spacing as any || 'normal',
+        letterSpacing: profile.letter_spacing as any || 'normal',
+        colorOverlay: profile.color_overlay as any || 'none',
+        focusModeEnabled: profile.focus_mode_enabled || false,
+        readingRulerEnabled: profile.reading_ruler_enabled || false,
+        textToSpeechEnabled: profile.text_to_speech_enabled || false,
+        highContrastEnabled: profile.high_contrast_enabled || false,
       });
     }
   };
@@ -101,18 +123,34 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Try to update student table first
     const { data: student } = await supabase
       .from('students')
       .select('id')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (!student) return;
+    if (student) {
+      const { error } = await supabase
+        .from('students')
+        .update({ [field]: value })
+        .eq('id', student.id);
 
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to save accessibility setting",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    // If not a student, update profiles table
     const { error } = await supabase
-      .from('students')
+      .from('profiles')
       .update({ [field]: value })
-      .eq('id', student.id);
+      .eq('id', user.id);
 
     if (error) {
       toast({

@@ -439,27 +439,57 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bionic_reading_enabled: boolean | null
+          color_overlay: string | null
           created_at: string | null
+          dyslexia_font_enabled: boolean | null
           email: string | null
+          focus_mode_enabled: boolean | null
+          high_contrast_enabled: boolean | null
           id: string
+          letter_spacing: string | null
+          line_spacing: string | null
           locale: string | null
           name: string | null
+          reading_ruler_enabled: boolean | null
+          text_to_speech_enabled: boolean | null
           timezone: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bionic_reading_enabled?: boolean | null
+          color_overlay?: string | null
           created_at?: string | null
+          dyslexia_font_enabled?: boolean | null
           email?: string | null
+          focus_mode_enabled?: boolean | null
+          high_contrast_enabled?: boolean | null
           id: string
+          letter_spacing?: string | null
+          line_spacing?: string | null
           locale?: string | null
           name?: string | null
+          reading_ruler_enabled?: boolean | null
+          text_to_speech_enabled?: boolean | null
           timezone?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bionic_reading_enabled?: boolean | null
+          color_overlay?: string | null
           created_at?: string | null
+          dyslexia_font_enabled?: boolean | null
           email?: string | null
+          focus_mode_enabled?: boolean | null
+          high_contrast_enabled?: boolean | null
           id?: string
+          letter_spacing?: string | null
+          line_spacing?: string | null
           locale?: string | null
           name?: string | null
+          reading_ruler_enabled?: boolean | null
+          text_to_speech_enabled?: boolean | null
           timezone?: string | null
         }
         Relationships: []

@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ParentDashboard from "./pages/ParentDashboard";
+import ParentProfile from "./pages/ParentProfile";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentDetail from "./pages/StudentDetail";
 import AssignmentDetail from "./pages/AssignmentDetail";
@@ -41,7 +42,15 @@ const App = () => (
               } 
             />
             <Route 
-              path="/student/:id" 
+              path="/parent/profile" 
+              element={
+                <AuthGuard>
+                  <ParentProfile />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/student/:id"
               element={
                 <AuthGuard>
                   <StudentDetail />
