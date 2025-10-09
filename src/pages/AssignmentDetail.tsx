@@ -657,7 +657,7 @@ export default function AssignmentDetail() {
                 </p>
                 {content.adhd_accommodations?.length > 0 && (
                   <div>
-                    <p className="font-medium mb-2">ADHD Accommodations:</p>
+                    <p className="font-medium mb-2">Supportive Tips:</p>
                     <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                       {content.adhd_accommodations.map((acc: string, idx: number) => (
                         <li key={idx}><BionicText>{cleanMarkdown(acc)}</BionicText></li>
