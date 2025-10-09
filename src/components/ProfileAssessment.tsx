@@ -177,11 +177,30 @@ export function ProfileAssessment({ studentId, onComplete }: ProfileAssessmentPr
     return (
       <PersonalityReport
         student={student}
-        onRetake={() => {
-          setCompleted(false);
-          setAnswers({});
-          setCurrentStep(0);
-          fetchStudent();
+        onRetake={async () => {
+          setLoading(true);
+          try {
+            // Reset the assessment completion status in the database
+            const { error } = await supabase
+              .from('students')
+              .update({
+                profile_assessment_completed: false
+              })
+              .eq('id', studentId);
+
+            if (error) throw error;
+
+            // Reset local state
+            setCompleted(false);
+            setAnswers({});
+            setCurrentStep(0);
+            await fetchStudent();
+          } catch (error: any) {
+            console.error('Error resetting assessment:', error);
+            toast.error('Failed to reset assessment');
+          } finally {
+            setLoading(false);
+          }
         }}
       />
     );
