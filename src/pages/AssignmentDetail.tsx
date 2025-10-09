@@ -8,12 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Clock, Target, BookOpen, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { AssignmentQuestions } from '@/components/AssignmentQuestions';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [assignment, setAssignment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [currentStudentId, setCurrentStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAssignment();
@@ -21,6 +23,21 @@ export default function AssignmentDetail() {
 
   const fetchAssignment = async () => {
     try {
+      // Get current user to determine student ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check if user is a student
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (studentData) {
+        setCurrentStudentId(studentData.id);
+      }
+
       const { data, error } = await supabase
         .from('assignments')
         .select(`
@@ -136,10 +153,23 @@ export default function AssignmentDetail() {
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="questions">Questions</TabsTrigger>
             <TabsTrigger value="instructions">Instructions</TabsTrigger>
             <TabsTrigger value="rubric">Rubric</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="questions" className="space-y-4">
+            {currentStudentId ? (
+              <AssignmentQuestions assignment={assignment} studentId={currentStudentId} />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">Sign in as a student to complete this assignment.</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
           <TabsContent value="overview" className="space-y-4">
             <Card>

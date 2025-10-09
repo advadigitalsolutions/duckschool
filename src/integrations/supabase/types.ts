@@ -142,6 +142,7 @@ export type Database = {
           curriculum_item_id: string | null
           due_at: string | null
           id: string
+          max_attempts: number | null
           rubric: Json | null
           status: Database["public"]["Enums"]["status_t"]
           weight: number | null
@@ -151,6 +152,7 @@ export type Database = {
           curriculum_item_id?: string | null
           due_at?: string | null
           id?: string
+          max_attempts?: number | null
           rubric?: Json | null
           status?: Database["public"]["Enums"]["status_t"]
           weight?: number | null
@@ -160,6 +162,7 @@ export type Database = {
           curriculum_item_id?: string | null
           due_at?: string | null
           id?: string
+          max_attempts?: number | null
           rubric?: Json | null
           status?: Database["public"]["Enums"]["status_t"]
           weight?: number | null
@@ -458,6 +461,47 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_responses: {
+        Row: {
+          answer: Json
+          attempt_number: number
+          created_at: string | null
+          id: string
+          is_correct: boolean | null
+          question_id: string
+          submission_id: string | null
+          time_spent_seconds: number | null
+        }
+        Insert: {
+          answer: Json
+          attempt_number: number
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          question_id: string
+          submission_id?: string | null
+          time_spent_seconds?: number | null
+        }
+        Update: {
+          answer?: Json
+          attempt_number?: number
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          question_id?: string
+          submission_id?: string | null
+          time_spent_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_responses_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
             referencedColumns: ["id"]
           },
         ]

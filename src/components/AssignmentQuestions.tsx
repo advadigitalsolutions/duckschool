@@ -1,0 +1,385 @@
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { CheckCircle2, XCircle, Clock, TrendingUp } from 'lucide-react';
+
+interface Question {
+  id: string;
+  type: 'multiple_choice' | 'short_answer' | 'numeric';
+  question: string;
+  points: number;
+  options?: string[];
+  correct_answer: string | number;
+  tolerance?: number;
+  explanation: string;
+}
+
+interface AssignmentQuestionsProps {
+  assignment: any;
+  studentId: string;
+}
+
+export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestionsProps) {
+  const [answers, setAnswers] = useState<Record<string, string | number>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [results, setResults] = useState<Record<string, boolean>>({});
+  const [attemptNumber, setAttemptNumber] = useState(1);
+  const [questionTimes, setQuestionTimes] = useState<Record<string, number>>({});
+  const [currentQuestionStart, setCurrentQuestionStart] = useState<Record<string, number>>({});
+  const [totalScore, setTotalScore] = useState(0);
+  const [maxScore, setMaxScore] = useState(0);
+
+  const questions: Question[] = assignment?.curriculum_items?.body?.questions || [];
+  const maxAttempts = assignment?.max_attempts;
+
+  useEffect(() => {
+    // Calculate max score
+    const max = questions.reduce((sum, q) => sum + q.points, 0);
+    setMaxScore(max);
+
+    // Load previous attempts
+    loadAttempts();
+  }, [questions]);
+
+  const loadAttempts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('attempt_no')
+        .eq('assignment_id', assignment.id)
+        .eq('student_id', studentId)
+        .order('attempt_no', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        setAttemptNumber(data[0].attempt_no + 1);
+      }
+    } catch (error) {
+      console.error('Error loading attempts:', error);
+    }
+  };
+
+  const trackQuestionTime = (questionId: string) => {
+    const now = Date.now();
+    if (currentQuestionStart[questionId]) {
+      const timeSpent = Math.floor((now - currentQuestionStart[questionId]) / 1000);
+      setQuestionTimes(prev => ({
+        ...prev,
+        [questionId]: (prev[questionId] || 0) + timeSpent
+      }));
+    }
+    setCurrentQuestionStart(prev => ({
+      ...prev,
+      [questionId]: now
+    }));
+  };
+
+  const handleAnswerChange = (questionId: string, value: string | number) => {
+    setAnswers(prev => ({ ...prev, [questionId]: value }));
+    trackQuestionTime(questionId);
+  };
+
+  const gradeAnswer = (question: Question, answer: string | number): boolean => {
+    if (question.type === 'numeric') {
+      const numAnswer = typeof answer === 'number' ? answer : parseFloat(answer as string);
+      const correctAnswer = typeof question.correct_answer === 'number' 
+        ? question.correct_answer 
+        : parseFloat(question.correct_answer as string);
+      const tolerance = question.tolerance || 0.01;
+      return Math.abs(numAnswer - correctAnswer) <= tolerance;
+    } else if (question.type === 'multiple_choice') {
+      return answer === question.correct_answer;
+    } else {
+      // For short answer, do case-insensitive comparison
+      const answerStr = (answer as string).toLowerCase().trim();
+      const correctStr = (question.correct_answer as string).toLowerCase().trim();
+      return answerStr.includes(correctStr) || correctStr.includes(answerStr);
+    }
+  };
+
+  const handleSubmit = async () => {
+    // Check if all questions answered
+    const unanswered = questions.filter(q => !answers[q.id]);
+    if (unanswered.length > 0) {
+      toast.error(`Please answer all questions. ${unanswered.length} remaining.`);
+      return;
+    }
+
+    // Check max attempts
+    if (maxAttempts && attemptNumber > maxAttempts) {
+      toast.error(`Maximum attempts (${maxAttempts}) reached`);
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      // Grade answers
+      const gradedResults: Record<string, boolean> = {};
+      let score = 0;
+
+      questions.forEach(question => {
+        const isCorrect = gradeAnswer(question, answers[question.id]);
+        gradedResults[question.id] = isCorrect;
+        if (isCorrect) score += question.points;
+      });
+
+      setResults(gradedResults);
+      setTotalScore(score);
+
+      // Calculate total time spent
+      const totalTime = Object.values(questionTimes).reduce((sum, time) => sum + time, 0);
+
+      // Create submission
+      const { data: submissionData, error: submissionError } = await supabase
+        .from('submissions')
+        .insert({
+          assignment_id: assignment.id,
+          student_id: studentId,
+          attempt_no: attemptNumber,
+          time_spent_seconds: totalTime,
+          content: { answers, results: gradedResults, score, maxScore }
+        })
+        .select()
+        .single();
+
+      if (submissionError) throw submissionError;
+
+      // Create question responses
+      const responses = questions.map(question => ({
+        submission_id: submissionData.id,
+        question_id: question.id,
+        answer: { value: answers[question.id] },
+        is_correct: gradedResults[question.id],
+        time_spent_seconds: questionTimes[question.id] || 0,
+        attempt_number: attemptNumber
+      }));
+
+      const { error: responsesError } = await supabase
+        .from('question_responses')
+        .insert(responses);
+
+      if (responsesError) throw responsesError;
+
+      // Create grade
+      const { error: gradeError } = await supabase
+        .from('grades')
+        .insert({
+          assignment_id: assignment.id,
+          student_id: studentId,
+          score,
+          max_score: maxScore,
+          grader: 'ai',
+          rubric_scores: gradedResults
+        });
+
+      if (gradeError) throw gradeError;
+
+      setSubmitted(true);
+      
+      if (score === maxScore) {
+        toast.success('Perfect score! 🎉 Assignment completed!');
+      } else {
+        toast.success(`Score: ${score}/${maxScore}. Review incorrect answers and try again!`);
+      }
+    } catch (error) {
+      console.error('Error submitting assignment:', error);
+      toast.error('Failed to submit assignment');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleTryAgain = () => {
+    setSubmitted(false);
+    setAnswers({});
+    setResults({});
+    setQuestionTimes({});
+    setCurrentQuestionStart({});
+    setAttemptNumber(prev => prev + 1);
+    loadAttempts();
+  };
+
+  if (questions.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-muted-foreground">No questions available for this assignment yet.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const progress = (Object.keys(answers).length / questions.length) * 100;
+
+  return (
+    <div className="space-y-6">
+      {/* Progress Bar */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Progress</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              {Object.keys(answers).length} / {questions.length} answered
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Progress value={progress} className="h-2" />
+        </CardContent>
+      </Card>
+
+      {/* Submission Results */}
+      {submitted && (
+        <Card className="border-2 border-primary">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {totalScore === maxScore ? (
+                <>
+                  <CheckCircle2 className="h-6 w-6 text-green-500" />
+                  Perfect Score!
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="h-6 w-6 text-orange-500" />
+                  Keep Going!
+                </>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-4xl font-bold text-center">
+              {totalScore} / {maxScore}
+            </div>
+            <p className="text-center text-muted-foreground">
+              Attempt #{attemptNumber}
+              {maxAttempts && ` of ${maxAttempts}`}
+            </p>
+            {totalScore < maxScore && (!maxAttempts || attemptNumber < maxAttempts) && (
+              <Button onClick={handleTryAgain} className="w-full">
+                Try Again
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Questions */}
+      {questions.map((question, index) => (
+        <Card key={question.id} className={submitted && results[question.id] === false ? 'border-2 border-red-500' : ''}>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between text-base">
+              <span>Question {index + 1}</span>
+              <span className="text-sm font-normal text-muted-foreground">
+                {question.points} points
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-lg">{question.question}</p>
+
+            {/* Multiple Choice */}
+            {question.type === 'multiple_choice' && (
+              <RadioGroup
+                value={answers[question.id] as string}
+                onValueChange={(value) => handleAnswerChange(question.id, value)}
+                disabled={submitted}
+              >
+                {question.options?.map((option, i) => (
+                  <div key={i} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option} id={`${question.id}-${i}`} />
+                    <Label htmlFor={`${question.id}-${i}`}>{option}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+
+            {/* Numeric Answer */}
+            {question.type === 'numeric' && (
+              <Input
+                type="number"
+                step="any"
+                value={answers[question.id] || ''}
+                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                disabled={submitted}
+                placeholder="Enter your answer"
+              />
+            )}
+
+            {/* Short Answer */}
+            {question.type === 'short_answer' && (
+              <Textarea
+                value={answers[question.id] as string || ''}
+                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                disabled={submitted}
+                placeholder="Type your answer here"
+                rows={4}
+              />
+            )}
+
+            {/* Result & Explanation */}
+            {submitted && (
+              <div className={`p-4 rounded-lg ${results[question.id] ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  {results[question.id] ? (
+                    <>
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <span className="font-medium text-green-600 dark:text-green-400">Correct!</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                      <span className="font-medium text-red-600 dark:text-red-400">Incorrect</span>
+                    </>
+                  )}
+                  {questionTimes[question.id] && (
+                    <span className="ml-auto text-sm text-muted-foreground flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {Math.floor(questionTimes[question.id] / 60)}:{(questionTimes[question.id] % 60).toString().padStart(2, '0')}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm">{question.explanation}</p>
+                {!results[question.id] && (
+                  <p className="text-sm mt-2">
+                    <strong>Correct answer:</strong> {question.correct_answer}
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+
+      {/* Submit Button */}
+      {!submitted && (
+        <Card>
+          <CardContent className="pt-6">
+            <Button 
+              onClick={handleSubmit} 
+              disabled={submitting || Object.keys(answers).length !== questions.length}
+              className="w-full"
+              size="lg"
+            >
+              {submitting ? 'Submitting...' : 'Submit Assignment'}
+            </Button>
+            {maxAttempts && (
+              <p className="text-center text-sm text-muted-foreground mt-2">
+                Attempt {attemptNumber} of {maxAttempts}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

@@ -5,18 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   ArrowLeft,
   BookOpen,
   GraduationCap,
   Plus,
   Calendar,
-  FileText
+  FileText,
+  ChevronDown,
+  BarChart3
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AddCourseDialog } from '@/components/AddCourseDialog';
 import { AddAssignmentDialog } from '@/components/AddAssignmentDialog';
+import { AssignmentAnalytics } from '@/components/AssignmentAnalytics';
 
 export default function StudentDetail() {
   const { id } = useParams();
@@ -25,6 +29,7 @@ export default function StudentDetail() {
   const [courses, setCourses] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedAssignments, setExpandedAssignments] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchStudentData();
@@ -83,6 +88,18 @@ export default function StudentDetail() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleAssignmentExpanded = (assignmentId: string) => {
+    setExpandedAssignments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(assignmentId)) {
+        newSet.delete(assignmentId);
+      } else {
+        newSet.add(assignmentId);
+      }
+      return newSet;
+    });
   };
 
   if (loading) {
@@ -250,36 +267,58 @@ export default function StudentDetail() {
                 ) : (
                   <div className="space-y-4">
                     {assignments.map((assignment) => (
-                      <Card 
+                      <Collapsible
                         key={assignment.id}
-                        className="cursor-pointer transition-all duration-300 hover:bg-muted/50 hover:border-orange-500 hover:shadow-lg hover:shadow-orange-500/20"
-                        onClick={() => navigate(`/assignment/${assignment.id}`)}
+                        open={expandedAssignments.has(assignment.id)}
+                        onOpenChange={() => toggleAssignmentExpanded(assignment.id)}
                       >
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <CardTitle className="text-base">
-                                {assignment.curriculum_items?.body?.title || assignment.curriculum_items?.title}
-                              </CardTitle>
-                              <CardDescription>
-                                {assignment.curriculum_items?.courses?.subject}
-                              </CardDescription>
-                              {assignment.due_at && (
-                                <p className="text-xs text-muted-foreground mt-2">
-                                  Due: {new Date(assignment.due_at).toLocaleDateString()}
-                                </p>
-                              )}
+                        <Card className="transition-all duration-300 hover:border-orange-500">
+                          <CardHeader>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <CardTitle className="text-base cursor-pointer" onClick={() => navigate(`/assignment/${assignment.id}`)}>
+                                    {assignment.curriculum_items?.body?.title || assignment.curriculum_items?.title}
+                                  </CardTitle>
+                                  <CollapsibleTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <ChevronDown className={`h-4 w-4 transition-transform ${expandedAssignments.has(assignment.id) ? 'rotate-180' : ''}`} />
+                                    </Button>
+                                  </CollapsibleTrigger>
+                                </div>
+                                <CardDescription>
+                                  {assignment.curriculum_items?.courses?.subject}
+                                </CardDescription>
+                                {assignment.due_at && (
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    Due: {new Date(assignment.due_at).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant={
+                                  assignment.status === 'graded' ? 'default' :
+                                  assignment.status === 'submitted' ? 'secondary' : 
+                                  'outline'
+                                }>
+                                  {assignment.status}
+                                </Badge>
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <BarChart3 className="h-4 w-4 mr-1" />
+                                    Analytics
+                                  </Button>
+                                </CollapsibleTrigger>
+                              </div>
                             </div>
-                            <Badge variant={
-                              assignment.status === 'graded' ? 'default' :
-                              assignment.status === 'submitted' ? 'secondary' : 
-                              'outline'
-                            }>
-                              {assignment.status}
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                      </Card>
+                          </CardHeader>
+                          <CollapsibleContent>
+                            <CardContent>
+                              <AssignmentAnalytics assignmentId={assignment.id} studentId={student.id} />
+                            </CardContent>
+                          </CollapsibleContent>
+                        </Card>
+                      </Collapsible>
                     ))}
                   </div>
                 )}
