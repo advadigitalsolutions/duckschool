@@ -61,11 +61,20 @@ Generate a complete assignment that includes:
 6. Assessment rubric with criteria
 7. Expected time to complete
 8. Differentiation suggestions for ADHD learners
+9. Teacher's guide with lesson-specific content
 
 ${studentContext}
 ${assessmentContext}
 
-CRITICAL: Every assignment MUST include actual questions that students can answer digitally. Questions should test understanding and allow for mastery-based learning through multiple attempts.`;
+CRITICAL: Every assignment MUST include actual questions that students can answer digitally. Questions should test understanding and allow for mastery-based learning through multiple attempts.
+
+TEACHER GUIDE REQUIREMENTS:
+- All teacher guide content MUST be specific to this lesson topic and student profile
+- NO GENERIC FILLER like "create a visual representation with art supplies"
+- Beyond screen activities must be CONCRETE and directly related to the topic being taught
+- Reference the student's specific interests, learning style, and challenges
+- Provide topic-specific introduction strategies that connect to prior knowledge
+- Give specific real-world examples and hands-on activities for THIS topic only`;
 
     const userPrompt = `Create a detailed interactive assignment for:
 Course: ${courseTitle} (${courseSubject})
@@ -114,10 +123,36 @@ Return a JSON object with this structure:
     {"criteria": "Criteria name", "points": 10, "description": "What's expected"}
   ],
   "estimated_minutes": 60,
-  "adhd_accommodations": ["accommodation 1", "accommodation 2"]
+  "adhd_accommodations": ["accommodation 1", "accommodation 2"],
+  "teacher_guide": {
+    "lesson_overview": "Specific description of what this lesson teaches about [topic] and why it matters for this student",
+    "course_alignment": "How this lesson fits into the course sequence - what came before, what builds on this, specific connections to course goals",
+    "introduction_strategy": "Specific approach to introduce THIS topic to THIS student, including relevant prior knowledge to activate and specific questions to ask",
+    "beyond_screen_activities": [
+      {
+        "title": "Specific activity name related to topic",
+        "description": "Concrete, topic-specific activity tailored to student's interests and learning style. NOT generic art/building. Must directly relate to the lesson content.",
+        "materials": ["specific materials needed"],
+        "time_estimate": "20-30 minutes"
+      },
+      {
+        "title": "Another specific activity",
+        "description": "Another concrete activity for this topic only, incorporating student's interests where possible",
+        "materials": ["specific materials"],
+        "time_estimate": "30-45 minutes"
+      }
+    ],
+    "discussion_prompts": [
+      "Specific question about this topic that connects to student's interests or experiences",
+      "Another discussion prompt specific to this lesson"
+    ],
+    "assessment_guidance": "How to assess understanding of THIS topic specifically, what mastery looks like for these concepts"
+  }
 }
 
-Include 8-15 questions of varying difficulty. Mix question types appropriately for the subject.`;
+Include 8-15 questions of varying difficulty. Mix question types appropriately for the subject.
+
+CRITICAL: The teacher_guide must be 100% specific to this lesson topic and student. No generic suggestions.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

@@ -326,7 +326,9 @@ export default function AssignmentDetail() {
                   <div>
                     <h4 className="font-semibold mb-2">About This Lesson</h4>
                     <p className="text-muted-foreground">
-                      <BionicText>{content.description || 'This assignment helps students practice and demonstrate their understanding of the topic.'}</BionicText>
+                      <BionicText>
+                        {content.teacher_guide?.lesson_overview || content.description || 'This assignment helps students practice and demonstrate their understanding of the topic.'}
+                      </BionicText>
                     </p>
                   </div>
 
@@ -334,7 +336,7 @@ export default function AssignmentDetail() {
                     <h4 className="font-semibold mb-2">How It Fits With Course Goals</h4>
                     <p className="text-muted-foreground">
                       <BionicText>
-                        {`This lesson aligns with the ${assignment.curriculum_items?.courses?.subject} curriculum and builds toward mastery of key concepts. It scaffolds student learning by connecting prior knowledge with new material, reinforcing fundamental skills while introducing advanced applications.`}
+                        {content.teacher_guide?.course_alignment || `This lesson aligns with the ${assignment.curriculum_items?.courses?.subject} curriculum and builds toward mastery of key concepts. It scaffolds student learning by connecting prior knowledge with new material, reinforcing fundamental skills while introducing advanced applications.`}
                       </BionicText>
                     </p>
                   </div>
@@ -343,10 +345,32 @@ export default function AssignmentDetail() {
                     <h4 className="font-semibold mb-2">Introducing to Students</h4>
                     <p className="text-muted-foreground">
                       <BionicText>
-                        Begin by reviewing the learning objectives with your student. Help them understand why this topic matters and how it connects to what they've learned before. Encourage questions and check for understanding before they start. Remind them to read carefully and take their time with each question.
+                        {content.teacher_guide?.introduction_strategy || 'Begin by reviewing the learning objectives with your student. Help them understand why this topic matters and how it connects to what they\'ve learned before. Encourage questions and check for understanding before they start. Remind them to read carefully and take their time with each question.'}
                       </BionicText>
                     </p>
                   </div>
+
+                  {content.teacher_guide?.discussion_prompts && content.teacher_guide.discussion_prompts.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Discussion Prompts</h4>
+                      <ul className="space-y-2">
+                        {content.teacher_guide.discussion_prompts.map((prompt: string, idx: number) => (
+                          <li key={idx} className="text-sm text-muted-foreground pl-4 border-l-2 border-primary">
+                            <BionicText>{prompt}</BionicText>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {content.teacher_guide?.assessment_guidance && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Assessment Guidance</h4>
+                      <p className="text-muted-foreground">
+                        <BionicText>{content.teacher_guide.assessment_guidance}</BionicText>
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -360,23 +384,46 @@ export default function AssignmentDetail() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-l-4 border-primary pl-4 py-2">
-                      <h4 className="font-semibold mb-2">Activity 1: Creative Expression</h4>
-                      <p className="text-sm text-muted-foreground">
-                        <BionicText>
-                          Have your student create a visual representation of what they learned using art supplies, building materials, or even a nature walk. This could be a poster, diagram, comic strip, or 3D model that explains the key concepts in their own way.
-                        </BionicText>
-                      </p>
-                    </div>
+                    {content.teacher_guide?.beyond_screen_activities && content.teacher_guide.beyond_screen_activities.length > 0 ? (
+                      content.teacher_guide.beyond_screen_activities.map((activity: any, idx: number) => (
+                        <div key={idx} className="border-l-4 border-primary pl-4 py-2">
+                          <h4 className="font-semibold mb-2">{activity.title}</h4>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            <BionicText>{activity.description}</BionicText>
+                          </p>
+                          {activity.materials && activity.materials.length > 0 && (
+                            <div className="text-xs text-muted-foreground mb-1">
+                              <span className="font-medium">Materials:</span> {activity.materials.join(', ')}
+                            </div>
+                          )}
+                          {activity.time_estimate && (
+                            <div className="text-xs text-muted-foreground">
+                              <span className="font-medium">Time:</span> {activity.time_estimate}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        <div className="border-l-4 border-primary pl-4 py-2">
+                          <h4 className="font-semibold mb-2">Activity 1: Creative Expression</h4>
+                          <p className="text-sm text-muted-foreground">
+                            <BionicText>
+                              Have your student create a visual representation of what they learned using art supplies, building materials, or even a nature walk. This could be a poster, diagram, comic strip, or 3D model that explains the key concepts in their own way.
+                            </BionicText>
+                          </p>
+                        </div>
 
-                    <div className="border-l-4 border-primary pl-4 py-2">
-                      <h4 className="font-semibold mb-2">Activity 2: Real-World Connection</h4>
-                      <p className="text-sm text-muted-foreground">
-                        <BionicText>
-                          Encourage your student to find real-world examples of the concepts they're learning. This could involve conducting simple experiments, interviewing family members, taking photos of examples in their environment, or writing about how they see these ideas in daily life.
-                        </BionicText>
-                      </p>
-                    </div>
+                        <div className="border-l-4 border-primary pl-4 py-2">
+                          <h4 className="font-semibold mb-2">Activity 2: Real-World Connection</h4>
+                          <p className="text-sm text-muted-foreground">
+                            <BionicText>
+                              Encourage your student to find real-world examples of the concepts they're learning. This could involve conducting simple experiments, interviewing family members, taking photos of examples in their environment, or writing about how they see these ideas in daily life.
+                            </BionicText>
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
