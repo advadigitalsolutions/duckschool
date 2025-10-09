@@ -374,19 +374,19 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-lg">{question.question}</p>
+                <p className="text-lg"><BionicText>{question.question}</BionicText></p>
 
                 {/* Display Answer Based on Type */}
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-sm font-medium mb-1">Your answer:</p>
                   {question.type === 'multiple_choice' && (
-                    <p className="text-base">{answers[question.id]}</p>
+                    <p className="text-base"><BionicText>{String(answers[question.id])}</BionicText></p>
                   )}
                   {question.type === 'numeric' && (
-                    <p className="text-base">{answers[question.id]}</p>
+                    <p className="text-base"><BionicText>{String(answers[question.id])}</BionicText></p>
                   )}
                   {question.type === 'short_answer' && (
-                    <p className="text-base whitespace-pre-wrap">{answers[question.id]}</p>
+                    <p className="text-base whitespace-pre-wrap"><BionicText>{String(answers[question.id])}</BionicText></p>
                   )}
                 </div>
 
@@ -411,10 +411,10 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
                       </span>
                     )}
                   </div>
-                  <p className="text-sm">{cleanMarkdown(question.explanation)}</p>
+                  <p className="text-sm"><BionicText>{cleanMarkdown(question.explanation)}</BionicText></p>
                   {!results[question.id] && (
                     <p className="text-sm mt-2">
-                      <strong>Correct answer:</strong> {question.correct_answer}
+                      <strong>Correct answer:</strong> <BionicText>{String(question.correct_answer)}</BionicText>
                     </p>
                   )}
                 </div>
@@ -434,7 +434,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-lg">{cleanMarkdown(currentQuestion.question)}</p>
+            <p className="text-lg"><BionicText>{cleanMarkdown(currentQuestion.question)}</BionicText></p>
 
             {/* Multiple Choice */}
             {currentQuestion.type === 'multiple_choice' && (
@@ -445,7 +445,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
                 {currentQuestion.options?.map((option, i) => (
                   <div key={i} className="flex items-center space-x-2">
                     <RadioGroupItem value={option} id={`${currentQuestion.id}-${i}`} />
-                    <Label htmlFor={`${currentQuestion.id}-${i}`}>{cleanMarkdown(option)}</Label>
+                    <Label htmlFor={`${currentQuestion.id}-${i}`}><BionicText>{cleanMarkdown(option)}</BionicText></Label>
                   </div>
                 ))}
               </RadioGroup>
