@@ -91,12 +91,57 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       const pacingConfig = course.pacing_config as any;
       const courseFramework = course.standards_scope?.[0]?.framework || pacingConfig?.framework || 'CA-CCSS';
       
-      const { data: standards } = await supabase
-        .from('standards')
-        .select('*')
-        .eq('framework', courseFramework)
-        .eq('subject', course.subject)
-        .eq('grade_band', course.grade_level);
+      // Normalize subject names for flexible matching
+      const subjectVariations = [
+        course.subject,
+        course.subject.replace(/\//g, ' '), // "English/Language Arts" -> "English Language Arts"
+        course.subject.replace(/ /g, '/'),   // "English Language Arts" -> "English/Language Arts"
+      ];
+      
+      // Try to find standards with flexible subject and grade matching
+      let standards = null;
+      for (const subjectVariant of subjectVariations) {
+        const { data } = await supabase
+          .from('standards')
+          .select('*')
+          .eq('framework', courseFramework)
+          .eq('subject', subjectVariant)
+          .eq('grade_band', course.grade_level);
+        
+        if (data && data.length > 0) {
+          standards = data;
+          break;
+        }
+      }
+      
+      // If no exact grade match, try grade ranges that include this grade
+      if (!standards || standards.length === 0) {
+        const gradeNum = parseInt(course.grade_level) || 12;
+        for (const subjectVariant of subjectVariations) {
+          const { data } = await supabase
+            .from('standards')
+            .select('*')
+            .eq('framework', courseFramework)
+            .eq('subject', subjectVariant);
+          
+          if (data && data.length > 0) {
+            // Filter for grade ranges that include our grade
+            const filtered = data.filter((s: any) => {
+              const gradeBand = s.grade_band;
+              if (gradeBand.includes('-')) {
+                const [start, end] = gradeBand.split('-').map((g: string) => parseInt(g));
+                return gradeNum >= start && gradeNum <= end;
+              }
+              return parseInt(gradeBand) === gradeNum;
+            });
+            
+            if (filtered.length > 0) {
+              standards = filtered;
+              break;
+            }
+          }
+        }
+      }
 
       // Calculate total required minutes from standards
       const totalRequiredMinutes = (standards || []).reduce((sum, standard) => {
