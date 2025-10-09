@@ -317,7 +317,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       {submitted ? (
         <div className="space-y-4">
           {questions.map((question, index) => (
-            <Card key={question.id} className={results[question.id] === false ? 'border-2 border-red-500' : 'border-2 border-green-500'}>
+            <Card key={question.id} className={results[question.id] === true ? 'border-2 border-green-500' : results[question.id] === false ? 'border-2 border-red-500' : ''}>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between text-base">
                   <span>Question {index + 1}</span>
