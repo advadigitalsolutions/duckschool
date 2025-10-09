@@ -10,8 +10,11 @@ import { CheckCircle2, Circle, AlertCircle } from 'lucide-react';
 interface Standard {
   code: string;
   text: string;
-  grade_band: string;
+  grade_band: string | null;
   covered: boolean;
+  estimatedHours: number;
+  curriculumHours: number;
+  completedHours: number;
 }
 
 interface StandardsCoverageDashboardProps {
@@ -58,15 +61,21 @@ export function StandardsCoverageDashboard({
       const { data: standardsData, error: standardsError } = await query;
       if (standardsError) throw standardsError;
 
-      // Get curriculum items with their standards and check if they have graded assignments
+      // Get curriculum items with their standards, estimated minutes, and check completion
       const { data: curriculumData, error: curriculumError } = await supabase
         .from('curriculum_items')
         .select(`
+          id,
           standards,
+          est_minutes,
           assignments (
+            id,
             status,
             submissions (
-              id
+              id,
+              student_id,
+              time_spent_seconds,
+              grades (score)
             )
           )
         `)
@@ -74,29 +83,75 @@ export function StandardsCoverageDashboard({
 
       if (curriculumError) throw curriculumError;
 
-      // Determine which standards have been covered (assignments with submissions that are graded)
-      const covered = new Set<string>();
-      curriculumData?.forEach(item => {
-        const hasCompletedWork = item.assignments?.some(
-          a => a.status === 'graded' && a.submissions && a.submissions.length > 0
-        );
-        
-        if (hasCompletedWork && Array.isArray(item.standards)) {
-          item.standards.forEach(code => {
-            if (typeof code === 'string') {
-              covered.add(code);
-            }
-          });
-        }
+      // Calculate hours per standard
+      const standardsMap = new Map<string, {
+        estimatedHours: number;
+        curriculumMinutes: number;
+        completedMinutes: number;
+        covered: boolean;
+      }>();
+
+      // Initialize from standards table
+      standardsData?.forEach(s => {
+        standardsMap.set(s.code, {
+          estimatedHours: (s as any).metadata?.estimated_hours || 0,
+          curriculumMinutes: 0,
+          completedMinutes: 0,
+          covered: false,
+        });
       });
 
-      setCoveredStandards(covered);
-      setAllStandards(
-        standardsData?.map(s => ({
-          ...s,
-          covered: covered.has(s.code)
-        })) || []
-      );
+      // Accumulate curriculum and completion data
+      curriculumData?.forEach(item => {
+        const standardCodes = Array.isArray(item.standards) 
+          ? item.standards 
+          : typeof item.standards === 'string'
+          ? [item.standards]
+          : [];
+        
+        const hasGradedSubmissions = item.assignments?.some(
+          (a: any) => a.submissions?.some((s: any) => s.grades?.length > 0)
+        );
+
+        const itemMinutes = item.est_minutes || 0;
+        const completedMinutes = item.assignments?.reduce((sum: number, a: any) => {
+          return sum + (a.submissions?.reduce((s: number, sub: any) => 
+            s + ((sub.time_spent_seconds || 0) / 60), 0) || 0);
+        }, 0) || 0;
+
+        standardCodes.forEach((code: string) => {
+          const existing = standardsMap.get(code);
+          if (existing) {
+            existing.curriculumMinutes += itemMinutes;
+            existing.completedMinutes += completedMinutes;
+            if (hasGradedSubmissions) {
+              existing.covered = true;
+            }
+          }
+        });
+      });
+
+      // Map to final format
+      const mappedStandards = standardsData?.map(s => {
+        const data = standardsMap.get(s.code) || {
+          estimatedHours: 0,
+          curriculumMinutes: 0,
+          completedMinutes: 0,
+          covered: false,
+        };
+        return {
+          code: s.code,
+          text: s.text,
+          grade_band: s.grade_band,
+          covered: data.covered,
+          estimatedHours: data.estimatedHours,
+          curriculumHours: data.curriculumMinutes / 60,
+          completedHours: data.completedMinutes / 60,
+        };
+      }) || [];
+
+      setAllStandards(mappedStandards);
+      setCoveredStandards(new Set(mappedStandards.filter(s => s.covered).map(s => s.code)));
     } catch (error) {
       console.error('Error loading standards coverage:', error);
     } finally {
@@ -104,7 +159,7 @@ export function StandardsCoverageDashboard({
     }
   };
 
-  const coveredCount = allStandards.filter(s => s.covered).length;
+  const coveredCount = coveredStandards.size;
   const totalCount = allStandards.length;
   const coveragePercentage = totalCount > 0 ? (coveredCount / totalCount) * 100 : 0;
   const pendingStandards = allStandards.filter(s => !s.covered);
@@ -193,22 +248,37 @@ export function StandardsCoverageDashboard({
                       key={standard.code}
                       className="p-3 rounded-lg border bg-card"
                     >
-                      <div className="flex items-start gap-2">
-                        <Circle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-mono text-sm font-medium text-primary">
-                            {standard.code}
+                        <div className="flex items-start gap-2">
+                          <Circle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-mono text-sm font-medium text-primary">
+                              {standard.code}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {standard.text}
+                            </div>
+                            <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                              {standard.grade_band && (
+                                <span>Grade: {standard.grade_band}</span>
+                              )}
+                              <span>Required: {standard.estimatedHours}h</span>
+                              <span>Created: {standard.curriculumHours.toFixed(1)}h</span>
+                              {standard.completedHours > 0 && (
+                                <span className="text-primary">Completed: {standard.completedHours.toFixed(1)}h</span>
+                              )}
+                            </div>
+                            {standard.curriculumHours === 0 && (
+                              <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                                ⚠️ No curriculum created yet
+                              </p>
+                            )}
+                            {standard.curriculumHours > 0 && standard.curriculumHours < standard.estimatedHours && (
+                              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                Need {(standard.estimatedHours - standard.curriculumHours).toFixed(1)}h more curriculum
+                              </p>
+                            )}
                           </div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {standard.text}
-                          </div>
-                          {standard.grade_band && (
-                            <Badge variant="outline" className="mt-2">
-                              Grade {standard.grade_band}
-                            </Badge>
-                          )}
                         </div>
-                      </div>
                     </div>
                   ))
                 )}
@@ -241,11 +311,14 @@ export function StandardsCoverageDashboard({
                             <div className="text-sm text-muted-foreground mt-1">
                               {standard.text}
                             </div>
-                            {standard.grade_band && (
-                              <Badge variant="outline" className="mt-2">
-                                Grade {standard.grade_band}
-                              </Badge>
-                            )}
+                            <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                              {standard.grade_band && (
+                                <span>Grade: {standard.grade_band}</span>
+                              )}
+                              <span>Required: {standard.estimatedHours}h</span>
+                              <span>Created: {standard.curriculumHours.toFixed(1)}h</span>
+                              <span className="text-primary">Completed: {standard.completedHours.toFixed(1)}h</span>
+                            </div>
                           </div>
                         </div>
                       </div>

@@ -79,8 +79,11 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
 
   const hoursCompleted = Math.floor(metrics.completedMinutes / 60);
   const minutesCompleted = Math.round(metrics.completedMinutes % 60);
-  const totalHours = Math.floor(metrics.totalEstimatedMinutes / 60);
-  const totalMinutes = Math.round(metrics.totalEstimatedMinutes % 60);
+  const totalHours = Math.floor((metrics as any).totalMinutes / 60);
+  const totalMinutes = Math.round((metrics as any).totalMinutes % 60);
+  
+  const curriculumHours = Math.floor(((metrics as any).curriculumCreatedMinutes || 0) / 60);
+  const curriculumMinutes = Math.round(((metrics as any).curriculumCreatedMinutes || 0) % 60);
 
   const getFrameworkName = () => {
     if (!metrics?.needsConfiguration && metrics) {
@@ -140,16 +143,32 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="font-medium">Completion</span>
-              <span className="font-bold">{metrics.progressPercentage.toFixed(1)}%</span>
+          {/* Progress Bars */}
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="font-medium">Work Completed (Standards-Based)</span>
+                <span className="font-bold">{metrics.progressPercentage.toFixed(1)}%</span>
+              </div>
+              <Progress value={metrics.progressPercentage} className="h-3" />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>{hoursCompleted}h {minutesCompleted}m completed</span>
+                <span>{totalHours}h {totalMinutes}m required</span>
+              </div>
             </div>
-            <Progress value={metrics.progressPercentage} className="h-3" />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{hoursCompleted}h {minutesCompleted}m completed</span>
-              <span>{totalHours}h {totalMinutes}m total</span>
+
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="font-medium">Curriculum Created</span>
+                <span className="font-bold">{((metrics as any).curriculumCoveragePercentage || 0).toFixed(1)}%</span>
+              </div>
+              <Progress value={(metrics as any).curriculumCoveragePercentage || 0} className="h-3 opacity-60" />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>{curriculumHours}h {curriculumMinutes}m created</span>
+                {(metrics as any).needsMoreCurriculum && (
+                  <span className="text-amber-600 dark:text-amber-500">⚠️ Need more curriculum</span>
+                )}
+              </div>
             </div>
           </div>
 

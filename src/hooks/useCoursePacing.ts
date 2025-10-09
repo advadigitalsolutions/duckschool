@@ -8,9 +8,11 @@ interface MasteryData {
 }
 
 interface PacingMetrics {
-  totalEstimatedMinutes: number;
+  totalMinutes: number;
+  curriculumCreatedMinutes: number;
   completedMinutes: number;
   progressPercentage: number;
+  curriculumCoveragePercentage: number;
   averageMinutesPerDay: number;
   projectedCompletionDate: Date | null;
   daysRemaining: number | null;
@@ -18,6 +20,7 @@ interface PacingMetrics {
   recommendedDailyMinutes: number;
   masteryData: MasteryData;
   needsConfiguration: boolean;
+  needsMoreCurriculum: boolean;
   missingData: string[];
   framework?: string;
 }
@@ -76,31 +79,37 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         .eq('id', courseId)
         .single();
 
-      console.log('Course data:', course);
-
       if (!course) return;
+
+      // Fetch all standards for this course to calculate total required hours
+      const pacingConfig = course.pacing_config as any;
+      const { data: standards } = await supabase
+        .from('standards')
+        .select('*')
+        .eq('framework', pacingConfig?.framework || 'CA-CCSS')
+        .eq('subject', course.subject)
+        .eq('grade_band', course.grade_level);
+
+      // Calculate total required minutes from standards
+      const totalRequiredMinutes = (standards || []).reduce((sum, standard) => {
+        const metadata = standard.metadata as any;
+        const estimatedHours = metadata?.estimated_hours || 0;
+        return sum + (estimatedHours * 60);
+      }, 0);
 
       // Check for missing critical configuration
       const missingData: string[] = [];
-      const needsConfiguration = 
-        !course.standards_scope || 
-        (Array.isArray(course.standards_scope) && course.standards_scope.length === 0) ||
-        !course.grade_level ||
-        !course.curriculum_items ||
-        course.curriculum_items.length === 0;
+      const needsConfiguration = totalRequiredMinutes === 0 || !course.grade_level;
 
-      if (!course.standards_scope || (Array.isArray(course.standards_scope) && course.standards_scope.length === 0)) {
+      if (totalRequiredMinutes === 0) {
         missingData.push('Regional standards or learning framework');
       }
       if (!course.grade_level) {
         missingData.push('Grade level');
       }
-      if (!course.curriculum_items || course.curriculum_items.length === 0) {
-        missingData.push('Curriculum content and assignments');
-      }
 
-      // Calculate total estimated minutes
-      const totalEstimatedMinutes = course.curriculum_items?.reduce(
+      // Calculate total estimated minutes in created curriculum
+      const curriculumCreatedMinutes = course.curriculum_items?.reduce(
         (sum: number, item: any) => sum + (item.est_minutes || 30),
         0
       ) || 0;
@@ -134,8 +143,14 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         pending: totalQuestions > 0 ? (unansweredQuestions / totalQuestions) * 100 : 0
       };
 
-      const progressPercentage = totalEstimatedMinutes > 0 
-        ? Math.min((completedMinutes / totalEstimatedMinutes) * 100, 100)
+      // Calculate progress percentage based on required hours
+      const progressPercentage = totalRequiredMinutes > 0 
+        ? Math.min((completedMinutes / totalRequiredMinutes) * 100, 100)
+        : 0;
+
+      // Calculate curriculum creation percentage
+      const curriculumCoveragePercentage = totalRequiredMinutes > 0
+        ? Math.min((curriculumCreatedMinutes / totalRequiredMinutes) * 100, 100)
         : 0;
 
       // Calculate average minutes per day (last 30 days)
@@ -161,7 +176,6 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       let averageMinutesPerDay = recentMinutes / 30 || 0;
       
       // If pacing_config.weekly_minutes is set, use that as baseline
-      const pacingConfig = course.pacing_config as any;
       if (pacingConfig?.weekly_minutes && pacingConfig.weekly_minutes > 0) {
         const configuredDailyMinutes = pacingConfig.weekly_minutes / 7;
         // Use configured value if we have no history, or take the average of both
@@ -172,8 +186,8 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         }
       }
 
-      // Calculate projected completion
-      const remainingMinutes = totalEstimatedMinutes - completedMinutes;
+      // Calculate projected completion based on required hours
+      const remainingMinutes = totalRequiredMinutes - completedMinutes;
       let projectedCompletionDate: Date | null = null;
       let daysRemaining: number | null = null;
 
@@ -195,12 +209,15 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         }
       }
 
-      // Calculate recommended daily minutes
+      // Calculate recommended daily minutes to complete all required hours
       let recommendedDailyMinutes = averageMinutesPerDay;
       if (targetDate) {
         const daysUntilTarget = Math.max(1, Math.ceil((targetDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
         recommendedDailyMinutes = remainingMinutes / daysUntilTarget;
       }
+
+      // Check if curriculum creation is keeping pace
+      const needsMoreCurriculum = curriculumCreatedMinutes < (completedMinutes + (recommendedDailyMinutes * 7));
 
       // Calculate standards coverage
       const allStandards = new Set(
@@ -229,9 +246,11 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       const framework = course.standards_scope?.[0]?.framework || null;
 
       setMetrics({
-        totalEstimatedMinutes,
+        totalMinutes: totalRequiredMinutes,
+        curriculumCreatedMinutes,
         completedMinutes,
         progressPercentage,
+        curriculumCoveragePercentage,
         averageMinutesPerDay,
         projectedCompletionDate,
         daysRemaining,
@@ -239,6 +258,7 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         recommendedDailyMinutes,
         masteryData,
         needsConfiguration,
+        needsMoreCurriculum,
         missingData,
         framework
       } as any);

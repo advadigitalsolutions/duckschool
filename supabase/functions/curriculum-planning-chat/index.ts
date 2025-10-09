@@ -417,7 +417,8 @@ async function analyzeStandardsCoverage(supabase: any, studentId: string, collec
         standards_scope,
         curriculum_items(
           standards,
-          assignments(status)
+          est_minutes,
+          assignments(status, submissions(time_spent_seconds))
         )
       `)
       .eq('student_id', studentId);
@@ -438,70 +439,113 @@ async function analyzeStandardsCoverage(supabase: any, studentId: string, collec
       return '';
     }
 
-    // Calculate coverage per subject
+    // Calculate coverage per subject with hour tracking
     const subjectAnalysis: Record<string, any> = {};
     
     courses.forEach((course: any) => {
       const subject = course.subject;
       if (!subjectAnalysis[subject]) {
         subjectAnalysis[subject] = {
+          totalRequiredHours: 0,
+          curriculumCreatedHours: 0,
+          completedHours: 0,
           totalStandards: 0,
           coveredStandards: new Set(),
-          uncoveredStandards: []
+          uncoveredStandards: [],
+          standardsWithHourGaps: []
         };
       }
 
       // Get applicable standards for this subject
       const subjectStandards = allStandards.filter((s: any) => s.subject === subject);
       subjectAnalysis[subject].totalStandards = subjectStandards.length;
+      
+      // Calculate total required hours
+      subjectStandards.forEach((std: any) => {
+        const metadata = std.metadata as any;
+        const estimatedHours = metadata?.estimated_hours || 0;
+        subjectAnalysis[subject].totalRequiredHours += estimatedHours;
+      });
 
-      // Track covered standards
+      // Track covered standards and hours
+      const standardHours: Record<string, { curriculum: number; completed: number }> = {};
+      
       course.curriculum_items?.forEach((item: any) => {
+        const itemHours = (item.est_minutes || 0) / 60;
+        const completedHours = item.assignments?.reduce((sum: number, a: any) => 
+          sum + (a.submissions?.reduce((s: number, sub: any) => 
+            s + ((sub.time_spent_seconds || 0) / 3600), 0) || 0), 0) || 0;
+
         if (item.standards && Array.isArray(item.standards)) {
           item.standards.forEach((code: string) => {
             subjectAnalysis[subject].coveredStandards.add(code);
+            if (!standardHours[code]) {
+              standardHours[code] = { curriculum: 0, completed: 0 };
+            }
+            standardHours[code].curriculum += itemHours;
+            standardHours[code].completed += completedHours;
           });
         }
+
+        subjectAnalysis[subject].curriculumCreatedHours += itemHours;
+        subjectAnalysis[subject].completedHours += completedHours;
       });
 
-      // Identify uncovered standards
+      // Identify uncovered standards and standards with hour gaps
       subjectStandards.forEach((std: any) => {
+        const metadata = std.metadata as any;
+        const requiredHours = metadata?.estimated_hours || 0;
+        const hours = standardHours[std.code] || { curriculum: 0, completed: 0 };
+        
         if (!subjectAnalysis[subject].coveredStandards.has(std.code)) {
           subjectAnalysis[subject].uncoveredStandards.push({
             code: std.code,
             text: std.text,
-            domain: std.metadata?.domain || 'General'
+            requiredHours,
+            domain: metadata?.domain || 'General'
+          });
+        } else if (hours.curriculum < requiredHours) {
+          subjectAnalysis[subject].standardsWithHourGaps.push({
+            code: std.code,
+            text: std.text,
+            requiredHours,
+            createdHours: hours.curriculum,
+            gapHours: requiredHours - hours.curriculum,
+            domain: metadata?.domain || 'General'
           });
         }
       });
     });
 
-    // Build context string
-    let context = '\n\nSTANDARDS COVERAGE ANALYSIS:\n';
+    // Build context string with hour-based recommendations
+    let context = '\n\nSTANDARDS COVERAGE ANALYSIS (Hour-Based):\n';
     
     Object.entries(subjectAnalysis).forEach(([subject, analysis]: [string, any]) => {
       const coveragePercent = Math.round((analysis.coveredStandards.size / analysis.totalStandards) * 100);
-      context += `\n${subject}: ${coveragePercent}% covered (${analysis.coveredStandards.size}/${analysis.totalStandards} standards)\n`;
+      const hourCoveragePercent = analysis.totalRequiredHours > 0 
+        ? Math.round((analysis.curriculumCreatedHours / analysis.totalRequiredHours) * 100) 
+        : 0;
+      
+      context += `\n${subject}:\n`;
+      context += `  Standards: ${coveragePercent}% covered (${analysis.coveredStandards.size}/${analysis.totalStandards})\n`;
+      context += `  Hours: ${hourCoveragePercent}% created (${analysis.curriculumCreatedHours.toFixed(1)}h / ${analysis.totalRequiredHours.toFixed(1)}h required)\n`;
+      context += `  Work Completed: ${analysis.completedHours.toFixed(1)}h\n`;
       
       if (analysis.uncoveredStandards.length > 0) {
-        context += `Priority uncovered standards in ${subject}:\n`;
-        // Group by domain
-        const byDomain: Record<string, any[]> = {};
-        analysis.uncoveredStandards.forEach((std: any) => {
-          if (!byDomain[std.domain]) byDomain[std.domain] = [];
-          byDomain[std.domain].push(std);
-        });
-        
-        Object.entries(byDomain).slice(0, 3).forEach(([domain, stds]) => {
-          context += `  ${domain}:\n`;
-          stds.slice(0, 2).forEach((std: any) => {
-            context += `    - ${std.code}: ${std.text.substring(0, 80)}...\n`;
-          });
-        });
+        context += `  Priority: ${analysis.uncoveredStandards.length} uncovered standards (${analysis.uncoveredStandards.reduce((sum: number, s: any) => sum + s.requiredHours, 0).toFixed(1)}h needed)\n`;
+      }
+      
+      if (analysis.standardsWithHourGaps.length > 0) {
+        const totalGapHours = analysis.standardsWithHourGaps.reduce((sum: number, s: any) => sum + s.gapHours, 0);
+        context += `  Hour Gaps: ${analysis.standardsWithHourGaps.length} standards need ${totalGapHours.toFixed(1)}h more curriculum\n`;
       }
     });
 
-    context += '\nWhen suggesting lessons or assignments, prioritize addressing these uncovered standards.\n';
+    context += '\nRECOMMENDATIONS:\n';
+    context += 'When suggesting lessons, prioritize:\n';
+    context += '1. Uncovered standards with highest hour requirements\n';
+    context += '2. Standards with significant curriculum hour gaps\n';
+    context += '3. Building towards completing the total required hours per subject\n';
     
     return context;
   } catch (error) {
