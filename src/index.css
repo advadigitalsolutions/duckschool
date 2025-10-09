@@ -301,25 +301,30 @@ All colors MUST be HSL.
   --input: 0 0% 80% !important;
 }
 
-/* Focus Mode - Highlight focused content only when active element exists */
-.focus-mode-active {
-  position: relative;
-  z-index: 50;
-  background: hsl(var(--background));
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.3);
-}
-
-/* Only show overlay when there's an active focus element */
-.focus-mode:has(.focus-mode-active)::before {
+/* Focus Mode - Dim background and highlight focused content */
+.focus-mode::before {
   content: '';
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.75);
   pointer-events: none;
   z-index: 40;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.focus-mode.has-focus::before {
+  opacity: 1;
+}
+
+.focus-mode-active {
+  position: relative;
+  z-index: 50 !important;
+  background: hsl(var(--background)) !important;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.5), 0 0 20px 2px hsl(var(--primary) / 0.3) !important;
 }
