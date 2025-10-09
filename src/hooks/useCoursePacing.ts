@@ -237,7 +237,7 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       // Calculate curriculum creation percentage
       const curriculumCoveragePercentage = effectiveTotalMinutes > 0
         ? Math.min((curriculumCreatedMinutes / effectiveTotalMinutes) * 100, 100)
-        : 100; // If no standards, show 100% if any curriculum exists
+        : 0; // If no standards/milestones generated, show 0% - setup incomplete
 
       // Calculate average minutes per day (last 30 days)
       const thirtyDaysAgo = new Date();

@@ -172,22 +172,31 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
               <Progress value={metrics.progressPercentage} variant="success" className="h-3" />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
                 <span>{hoursCompleted}h {minutesCompleted}m completed</span>
-                <span>{totalHours}h {totalMinutes}m required</span>
+                <span>{totalHours}h {totalMinutes}m total required</span>
               </div>
+              {(metrics as any)?.framework === 'CUSTOM' && (metrics as any).trackingMode === 'custom-milestones' && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  💡 Based on AI-generated milestones
+                </div>
+              )}
             </div>
 
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="font-medium">Curriculum Created</span>
+                <span className="font-medium">Curriculum Built</span>
                 <span className="font-bold">{((metrics as any).curriculumCoveragePercentage || 0).toFixed(1)}%</span>
               </div>
               <Progress value={(metrics as any).curriculumCoveragePercentage || 0} variant="success" className="h-3 opacity-60" />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>{curriculumHours}h {curriculumMinutes}m created</span>
-                {(metrics as any).needsMoreCurriculum && (
-                  <span className="text-amber-600 dark:text-amber-500">⚠️ Need more curriculum</span>
-                )}
+                <span>{curriculumHours}h {curriculumMinutes}m built so far</span>
+                <span>{totalHours}h {totalMinutes}m total needed</span>
               </div>
+              {((metrics as any).curriculumCoveragePercentage || 0) < 100 && totalHours > 0 && (
+                <div className="text-xs text-amber-600 dark:text-amber-500 mt-2 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span>Build {(totalHours - curriculumHours).toFixed(0)}h more curriculum to cover all {(metrics as any)?.framework === 'CUSTOM' ? 'milestones' : 'standards'}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -207,20 +216,36 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
             </div>
             
             <div className="rounded-lg border p-4">
-              <div className="text-sm text-muted-foreground mb-1">Projected Completion</div>
+              <div className="text-sm text-muted-foreground mb-1">
+                {curriculumHours > 0 && curriculumHours < totalHours 
+                  ? 'Current Curriculum Finishes' 
+                  : 'All Work Completes'}
+              </div>
               <div className="text-2xl font-bold">
                 {metrics.projectedCompletionDate 
                   ? format(metrics.projectedCompletionDate, 'MMM dd, yyyy')
                   : 'Unknown'
                 }
               </div>
+              {curriculumHours > 0 && curriculumHours < totalHours && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  At current {Math.round(metrics.averageMinutesPerDay)} min/day pace
+                </div>
+              )}
             </div>
 
             <div className="rounded-lg border p-4">
-              <div className="text-sm text-muted-foreground mb-1">Days Remaining</div>
+              <div className="text-sm text-muted-foreground mb-1">
+                {targetDate ? 'Days Until Target' : 'Days to Complete'}
+              </div>
               <div className="text-2xl font-bold">
                 {metrics.daysRemaining !== null ? metrics.daysRemaining : '—'}
               </div>
+              {targetDate && metrics.daysRemaining && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  Target: {format(targetDate, 'MMM dd, yyyy')}
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
