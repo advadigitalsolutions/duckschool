@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Loader2, Send, Sparkles, Bookmark, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -203,7 +203,10 @@ export const CurriculumPlanningChat = ({ onComplete, existingSessionId }: Curric
       )}
 
       <div className="flex-1 px-6 pb-4">
-        <ScrollArea className="h-[calc(100vh-380px)] pr-4" ref={scrollRef}>
+        <div 
+          ref={scrollRef}
+          className="h-[calc(100vh-380px)] pr-4 overflow-y-auto"
+        >
           <div className="space-y-6">
             {messages.map((msg, idx) => (
               <div
@@ -241,7 +244,7 @@ export const CurriculumPlanningChat = ({ onComplete, existingSessionId }: Curric
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {canFinalize && (
