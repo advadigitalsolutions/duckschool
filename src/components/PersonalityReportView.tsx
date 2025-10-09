@@ -6,6 +6,7 @@ import {
   Eye, Hand, Ear, BookOpen, Sparkles, Target, TrendingUp, 
   Lightbulb, Brain, Star, Award, CheckCircle2, Home
 } from 'lucide-react';
+import { BionicText } from './BionicText';
 
 interface PersonalityReportViewProps {
   student: any;
@@ -70,7 +71,7 @@ export function PersonalityReportView({ student }: PersonalityReportViewProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-muted-foreground">{config.description}</p>
+            <p className="text-muted-foreground"><BionicText>{config.description}</BionicText></p>
             
             <div>
               <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -81,7 +82,7 @@ export function PersonalityReportView({ student }: PersonalityReportViewProps) {
                 {config.characteristics.map((char, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <Star className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-sm">{char}</span>
+                    <span className="text-sm"><BionicText>{char}</BionicText></span>
                   </li>
                 ))}
               </ul>
@@ -104,7 +105,7 @@ export function PersonalityReportView({ student }: PersonalityReportViewProps) {
                   <div className="bg-primary/10 p-2 rounded-full">
                     <Target className="h-4 w-4 text-primary" />
                   </div>
-                  <span className="text-sm flex-1">{strategy}</span>
+                  <span className="text-sm flex-1"><BionicText>{strategy}</BionicText></span>
                 </li>
               ))}
             </ul>
@@ -120,7 +121,7 @@ export function PersonalityReportView({ student }: PersonalityReportViewProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">{config.idealEnvironment}</p>
+            <p className="text-muted-foreground"><BionicText>{config.idealEnvironment}</BionicText></p>
           </CardContent>
         </Card>
 
@@ -137,7 +138,7 @@ export function PersonalityReportView({ student }: PersonalityReportViewProps) {
               {config.strengths.map((strength, index) => (
                 <div key={index} className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg">
                   <Award className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span className="text-sm font-medium">{strength}</span>
+                  <span className="text-sm font-medium"><BionicText>{strength}</BionicText></span>
                 </div>
               ))}
             </div>

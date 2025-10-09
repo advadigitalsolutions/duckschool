@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRef } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { BionicText } from './BionicText';
 
 interface PersonalityReportProps {
   student: any;
@@ -167,7 +168,7 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-muted-foreground">{config.description}</p>
+            <p className="text-muted-foreground"><BionicText>{config.description}</BionicText></p>
             
             <div>
               <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -178,7 +179,7 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
                 {config.characteristics.map((char, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <Star className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-sm">{char}</span>
+                    <span className="text-sm"><BionicText>{char}</BionicText></span>
                   </li>
                 ))}
               </ul>
@@ -210,7 +211,7 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
                   <div className="bg-primary/10 p-2 rounded-full">
                     <Target className="h-4 w-4 text-primary" />
                   </div>
-                  <span className="text-sm flex-1">{strategy}</span>
+                  <span className="text-sm flex-1"><BionicText>{strategy}</BionicText></span>
                 </li>
               ))}
             </ul>
@@ -226,7 +227,7 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">{config.idealEnvironment}</p>
+            <p className="text-muted-foreground"><BionicText>{config.idealEnvironment}</BionicText></p>
           </CardContent>
         </Card>
 
@@ -243,7 +244,7 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
               {config.strengths.map((strength, index) => (
                 <div key={index} className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg">
                   <Award className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span className="text-sm font-medium">{strength}</span>
+                  <span className="text-sm font-medium"><BionicText>{strength}</BionicText></span>
                 </div>
               ))}
             </div>
@@ -304,13 +305,13 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
             <div className="space-y-3">
               {personalizedTips.map((tip, index) => (
                 <div key={index} className="flex gap-3 p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-lg border-l-2 border-primary">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs font-bold text-primary">{index + 1}</span>
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-xs font-bold text-primary">{index + 1}</span>
+                      </div>
                     </div>
+                    <p className="text-sm leading-relaxed"><BionicText>{tip}</BionicText></p>
                   </div>
-                  <p className="text-sm leading-relaxed">{tip}</p>
-                </div>
               ))}
             </div>
           </CardContent>
