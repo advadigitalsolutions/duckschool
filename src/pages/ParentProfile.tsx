@@ -229,23 +229,22 @@ export default function ParentProfile() {
 
                 <div>
                   <Label className="mb-3 block">Or choose a fun avatar:</Label>
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-5 gap-3">
                     {defaultAvatars.map((avatar, index) => (
                       <button
                         key={index}
                         onClick={() => setSelectedAvatar(avatar)}
-                        className={`rounded-full border-2 transition-all overflow-hidden aspect-square ${
+                        className={`relative rounded-full border-3 transition-all p-2 aspect-square flex items-center justify-center ${
                           selectedAvatar === avatar
-                            ? 'border-primary scale-110'
-                            : 'border-transparent hover:border-muted-foreground'
+                            ? 'border-primary ring-2 ring-primary/20'
+                            : 'border-border hover:border-primary/50'
                         }`}
                       >
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={avatar} className="object-cover" />
-                          <AvatarFallback>
-                            <User className="h-8 w-8" />
-                          </AvatarFallback>
-                        </Avatar>
+                        <img 
+                          src={avatar} 
+                          alt="Avatar option"
+                          className="w-full h-full object-contain rounded-full"
+                        />
                       </button>
                     ))}
                   </div>
