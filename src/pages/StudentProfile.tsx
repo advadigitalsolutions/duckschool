@@ -16,6 +16,7 @@ import { useBionicReading } from '@/contexts/BionicReadingContext';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BionicText } from '@/components/BionicText';
+import { Slider } from '@/components/ui/slider';
 
 const defaultAvatars = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
@@ -42,6 +43,8 @@ export default function StudentProfile() {
     letterSpacing,
     colorOverlay,
     focusModeEnabled,
+    focusModeOverlayOpacity,
+    focusModeGlowColor,
     readingRulerEnabled,
     textToSpeechEnabled,
     highContrastEnabled,
@@ -50,6 +53,8 @@ export default function StudentProfile() {
     setLetterSpacing,
     setColorOverlay,
     setFocusMode,
+    setFocusModeOverlayOpacity,
+    setFocusModeGlowColor,
     setReadingRuler,
     setTextToSpeech,
     setHighContrast,
@@ -391,6 +396,46 @@ export default function StudentProfile() {
                       onCheckedChange={setFocusMode}
                     />
                   </div>
+
+                  {focusModeEnabled && (
+                    <>
+                      <div className="p-4 border rounded-lg space-y-3">
+                        <Label htmlFor="focus-opacity">Overlay Dim Amount ({focusModeOverlayOpacity}%)</Label>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          <BionicText>Adjust how much the background is dimmed</BionicText>
+                        </p>
+                        <Slider
+                          id="focus-opacity"
+                          min={0}
+                          max={100}
+                          step={5}
+                          value={[focusModeOverlayOpacity]}
+                          onValueChange={(value) => setFocusModeOverlayOpacity(value[0])}
+                          className="w-full"
+                        />
+                      </div>
+
+                      <div className="p-4 border rounded-lg space-y-2">
+                        <Label htmlFor="focus-glow"><BionicText>Highlight Glow Color</BionicText></Label>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          <BionicText>Choose the color of the glow effect on focused cards</BionicText>
+                        </p>
+                        <Select value={focusModeGlowColor} onValueChange={(value) => setFocusModeGlowColor(value)}>
+                          <SelectTrigger id="focus-glow">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="yellow">Yellow (Default)</SelectItem>
+                            <SelectItem value="blue">Blue</SelectItem>
+                            <SelectItem value="green">Green</SelectItem>
+                            <SelectItem value="purple">Purple</SelectItem>
+                            <SelectItem value="red">Red</SelectItem>
+                            <SelectItem value="none">No Glow</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-0.5">

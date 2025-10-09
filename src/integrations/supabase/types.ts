@@ -446,6 +446,8 @@ export type Database = {
           dyslexia_font_enabled: boolean | null
           email: string | null
           focus_mode_enabled: boolean | null
+          focus_mode_glow_color: string | null
+          focus_mode_overlay_opacity: number | null
           high_contrast_enabled: boolean | null
           id: string
           letter_spacing: string | null
@@ -464,6 +466,8 @@ export type Database = {
           dyslexia_font_enabled?: boolean | null
           email?: string | null
           focus_mode_enabled?: boolean | null
+          focus_mode_glow_color?: string | null
+          focus_mode_overlay_opacity?: number | null
           high_contrast_enabled?: boolean | null
           id: string
           letter_spacing?: string | null
@@ -482,6 +486,8 @@ export type Database = {
           dyslexia_font_enabled?: boolean | null
           email?: string | null
           focus_mode_enabled?: boolean | null
+          focus_mode_glow_color?: string | null
+          focus_mode_overlay_opacity?: number | null
           high_contrast_enabled?: boolean | null
           id?: string
           letter_spacing?: string | null
@@ -711,6 +717,8 @@ export type Database = {
           dob: string | null
           dyslexia_font_enabled: boolean | null
           focus_mode_enabled: boolean | null
+          focus_mode_glow_color: string | null
+          focus_mode_overlay_opacity: number | null
           goals: Json | null
           grade_level: string | null
           high_contrast_enabled: boolean | null
@@ -736,6 +744,8 @@ export type Database = {
           dob?: string | null
           dyslexia_font_enabled?: boolean | null
           focus_mode_enabled?: boolean | null
+          focus_mode_glow_color?: string | null
+          focus_mode_overlay_opacity?: number | null
           goals?: Json | null
           grade_level?: string | null
           high_contrast_enabled?: boolean | null
@@ -761,6 +771,8 @@ export type Database = {
           dob?: string | null
           dyslexia_font_enabled?: boolean | null
           focus_mode_enabled?: boolean | null
+          focus_mode_glow_color?: string | null
+          focus_mode_overlay_opacity?: number | null
           goals?: Json | null
           grade_level?: string | null
           high_contrast_enabled?: boolean | null

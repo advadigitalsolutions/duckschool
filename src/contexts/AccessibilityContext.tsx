@@ -8,6 +8,8 @@ interface AccessibilitySettings {
   letterSpacing: 'normal' | 'wide' | 'wider';
   colorOverlay: 'none' | 'cream' | 'mint' | 'lavender' | 'peach' | 'aqua';
   focusModeEnabled: boolean;
+  focusModeOverlayOpacity: number;
+  focusModeGlowColor: string;
   readingRulerEnabled: boolean;
   textToSpeechEnabled: boolean;
   highContrastEnabled: boolean;
@@ -19,6 +21,8 @@ interface AccessibilityContextType extends AccessibilitySettings {
   setLetterSpacing: (spacing: 'normal' | 'wide' | 'wider') => Promise<void>;
   setColorOverlay: (overlay: 'none' | 'cream' | 'mint' | 'lavender' | 'peach' | 'aqua') => Promise<void>;
   setFocusMode: (enabled: boolean) => Promise<void>;
+  setFocusModeOverlayOpacity: (opacity: number) => Promise<void>;
+  setFocusModeGlowColor: (color: string) => Promise<void>;
   setReadingRuler: (enabled: boolean) => Promise<void>;
   setTextToSpeech: (enabled: boolean) => Promise<void>;
   setHighContrast: (enabled: boolean) => Promise<void>;
@@ -33,6 +37,8 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     letterSpacing: 'normal',
     colorOverlay: 'none',
     focusModeEnabled: false,
+    focusModeOverlayOpacity: 70,
+    focusModeGlowColor: 'yellow',
     readingRulerEnabled: false,
     textToSpeechEnabled: false,
     highContrastEnabled: false,
@@ -54,7 +60,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // Try student table first
     const { data: student } = await supabase
       .from('students')
-      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, reading_ruler_enabled, text_to_speech_enabled, high_contrast_enabled')
+      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, focus_mode_overlay_opacity, focus_mode_glow_color, reading_ruler_enabled, text_to_speech_enabled, high_contrast_enabled')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -65,6 +71,8 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         letterSpacing: student.letter_spacing as any || 'normal',
         colorOverlay: student.color_overlay as any || 'none',
         focusModeEnabled: student.focus_mode_enabled || false,
+        focusModeOverlayOpacity: student.focus_mode_overlay_opacity || 70,
+        focusModeGlowColor: student.focus_mode_glow_color || 'yellow',
         readingRulerEnabled: student.reading_ruler_enabled || false,
         textToSpeechEnabled: student.text_to_speech_enabled || false,
         highContrastEnabled: student.high_contrast_enabled || false,
@@ -75,7 +83,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // If not a student, try profiles table
     const { data: profile } = await supabase
       .from('profiles')
-      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, reading_ruler_enabled, text_to_speech_enabled, high_contrast_enabled')
+      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, focus_mode_overlay_opacity, focus_mode_glow_color, reading_ruler_enabled, text_to_speech_enabled, high_contrast_enabled')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -86,6 +94,8 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         letterSpacing: profile.letter_spacing as any || 'normal',
         colorOverlay: profile.color_overlay as any || 'none',
         focusModeEnabled: profile.focus_mode_enabled || false,
+        focusModeOverlayOpacity: profile.focus_mode_overlay_opacity || 70,
+        focusModeGlowColor: profile.focus_mode_glow_color || 'yellow',
         readingRulerEnabled: profile.reading_ruler_enabled || false,
         textToSpeechEnabled: profile.text_to_speech_enabled || false,
         highContrastEnabled: profile.high_contrast_enabled || false,
@@ -119,8 +129,15 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // High contrast
     root.classList.toggle('high-contrast', settings.highContrastEnabled);
     
-    // Focus mode - simple body class toggle
+    // Focus mode - set CSS variables and classes for customization
     body.classList.toggle('focus-mode', settings.focusModeEnabled);
+    root.style.setProperty('--focus-overlay-opacity', `${settings.focusModeOverlayOpacity / 100}`);
+    
+    // Remove all glow classes and add the selected one
+    body.classList.remove('focus-glow-yellow', 'focus-glow-blue', 'focus-glow-green', 'focus-glow-purple', 'focus-glow-red', 'focus-glow-none');
+    if (settings.focusModeGlowColor !== 'yellow') {
+      body.classList.add(`focus-glow-${settings.focusModeGlowColor}`);
+    }
   };
 
   const updateSetting = async (field: string, value: any) => {
@@ -190,6 +207,16 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     await updateSetting('focus_mode_enabled', enabled);
   };
 
+  const setFocusModeOverlayOpacity = async (opacity: number) => {
+    setSettings(prev => ({ ...prev, focusModeOverlayOpacity: opacity }));
+    await updateSetting('focus_mode_overlay_opacity', opacity);
+  };
+
+  const setFocusModeGlowColor = async (color: string) => {
+    setSettings(prev => ({ ...prev, focusModeGlowColor: color }));
+    await updateSetting('focus_mode_glow_color', color);
+  };
+
   const setReadingRuler = async (enabled: boolean) => {
     setSettings(prev => ({ ...prev, readingRulerEnabled: enabled }));
     await updateSetting('reading_ruler_enabled', enabled);
@@ -214,6 +241,8 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         setLetterSpacing,
         setColorOverlay,
         setFocusMode,
+        setFocusModeOverlayOpacity,
+        setFocusModeGlowColor,
         setReadingRuler,
         setTextToSpeech,
         setHighContrast,

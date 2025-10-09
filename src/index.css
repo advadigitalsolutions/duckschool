@@ -360,7 +360,7 @@ All colors MUST be HSL.
   isolation: isolate;
 }
 
-/* Add dark overlay for the entire page */
+/* Add dark overlay for the entire page - uses CSS variable for opacity */
 .focus-mode::before {
   content: '';
   position: fixed;
@@ -368,15 +368,10 @@ All colors MUST be HSL.
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, var(--focus-overlay-opacity, 0.7));
   pointer-events: none;
   z-index: 1;
   transition: background 0.3s ease;
-}
-
-/* Lighter overlay for dark mode */
-.dark.focus-mode::before {
-  background: rgba(0, 0, 0, 0.6);
 }
 
 /* Cards default state - behind overlay */
@@ -387,7 +382,7 @@ All colors MUST be HSL.
   isolation: isolate;
 }
 
-/* Hovered card breaks through overlay completely */
+/* Hovered card breaks through overlay completely - uses CSS variable for glow color */
 .focus-mode [class*="card"]:hover,
 .focus-mode [class*="Card"]:hover {
   z-index: 999 !important;
@@ -397,6 +392,48 @@ All colors MUST be HSL.
     0 0 30px 10px rgba(255, 215, 0, 0.6),
     0 0 60px 20px rgba(255, 215, 0, 0.3),
     0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Blue glow */
+.focus-glow-blue [class*="card"]:hover,
+.focus-glow-blue [class*="Card"]:hover {
+  box-shadow: 
+    0 0 30px 10px rgba(59, 130, 246, 0.6),
+    0 0 60px 20px rgba(59, 130, 246, 0.3),
+    0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Green glow */
+.focus-glow-green [class*="card"]:hover,
+.focus-glow-green [class*="Card"]:hover {
+  box-shadow: 
+    0 0 30px 10px rgba(34, 197, 94, 0.6),
+    0 0 60px 20px rgba(34, 197, 94, 0.3),
+    0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Purple glow */
+.focus-glow-purple [class*="card"]:hover,
+.focus-glow-purple [class*="Card"]:hover {
+  box-shadow: 
+    0 0 30px 10px rgba(168, 85, 247, 0.6),
+    0 0 60px 20px rgba(168, 85, 247, 0.3),
+    0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Red glow */
+.focus-glow-red [class*="card"]:hover,
+.focus-glow-red [class*="Card"]:hover {
+  box-shadow: 
+    0 0 30px 10px rgba(239, 68, 68, 0.6),
+    0 0 60px 20px rgba(239, 68, 68, 0.3),
+    0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* No glow */
+.focus-glow-none [class*="card"]:hover,
+.focus-glow-none [class*="Card"]:hover {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* Create a white backdrop for hovered card to block overlay */
