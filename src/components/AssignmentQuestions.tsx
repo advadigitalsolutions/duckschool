@@ -58,82 +58,74 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     loadProgress();
   }, [questions]);
 
-  // Auto-save progress every 5 seconds
+  // Initialize draft submission on mount
   useEffect(() => {
-    if (!submitted && Object.keys(answers).length > 0) {
-      const saveTimer = setTimeout(() => {
-        saveProgress();
-      }, 5000);
-      return () => clearTimeout(saveTimer);
+    if (!draftSubmissionId && !submitted && !loadingDraft) {
+      createDraftSubmission();
     }
-  }, [answers, currentQuestionIndex, questionTimes, submitted]);
-
-  // Save progress when navigating away
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (!submitted && Object.keys(answers).length > 0) {
-        saveProgress();
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      if (!submitted && Object.keys(answers).length > 0) {
-        saveProgress();
-      }
-    };
-  }, [answers, currentQuestionIndex, questionTimes, submitted]);
+  }, [loadingDraft]);
 
   const loadProgress = async () => {
     try {
       setLoadingDraft(true);
       
-      // First check for draft submission (where submitted_at is null)
+      // Check for draft submission
       const { data: draftData, error: draftError } = await supabase
         .from('submissions')
         .select('*')
         .eq('assignment_id', assignment.id)
         .eq('student_id', studentId)
-        .filter('submitted_at', 'is', null) // Use filter instead of is
-        .order('created_at', { ascending: false })
+        .is('submitted_at', null)
+        .order('attempt_no', { ascending: false })
         .limit(1)
         .maybeSingle();
 
       if (!draftError && draftData) {
-        // Restore draft progress
-        console.log('Restoring draft progress from submission:', draftData.id);
+        console.log('Restoring draft:', draftData.id);
         setDraftSubmissionId(draftData.id);
         setAttemptNumber(draftData.attempt_no);
         
-        const content = draftData.content as any;
-        if (content) {
-          setAnswers(content.answers || {});
-          setCurrentQuestionIndex(content.currentQuestionIndex || 0);
-          setQuestionTimes(content.questionTimes || {});
+        // Load saved answers from question_responses
+        const { data: responses } = await supabase
+          .from('question_responses')
+          .select('*')
+          .eq('submission_id', draftData.id);
+
+        if (responses && responses.length > 0) {
+          const restoredAnswers: Record<string, string | number> = {};
+          const restoredTimes: Record<string, number> = {};
+          
+          responses.forEach(response => {
+            const answerData = response.answer as any;
+            restoredAnswers[response.question_id] = answerData?.value ?? answerData;
+            restoredTimes[response.question_id] = response.time_spent_seconds || 0;
+          });
+          
+          setAnswers(restoredAnswers);
+          setQuestionTimes(restoredTimes);
+          
+          // Find first unanswered question
+          const firstUnanswered = questions.findIndex(q => !restoredAnswers[q.id]);
+          setCurrentQuestionIndex(firstUnanswered >= 0 ? firstUnanswered : 0);
+          
+          toast.success('Progress restored!');
         }
-        
-        toast.success('Progress restored!');
       } else {
-        // Load completed attempts to determine next attempt number
-        const { data, error } = await supabase
+        // Determine next attempt number
+        const { data } = await supabase
           .from('submissions')
           .select('attempt_no')
           .eq('assignment_id', assignment.id)
           .eq('student_id', studentId)
-          .not('submitted_at', 'is', null) // Only count completed submissions
+          .not('submitted_at', 'is', null)
           .order('attempt_no', { ascending: false })
           .limit(1);
 
-        if (error) throw error;
-        if (data && data.length > 0) {
-          const nextAttempt = data[0].attempt_no + 1;
-          setAttemptNumber(nextAttempt);
-          
-          // If they've exceeded max attempts, mark as submitted
-          if (maxAttempts && nextAttempt > maxAttempts) {
-            setSubmitted(true);
-          }
+        const nextAttempt = data && data.length > 0 ? data[0].attempt_no + 1 : 1;
+        setAttemptNumber(nextAttempt);
+        
+        if (maxAttempts && nextAttempt > maxAttempts) {
+          setSubmitted(true);
         }
       }
     } catch (error) {
@@ -143,81 +135,56 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     }
   };
 
-  const saveProgress = async () => {
-    try {
-      console.log('Saving progress...', { answersCount: Object.keys(answers).length, currentIndex: currentQuestionIndex });
-      
-      // Track time for current question before saving
-      const currentQuestionId = questions[currentQuestionIndex]?.id;
-      if (currentQuestionId && currentQuestionStart[currentQuestionId]) {
-        const now = Date.now();
-        const timeSpent = Math.floor((now - currentQuestionStart[currentQuestionId]) / 1000);
-        setQuestionTimes(prev => {
-          const updated = {
-            ...prev,
-            [currentQuestionId]: (prev[currentQuestionId] || 0) + timeSpent
-          };
-          
-          // Save with updated times
-          saveDraftSubmission(updated);
-          return updated;
-        });
-      } else {
-        await saveDraftSubmission(questionTimes);
-      }
-      
-      console.log('Progress saved successfully');
-    } catch (error) {
-      console.error('Error saving progress:', error);
+  const createDraftSubmission = async () => {
+    const { data, error } = await supabase
+      .from('submissions')
+      .insert({
+        assignment_id: assignment.id,
+        student_id: studentId,
+        attempt_no: attemptNumber,
+        content: {},
+        time_spent_seconds: 0,
+        submitted_at: null
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setDraftSubmissionId(data.id);
+      console.log('Draft created:', data.id);
     }
   };
 
-  const saveDraftSubmission = async (currentQuestionTimes: Record<string, number>) => {
-    const draftContent = {
-      answers,
-      currentQuestionIndex,
-      questionTimes: currentQuestionTimes,
-      lastSaved: new Date().toISOString()
-    };
+  const saveAnswer = async (questionId: string, answer: any, timeSpent: number) => {
+    if (!draftSubmissionId) return;
 
-    console.log('Saving draft submission...', { draftId: draftSubmissionId, answersCount: Object.keys(answers).length });
+    // Upsert answer to question_responses
+    const { data: existing } = await supabase
+      .from('question_responses')
+      .select('id')
+      .eq('submission_id', draftSubmissionId)
+      .eq('question_id', questionId)
+      .eq('attempt_number', attemptNumber)
+      .maybeSingle();
 
-    if (draftSubmissionId) {
-      // Update existing draft
-      const { error } = await supabase
-        .from('submissions')
+    if (existing) {
+      await supabase
+        .from('question_responses')
         .update({
-          content: draftContent,
-          time_spent_seconds: Object.values(currentQuestionTimes).reduce((sum, time) => sum + time, 0)
+          answer: { value: answer },
+          time_spent_seconds: timeSpent
         })
-        .eq('id', draftSubmissionId);
-      
-      if (error) {
-        console.error('Error updating draft:', error);
-      } else {
-        console.log('Draft updated successfully');
-      }
+        .eq('id', existing.id);
     } else {
-      // Create new draft submission with explicit null submitted_at
-      const { data, error } = await supabase
-        .from('submissions')
+      await supabase
+        .from('question_responses')
         .insert({
-          assignment_id: assignment.id,
-          student_id: studentId,
-          attempt_no: attemptNumber,
-          content: draftContent,
-          time_spent_seconds: 0,
-          submitted_at: null  // Explicitly set to null for draft
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating draft:', error);
-      } else if (data) {
-        setDraftSubmissionId(data.id);
-        console.log('Draft created successfully:', data.id);
-      }
+          submission_id: draftSubmissionId,
+          question_id: questionId,
+          answer: { value: answer },
+          time_spent_seconds: timeSpent,
+          attempt_number: attemptNumber
+        });
     }
   };
 
@@ -431,10 +398,17 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     loadAttempts();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentQuestionIndex < questions.length - 1) {
-      // Track time before moving to next question
+      // Save current answer before moving
       const currentQuestionId = questions[currentQuestionIndex].id;
+      const currentAnswer = answers[currentQuestionId];
+      const timeSpent = questionTimes[currentQuestionId] || 0;
+      
+      if (currentAnswer !== undefined) {
+        await saveAnswer(currentQuestionId, currentAnswer, timeSpent);
+      }
+      
       trackQuestionTime(currentQuestionId);
       setCurrentQuestionIndex(prev => prev + 1);
     }
