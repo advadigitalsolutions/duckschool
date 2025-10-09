@@ -40,6 +40,8 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
   const [totalScore, setTotalScore] = useState(0);
   const [maxScore, setMaxScore] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  
+  const { config: xpConfig } = useXPConfig();
 
   const questions: Question[] = assignment?.curriculum_items?.body?.questions || [];
   const maxAttempts = assignment?.max_attempts;
