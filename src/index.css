@@ -220,40 +220,40 @@ All colors MUST be HSL.
   letter-spacing: 0.1em !important;
 }
 
-/* Color Overlays - Apply to all major containers */
-.color-overlay-cream,
-.color-overlay-cream * {
-  --background: 38 20% 97% !important;
-  --card: 38 20% 97% !important;
-  --popover: 38 20% 97% !important;
+/* Color Overlays */
+:root.color-overlay-cream {
+  --background: 38 20% 97%;
+  --card: 38 20% 95%;
+  --popover: 38 20% 95%;
+  --muted: 38 20% 93%;
 }
 
-.color-overlay-mint,
-.color-overlay-mint * {
-  --background: 140 50% 97% !important;
-  --card: 140 50% 97% !important;
-  --popover: 140 50% 97% !important;
+:root.color-overlay-mint {
+  --background: 140 50% 97%;
+  --card: 140 50% 95%;
+  --popover: 140 50% 95%;
+  --muted: 140 50% 93%;
 }
 
-.color-overlay-lavender,
-.color-overlay-lavender * {
-  --background: 250 100% 97% !important;
-  --card: 250 100% 97% !important;
-  --popover: 250 100% 97% !important;
+:root.color-overlay-lavender {
+  --background: 250 100% 97%;
+  --card: 250 100% 95%;
+  --popover: 250 100% 95%;
+  --muted: 250 100% 93%;
 }
 
-.color-overlay-peach,
-.color-overlay-peach * {
-  --background: 20 100% 97% !important;
-  --card: 20 100% 97% !important;
-  --popover: 20 100% 97% !important;
+:root.color-overlay-peach {
+  --background: 20 100% 97%;
+  --card: 20 100% 95%;
+  --popover: 20 100% 95%;
+  --muted: 20 100% 93%;
 }
 
-.color-overlay-aqua,
-.color-overlay-aqua * {
-  --background: 200 100% 97% !important;
-  --card: 200 100% 97% !important;
-  --popover: 200 100% 97% !important;
+:root.color-overlay-aqua {
+  --background: 200 100% 97%;
+  --card: 200 100% 95%;
+  --popover: 200 100% 95%;
+  --muted: 200 100% 93%;
 }
 
 /* High Contrast Mode - Actually change colors, not just filter */

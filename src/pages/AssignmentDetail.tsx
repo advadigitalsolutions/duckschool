@@ -13,6 +13,7 @@ import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
 import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
 import { cleanMarkdown } from '@/utils/textFormatting';
 import { BionicText } from '@/components/BionicText';
+import { useFocusMode } from '@/hooks/useFocusMode';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -21,6 +22,7 @@ export default function AssignmentDetail() {
   const [loading, setLoading] = useState(true);
   const [currentStudentId, setCurrentStudentId] = useState<string | null>(null);
   const [isParent, setIsParent] = useState(false);
+  const focusRef = useFocusMode();
 
   useEffect(() => {
     fetchAssignment();
@@ -139,7 +141,7 @@ export default function AssignmentDetail() {
         </div>
       </header>
 
-      <div className="container mx-auto p-4 md:p-8">
+      <div className="container mx-auto p-4 md:p-8" ref={focusRef}>
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Badge variant={

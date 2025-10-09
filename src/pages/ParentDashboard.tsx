@@ -25,6 +25,7 @@ import { EditStudentDialog } from '@/components/EditStudentDialog';
 import { DeleteStudentDialog } from '@/components/DeleteStudentDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Pencil, Trash2, User } from 'lucide-react';
+import { useFocusMode } from '@/hooks/useFocusMode';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -37,6 +38,7 @@ export default function ParentDashboard() {
   const [userName, setUserName] = useState('');
   const [userAvatar, setUserAvatar] = useState('');
   const navigate = useNavigate();
+  const focusRef = useFocusMode();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -173,7 +175,7 @@ export default function ParentDashboard() {
         </div>
       </header>
 
-      <div className="container mx-auto p-4 md:p-8">
+      <div className="container mx-auto p-4 md:p-8" ref={focusRef}>
         {/* KPI Cards */}
         <div className="grid gap-4 md:grid-cols-3 mb-8">
           <Card>
