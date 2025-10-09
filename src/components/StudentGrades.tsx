@@ -236,7 +236,11 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
                                           grade.assignment.curriculum_items.title;
 
                     return (
-                      <div key={grade.id} className="flex items-center justify-between p-3 rounded-lg border">
+                      <div 
+                        key={grade.id} 
+                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                        onClick={() => window.location.href = `/assignment/${grade.assignment_id}`}
+                      >
                         <div className="flex-1">
                           <div className="font-medium">{assignmentTitle}</div>
                           <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">

@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.generate-profile-assessment]
 verify_jwt = false
+
+[functions.generate-remedial-assignment]
+verify_jwt = false

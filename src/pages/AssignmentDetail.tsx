@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Clock, Target, BookOpen, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Clock, Target, BookOpen, CheckCircle2, Brain, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AssignmentQuestions } from '@/components/AssignmentQuestions';
@@ -21,6 +21,8 @@ export default function AssignmentDetail() {
   const [loading, setLoading] = useState(true);
   const [currentStudentId, setCurrentStudentId] = useState<string | null>(null);
   const [isParent, setIsParent] = useState(false);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [generatingRemedial, setGeneratingRemedial] = useState(false);
 
   useEffect(() => {
     fetchAssignment();
@@ -69,6 +71,22 @@ export default function AssignmentDetail() {
 
       if (error) throw error;
       setAssignment(data);
+
+      // If parent, fetch student submissions
+      if (parentStudents && parentStudents.length > 0) {
+        const { data: submissionsData } = await supabase
+          .from('submissions')
+          .select(`
+            *,
+            question_responses (*)
+          `)
+          .eq('assignment_id', id)
+          .order('attempt_no', { ascending: false });
+        
+        if (submissionsData) {
+          setSubmissions(submissionsData);
+        }
+      }
     } catch (error: any) {
       toast.error('Failed to load assignment');
       console.error(error);
@@ -91,6 +109,34 @@ export default function AssignmentDetail() {
     } catch (error: any) {
       toast.error('Failed to publish assignment');
       console.error(error);
+    }
+  };
+
+  const handleGenerateRemedialAssignment = async () => {
+    if (!studentId) {
+      toast.error('Student ID not found');
+      return;
+    }
+
+    setGeneratingRemedial(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-remedial-assignment', {
+        body: {
+          assignmentId: id,
+          studentId: studentId,
+          courseId: assignment.curriculum_items.course_id
+        }
+      });
+
+      if (error) throw error;
+      
+      toast.success('Remedial assignment created successfully!');
+      navigate(`/assignment/${data.assignmentId}`);
+    } catch (error: any) {
+      toast.error('Failed to generate remedial assignment');
+      console.error(error);
+    } finally {
+      setGeneratingRemedial(false);
     }
   };
 
@@ -181,6 +227,9 @@ export default function AssignmentDetail() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="questions">Questions</TabsTrigger>
+            {isParent && submissions.length > 0 && (
+              <TabsTrigger value="attempts">Student Attempts</TabsTrigger>
+            )}
             <TabsTrigger value="instructions">Instructions</TabsTrigger>
             <TabsTrigger value="rubric">Rubric</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
@@ -197,6 +246,106 @@ export default function AssignmentDetail() {
               </Card>
             )}
           </TabsContent>
+
+          {isParent && submissions.length > 0 && (
+            <TabsContent value="attempts" className="space-y-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Student Submission History</h3>
+                <Button 
+                  onClick={handleGenerateRemedialAssignment}
+                  disabled={generatingRemedial}
+                  className="gap-2"
+                >
+                  <Brain className="h-4 w-4" />
+                  {generatingRemedial ? 'Generating...' : 'Generate Targeted Assignment'}
+                </Button>
+              </div>
+              
+              {submissions.map((submission) => (
+                <Card key={submission.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">
+                        Attempt #{submission.attempt_no}
+                      </CardTitle>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {Math.floor(submission.time_spent_seconds / 60)} min
+                        </span>
+                        <span>
+                          {new Date(submission.submitted_at).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {submission.question_responses && submission.question_responses.length > 0 ? (
+                      <div className="space-y-4">
+                        {submission.question_responses.map((response: any, idx: number) => {
+                          const question = content.questions?.find((q: any) => q.id === response.question_id);
+                          if (!question) return null;
+                          
+                          return (
+                            <div key={response.id} className="border rounded-lg p-4">
+                              <div className="flex items-start justify-between mb-2">
+                                <h4 className="font-medium flex-1">
+                                  Question {idx + 1}: <BionicText>{question.question}</BionicText>
+                                </h4>
+                                <Badge variant={response.is_correct ? 'default' : 'destructive'}>
+                                  {response.is_correct ? 'Correct' : 'Incorrect'}
+                                </Badge>
+                              </div>
+                              
+                              <div className="space-y-2 text-sm">
+                                <div>
+                                  <span className="font-medium">Student Answer: </span>
+                                  <span className="text-muted-foreground">
+                                    {typeof response.answer === 'object' 
+                                      ? JSON.stringify(response.answer) 
+                                      : response.answer}
+                                  </span>
+                                </div>
+                                
+                                {!response.is_correct && (
+                                  <div>
+                                    <span className="font-medium">Correct Answer: </span>
+                                    <span className="text-success">
+                                      {typeof question.correct_answer === 'object'
+                                        ? JSON.stringify(question.correct_answer)
+                                        : question.correct_answer}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {question.explanation && (
+                                  <div className="pt-2 border-t">
+                                    <span className="font-medium">Explanation: </span>
+                                    <p className="text-muted-foreground mt-1">
+                                      <BionicText>{question.explanation}</BionicText>
+                                    </p>
+                                  </div>
+                                )}
+                                
+                                {response.time_spent_seconds > 0 && (
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Clock className="h-3 w-3" />
+                                    {response.time_spent_seconds}s spent
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">No question responses recorded.</p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+          )}
 
           <TabsContent value="overview" className="space-y-4">
             <Card>
