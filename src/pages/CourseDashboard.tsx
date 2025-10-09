@@ -105,6 +105,7 @@ export default function CourseDashboard() {
           courseId={course.id}
           courseTitle={course.title}
           courseSubject={course.subject}
+          gradeLevel={course.grade_level}
         />
       </div>
     </div>

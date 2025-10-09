@@ -17,6 +17,8 @@ interface PacingMetrics {
   onTrackStatus: 'ahead' | 'on-track' | 'behind' | 'unknown';
   recommendedDailyMinutes: number;
   masteryData: MasteryData;
+  needsConfiguration: boolean;
+  missingData: string[];
 }
 
 interface TimeBySubject {
@@ -74,6 +76,25 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         .single();
 
       if (!course) return;
+
+      // Check for missing critical configuration
+      const missingData: string[] = [];
+      const needsConfiguration = 
+        !course.standards_scope || 
+        (Array.isArray(course.standards_scope) && course.standards_scope.length === 0) ||
+        !course.grade_level ||
+        !course.curriculum_items ||
+        course.curriculum_items.length === 0;
+
+      if (!course.standards_scope || (Array.isArray(course.standards_scope) && course.standards_scope.length === 0)) {
+        missingData.push('Regional standards or learning framework');
+      }
+      if (!course.grade_level) {
+        missingData.push('Grade level');
+      }
+      if (!course.curriculum_items || course.curriculum_items.length === 0) {
+        missingData.push('Curriculum content and assignments');
+      }
 
       // Calculate total estimated minutes
       const totalEstimatedMinutes = course.curriculum_items?.reduce(
@@ -197,7 +218,9 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         daysRemaining,
         onTrackStatus,
         recommendedDailyMinutes,
-        masteryData
+        masteryData,
+        needsConfiguration,
+        missingData
       });
 
       setStandardsCoverage(standardsCoverage);

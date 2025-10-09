@@ -10,15 +10,17 @@ import { format } from 'date-fns';
 import { useCoursePacing } from '@/hooks/useCoursePacing';
 import { CourseMasteryChart } from './CourseMasteryChart';
 import { CourseProgressCharts } from './CourseProgressCharts';
+import { CourseConfigurationPrompt } from './CourseConfigurationPrompt';
 import { cn } from '@/lib/utils';
 
 interface CoursePacingDashboardProps {
   courseId: string;
   courseTitle: string;
   courseSubject: string;
+  gradeLevel?: string;
 }
 
-export function CoursePacingDashboard({ courseId, courseTitle, courseSubject }: CoursePacingDashboardProps) {
+export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, gradeLevel }: CoursePacingDashboardProps) {
   const [targetDate, setTargetDate] = useState<Date | undefined>();
   const { loading, metrics, timeBySubject, standardsCoverage, refreshMetrics } = useCoursePacing(
     courseId,
@@ -84,6 +86,16 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject }: 
         <p className="text-muted-foreground">{courseSubject} - Course Progress Dashboard</p>
       </div>
 
+      {/* Configuration Prompt if needed */}
+      {metrics.needsConfiguration && (
+        <CourseConfigurationPrompt
+          missingData={metrics.missingData}
+          courseId={courseId}
+          gradeLevel={gradeLevel}
+          subject={courseSubject}
+        />
+      )}
+
       {/* Overall Progress Card */}
       <Card>
         <CardHeader>
@@ -117,8 +129,14 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject }: 
             <div className="rounded-lg border p-4">
               <div className="text-sm text-muted-foreground mb-1">Average Pace</div>
               <div className="text-2xl font-bold">
-                {Math.round(metrics.averageMinutesPerDay)} min/day
+                {metrics.averageMinutesPerDay > 0 
+                  ? `${Math.round(metrics.averageMinutesPerDay)} min/day`
+                  : '—'
+                }
               </div>
+              {metrics.averageMinutesPerDay === 0 && !metrics.needsConfiguration && (
+                <div className="text-xs text-muted-foreground mt-1">No activity yet</div>
+              )}
             </div>
             
             <div className="rounded-lg border p-4">
