@@ -410,8 +410,22 @@ All colors MUST be HSL.
   z-index: -1;
 }
 
-/* Keep header above overlay */
+/* Header is dimmed by default - behind overlay */
 .focus-mode header {
   position: relative;
+}
+
+/* Header brightens when hovered */
+.focus-mode header:hover {
   z-index: 999;
+  isolation: isolate;
+}
+
+/* Create backdrop for hovered header */
+.focus-mode header:hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: hsl(var(--background));
+  z-index: -1;
 }
