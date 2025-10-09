@@ -12,12 +12,12 @@ import {
   TrendingUp,
   FileText,
   Settings,
-  LogOut,
-  Plus
+  LogOut
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { AddStudentDialog } from '@/components/AddStudentDialog';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -178,14 +178,11 @@ export default function ParentDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   {students.length === 0 ? (
-                    <div className="text-center py-12">
-                      <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground mb-4">No students added yet</p>
-                      <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Student
-                      </Button>
-                    </div>
+                  <div className="text-center py-12">
+                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">No students added yet</p>
+                    <AddStudentDialog onStudentAdded={fetchDashboardData} />
+                  </div>
                   ) : (
                     <p className="text-muted-foreground">Activity feed coming soon...</p>
                   )}
@@ -204,10 +201,7 @@ export default function ParentDashboard() {
                 {students.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground mb-4">No students yet</p>
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Student
-                    </Button>
+                    <AddStudentDialog onStudentAdded={fetchDashboardData} />
                   </div>
                 ) : (
                   <div className="space-y-4">
