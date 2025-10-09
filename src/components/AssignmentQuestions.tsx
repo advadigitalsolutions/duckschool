@@ -320,12 +320,11 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
           {/* Numeric Answer */}
           {currentQuestion.type === 'numeric' && (
             <Input
-              type="number"
-              step="any"
+              type="text"
               value={answers[currentQuestion.id] || ''}
               onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
               disabled={submitted}
-              placeholder="Enter your answer"
+              placeholder="Enter your answer (e.g., 3/8 or 0.375)"
             />
           )}
 
