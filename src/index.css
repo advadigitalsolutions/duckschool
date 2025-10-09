@@ -359,16 +359,7 @@ All colors MUST be HSL.
   --focus-glow-intensity: 1;
 }
 
-@keyframes shimmer {
-  0%, 100% {
-    opacity: 1;
-    filter: brightness(1);
-  }
-  50% {
-    opacity: 0.85;
-    filter: brightness(1.2);
-  }
-}
+/* Shimmer animation removed - keeping cards static while maintaining glow */
 
 .focus-mode {
   position: relative;
@@ -409,7 +400,6 @@ All colors MUST be HSL.
     0 0 calc(150px * var(--focus-glow-intensity)) calc(60px * var(--focus-glow-intensity)) rgba(255, 215, 0, calc(0.3 * var(--focus-glow-intensity))),
     0 0 calc(300px * var(--focus-glow-intensity)) calc(100px * var(--focus-glow-intensity)) rgba(255, 215, 0, calc(0.15 * var(--focus-glow-intensity))),
     0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
-  animation: shimmer 2s ease-in-out infinite;
 }
 
 /* Blue glow */
@@ -421,7 +411,6 @@ All colors MUST be HSL.
     0 0 calc(150px * var(--focus-glow-intensity)) calc(60px * var(--focus-glow-intensity)) rgba(59, 130, 246, calc(0.3 * var(--focus-glow-intensity))),
     0 0 calc(300px * var(--focus-glow-intensity)) calc(100px * var(--focus-glow-intensity)) rgba(59, 130, 246, calc(0.15 * var(--focus-glow-intensity))),
     0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
-  animation: shimmer 2s ease-in-out infinite;
 }
 
 /* Green glow */
@@ -433,7 +422,6 @@ All colors MUST be HSL.
     0 0 calc(150px * var(--focus-glow-intensity)) calc(60px * var(--focus-glow-intensity)) rgba(34, 197, 94, calc(0.3 * var(--focus-glow-intensity))),
     0 0 calc(300px * var(--focus-glow-intensity)) calc(100px * var(--focus-glow-intensity)) rgba(34, 197, 94, calc(0.15 * var(--focus-glow-intensity))),
     0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
-  animation: shimmer 2s ease-in-out infinite;
 }
 
 /* Purple glow */
@@ -445,7 +433,6 @@ All colors MUST be HSL.
     0 0 calc(150px * var(--focus-glow-intensity)) calc(60px * var(--focus-glow-intensity)) rgba(168, 85, 247, calc(0.3 * var(--focus-glow-intensity))),
     0 0 calc(300px * var(--focus-glow-intensity)) calc(100px * var(--focus-glow-intensity)) rgba(168, 85, 247, calc(0.15 * var(--focus-glow-intensity))),
     0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
-  animation: shimmer 2s ease-in-out infinite;
 }
 
 /* Red glow */
@@ -457,7 +444,6 @@ All colors MUST be HSL.
     0 0 calc(150px * var(--focus-glow-intensity)) calc(60px * var(--focus-glow-intensity)) rgba(239, 68, 68, calc(0.3 * var(--focus-glow-intensity))),
     0 0 calc(300px * var(--focus-glow-intensity)) calc(100px * var(--focus-glow-intensity)) rgba(239, 68, 68, calc(0.15 * var(--focus-glow-intensity))),
     0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
-  animation: shimmer 2s ease-in-out infinite;
 }
 
 /* Rainbow glow */
@@ -471,7 +457,6 @@ All colors MUST be HSL.
     0 0 calc(230px * var(--focus-glow-intensity)) calc(90px * var(--focus-glow-intensity)) rgba(0, 0, 255, calc(0.3 * var(--focus-glow-intensity))),
     0 0 calc(300px * var(--focus-glow-intensity)) calc(110px * var(--focus-glow-intensity)) rgba(128, 0, 255, calc(0.2 * var(--focus-glow-intensity))),
     0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
-  animation: shimmer 1.8s ease-in-out infinite;
 }
 
 /* Trans flag glow */
@@ -484,7 +469,6 @@ All colors MUST be HSL.
     0 0 calc(200px * var(--focus-glow-intensity)) calc(80px * var(--focus-glow-intensity)) rgba(245, 169, 184, calc(0.5 * var(--focus-glow-intensity))),
     0 0 calc(270px * var(--focus-glow-intensity)) calc(100px * var(--focus-glow-intensity)) rgba(91, 206, 250, calc(0.4 * var(--focus-glow-intensity))),
     0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
-  animation: shimmer 2.2s ease-in-out infinite;
 }
 
 /* No glow */
