@@ -159,7 +159,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
             <span className="font-semibold">Total Required Hours:</span>{' '}
             <span className="text-muted-foreground">
               {(metrics as any)?.framework === 'CUSTOM' 
-                ? 'Based on AI-generated learning milestones from your course goals. Each milestone has an estimated time requirement.'
+                ? 'Based on learning milestones from your course goals. Each milestone has an estimated time requirement.'
                 : `Based on ${getFrameworkName()} official standards for ${courseSubject} at grade ${gradeLevel}. Each standard has an estimated time requirement.`
               }
             </span>
