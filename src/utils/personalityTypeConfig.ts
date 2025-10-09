@@ -15,7 +15,7 @@ export const personalityTypeConfigs: Record<string, PersonalityTypeConfig> = {
   'Visual Learner': {
     name: 'Visual Learner',
     color: 'hsl(var(--chart-1))',
-    gradient: 'from-purple-500 to-pink-500',
+    gradient: 'from-primary/80 to-primary',
     icon: 'Eye',
     description: 'You learn best through seeing and visualizing information. Images, diagrams, and visual demonstrations help you understand and remember concepts.',
     characteristics: [
@@ -39,7 +39,7 @@ export const personalityTypeConfigs: Record<string, PersonalityTypeConfig> = {
   'Kinesthetic Learner': {
     name: 'Kinesthetic Learner',
     color: 'hsl(var(--chart-2))',
-    gradient: 'from-orange-500 to-red-500',
+    gradient: 'from-accent/80 to-accent',
     icon: 'Hand',
     description: 'You learn best through hands-on experiences and physical activity. Movement and touch help you understand and retain information.',
     characteristics: [
@@ -63,7 +63,7 @@ export const personalityTypeConfigs: Record<string, PersonalityTypeConfig> = {
   'Auditory Learner': {
     name: 'Auditory Learner',
     color: 'hsl(var(--chart-3))',
-    gradient: 'from-blue-500 to-cyan-500',
+    gradient: 'from-primary/70 to-secondary',
     icon: 'Ear',
     description: 'You learn best through listening and speaking. Hearing information and discussing concepts helps you understand and remember.',
     characteristics: [
@@ -87,7 +87,7 @@ export const personalityTypeConfigs: Record<string, PersonalityTypeConfig> = {
   'Reading/Writing Learner': {
     name: 'Reading/Writing Learner',
     color: 'hsl(var(--chart-4))',
-    gradient: 'from-green-500 to-emerald-500',
+    gradient: 'from-secondary/80 to-secondary',
     icon: 'BookOpen',
     description: 'You learn best through reading and writing. Written words help you process, understand, and remember information most effectively.',
     characteristics: [
@@ -111,7 +111,7 @@ export const personalityTypeConfigs: Record<string, PersonalityTypeConfig> = {
   'Multimodal Learner': {
     name: 'Multimodal Learner',
     color: 'hsl(var(--chart-5))',
-    gradient: 'from-indigo-500 to-purple-500',
+    gradient: 'from-primary/60 to-accent/80',
     icon: 'Sparkles',
     description: 'You learn effectively through multiple modalities. You adapt your learning style based on the situation and combine different approaches.',
     characteristics: [
