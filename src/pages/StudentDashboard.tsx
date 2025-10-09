@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   PlayCircle, 
   Clock, 
@@ -11,7 +13,9 @@ import {
   Award,
   LogOut,
   Pause,
-  RotateCcw
+  RotateCcw,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -27,6 +31,8 @@ export default function StudentDashboard() {
   const [completedToday, setCompletedToday] = useState(0);
   const [streak, setStreak] = useState(0);
   const [dailyQuote, setDailyQuote] = useState('');
+  const [dailyGoals, setDailyGoals] = useState<any[]>([]);
+  const [newGoalText, setNewGoalText] = useState('');
   const navigate = useNavigate();
 
   const motivationalQuotes = [
@@ -222,12 +228,143 @@ export default function StudentDashboard() {
 
       setCompletedToday(completedData?.length || 0);
 
-      // TODO: Calculate streak from progress_events
-      setStreak(3);
+      // Calculate streak from submissions
+      await calculateStreak(studentData?.id);
+
+      // Fetch today's goals
+      await fetchDailyGoals(studentData?.id);
     } catch (error: any) {
       toast.error('Failed to load student data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const calculateStreak = async (studentId: string) => {
+    try {
+      // Get all submissions ordered by date
+      const { data: submissions } = await supabase
+        .from('submissions')
+        .select('submitted_at')
+        .eq('student_id', studentId)
+        .order('submitted_at', { ascending: false });
+
+      if (!submissions || submissions.length === 0) {
+        setStreak(0);
+        return;
+      }
+
+      // Group submissions by date
+      const submissionDates = new Set(
+        submissions.map(s => new Date(s.submitted_at).toISOString().split('T')[0])
+      );
+
+      // Calculate consecutive days
+      let currentStreak = 0;
+      let checkDate = new Date();
+      
+      // Check if there's a submission today or yesterday to start counting
+      const today = checkDate.toISOString().split('T')[0];
+      checkDate.setDate(checkDate.getDate() - 1);
+      const yesterday = checkDate.toISOString().split('T')[0];
+      
+      if (!submissionDates.has(today) && !submissionDates.has(yesterday)) {
+        setStreak(0);
+        return;
+      }
+
+      // Start from today and go backwards
+      checkDate = new Date();
+      while (true) {
+        const dateStr = checkDate.toISOString().split('T')[0];
+        if (submissionDates.has(dateStr)) {
+          currentStreak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else if (currentStreak === 0 && dateStr === today) {
+          // If no submission today, check yesterday
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+
+      setStreak(currentStreak);
+    } catch (error) {
+      console.error('Error calculating streak:', error);
+      setStreak(0);
+    }
+  };
+
+  const fetchDailyGoals = async (studentId: string) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('daily_goals')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('date', today)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setDailyGoals(data || []);
+    } catch (error) {
+      console.error('Error fetching daily goals:', error);
+    }
+  };
+
+  const addDailyGoal = async () => {
+    if (!newGoalText.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('daily_goals')
+        .insert({
+          student_id: student.id,
+          goal_text: newGoalText.trim(),
+          date: new Date().toISOString().split('T')[0]
+        });
+
+      if (error) throw error;
+      
+      setNewGoalText('');
+      await fetchDailyGoals(student.id);
+      toast.success('Goal added!');
+    } catch (error) {
+      console.error('Error adding goal:', error);
+      toast.error('Failed to add goal');
+    }
+  };
+
+  const toggleGoalComplete = async (goalId: string, completed: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('daily_goals')
+        .update({ completed })
+        .eq('id', goalId);
+
+      if (error) throw error;
+      
+      await fetchDailyGoals(student.id);
+    } catch (error) {
+      console.error('Error updating goal:', error);
+      toast.error('Failed to update goal');
+    }
+  };
+
+  const deleteGoal = async (goalId: string) => {
+    try {
+      const { error } = await supabase
+        .from('daily_goals')
+        .delete()
+        .eq('id', goalId);
+
+      if (error) throw error;
+      
+      await fetchDailyGoals(student.id);
+      toast.success('Goal deleted');
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      toast.error('Failed to delete goal');
     }
   };
 
@@ -438,18 +575,47 @@ export default function StudentDashboard() {
             <CardDescription>Small steps to keep you on track</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" className="h-4 w-4" />
-                <span className="text-sm">Complete morning math lesson</span>
+            <div className="space-y-4">
+              {/* Add new goal */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add a new goal..."
+                  value={newGoalText}
+                  onChange={(e) => setNewGoalText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addDailyGoal()}
+                />
+                <Button onClick={addDailyGoal} size="icon">
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" className="h-4 w-4" />
-                <span className="text-sm">Read 2 chapters of history</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" className="h-4 w-4" />
-                <span className="text-sm">Write science lab report</span>
+
+              {/* Goals list */}
+              <div className="space-y-2">
+                {dailyGoals.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No goals yet. Add one above to get started!
+                  </p>
+                ) : (
+                  dailyGoals.map((goal) => (
+                    <div key={goal.id} className="flex items-center gap-2 group">
+                      <Checkbox
+                        checked={goal.completed}
+                        onCheckedChange={(checked) => toggleGoalComplete(goal.id, checked as boolean)}
+                      />
+                      <span className={`text-sm flex-1 ${goal.completed ? 'line-through text-muted-foreground' : ''}`}>
+                        {goal.goal_text}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => deleteGoal(goal.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </CardContent>

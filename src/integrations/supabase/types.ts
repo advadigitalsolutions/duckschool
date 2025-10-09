@@ -348,6 +348,41 @@ export type Database = {
           },
         ]
       }
+      daily_goals: {
+        Row: {
+          completed: boolean
+          created_at: string
+          date: string
+          goal_text: string
+          id: string
+          student_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          date?: string
+          goal_text: string
+          id?: string
+          student_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          date?: string
+          goal_text?: string
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_student"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grades: {
         Row: {
           assignment_id: string | null
