@@ -12,6 +12,7 @@ import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronLeft, ChevronRight } f
 import { cleanMarkdown } from '@/utils/textFormatting';
 import { useXPConfig } from '@/hooks/useXP';
 import { BionicText } from './BionicText';
+import { TextToSpeech } from './TextToSpeech';
 
 interface Question {
   id: string;
@@ -374,7 +375,10 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-lg"><BionicText>{question.question}</BionicText></p>
+                <div className="space-y-2">
+                  <p className="text-lg"><BionicText>{question.question}</BionicText></p>
+                  <TextToSpeech text={question.question} />
+                </div>
 
                 {/* Display Answer Based on Type */}
                 <div className="p-3 bg-muted rounded-lg">
@@ -434,7 +438,10 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-lg"><BionicText>{cleanMarkdown(currentQuestion.question)}</BionicText></p>
+            <div className="space-y-2">
+              <p className="text-lg"><BionicText>{cleanMarkdown(currentQuestion.question)}</BionicText></p>
+              <TextToSpeech text={cleanMarkdown(currentQuestion.question)} />
+            </div>
 
             {/* Multiple Choice */}
             {currentQuestion.type === 'multiple_choice' && (

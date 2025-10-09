@@ -16,6 +16,7 @@ import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
 import { cleanMarkdown } from '@/utils/textFormatting';
 import { BionicText } from '@/components/BionicText';
 import { StudyGuidePanel } from '@/components/StudyGuidePanel';
+import { TextToSpeech } from '@/components/TextToSpeech';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -585,14 +586,17 @@ export default function AssignmentDetail() {
               </CardHeader>
               <CardContent>
                   {content.objectives?.length > 0 ? (
-                  <ul className="space-y-2">
-                    {content.objectives.map((obj: string, idx: number) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                        <BionicText>{obj}</BionicText>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="space-y-4">
+                    <TextToSpeech text={content.objectives?.join('. ') || ''} />
+                    <ul className="space-y-2">
+                      {content.objectives.map((obj: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                          <BionicText>{obj}</BionicText>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ) : (
                   <p className="text-muted-foreground">No objectives defined</p>
                 )}
@@ -631,9 +635,12 @@ export default function AssignmentDetail() {
                 <CardTitle>Instructions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="prose dark:prose-invert max-w-none">
+                <div className="prose dark:prose-invert max-w-none space-y-4">
                   {content.instructions ? (
-                    <p className="whitespace-pre-wrap"><BionicText>{cleanMarkdown(content.instructions)}</BionicText></p>
+                    <>
+                      <TextToSpeech text={cleanMarkdown(content.instructions)} />
+                      <p className="whitespace-pre-wrap"><BionicText>{cleanMarkdown(content.instructions)}</BionicText></p>
+                    </>
                   ) : (
                     <p className="text-muted-foreground">No instructions provided</p>
                   )}
