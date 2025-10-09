@@ -13,17 +13,23 @@ const Index = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // Get user profile to determine role
-        const { data: profile } = await supabase
-          .from('profiles')
+        // Get user roles from user_roles table
+        const { data: roles } = await supabase
+          .from('user_roles')
           .select('role')
-          .eq('id', session.user.id)
-          .single();
+          .eq('user_id', session.user.id);
 
-        if (profile?.role === 'student') {
-          navigate('/student');
-        } else {
-          navigate('/parent');
+        if (roles && roles.length > 0) {
+          const userRoles = roles.map(r => r.role);
+          
+          // Redirect based on role priority
+          if (userRoles.includes('student')) {
+            navigate('/student');
+          } else if (userRoles.includes('self_directed_learner')) {
+            navigate('/parent'); // Will show unified dashboard
+          } else {
+            navigate('/parent');
+          }
         }
       }
     };

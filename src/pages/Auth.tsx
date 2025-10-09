@@ -162,6 +162,7 @@ export default function Auth() {
                   >
                     <option value="parent">Parent/Teacher</option>
                     <option value="student">Student</option>
+                    <option value="self_directed_learner">Self-Directed Learner</option>
                   </select>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>

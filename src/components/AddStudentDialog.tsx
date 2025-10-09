@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ interface AddStudentDialogProps {
 export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [createLogin, setCreateLogin] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,10 +35,34 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
     const gradeLevel = formData.get('gradeLevel') as string;
     const accommodationsText = formData.get('accommodations') as string;
     const goalsText = formData.get('goals') as string;
+    const studentEmail = formData.get('studentEmail') as string;
+    const studentPassword = formData.get('studentPassword') as string;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
+
+      let studentUserId: string | null = null;
+
+      // Create student login if requested
+      if (createLogin && studentEmail && studentPassword) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: studentEmail,
+          password: studentPassword,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              name,
+              role: 'student'
+            }
+          }
+        });
+
+        if (authError) throw authError;
+        studentUserId = authData.user?.id || null;
+        
+        if (!studentUserId) throw new Error('Failed to create student account');
+      }
 
       // Parse accommodations and goals
       const accommodations = accommodationsText 
@@ -53,14 +79,20 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
           dob: dob || null,
           grade_level: gradeLevel,
           parent_id: user.id,
+          user_id: studentUserId,
           accommodations,
           goals,
         });
 
       if (error) throw error;
 
-      toast.success('Student added successfully!');
+      toast.success(
+        createLogin 
+          ? 'Student profile and login created successfully!' 
+          : 'Student profile added successfully!'
+      );
       setOpen(false);
+      setCreateLogin(false);
       onStudentAdded();
       
       // Reset form
@@ -136,6 +168,49 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
               placeholder="e.g., Complete 10th grade curriculum, prepare for GED"
               rows={3}
             />
+          </div>
+
+          <div className="space-y-4 border-t pt-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="createLogin"
+                checked={createLogin}
+                onCheckedChange={(checked) => setCreateLogin(checked === true)}
+              />
+              <Label 
+                htmlFor="createLogin" 
+                className="text-sm font-normal cursor-pointer"
+              >
+                Create student login account
+              </Label>
+            </div>
+
+            {createLogin && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="studentEmail">Student Email *</Label>
+                  <Input
+                    id="studentEmail"
+                    name="studentEmail"
+                    type="email"
+                    placeholder="student@example.com"
+                    required={createLogin}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="studentPassword">Student Password *</Label>
+                  <Input
+                    id="studentPassword"
+                    name="studentPassword"
+                    type="password"
+                    minLength={6}
+                    placeholder="Minimum 6 characters"
+                    required={createLogin}
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2">
