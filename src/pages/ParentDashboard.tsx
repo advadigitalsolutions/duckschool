@@ -41,8 +41,33 @@ export default function ParentDashboard() {
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    checkRoleAndFetch();
   }, []);
+
+  const checkRoleAndFetch = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check user role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (roleData?.role === 'student') {
+        // Redirect to student dashboard if they're a student
+        navigate('/student');
+        return;
+      }
+
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error checking role:', error);
+      fetchDashboardData();
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
