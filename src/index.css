@@ -359,7 +359,7 @@ All colors MUST be HSL.
   position: relative;
 }
 
-/* Add dark overlay for light mode */
+/* Add dark overlay for the entire page */
 .focus-mode::before {
   content: '';
   position: fixed;
@@ -367,50 +367,55 @@ All colors MUST be HSL.
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   pointer-events: none;
-  z-index: 1;
+  z-index: 999;
   transition: opacity 0.3s ease;
 }
 
 /* Lighter overlay for dark mode */
 .dark.focus-mode::before {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.6);
 }
 
-/* Dim all cards when focus mode is active */
+/* All content should be below the overlay by default */
+.focus-mode > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Cards default state - behind overlay */
 .focus-mode [class*="card"],
 .focus-mode [class*="Card"] {
-  transition: opacity 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
 
-/* Light up card on hover with yellow glow */
+/* Hovered card appears on top of overlay with white background */
 .focus-mode [class*="card"]:hover,
 .focus-mode [class*="Card"]:hover {
+  z-index: 1000 !important;
   transform: translateY(-2px);
   box-shadow: 
-    0 0 30px 10px rgba(255, 215, 0, 0.5),
-    0 0 60px 20px rgba(255, 215, 0, 0.25),
-    0 10px 30px -5px rgba(0, 0, 0, 0.3) !important;
-  z-index: 10;
-  position: relative;
+    0 0 30px 10px rgba(255, 215, 0, 0.6),
+    0 0 60px 20px rgba(255, 215, 0, 0.3),
+    0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Keep header visible */
-.focus-mode header,
-.focus-mode header * {
+/* Keep header above overlay */
+.focus-mode header {
   position: relative;
-  z-index: 10;
+  z-index: 1000;
 }
 
-/* Don't dim buttons, inputs, or interactive elements inside cards */
-.focus-mode button,
-.focus-mode input,
-.focus-mode textarea,
-.focus-mode select,
-.focus-mode a {
+/* Ensure all interactive elements in hovered cards work */
+.focus-mode [class*="card"]:hover button,
+.focus-mode [class*="Card"]:hover button,
+.focus-mode [class*="card"]:hover input,
+.focus-mode [class*="Card"]:hover input,
+.focus-mode [class*="card"]:hover a,
+.focus-mode [class*="Card"]:hover a {
   position: relative;
-  z-index: 3;
+  z-index: 1;
 }
