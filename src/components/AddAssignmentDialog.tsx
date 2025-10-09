@@ -1,9 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +8,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -19,8 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
 
 interface AddAssignmentDialogProps {
   courses: any[];
@@ -28,60 +28,81 @@ interface AddAssignmentDialogProps {
   onAssignmentAdded: () => void;
 }
 
-export const AddAssignmentDialog = ({ courses, studentId, onAssignmentAdded }: AddAssignmentDialogProps) => {
+export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: AddAssignmentDialogProps) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [topic, setTopic] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const courseId = formData.get('courseId') as string;
-    const title = formData.get('title') as string;
-    const type = formData.get('type') as string;
-    const description = formData.get('description') as string;
-    const estMinutes = parseInt(formData.get('estMinutes') as string) || 30;
-    const dueAt = formData.get('dueAt') as string;
+    if (!topic.trim()) {
+      toast.error('Please enter a topic for the assignment');
+      return;
+    }
+
+    setIsGenerating(true);
 
     try {
-      // First create curriculum item
-      const { data: curriculumItem, error: itemError } = await supabase
+      const selectedCourseData = courses.find(c => c.id === selectedCourse);
+      if (!selectedCourseData) throw new Error('Course not found');
+
+      // Generate assignment content with AI
+      const { data: generatedContent, error: generateError } = await supabase.functions.invoke(
+        'generate-assignment',
+        {
+          body: {
+            courseTitle: selectedCourseData.title,
+            courseSubject: selectedCourseData.subject,
+            topic: topic,
+            gradeLevel: selectedCourseData.grade_level,
+            standards: selectedCourseData.standards_scope
+          }
+        }
+      );
+
+      if (generateError) throw generateError;
+
+      // Create curriculum item with generated content
+      const { data: curriculumItem, error: curriculumError } = await supabase
         .from('curriculum_items')
         .insert({
-          course_id: courseId,
-          title,
-          type,
-          body: { description },
-          est_minutes: estMinutes,
+          course_id: selectedCourse,
+          title: generatedContent.title,
+          type: 'assignment',
+          body: generatedContent,
+          est_minutes: generatedContent.estimated_minutes || 60
         } as any)
         .select()
         .single();
 
-      if (itemError) throw itemError;
+      if (curriculumError) throw curriculumError;
 
-      // Then create assignment
+      // Create the assignment
       const { error: assignmentError } = await supabase
         .from('assignments')
         .insert({
           curriculum_item_id: curriculumItem.id,
-          due_at: dueAt ? new Date(dueAt).toISOString() : null,
-          status: 'assigned',
-        });
+          status: 'draft',
+          due_at: dueDate || null,
+          rubric: generatedContent.rubric || null
+        } as any);
 
       if (assignmentError) throw assignmentError;
 
-      toast.success('Assignment created successfully!');
+      toast.success('AI-generated assignment created successfully!');
       setOpen(false);
+      setTopic('');
+      setSelectedCourse('');
+      setDueDate('');
       onAssignmentAdded();
-      
-      // Reset form
-      (e.target as HTMLFormElement).reset();
     } catch (error: any) {
-      console.error('Error creating assignment:', error);
       toast.error(error.message || 'Failed to create assignment');
+      console.error(error);
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -89,28 +110,31 @@ export const AddAssignmentDialog = ({ courses, studentId, onAssignmentAdded }: A
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Assignment
+          <Sparkles className="mr-2 h-4 w-4" />
+          Generate Assignment with AI
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create Assignment</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            AI-Powered Assignment Creator
+          </DialogTitle>
           <DialogDescription>
-            Add a new assignment for the student
+            Describe what you want students to learn, and AI will generate a complete assignment with objectives, instructions, rubric, and more.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="courseId">Course *</Label>
-            <Select name="courseId" required>
+            <Label htmlFor="course">Course</Label>
+            <Select value={selectedCourse} onValueChange={setSelectedCourse} required>
               <SelectTrigger>
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
               <SelectContent>
                 {courses.map((course) => (
                   <SelectItem key={course.id} value={course.id}>
-                    {course.title} ({course.subject})
+                    {course.title} - {course.subject}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -118,76 +142,46 @@ export const AddAssignmentDialog = ({ courses, studentId, onAssignmentAdded }: A
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">Assignment Title *</Label>
-            <Input
-              id="title"
-              name="title"
-              placeholder="e.g., Chapter 3 Quiz"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="type">Type *</Label>
-            <Select name="type" required defaultValue="lesson">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lesson">Lesson</SelectItem>
-                <SelectItem value="quiz">Quiz</SelectItem>
-                <SelectItem value="project">Project</SelectItem>
-                <SelectItem value="video">Video</SelectItem>
-                <SelectItem value="reading">Reading</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="estMinutes">Est. Time (minutes)</Label>
-            <Input
-              id="estMinutes"
-              name="estMinutes"
-              type="number"
-              min="5"
-              defaultValue="30"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="dueAt">Due Date</Label>
-            <Input
-              id="dueAt"
-              name="dueAt"
-              type="datetime-local"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="topic">Assignment Topic</Label>
             <Textarea
-              id="description"
-              name="description"
-              placeholder="Assignment instructions"
-              rows={3}
+              id="topic"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g., Write a persuasive essay about climate change, or Solve quadratic equations using multiple methods"
+              required
+              rows={4}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Be specific about what you want students to learn and demonstrate
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dueDate">Due Date (Optional)</Label>
+            <Input
+              id="dueDate"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
             />
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Assignment'}
-            </Button>
-          </div>
+          <Button type="submit" className="w-full" disabled={isGenerating}>
+            {isGenerating ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                Generating Assignment...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Generate Assignment
+              </>
+            )}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>
   );
-};
+}

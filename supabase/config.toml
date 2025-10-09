@@ -1,1 +1,7 @@
 project_id = "tzqxdsxjmpscotdcevdh"
+
+[functions.hello-world]
+verify_jwt = false
+
+[functions.generate-assignment]
+verify_jwt = false

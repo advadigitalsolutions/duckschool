@@ -253,19 +253,22 @@ export default function StudentDetail() {
                       <Card 
                         key={assignment.id}
                         className="cursor-pointer transition-colors hover:bg-accent"
-                        onClick={() => toast.info(`Assignment: ${assignment.curriculum_items?.title}`, {
-                          description: `Status: ${assignment.status}\nDue: ${assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : 'No due date'}`
-                        })}
+                        onClick={() => navigate(`/assignment/${assignment.id}`)}
                       >
                         <CardHeader>
                           <div className="flex items-start justify-between">
-                            <div>
+                            <div className="flex-1">
                               <CardTitle className="text-base">
-                                {assignment.curriculum_items?.title}
+                                {assignment.curriculum_items?.body?.title || assignment.curriculum_items?.title}
                               </CardTitle>
                               <CardDescription>
                                 {assignment.curriculum_items?.courses?.subject}
                               </CardDescription>
+                              {assignment.due_at && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  Due: {new Date(assignment.due_at).toLocaleDateString()}
+                                </p>
+                              )}
                             </div>
                             <Badge variant={
                               assignment.status === 'graded' ? 'default' :
