@@ -89,13 +89,13 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     try {
       setLoadingDraft(true);
       
-      // First check for draft submission
+      // First check for draft submission (where submitted_at is null)
       const { data: draftData, error: draftError } = await supabase
         .from('submissions')
         .select('*')
         .eq('assignment_id', assignment.id)
         .eq('student_id', studentId)
-        .is('submitted_at', null) // Draft submissions have no submitted_at
+        .filter('submitted_at', 'is', null) // Use filter instead of is
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -145,6 +145,8 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
 
   const saveProgress = async () => {
     try {
+      console.log('Saving progress...', { answersCount: Object.keys(answers).length, currentIndex: currentQuestionIndex });
+      
       // Track time for current question before saving
       const currentQuestionId = questions[currentQuestionIndex]?.id;
       if (currentQuestionId && currentQuestionStart[currentQuestionId]) {
@@ -163,6 +165,8 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       } else {
         await saveDraftSubmission(questionTimes);
       }
+      
+      console.log('Progress saved successfully');
     } catch (error) {
       console.error('Error saving progress:', error);
     }
@@ -176,15 +180,23 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       lastSaved: new Date().toISOString()
     };
 
+    console.log('Saving draft submission...', { draftId: draftSubmissionId, answersCount: Object.keys(answers).length });
+
     if (draftSubmissionId) {
       // Update existing draft
-      await supabase
+      const { error } = await supabase
         .from('submissions')
         .update({
           content: draftContent,
           time_spent_seconds: Object.values(currentQuestionTimes).reduce((sum, time) => sum + time, 0)
         })
         .eq('id', draftSubmissionId);
+      
+      if (error) {
+        console.error('Error updating draft:', error);
+      } else {
+        console.log('Draft updated successfully');
+      }
     } else {
       // Create new draft submission with explicit null submitted_at
       const { data, error } = await supabase
@@ -200,8 +212,11 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
         .select()
         .single();
 
-      if (!error && data) {
+      if (error) {
+        console.error('Error creating draft:', error);
+      } else if (data) {
         setDraftSubmissionId(data.id);
+        console.log('Draft created successfully:', data.id);
       }
     }
   };
