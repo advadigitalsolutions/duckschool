@@ -357,6 +357,7 @@ All colors MUST be HSL.
 /* Focus Mode - Hover-based card highlighting with yellow glow */
 .focus-mode {
   position: relative;
+  isolation: isolate;
 }
 
 /* Add dark overlay for the entire page */
@@ -369,7 +370,7 @@ All colors MUST be HSL.
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
   pointer-events: none;
-  z-index: 999;
+  z-index: 1;
   transition: background 0.3s ease;
 }
 
@@ -378,42 +379,39 @@ All colors MUST be HSL.
   background: rgba(0, 0, 0, 0.6);
 }
 
-/* All content should be below the overlay by default */
-.focus-mode > * {
-  position: relative;
-  z-index: 1;
-}
-
 /* Cards default state - behind overlay */
 .focus-mode [class*="card"],
 .focus-mode [class*="Card"] {
-  transition: transform 0.2s ease, box-shadow 0.3s ease, z-index 0s;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
   position: relative;
-  z-index: 1;
+  isolation: isolate;
 }
 
-/* Hovered card appears on top of overlay with full normal styling */
+/* Hovered card breaks through overlay completely */
 .focus-mode [class*="card"]:hover,
 .focus-mode [class*="Card"]:hover {
-  z-index: 1000 !important;
+  z-index: 999 !important;
   transform: translateY(-2px);
+  isolation: isolate;
   box-shadow: 
     0 0 30px 10px rgba(255, 215, 0, 0.6),
     0 0 60px 20px rgba(255, 215, 0, 0.3),
     0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
-  /* Ensure card maintains its original colors */
-  background: hsl(var(--card)) !important;
-  color: hsl(var(--card-foreground)) !important;
 }
 
-/* Ensure all content in hovered card maintains original styling */
-.focus-mode [class*="card"]:hover *,
-.focus-mode [class*="Card"]:hover * {
-  opacity: 1 !important;
+/* Create a white backdrop for hovered card to block overlay */
+.focus-mode [class*="card"]:hover::before,
+.focus-mode [class*="Card"]:hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: hsl(var(--card));
+  border-radius: inherit;
+  z-index: -1;
 }
 
 /* Keep header above overlay */
 .focus-mode header {
   position: relative;
-  z-index: 1000;
+  z-index: 999;
 }
