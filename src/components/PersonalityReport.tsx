@@ -33,10 +33,6 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
     const responses = learningProfile.responses || {};
     const personalityType = student?.personality_type || '';
     
-    console.log('Learning Profile:', learningProfile);
-    console.log('Responses:', responses);
-    console.log('Personality Type:', personalityType);
-    
     // Analyze their specific preferences from responses
     Object.values(responses).forEach((response: any) => {
       const resp = String(response).toLowerCase();
