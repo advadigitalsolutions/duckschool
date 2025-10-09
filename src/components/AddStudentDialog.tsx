@@ -39,9 +39,11 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
     const studentPassword = formData.get('studentPassword') as string;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
+      // Get parent's session BEFORE creating student account
+      const { data: { session: parentSession } } = await supabase.auth.getSession();
+      if (!parentSession) throw new Error('Not authenticated');
+      
+      const parentUserId = parentSession.user.id;
       let studentUserId: string | null = null;
 
       // Create student login if requested
@@ -62,6 +64,12 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
         studentUserId = authData.user?.id || null;
         
         if (!studentUserId) throw new Error('Failed to create student account');
+        
+        // CRITICAL: Restore parent's session after signUp auto-logged us in as student
+        await supabase.auth.setSession({
+          access_token: parentSession.access_token,
+          refresh_token: parentSession.refresh_token,
+        });
       }
 
       // Parse accommodations and goals
@@ -78,7 +86,7 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
           name,
           dob: dob || null,
           grade_level: gradeLevel,
-          parent_id: user.id,
+          parent_id: parentUserId,
           user_id: studentUserId,
           accommodations,
           goals,

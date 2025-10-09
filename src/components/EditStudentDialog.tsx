@@ -46,6 +46,10 @@ export const EditStudentDialog = ({ student, open, onOpenChange, onStudentUpdate
     const studentPassword = formData.get('studentPassword') as string;
 
     try {
+      // Get parent's session BEFORE creating student account
+      const { data: { session: parentSession } } = await supabase.auth.getSession();
+      if (!parentSession) throw new Error('Not authenticated');
+      
       let studentUserId = student.user_id;
 
       // Create student login if requested and doesn't exist
@@ -66,6 +70,12 @@ export const EditStudentDialog = ({ student, open, onOpenChange, onStudentUpdate
         studentUserId = authData.user?.id || null;
         
         if (!studentUserId) throw new Error('Failed to create student account');
+        
+        // CRITICAL: Restore parent's session after signUp auto-logged us in as student
+        await supabase.auth.setSession({
+          access_token: parentSession.access_token,
+          refresh_token: parentSession.refresh_token,
+        });
       }
 
       const accommodations = accommodationsText 
