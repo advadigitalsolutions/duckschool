@@ -48,7 +48,7 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
     try {
       setLoading(true);
 
-      // Fetch course with curriculum items
+      // Fetch course with curriculum items and pacing config
       const { data: course } = await supabase
         .from('courses')
         .select(`
@@ -74,6 +74,8 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         `)
         .eq('id', courseId)
         .single();
+
+      console.log('Course data:', course);
 
       if (!course) return;
 
@@ -154,7 +156,20 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         0
       ) || 0;
 
-      const averageMinutesPerDay = recentMinutes / 30 || 0;
+      // Use pacing_config if available, otherwise fall back to historical data
+      let averageMinutesPerDay = recentMinutes / 30 || 0;
+      
+      // If pacing_config.weekly_minutes is set, use that as baseline
+      const pacingConfig = course.pacing_config as any;
+      if (pacingConfig?.weekly_minutes && pacingConfig.weekly_minutes > 0) {
+        const configuredDailyMinutes = pacingConfig.weekly_minutes / 7;
+        // Use configured value if we have no history, or take the average of both
+        if (averageMinutesPerDay === 0) {
+          averageMinutesPerDay = configuredDailyMinutes;
+        } else {
+          averageMinutesPerDay = (averageMinutesPerDay + configuredDailyMinutes) / 2;
+        }
+      }
 
       // Calculate projected completion
       const remainingMinutes = totalEstimatedMinutes - completedMinutes;
