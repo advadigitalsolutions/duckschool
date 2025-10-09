@@ -547,6 +547,93 @@ export type Database = {
           },
         ]
       }
+      reward_redemptions: {
+        Row: {
+          id: string
+          notes: string | null
+          requested_at: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          reward_id: string
+          status: string | null
+          student_id: string
+          xp_cost: number
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          requested_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          reward_id: string
+          status?: string | null
+          student_id: string
+          xp_cost: number
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          requested_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          reward_id?: string
+          status?: string | null
+          student_id?: string
+          xp_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reward_redemptions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rewards: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          description: string | null
+          emoji: string | null
+          id: string
+          parent_id: string
+          requires_approval: boolean | null
+          title: string
+          xp_cost: number
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          parent_id: string
+          requires_approval?: boolean | null
+          title: string
+          xp_cost: number
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          parent_id?: string
+          requires_approval?: boolean | null
+          title?: string
+          xp_cost?: number
+        }
+        Relationships: []
+      }
       standards: {
         Row: {
           code: string
@@ -587,6 +674,7 @@ export type Database = {
         Row: {
           accommodations: Json | null
           avatar_url: string | null
+          bionic_reading_enabled: boolean | null
           created_at: string | null
           display_name: string | null
           dob: string | null
@@ -603,6 +691,7 @@ export type Database = {
         Insert: {
           accommodations?: Json | null
           avatar_url?: string | null
+          bionic_reading_enabled?: boolean | null
           created_at?: string | null
           display_name?: string | null
           dob?: string | null
@@ -619,6 +708,7 @@ export type Database = {
         Update: {
           accommodations?: Json | null
           avatar_url?: string | null
+          bionic_reading_enabled?: boolean | null
           created_at?: string | null
           display_name?: string | null
           dob?: string | null
@@ -756,6 +846,80 @@ export type Database = {
         }
         Relationships: []
       }
+      xp_config: {
+        Row: {
+          assignment_completion_xp: number | null
+          attendance_per_minute_xp: number | null
+          created_at: string | null
+          custom_rules: Json | null
+          daily_goal_completion_xp: number | null
+          id: string
+          parent_id: string
+          question_correct_xp: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          assignment_completion_xp?: number | null
+          attendance_per_minute_xp?: number | null
+          created_at?: string | null
+          custom_rules?: Json | null
+          daily_goal_completion_xp?: number | null
+          id?: string
+          parent_id: string
+          question_correct_xp?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          assignment_completion_xp?: number | null
+          attendance_per_minute_xp?: number | null
+          created_at?: string | null
+          custom_rules?: Json | null
+          daily_goal_completion_xp?: number | null
+          id?: string
+          parent_id?: string
+          question_correct_xp?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      xp_events: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          event_type: string
+          id: string
+          reference_id: string | null
+          student_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          reference_id?: string | null
+          student_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          reference_id?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_events_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -764,6 +928,14 @@ export type Database = {
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
+      }
+      get_student_available_xp: {
+        Args: { student_uuid: string }
+        Returns: number
+      }
+      get_student_total_xp: {
+        Args: { student_uuid: string }
+        Returns: number
       }
       halfvec_avg: {
         Args: { "": number[] }

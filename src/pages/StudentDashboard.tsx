@@ -20,6 +20,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { XPDisplay } from '@/components/XPDisplay';
+import { RewardsShop } from '@/components/RewardsShop';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);

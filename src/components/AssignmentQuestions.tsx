@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cleanMarkdown } from '@/utils/textFormatting';
+import { useXPConfig } from '@/hooks/useXP';
+import { BionicText } from './BionicText';
 
 interface Question {
   id: string;
@@ -152,11 +154,15 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       // Grade answers
       const gradedResults: Record<string, boolean> = {};
       let score = 0;
+      let correctCount = 0;
 
       questions.forEach(question => {
         const isCorrect = gradeAnswer(question, answers[question.id]);
         gradedResults[question.id] = isCorrect;
-        if (isCorrect) score += question.points;
+        if (isCorrect) {
+          score += question.points;
+          correctCount++;
+        }
       });
 
       setResults(gradedResults);
@@ -209,6 +215,20 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
         });
 
       if (gradeError) throw gradeError;
+
+      // Award XP for correct answers
+      if (xpConfig && correctCount > 0) {
+        const xpPerQuestion = xpConfig.question_correct_xp;
+        const totalXP = correctCount * xpPerQuestion;
+        
+        await supabase.from('xp_events').insert({
+          student_id: studentId,
+          amount: totalXP,
+          event_type: 'question_correct',
+          description: `Answered ${correctCount} questions correctly`,
+          reference_id: assignment.id,
+        });
+      }
 
       setSubmitted(true);
       

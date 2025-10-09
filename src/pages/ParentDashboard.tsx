@@ -17,6 +17,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { XPConfigDialog } from '@/components/XPConfigDialog';
+import { RewardsManagement } from '@/components/RewardsManagement';
+import { RedemptionApprovals } from '@/components/RedemptionApprovals';
 import { AddStudentDialog } from '@/components/AddStudentDialog';
 import { EditStudentDialog } from '@/components/EditStudentDialog';
 import { DeleteStudentDialog } from '@/components/DeleteStudentDialog';
@@ -409,6 +412,14 @@ export default function ParentDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="xp" className="space-y-4">
+            <div className="flex items-center justify-end mb-4">
+              <XPConfigDialog />
+            </div>
+            <RedemptionApprovals />
+            <RewardsManagement />
           </TabsContent>
         </Tabs>
       </div>

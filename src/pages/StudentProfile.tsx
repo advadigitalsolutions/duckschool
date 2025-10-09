@@ -11,6 +11,8 @@ import { ArrowLeft, Upload, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ProfileAssessment } from '@/components/ProfileAssessment';
+import { Switch } from '@/components/ui/switch';
+import { useBionicReading } from '@/contexts/BionicReadingContext';
 
 const defaultAvatars = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
@@ -30,6 +32,7 @@ export default function StudentProfile() {
   const [selectedAvatar, setSelectedAvatar] = useState('');
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { enabled: bionicEnabled, setEnabled: setBionicEnabled } = useBionicReading();
 
   useEffect(() => {
     fetchStudentProfile();
@@ -216,6 +219,20 @@ export default function StudentProfile() {
                   <p className="text-xs text-muted-foreground">
                     This is how your name will appear throughout the app
                   </p>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="bionic">Bionic Reading</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Bold the first letters of words to help your brain parse text faster
+                    </p>
+                  </div>
+                  <Switch
+                    id="bionic"
+                    checked={bionicEnabled}
+                    onCheckedChange={setBionicEnabled}
+                  />
                 </div>
 
                 <Button onClick={handleSaveProfile} className="w-full">
