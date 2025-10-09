@@ -47,16 +47,6 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     applyGlobalStyles();
   }, [settings]);
 
-  // Re-apply styles on route changes
-  useEffect(() => {
-    const handleRouteChange = () => {
-      applyGlobalStyles();
-    };
-    
-    window.addEventListener('popstate', handleRouteChange);
-    return () => window.removeEventListener('popstate', handleRouteChange);
-  }, [settings]);
-
   const loadSettings = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
