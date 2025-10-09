@@ -255,9 +255,12 @@ export type Database = {
           description: string | null
           grade_level: string | null
           id: string
+          pacing_config: Json | null
+          skeleton: Json | null
           standards_scope: Json | null
           student_id: string | null
           subject: string
+          template_id: string | null
           title: string
           updated_at: string | null
         }
@@ -268,9 +271,12 @@ export type Database = {
           description?: string | null
           grade_level?: string | null
           id?: string
+          pacing_config?: Json | null
+          skeleton?: Json | null
           standards_scope?: Json | null
           student_id?: string | null
           subject: string
+          template_id?: string | null
           title: string
           updated_at?: string | null
         }
@@ -281,9 +287,12 @@ export type Database = {
           description?: string | null
           grade_level?: string | null
           id?: string
+          pacing_config?: Json | null
+          skeleton?: Json | null
           standards_scope?: Json | null
           student_id?: string | null
           subject?: string
+          template_id?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -293,6 +302,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courses_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "curriculum_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -308,6 +324,7 @@ export type Database = {
           standards: Json | null
           title: string
           type: Database["public"]["Enums"]["item_t"]
+          unit_id: string | null
         }
         Insert: {
           body: Json
@@ -319,6 +336,7 @@ export type Database = {
           standards?: Json | null
           title: string
           type: Database["public"]["Enums"]["item_t"]
+          unit_id?: string | null
         }
         Update: {
           body?: Json
@@ -330,6 +348,7 @@ export type Database = {
           standards?: Json | null
           title?: string
           type?: Database["public"]["Enums"]["item_t"]
+          unit_id?: string | null
         }
         Relationships: [
           {
@@ -347,6 +366,89 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      curriculum_planning_sessions: {
+        Row: {
+          collected_data: Json | null
+          conversation_history: Json | null
+          created_at: string | null
+          id: string
+          parent_id: string
+          status: string | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          collected_data?: Json | null
+          conversation_history?: Json | null
+          created_at?: string | null
+          id?: string
+          parent_id: string
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          collected_data?: Json | null
+          conversation_history?: Json | null
+          created_at?: string | null
+          id?: string
+          parent_id?: string
+          status?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "curriculum_planning_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      curriculum_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          framework: string | null
+          grade_level: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          region: string | null
+          structure: Json | null
+          subjects: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          framework?: string | null
+          grade_level?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          region?: string | null
+          structure?: Json | null
+          subjects?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          framework?: string | null
+          grade_level?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          region?: string | null
+          structure?: Json | null
+          subjects?: Json | null
+        }
+        Relationships: []
       }
       daily_goals: {
         Row: {
@@ -680,7 +782,9 @@ export type Database = {
           framework: string
           grade_band: string | null
           id: string
+          metadata: Json | null
           parent_code: string | null
+          region: string | null
           subject: string | null
           tags: string[] | null
           text: string
@@ -691,7 +795,9 @@ export type Database = {
           framework: string
           grade_band?: string | null
           id?: string
+          metadata?: Json | null
           parent_code?: string | null
+          region?: string | null
           subject?: string | null
           tags?: string[] | null
           text: string
@@ -702,7 +808,9 @@ export type Database = {
           framework?: string
           grade_band?: string | null
           id?: string
+          metadata?: Json | null
           parent_code?: string | null
+          region?: string | null
           subject?: string | null
           tags?: string[] | null
           text?: string

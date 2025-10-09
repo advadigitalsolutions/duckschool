@@ -23,8 +23,9 @@ import { RedemptionApprovals } from '@/components/RedemptionApprovals';
 import { AddStudentDialog } from '@/components/AddStudentDialog';
 import { EditStudentDialog } from '@/components/EditStudentDialog';
 import { DeleteStudentDialog } from '@/components/DeleteStudentDialog';
+import { CurriculumPlanningDialog } from '@/components/CurriculumPlanningDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Pencil, Trash2, User } from 'lucide-react';
+import { Pencil, Trash2, User, Sparkles } from 'lucide-react';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -36,6 +37,7 @@ export default function ParentDashboard() {
   const [deletingStudent, setDeletingStudent] = useState<any>(null);
   const [userName, setUserName] = useState('');
   const [userAvatar, setUserAvatar] = useState('');
+  const [showPlanningDialog, setShowPlanningDialog] = useState(false);
   const navigate = useNavigate();
 
   const getGreeting = () => {
@@ -229,7 +231,7 @@ export default function ParentDashboard() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
+            <TabsTrigger value="curriculum">Curriculum Planning</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
             <TabsTrigger value="todo">To Do List</TabsTrigger>
           </TabsList>
@@ -326,17 +328,54 @@ export default function ParentDashboard() {
           </TabsContent>
 
           <TabsContent value="curriculum" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card className="border-primary/50">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <CardTitle>AI Curriculum Planning</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Create personalized, standards-aligned curriculum plans through conversation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Our AI assistant will guide you through creating a complete curriculum plan tailored to your student's needs, learning style, and educational goals.
+                  </p>
+                  <Button onClick={() => setShowPlanningDialog(true)} className="w-full">
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Start AI Planning Session
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Add Student</CardTitle>
+                  <CardDescription>
+                    Manually add a student profile without AI assistance
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Use this option if you prefer to set up courses and curriculum yourself, or if you're adding additional students.
+                  </p>
+                  <AddStudentDialog onStudentAdded={fetchDashboardData} />
+                </CardContent>
+              </Card>
+            </div>
+
             <Card>
               <CardHeader>
-                <CardTitle>Curriculum Management</CardTitle>
-                <CardDescription>Create and manage lesson plans</CardDescription>
+                <CardTitle>Course Templates</CardTitle>
+                <CardDescription>Browse pre-built curriculum plans</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">AI curriculum planner coming soon</p>
+                <div className="text-center py-8">
+                  <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground">
-                    Upload materials, set standards, and let AI create personalized lesson plans
+                    Template library coming soon
                   </p>
                 </div>
               </CardContent>
@@ -459,6 +498,12 @@ export default function ParentDashboard() {
         open={!!deletingStudent}
         onOpenChange={(open) => !open && setDeletingStudent(null)}
         onStudentDeleted={fetchDashboardData}
+      />
+
+      <CurriculumPlanningDialog
+        open={showPlanningDialog}
+        onOpenChange={setShowPlanningDialog}
+        onComplete={fetchDashboardData}
       />
     </div>
   );
