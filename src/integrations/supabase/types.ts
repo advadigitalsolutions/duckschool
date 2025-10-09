@@ -136,6 +136,38 @@ export type Database = {
           },
         ]
       }
+      assignment_study_guides: {
+        Row: {
+          assignment_id: string
+          generated_at: string
+          id: string
+          study_guide: Json
+          version: number
+        }
+        Insert: {
+          assignment_id: string
+          generated_at?: string
+          id?: string
+          study_guide: Json
+          version?: number
+        }
+        Update: {
+          assignment_id?: string
+          generated_at?: string
+          id?: string
+          study_guide?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_study_guides_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: true
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignments: {
         Row: {
           created_at: string | null
@@ -915,6 +947,48 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_guide_interactions: {
+        Row: {
+          assignment_id: string
+          hint_level: number
+          id: string
+          question_id: string
+          student_id: string
+          viewed_at: string
+        }
+        Insert: {
+          assignment_id: string
+          hint_level: number
+          id?: string
+          question_id: string
+          student_id: string
+          viewed_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          hint_level?: number
+          id?: string
+          question_id?: string
+          student_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_guide_interactions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_guide_interactions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]

@@ -15,6 +15,7 @@ import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
 import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
 import { cleanMarkdown } from '@/utils/textFormatting';
 import { BionicText } from '@/components/BionicText';
+import { StudyGuidePanel } from '@/components/StudyGuidePanel';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -690,15 +691,36 @@ export default function AssignmentDetail() {
           </TabsContent>
 
           <TabsContent value="resources" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  Materials & Resources
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {content.materials?.length > 0 ? (
+            {/* Study Guide Panel - AI-generated question-specific learning resources */}
+            {content.questions?.length > 0 && (
+              <StudyGuidePanel
+                assignmentId={assignment.id}
+                questions={content.questions}
+                studentProfile={{
+                  grade_level: assignment.curriculum_items?.courses?.student_id 
+                    ? 'N/A' // Will be fetched from student data if needed
+                    : 'General',
+                  learning_style: undefined,
+                  interests: []
+                }}
+                readingMaterials={content.reading_materials}
+                studentId={currentStudentId || undefined}
+              />
+            )}
+
+            {/* External Materials (if provided by assignment generator) */}
+            {content.materials?.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    External Resources
+                  </CardTitle>
+                  <CardDescription>
+                    Additional materials recommended for this assignment
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
                   <ul className="space-y-2">
                     {content.materials.map((material: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2">
@@ -707,11 +729,20 @@ export default function AssignmentDetail() {
                       </li>
                     ))}
                   </ul>
-                ) : (
-                  <p className="text-muted-foreground">No materials listed</p>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
+
+            {!content.questions?.length && !content.materials?.length && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Resources</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">No resources available for this assignment</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>
