@@ -18,6 +18,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AddStudentDialog } from '@/components/AddStudentDialog';
+import { EditStudentDialog } from '@/components/EditStudentDialog';
+import { DeleteStudentDialog } from '@/components/DeleteStudentDialog';
+import { Pencil, Trash2 } from 'lucide-react';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -25,6 +28,8 @@ export default function ParentDashboard() {
   const [todayMinutes, setTodayMinutes] = useState(0);
   const [completedToday, setCompletedToday] = useState(0);
   const [overdueCount, setOverdueCount] = useState(0);
+  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [deletingStudent, setDeletingStudent] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -193,27 +198,56 @@ export default function ParentDashboard() {
 
           <TabsContent value="students" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Students</CardTitle>
-                <CardDescription>Manage your homeschool students</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Students</CardTitle>
+                  <CardDescription>Manage your homeschool students</CardDescription>
+                </div>
+                <AddStudentDialog onStudentAdded={fetchDashboardData} />
               </CardHeader>
               <CardContent>
                 {students.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-muted-foreground mb-4">No students yet</p>
-                    <AddStudentDialog onStudentAdded={fetchDashboardData} />
+                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No students yet. Click "Add Student" above to get started.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {students.map((student) => (
                       <Card 
                         key={student.id} 
-                        className="cursor-pointer hover:border-primary transition-colors"
-                        onClick={() => navigate(`/student/${student.id}`)}
+                        className="hover:border-primary transition-colors"
                       >
-                        <CardHeader>
-                          <CardTitle className="text-lg">{student.name}</CardTitle>
-                          <CardDescription>Grade {student.grade_level || 'N/A'}</CardDescription>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                          <div 
+                            className="flex-1 cursor-pointer"
+                            onClick={() => navigate(`/student/${student.id}`)}
+                          >
+                            <CardTitle className="text-lg">{student.name}</CardTitle>
+                            <CardDescription>Grade {student.grade_level || 'N/A'}</CardDescription>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingStudent(student);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeletingStudent(student);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
                         </CardHeader>
                       </Card>
                     ))}
@@ -336,6 +370,20 @@ export default function ParentDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <EditStudentDialog
+        student={editingStudent}
+        open={!!editingStudent}
+        onOpenChange={(open) => !open && setEditingStudent(null)}
+        onStudentUpdated={fetchDashboardData}
+      />
+
+      <DeleteStudentDialog
+        student={deletingStudent}
+        open={!!deletingStudent}
+        onOpenChange={(open) => !open && setDeletingStudent(null)}
+        onStudentDeleted={fetchDashboardData}
+      />
     </div>
   );
 }
