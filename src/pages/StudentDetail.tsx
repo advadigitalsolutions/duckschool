@@ -252,7 +252,7 @@ export default function StudentDetail() {
                     {assignments.map((assignment) => (
                       <Card 
                         key={assignment.id}
-                        className="cursor-pointer transition-colors hover:bg-accent"
+                        className="cursor-pointer transition-colors hover:bg-muted/50"
                         onClick={() => navigate(`/assignment/${assignment.id}`)}
                       >
                         <CardHeader>
