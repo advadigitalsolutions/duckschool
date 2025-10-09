@@ -15,6 +15,7 @@ interface AssignmentSuggestion {
   objectives: string[];
   materials?: string[];
   pedagogy_notes?: string;
+  created?: boolean;
 }
 
 interface CurriculumGenerationDialogProps {
@@ -33,6 +34,8 @@ export function CurriculumGenerationDialog({
   onGenerated
 }: CurriculumGenerationDialogProps) {
   const [generating, setGenerating] = useState(false);
+  const [creatingAll, setCreatingAll] = useState(false);
+  const [creatingIndex, setCreatingIndex] = useState<number | null>(null);
   const [suggestions, setSuggestions] = useState<AssignmentSuggestion[]>([]);
   const [uncoveredCount, setUncoveredCount] = useState(0);
   const [pedagogy, setPedagogy] = useState('');
@@ -66,7 +69,8 @@ export function CurriculumGenerationDialog({
     }
   };
 
-  const handleCreateAssignment = async (suggestion: AssignmentSuggestion) => {
+  const handleCreateAssignment = async (suggestion: AssignmentSuggestion, index: number) => {
+    setCreatingIndex(index);
     try {
       // First, create a curriculum item
       const { data: curriculumItem, error: curriculumError } = await supabase
@@ -100,13 +104,75 @@ export function CurriculumGenerationDialog({
 
       toast.success('Assignment created successfully');
       
-      // Remove this suggestion from the list
-      setSuggestions(prev => prev.filter(s => s.standardCode !== suggestion.standardCode));
+      // Mark this suggestion as created instead of removing it
+      setSuggestions(prev => prev.map((s, i) => 
+        i === index ? { ...s, created: true } : s
+      ));
       
-      onGenerated?.();
+      // Don't close the modal - let user continue creating
     } catch (error: any) {
       console.error('Error creating assignment:', error);
       toast.error('Failed to create assignment');
+    } finally {
+      setCreatingIndex(null);
+    }
+  };
+
+  const handleCreateAll = async () => {
+    setCreatingAll(true);
+    const uncreatedSuggestions = suggestions.filter(s => !s.created);
+    let successCount = 0;
+    
+    try {
+      for (let i = 0; i < suggestions.length; i++) {
+        const suggestion = suggestions[i];
+        if (suggestion.created) continue;
+
+        try {
+          const { data: curriculumItem, error: curriculumError } = await supabase
+            .from('curriculum_items')
+            .insert({
+              course_id: courseId,
+              title: suggestion.title,
+              type: 'lesson',
+              body: {
+                description: suggestion.description,
+                objectives: suggestion.objectives,
+                materials: suggestion.materials || []
+              },
+              standards: [suggestion.standardCode],
+              est_minutes: suggestion.estimatedMinutes
+            })
+            .select()
+            .single();
+
+          if (curriculumError) throw curriculumError;
+
+          const { error: assignmentError } = await supabase
+            .from('assignments')
+            .insert({
+              curriculum_item_id: curriculumItem.id,
+              status: 'draft'
+            });
+
+          if (assignmentError) throw assignmentError;
+
+          successCount++;
+          setSuggestions(prev => prev.map((s, idx) => 
+            idx === i ? { ...s, created: true } : s
+          ));
+        } catch (error) {
+          console.error(`Error creating assignment ${i}:`, error);
+        }
+      }
+
+      toast.success(`Created ${successCount} of ${uncreatedSuggestions.length} assignments`);
+      
+      if (successCount > 0) {
+        onGenerated?.();
+      }
+    } finally {
+      setCreatingAll(false);
     }
   };
 
@@ -160,13 +226,31 @@ export function CurriculumGenerationDialog({
                       : `${uncoveredCount} uncovered standards • ${pedagogy} pedagogy • ${framework}`}
                   </p>
                 </div>
-                <Button variant="outline" onClick={handleGenerate} disabled={generating}>
-                  {generating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    'Regenerate'
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleCreateAll} 
+                    disabled={creatingAll || suggestions.every(s => s.created)}
+                  >
+                    {creatingAll ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating All...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Create All ({suggestions.filter(s => !s.created).length})
+                      </>
+                    )}
+                  </Button>
+                  <Button variant="outline" onClick={handleGenerate} disabled={generating}>
+                    {generating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Regenerate'
+                    )}
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -183,8 +267,20 @@ export function CurriculumGenerationDialog({
                             <span className="text-xs">{suggestion.description}</span>
                           </CardDescription>
                         </div>
-                        <Button onClick={() => handleCreateAssignment(suggestion)}>
-                          Create Assignment
+                        <Button 
+                          onClick={() => handleCreateAssignment(suggestion, index)}
+                          disabled={suggestion.created || creatingIndex === index || creatingAll}
+                        >
+                          {creatingIndex === index ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Creating...
+                            </>
+                          ) : suggestion.created ? (
+                            '✓ Created'
+                          ) : (
+                            'Create Assignment'
+                          )}
                         </Button>
                       </div>
                     </CardHeader>
