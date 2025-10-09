@@ -220,30 +220,111 @@ All colors MUST be HSL.
   letter-spacing: 0.1em !important;
 }
 
-.color-overlay-cream {
-  background-color: #FAF8F3 !important;
+/* Color Overlays - Apply to all major containers */
+.color-overlay-cream,
+.color-overlay-cream * {
+  --background: 38 20% 97% !important;
+  --card: 38 20% 97% !important;
+  --popover: 38 20% 97% !important;
 }
 
-.color-overlay-mint {
-  background-color: #F0F9F4 !important;
+.color-overlay-mint,
+.color-overlay-mint * {
+  --background: 140 50% 97% !important;
+  --card: 140 50% 97% !important;
+  --popover: 140 50% 97% !important;
 }
 
-.color-overlay-lavender {
-  background-color: #F5F3FF !important;
+.color-overlay-lavender,
+.color-overlay-lavender * {
+  --background: 250 100% 97% !important;
+  --card: 250 100% 97% !important;
+  --popover: 250 100% 97% !important;
 }
 
-.color-overlay-peach {
-  background-color: #FFF5F0 !important;
+.color-overlay-peach,
+.color-overlay-peach * {
+  --background: 20 100% 97% !important;
+  --card: 20 100% 97% !important;
+  --popover: 20 100% 97% !important;
 }
 
-.color-overlay-aqua {
-  background-color: #F0F9FF !important;
+.color-overlay-aqua,
+.color-overlay-aqua * {
+  --background: 200 100% 97% !important;
+  --card: 200 100% 97% !important;
+  --popover: 200 100% 97% !important;
 }
 
+/* High Contrast Mode - Actually change colors, not just filter */
 .high-contrast {
-  filter: contrast(1.5);
+  --background: 0 0% 100% !important;
+  --foreground: 0 0% 0% !important;
+  --card: 0 0% 100% !important;
+  --card-foreground: 0 0% 0% !important;
+  --popover: 0 0% 100% !important;
+  --popover-foreground: 0 0% 0% !important;
+  --primary: 221 83% 40% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --secondary: 210 40% 90% !important;
+  --secondary-foreground: 0 0% 0% !important;
+  --muted: 210 40% 90% !important;
+  --muted-foreground: 0 0% 0% !important;
+  --accent: 210 40% 90% !important;
+  --accent-foreground: 0 0% 0% !important;
+  --border: 0 0% 20% !important;
+  --input: 0 0% 20% !important;
 }
 
 .high-contrast * {
-  font-weight: 500 !important;
+  font-weight: 600 !important;
+  border-width: 2px !important;
+}
+
+/* Dark mode high contrast */
+.dark.high-contrast {
+  --background: 0 0% 0% !important;
+  --foreground: 0 0% 100% !important;
+  --card: 0 0% 0% !important;
+  --card-foreground: 0 0% 100% !important;
+  --popover: 0 0% 0% !important;
+  --popover-foreground: 0 0% 100% !important;
+  --primary: 221 83% 60% !important;
+  --primary-foreground: 0 0% 0% !important;
+  --secondary: 210 40% 20% !important;
+  --secondary-foreground: 0 0% 100% !important;
+  --muted: 210 40% 20% !important;
+  --muted-foreground: 0 0% 100% !important;
+  --accent: 210 40% 20% !important;
+  --accent-foreground: 0 0% 100% !important;
+  --border: 0 0% 80% !important;
+  --input: 0 0% 80% !important;
+}
+
+/* Focus Mode - Dim everything except focused content */
+.focus-mode {
+  position: relative;
+}
+
+.focus-mode::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  z-index: 40;
+  transition: opacity 0.3s ease;
+}
+
+/* Focus mode should not dim interactive elements */
+.focus-mode-active {
+  position: relative;
+  z-index: 50;
+  background: hsl(var(--background));
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.3);
 }

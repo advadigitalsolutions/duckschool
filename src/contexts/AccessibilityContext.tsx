@@ -95,6 +95,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   const applyGlobalStyles = () => {
     const body = document.body;
+    const root = document.documentElement;
     
     // Font
     body.classList.toggle('dyslexia-font', settings.dyslexiaFontEnabled);
@@ -109,14 +110,17 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     if (settings.letterSpacing === 'wide') body.classList.add('letter-spacing-wide');
     if (settings.letterSpacing === 'wider') body.classList.add('letter-spacing-wider');
     
-    // Color overlay
-    body.classList.remove('color-overlay-cream', 'color-overlay-mint', 'color-overlay-lavender', 'color-overlay-peach', 'color-overlay-aqua');
+    // Color overlay - apply to root for CSS variable override
+    root.classList.remove('color-overlay-cream', 'color-overlay-mint', 'color-overlay-lavender', 'color-overlay-peach', 'color-overlay-aqua');
     if (settings.colorOverlay !== 'none') {
-      body.classList.add(`color-overlay-${settings.colorOverlay}`);
+      root.classList.add(`color-overlay-${settings.colorOverlay}`);
     }
     
     // High contrast
-    body.classList.toggle('high-contrast', settings.highContrastEnabled);
+    root.classList.toggle('high-contrast', settings.highContrastEnabled);
+    
+    // Focus mode
+    body.classList.toggle('focus-mode', settings.focusModeEnabled);
   };
 
   const updateSetting = async (field: string, value: any) => {
