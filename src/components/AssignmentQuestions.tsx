@@ -41,6 +41,8 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
   const [totalScore, setTotalScore] = useState(0);
   const [maxScore, setMaxScore] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(null);
+  const [loadingDraft, setLoadingDraft] = useState(true);
   
   const { config: xpConfig } = useXPConfig();
 
@@ -52,23 +54,157 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     const max = questions.reduce((sum, q) => sum + q.points, 0);
     setMaxScore(max);
 
-    // Load previous attempts
-    loadAttempts();
+    // Load previous attempts and draft progress
+    loadProgress();
   }, [questions]);
 
-  // Track time when question changes
+  // Auto-save progress every 5 seconds
   useEffect(() => {
-    if (questions.length > 0 && !submitted) {
+    if (!submitted && Object.keys(answers).length > 0) {
+      const saveTimer = setTimeout(() => {
+        saveProgress();
+      }, 5000);
+      return () => clearTimeout(saveTimer);
+    }
+  }, [answers, currentQuestionIndex, questionTimes, submitted]);
+
+  // Save progress when navigating away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (!submitted && Object.keys(answers).length > 0) {
+        saveProgress();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (!submitted && Object.keys(answers).length > 0) {
+        saveProgress();
+      }
+    };
+  }, [answers, currentQuestionIndex, questionTimes, submitted]);
+
+  const loadProgress = async () => {
+    try {
+      setLoadingDraft(true);
+      
+      // First check for draft submission
+      const { data: draftData, error: draftError } = await supabase
+        .from('submissions')
+        .select('*')
+        .eq('assignment_id', assignment.id)
+        .eq('student_id', studentId)
+        .is('submitted_at', null) // Draft submissions have no submitted_at
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!draftError && draftData) {
+        // Restore draft progress
+        console.log('Restoring draft progress from submission:', draftData.id);
+        setDraftSubmissionId(draftData.id);
+        setAttemptNumber(draftData.attempt_no);
+        
+        const content = draftData.content as any;
+        if (content) {
+          setAnswers(content.answers || {});
+          setCurrentQuestionIndex(content.currentQuestionIndex || 0);
+          setQuestionTimes(content.questionTimes || {});
+        }
+        
+        toast.success('Progress restored!');
+      } else {
+        // Load completed attempts to determine next attempt number
+        const { data, error } = await supabase
+          .from('submissions')
+          .select('attempt_no')
+          .eq('assignment_id', assignment.id)
+          .eq('student_id', studentId)
+          .not('submitted_at', 'is', null) // Only count completed submissions
+          .order('attempt_no', { ascending: false })
+          .limit(1);
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+          const nextAttempt = data[0].attempt_no + 1;
+          setAttemptNumber(nextAttempt);
+          
+          // If they've exceeded max attempts, mark as submitted
+          if (maxAttempts && nextAttempt > maxAttempts) {
+            setSubmitted(true);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading progress:', error);
+    } finally {
+      setLoadingDraft(false);
+    }
+  };
+
+  const saveProgress = async () => {
+    try {
+      // Track time for current question before saving
       const currentQuestionId = questions[currentQuestionIndex]?.id;
-      if (currentQuestionId) {
-        // Start tracking time for the current question
-        setCurrentQuestionStart(prev => ({
-          ...prev,
-          [currentQuestionId]: Date.now()
-        }));
+      if (currentQuestionId && currentQuestionStart[currentQuestionId]) {
+        const now = Date.now();
+        const timeSpent = Math.floor((now - currentQuestionStart[currentQuestionId]) / 1000);
+        setQuestionTimes(prev => {
+          const updated = {
+            ...prev,
+            [currentQuestionId]: (prev[currentQuestionId] || 0) + timeSpent
+          };
+          
+          // Save with updated times
+          saveDraftSubmission(updated);
+          return updated;
+        });
+      } else {
+        await saveDraftSubmission(questionTimes);
+      }
+    } catch (error) {
+      console.error('Error saving progress:', error);
+    }
+  };
+
+  const saveDraftSubmission = async (currentQuestionTimes: Record<string, number>) => {
+    const draftContent = {
+      answers,
+      currentQuestionIndex,
+      questionTimes: currentQuestionTimes,
+      lastSaved: new Date().toISOString()
+    };
+
+    if (draftSubmissionId) {
+      // Update existing draft
+      await supabase
+        .from('submissions')
+        .update({
+          content: draftContent,
+          time_spent_seconds: Object.values(currentQuestionTimes).reduce((sum, time) => sum + time, 0)
+        })
+        .eq('id', draftSubmissionId);
+    } else {
+      // Create new draft submission with explicit null submitted_at
+      const { data, error } = await supabase
+        .from('submissions')
+        .insert({
+          assignment_id: assignment.id,
+          student_id: studentId,
+          attempt_no: attemptNumber,
+          content: draftContent,
+          time_spent_seconds: 0,
+          submitted_at: null  // Explicitly set to null for draft
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        setDraftSubmissionId(data.id);
       }
     }
-  }, [currentQuestionIndex, questions, submitted]);
+  };
 
   const loadAttempts = async () => {
     try {
@@ -77,6 +213,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
         .select('attempt_no')
         .eq('assignment_id', assignment.id)
         .eq('student_id', studentId)
+        .not('submitted_at', 'is', null)
         .order('attempt_no', { ascending: false })
         .limit(1);
 
@@ -174,20 +311,40 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       // Calculate total time spent
       const totalTime = Object.values(questionTimes).reduce((sum, time) => sum + time, 0);
 
-      // Create submission
-      const { data: submissionData, error: submissionError } = await supabase
-        .from('submissions')
-        .insert({
-          assignment_id: assignment.id,
-          student_id: studentId,
-          attempt_no: attemptNumber,
-          time_spent_seconds: totalTime,
-          content: { answers, results: gradedResults, score, maxScore }
-        })
-        .select()
-        .single();
+      let submissionData;
+      
+      if (draftSubmissionId) {
+        // Update existing draft submission to finalize it
+        const { data, error: submissionError } = await supabase
+          .from('submissions')
+          .update({
+            submitted_at: new Date().toISOString(),
+            time_spent_seconds: totalTime,
+            content: { answers, results: gradedResults, score, maxScore }
+          })
+          .eq('id', draftSubmissionId)
+          .select()
+          .single();
 
-      if (submissionError) throw submissionError;
+        if (submissionError) throw submissionError;
+        submissionData = data;
+      } else {
+        // Create new submission
+        const { data, error: submissionError } = await supabase
+          .from('submissions')
+          .insert({
+            assignment_id: assignment.id,
+            student_id: studentId,
+            attempt_no: attemptNumber,
+            time_spent_seconds: totalTime,
+            content: { answers, results: gradedResults, score, maxScore }
+          })
+          .select()
+          .single();
+
+        if (submissionError) throw submissionError;
+        submissionData = data;
+      }
 
       // Create question responses
       const responses = questions.map(question => ({
@@ -282,6 +439,20 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       <Card>
         <CardContent className="py-12 text-center">
           <p className="text-muted-foreground">No questions available for this assignment yet.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show loading state while restoring progress
+  if (loadingDraft) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <p className="text-muted-foreground">Loading your progress...</p>
+          </div>
         </CardContent>
       </Card>
     );
