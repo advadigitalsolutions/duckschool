@@ -132,7 +132,10 @@ export default function StudentDetail() {
     setProcessingSession(true);
     try {
       const { data, error } = await supabase.functions.invoke('process-curriculum-session', {
-        body: { studentId: id }
+        body: JSON.stringify({ studentId: id }),
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       if (error) throw error;
