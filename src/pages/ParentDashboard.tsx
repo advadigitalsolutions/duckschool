@@ -38,7 +38,8 @@ export default function ParentDashboard() {
   const [userName, setUserName] = useState('');
   const [userAvatar, setUserAvatar] = useState('');
   const navigate = useNavigate();
-  const focusRef = useFocusMode();
+  
+  useFocusMode();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -175,7 +176,7 @@ export default function ParentDashboard() {
         </div>
       </header>
 
-      <div className="container mx-auto p-4 md:p-8" ref={focusRef}>
+      <div className="container mx-auto p-4 md:p-8">
         {/* KPI Cards */}
         <div className="grid gap-4 md:grid-cols-3 mb-8">
           <Card>

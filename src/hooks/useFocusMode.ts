@@ -1,37 +1,48 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 
 /**
- * Hook to apply focus mode styling to a specific element
- * Usage: const focusRef = useFocusMode();
- * Then add ref={focusRef} to the element you want to highlight in focus mode
+ * Hook to automatically apply focus mode to main content
+ * No ref needed - automatically highlights [role="main"] or main elements
  */
 export function useFocusMode() {
-  const elementRef = useRef<HTMLDivElement>(null);
   const { focusModeEnabled } = useAccessibility();
 
   useEffect(() => {
-    const body = document.body;
+    console.log('useFocusMode: Focus mode changed to', focusModeEnabled);
     
-    if (!elementRef.current) return;
+    // Find all potential main content areas
+    const mainElements = document.querySelectorAll('main, [role="main"], .main-content');
+    
+    console.log('Found main elements:', mainElements.length);
+    
+    mainElements.forEach((element) => {
+      if (focusModeEnabled) {
+        element.classList.add('focus-mode-active');
+        console.log('Added focus-mode-active to', element);
+      } else {
+        element.classList.remove('focus-mode-active');
+        console.log('Removed focus-mode-active from', element);
+      }
+    });
 
-    console.log('useFocusMode effect - enabled:', focusModeEnabled, 'element:', elementRef.current);
+    // Also add to container divs with specific patterns
+    const containers = document.querySelectorAll('.container.mx-auto');
+    console.log('Found container elements:', containers.length);
+    
+    containers.forEach((element) => {
+      if (focusModeEnabled) {
+        element.classList.add('focus-mode-active');
+      } else {
+        element.classList.remove('focus-mode-active');
+      }
+    });
 
-    if (focusModeEnabled) {
-      elementRef.current.classList.add('focus-mode-active');
+    const body = document.body;
+    if (focusModeEnabled && (mainElements.length > 0 || containers.length > 0)) {
       body.classList.add('has-focus');
-      console.log('Added focus-mode-active class and has-focus to body');
     } else {
-      elementRef.current.classList.remove('focus-mode-active');
       body.classList.remove('has-focus');
-      console.log('Removed focus-mode-active class and has-focus from body');
     }
-
-    return () => {
-      elementRef.current?.classList.remove('focus-mode-active');
-      body.classList.remove('has-focus');
-    };
   }, [focusModeEnabled]);
-
-  return elementRef;
 }

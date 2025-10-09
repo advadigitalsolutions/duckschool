@@ -39,7 +39,8 @@ export default function StudentDashboard() {
   const [dailyGoals, setDailyGoals] = useState<any[]>([]);
   const [newGoalText, setNewGoalText] = useState('');
   const navigate = useNavigate();
-  const focusRef = useFocusMode();
+  
+  useFocusMode();
 
   const motivationalQuotes = [
     "Your potential is endless. Go do what you were created to do.",
@@ -444,7 +445,7 @@ export default function StudentDashboard() {
         </div>
       </header>
 
-      <div className="container mx-auto p-4 md:p-8 max-w-4xl" ref={focusRef}>
+      <div className="container mx-auto p-4 md:p-8 max-w-4xl">
         {/* Pomodoro Timer Card */}
         <Card className="mb-8 border-2 shadow-lg">
           <CardHeader className="text-center">
