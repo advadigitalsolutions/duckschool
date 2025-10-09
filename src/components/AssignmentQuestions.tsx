@@ -50,6 +50,20 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     loadAttempts();
   }, [questions]);
 
+  // Track time when question changes
+  useEffect(() => {
+    if (questions.length > 0 && !submitted) {
+      const currentQuestionId = questions[currentQuestionIndex]?.id;
+      if (currentQuestionId) {
+        // Start tracking time for the current question
+        setCurrentQuestionStart(prev => ({
+          ...prev,
+          [currentQuestionId]: Date.now()
+        }));
+      }
+    }
+  }, [currentQuestionIndex, questions, submitted]);
+
   const loadAttempts = async () => {
     try {
       const { data, error } = await supabase
@@ -126,6 +140,10 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       toast.error(`Maximum attempts (${maxAttempts}) reached`);
       return;
     }
+
+    // Track time for current question before submitting
+    const currentQuestionId = questions[currentQuestionIndex].id;
+    trackQuestionTime(currentQuestionId);
 
     setSubmitting(true);
 
@@ -219,12 +237,18 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
+      // Track time before moving to next question
+      const currentQuestionId = questions[currentQuestionIndex].id;
+      trackQuestionTime(currentQuestionId);
       setCurrentQuestionIndex(prev => prev + 1);
     }
   };
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
+      // Track time before moving to previous question
+      const currentQuestionId = questions[currentQuestionIndex].id;
+      trackQuestionTime(currentQuestionId);
       setCurrentQuestionIndex(prev => prev - 1);
     }
   };
