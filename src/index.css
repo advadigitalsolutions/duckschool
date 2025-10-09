@@ -256,7 +256,7 @@ All colors MUST be HSL.
   --muted: 200 100% 93%;
 }
 
-/* High Contrast Mode - Actually change colors, not just filter */
+/* High Contrast Mode - Improve readability with strong contrast */
 .high-contrast {
   --background: 0 0% 100% !important;
   --foreground: 0 0% 0% !important;
@@ -266,39 +266,56 @@ All colors MUST be HSL.
   --popover-foreground: 0 0% 0% !important;
   --primary: 221 83% 40% !important;
   --primary-foreground: 0 0% 100% !important;
-  --secondary: 210 40% 90% !important;
+  --secondary: 210 40% 95% !important;
   --secondary-foreground: 0 0% 0% !important;
-  --muted: 210 40% 90% !important;
+  --muted: 210 40% 95% !important;
   --muted-foreground: 0 0% 0% !important;
-  --accent: 210 40% 90% !important;
+  --accent: 210 40% 95% !important;
   --accent-foreground: 0 0% 0% !important;
-  --border: 0 0% 20% !important;
-  --input: 0 0% 20% !important;
+  --border: 0 0% 0% !important;
+  --input: 0 0% 100% !important;
+  --ring: 221 83% 40% !important;
 }
 
 .high-contrast * {
-  font-weight: 600 !important;
+  font-weight: 500 !important;
+}
+
+/* Only apply thicker borders to key interactive elements */
+.high-contrast button,
+.high-contrast input,
+.high-contrast select,
+.high-contrast textarea,
+.high-contrast [role="button"] {
   border-width: 2px !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.high-contrast .card,
+.high-contrast [class*="Card"] {
+  border-width: 2px !important;
+  border-color: hsl(var(--border)) !important;
 }
 
 /* Dark mode high contrast */
 .dark.high-contrast {
   --background: 0 0% 0% !important;
   --foreground: 0 0% 100% !important;
-  --card: 0 0% 0% !important;
+  --card: 0 0% 10% !important;
   --card-foreground: 0 0% 100% !important;
-  --popover: 0 0% 0% !important;
+  --popover: 0 0% 10% !important;
   --popover-foreground: 0 0% 100% !important;
   --primary: 221 83% 60% !important;
-  --primary-foreground: 0 0% 0% !important;
-  --secondary: 210 40% 20% !important;
+  --primary-foreground: 0 0% 100% !important;
+  --secondary: 210 40% 15% !important;
   --secondary-foreground: 0 0% 100% !important;
-  --muted: 210 40% 20% !important;
+  --muted: 210 40% 15% !important;
   --muted-foreground: 0 0% 100% !important;
-  --accent: 210 40% 20% !important;
+  --accent: 210 40% 15% !important;
   --accent-foreground: 0 0% 100% !important;
-  --border: 0 0% 80% !important;
-  --input: 0 0% 80% !important;
+  --border: 0 0% 100% !important;
+  --input: 0 0% 10% !important;
+  --ring: 221 83% 60% !important;
 }
 
 /* Focus Mode - Hover-based card highlighting with yellow glow */
