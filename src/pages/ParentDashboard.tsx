@@ -150,7 +150,7 @@ export default function ParentDashboard() {
       <header className="border-b bg-card">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-12 w-12">
+            <Avatar className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/parent/profile')}>
               <AvatarImage src={userAvatar} />
               <AvatarFallback>
                 <User className="h-6 w-6" />
