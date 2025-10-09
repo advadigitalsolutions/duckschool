@@ -156,8 +156,11 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
 
       // Calculate total required minutes from standards
       const totalRequiredMinutes = (standards || []).reduce((sum, standard) => {
-        const metadata = standard.metadata as any;
-        const estimatedHours = metadata?.estimated_hours || 0;
+        // Custom standards have estimated_hours directly on the object
+        // Regular standards have it in metadata
+        const estimatedHours = (standard as any).estimated_hours || 
+                               (standard.metadata as any)?.estimated_hours || 
+                               0;
         return sum + (estimatedHours * 60);
       }, 0);
 
