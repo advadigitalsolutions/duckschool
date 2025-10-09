@@ -675,51 +675,75 @@ export type Database = {
           accommodations: Json | null
           avatar_url: string | null
           bionic_reading_enabled: boolean | null
+          color_overlay: string | null
           created_at: string | null
           display_name: string | null
           dob: string | null
+          dyslexia_font_enabled: boolean | null
+          focus_mode_enabled: boolean | null
           goals: Json | null
           grade_level: string | null
+          high_contrast_enabled: boolean | null
           id: string
           learning_profile: Json | null
+          letter_spacing: string | null
+          line_spacing: string | null
           name: string
           parent_id: string | null
           personality_type: string | null
           profile_assessment_completed: boolean | null
+          reading_ruler_enabled: boolean | null
+          text_to_speech_enabled: boolean | null
           user_id: string | null
         }
         Insert: {
           accommodations?: Json | null
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
+          color_overlay?: string | null
           created_at?: string | null
           display_name?: string | null
           dob?: string | null
+          dyslexia_font_enabled?: boolean | null
+          focus_mode_enabled?: boolean | null
           goals?: Json | null
           grade_level?: string | null
+          high_contrast_enabled?: boolean | null
           id?: string
           learning_profile?: Json | null
+          letter_spacing?: string | null
+          line_spacing?: string | null
           name: string
           parent_id?: string | null
           personality_type?: string | null
           profile_assessment_completed?: boolean | null
+          reading_ruler_enabled?: boolean | null
+          text_to_speech_enabled?: boolean | null
           user_id?: string | null
         }
         Update: {
           accommodations?: Json | null
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
+          color_overlay?: string | null
           created_at?: string | null
           display_name?: string | null
           dob?: string | null
+          dyslexia_font_enabled?: boolean | null
+          focus_mode_enabled?: boolean | null
           goals?: Json | null
           grade_level?: string | null
+          high_contrast_enabled?: boolean | null
           id?: string
           learning_profile?: Json | null
+          letter_spacing?: string | null
+          line_spacing?: string | null
           name?: string
           parent_id?: string | null
           personality_type?: string | null
           profile_assessment_completed?: boolean | null
+          reading_ruler_enabled?: boolean | null
+          text_to_speech_enabled?: boolean | null
           user_id?: string | null
         }
         Relationships: [

@@ -13,6 +13,8 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { ProfileAssessment } from '@/components/ProfileAssessment';
 import { Switch } from '@/components/ui/switch';
 import { useBionicReading } from '@/contexts/BionicReadingContext';
+import { useAccessibility } from '@/contexts/AccessibilityContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const defaultAvatars = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
@@ -33,6 +35,24 @@ export default function StudentProfile() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const { enabled: bionicEnabled, setEnabled: setBionicEnabled } = useBionicReading();
+  const {
+    dyslexiaFontEnabled,
+    lineSpacing,
+    letterSpacing,
+    colorOverlay,
+    focusModeEnabled,
+    readingRulerEnabled,
+    textToSpeechEnabled,
+    highContrastEnabled,
+    setDyslexiaFont,
+    setLineSpacing,
+    setLetterSpacing,
+    setColorOverlay,
+    setFocusMode,
+    setReadingRuler,
+    setTextToSpeech,
+    setHighContrast,
+  } = useAccessibility();
 
   useEffect(() => {
     fetchStudentProfile();
@@ -221,23 +241,170 @@ export default function StudentProfile() {
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="bionic">Bionic Reading</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Bold the first letters of words to help your brain parse text faster
-                    </p>
-                  </div>
-                  <Switch
-                    id="bionic"
-                    checked={bionicEnabled}
-                    onCheckedChange={setBionicEnabled}
-                  />
-                </div>
-
                 <Button onClick={handleSaveProfile} className="w-full">
                   Save Profile
                 </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle>Accessibility Settings</CardTitle>
+                <CardDescription>Customize your reading experience</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Reading Assistance */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Reading Assistance</h3>
+                  
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="bionic">Bionic Reading</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Bold the first letters of words to help your brain parse text faster
+                      </p>
+                    </div>
+                    <Switch
+                      id="bionic"
+                      checked={bionicEnabled}
+                      onCheckedChange={setBionicEnabled}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="dyslexia-font">Dyslexia-Friendly Font</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Use OpenDyslexic font designed for easier reading
+                      </p>
+                    </div>
+                    <Switch
+                      id="dyslexia-font"
+                      checked={dyslexiaFontEnabled}
+                      onCheckedChange={setDyslexiaFont}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="reading-ruler">Reading Ruler</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Follow text with a highlighted line as you read
+                      </p>
+                    </div>
+                    <Switch
+                      id="reading-ruler"
+                      checked={readingRulerEnabled}
+                      onCheckedChange={setReadingRuler}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="text-to-speech">Text-to-Speech</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Listen to text read aloud using natural voice
+                      </p>
+                    </div>
+                    <Switch
+                      id="text-to-speech"
+                      checked={textToSpeechEnabled}
+                      onCheckedChange={setTextToSpeech}
+                    />
+                  </div>
+                </div>
+
+                {/* Spacing & Layout */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Spacing & Layout</h3>
+                  
+                  <div className="p-4 border rounded-lg space-y-2">
+                    <Label htmlFor="line-spacing">Line Spacing</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Adjust space between lines for easier reading
+                    </p>
+                    <Select value={lineSpacing} onValueChange={(value: any) => setLineSpacing(value)}>
+                      <SelectTrigger id="line-spacing">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="normal">Normal (1.0)</SelectItem>
+                        <SelectItem value="1.5x">Relaxed (1.5x)</SelectItem>
+                        <SelectItem value="2x">Spacious (2x)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="p-4 border rounded-lg space-y-2">
+                    <Label htmlFor="letter-spacing">Letter Spacing</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Adjust space between letters
+                    </p>
+                    <Select value={letterSpacing} onValueChange={(value: any) => setLetterSpacing(value)}>
+                      <SelectTrigger id="letter-spacing">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="wide">Wide (+0.05em)</SelectItem>
+                        <SelectItem value="wider">Wider (+0.1em)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Visual Comfort */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Visual Comfort</h3>
+                  
+                  <div className="p-4 border rounded-lg space-y-2">
+                    <Label htmlFor="color-overlay">Color Overlay</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Add a tinted background to reduce eye strain
+                    </p>
+                    <Select value={colorOverlay} onValueChange={(value: any) => setColorOverlay(value)}>
+                      <SelectTrigger id="color-overlay">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="cream">Cream</SelectItem>
+                        <SelectItem value="mint">Mint</SelectItem>
+                        <SelectItem value="lavender">Lavender</SelectItem>
+                        <SelectItem value="peach">Peach</SelectItem>
+                        <SelectItem value="aqua">Aqua</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="focus-mode">Focus Mode</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Highlight active section and dim surroundings
+                      </p>
+                    </div>
+                    <Switch
+                      id="focus-mode"
+                      checked={focusModeEnabled}
+                      onCheckedChange={setFocusMode}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="high-contrast">High Contrast Mode</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Increase contrast for better visibility
+                      </p>
+                    </div>
+                    <Switch
+                      id="high-contrast"
+                      checked={highContrastEnabled}
+                      onCheckedChange={setHighContrast}
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

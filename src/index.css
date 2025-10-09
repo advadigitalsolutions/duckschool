@@ -198,3 +198,52 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Accessibility Styles */
+.dyslexia-font * {
+  font-family: 'OpenDyslexic', sans-serif !important;
+}
+
+.line-spacing-relaxed * {
+  line-height: 1.5 !important;
+}
+
+.line-spacing-spacious * {
+  line-height: 2 !important;
+}
+
+.letter-spacing-wide * {
+  letter-spacing: 0.05em !important;
+}
+
+.letter-spacing-wider * {
+  letter-spacing: 0.1em !important;
+}
+
+.color-overlay-cream {
+  background-color: #FAF8F3 !important;
+}
+
+.color-overlay-mint {
+  background-color: #F0F9F4 !important;
+}
+
+.color-overlay-lavender {
+  background-color: #F5F3FF !important;
+}
+
+.color-overlay-peach {
+  background-color: #FFF5F0 !important;
+}
+
+.color-overlay-aqua {
+  background-color: #F0F9FF !important;
+}
+
+.high-contrast {
+  filter: contrast(1.5);
+}
+
+.high-contrast * {
+  font-weight: 500 !important;
+}
