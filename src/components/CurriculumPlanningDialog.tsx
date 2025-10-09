@@ -64,9 +64,20 @@ export const CurriculumPlanningDialog = ({
         { name: 'Computer Science', description: 'Programming, algorithms, and software development' }
       ];
 
+      // Add extracurriculars if mentioned
+      const allSubjects = [...coreSubjects];
+      if (collectedData.extracurriculars && collectedData.extracurriculars.length > 0) {
+        collectedData.extracurriculars.forEach((extra: string) => {
+          allSubjects.push({
+            name: extra.charAt(0).toUpperCase() + extra.slice(1),
+            description: `Extracurricular focus on ${extra}`
+          });
+        });
+      }
+
       // Create a course for each subject
       const createdCourses = [];
-      for (const subject of coreSubjects) {
+      for (const subject of allSubjects) {
         const { data: course, error: courseError } = await supabase
           .from('courses')
           .insert({
@@ -141,6 +152,7 @@ export const CurriculumPlanningDialog = ({
 
       toast.success(`Created ${createdCourses.length} courses with initial assessments!`);
       console.log('Created courses:', createdCourses);
+      console.log('Collected data:', collectedData);
 
       // Mark session as completed
       await supabase

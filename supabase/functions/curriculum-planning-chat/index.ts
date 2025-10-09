@@ -113,6 +113,7 @@ serve(async (req) => {
 
     // Extract structured data from conversation
     const updatedData = extractDataFromMessage(message, collectedData, stage);
+    console.log('Extracted data from message:', { message, stage, updatedData });
 
     // Update conversation history
     conversationHistory.push({
@@ -172,11 +173,14 @@ CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
 3. Move through stages QUICKLY - don't dig for unnecessary details
 4. Accept brief answers and move forward
 5. NEVER ask follow-up questions if you have enough to proceed
+6. REMEMBER EVERYTHING the parent mentions - extracurriculars, interests, learning challenges, accommodations, goals
 
 KEY MESSAGING:
 - We'll create an INITIAL ASSESSMENT to understand the student's current level
 - The curriculum ADAPTS IN REAL-TIME based on their progress
 - Everything is PERSONALIZED to their timeline and goals
+
+CRITICAL: If parent mentions ANY extracurriculars, interests, or additional subjects they want (like music, art, sports, coding projects, languages, etc.), YOU MUST CAPTURE THEM. They will be added as courses.
 
 Current stage: ${stage}
 Data collected: ${JSON.stringify(data, null, 2)}
@@ -186,8 +190,8 @@ Data collected: ${JSON.stringify(data, null, 2)}
   const stagePrompts: Record<string, string> = {
     'initial': 'Get: student name, grade level, and location in ONE question. Example: "What\'s your student\'s name, grade level, and where are you located?" Keep it friendly but brief.',
     'framework': `Based on their location (${data.location || 'provided'}), quickly suggest appropriate standards. Example: "I recommend Common Core for ${data.location || 'your area'}. Does that work?" Just 1-2 sentences.`,
-    'goals': `Ask ONE combined question: "What subjects should we focus on, and what's the main goal (e.g., college prep, grade-level mastery)?" That's it - don't elaborate.`,
-    'ready': `Confirm in 2-3 sentences: "Perfect! I'll create an assessment for ${data.studentName || 'your student'} to gauge their current level in ${data.subjects || 'the subjects'}, then build a curriculum that adapts to help them reach ${data.goals || 'their goals'}. Ready to start?" STOP THERE.`
+    'goals': `Ask: "What subjects and any extracurriculars (like music, art, coding, sports) should we focus on?" Then ask goal. Keep brief.`,
+    'ready': `Confirm: "Perfect! Creating courses for ${data.subjects || 'core subjects'}${data.extracurriculars && data.extracurriculars.length > 0 ? ' plus ' + data.extracurriculars.join(' and ') : ''} with initial assessments to gauge ${data.studentName || 'your student'}\'s level and build adaptive curriculum toward ${data.goals || 'their goals'}. Ready?" STOP.`
   };
 
   return basePrompt + (stagePrompts[stage] || stagePrompts['initial']);
@@ -250,6 +254,48 @@ function extractDataFromMessage(message: string, existingData: any, stage: strin
         data.goals = 'grade-level mastery'; // Reasonable default
       }
     }
+  }
+
+  // Extract extracurriculars - look for common activities and interests
+  const extracurricularKeywords = [
+    'music', 'piano', 'guitar', 'violin', 'drums', 'band', 'orchestra', 'choir',
+    'art', 'drawing', 'painting', 'sculpture', 'photography', 'digital art',
+    'sports', 'soccer', 'basketball', 'tennis', 'swimming', 'dance', 'martial arts',
+    'coding', 'programming', 'robotics', 'game development', 'web design',
+    'theater', 'drama', 'acting', 'speech', 'debate',
+    'language', 'spanish', 'french', 'mandarin', 'japanese', 'german',
+    'cooking', 'baking', 'culinary',
+    'creative writing', 'journalism', 'poetry',
+    'chess', 'strategy games'
+  ];
+
+  const foundExtracurriculars = extracurricularKeywords.filter(keyword => 
+    lowerMessage.includes(keyword)
+  );
+
+  if (foundExtracurriculars.length > 0) {
+    data.extracurriculars = data.extracurriculars || [];
+    // Add new ones that aren't already in the list
+    foundExtracurriculars.forEach(extra => {
+      if (!data.extracurriculars.some((e: string) => e.toLowerCase().includes(extra))) {
+        data.extracurriculars.push(extra);
+      }
+    });
+  }
+
+  // Also capture accommodations and learning needs
+  const accommodationKeywords = ['adhd', 'dyslexia', 'autism', 'anxiety', 'fatigue', 'visual', 'auditory'];
+  const foundAccommodations = accommodationKeywords.filter(keyword => 
+    lowerMessage.includes(keyword)
+  );
+  
+  if (foundAccommodations.length > 0) {
+    data.accommodations = data.accommodations || [];
+    foundAccommodations.forEach(acc => {
+      if (!data.accommodations.includes(acc)) {
+        data.accommodations.push(acc);
+      }
+    });
   }
 
   return data;
