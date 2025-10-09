@@ -17,24 +17,36 @@ import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BionicText } from '@/components/BionicText';
 import { Slider } from '@/components/ui/slider';
-import cuteCat from '@/assets/avatars/cute-cat.png';
-import cuteDog from '@/assets/avatars/cute-dog.png';
-import cuteRobot from '@/assets/avatars/cute-robot.png';
-import cuteBunny from '@/assets/avatars/cute-bunny.png';
-import cuteBear from '@/assets/avatars/cute-bear.png';
-import cuteFox from '@/assets/avatars/cute-fox.png';
-import cuteOwl from '@/assets/avatars/cute-owl.png';
-import cutePanda from '@/assets/avatars/cute-panda.png';
+import avatarElephant from '@/assets/avatars/avatar-elephant.png';
+import avatarWolf from '@/assets/avatars/avatar-wolf.png';
+import avatarBeetle from '@/assets/avatars/avatar-beetle.png';
+import avatarLadybug from '@/assets/avatars/avatar-ladybug.png';
+import avatarAngel from '@/assets/avatars/avatar-angel.png';
+import avatarCowboy from '@/assets/avatars/avatar-cowboy.png';
+import avatarWhale from '@/assets/avatars/avatar-whale.png';
+import avatarDuck from '@/assets/avatars/avatar-duck.png';
+import avatarTomato from '@/assets/avatars/avatar-tomato.png';
+import avatarRabbit from '@/assets/avatars/avatar-rabbit.png';
+import avatarSpottedBunny from '@/assets/avatars/avatar-spotted-bunny.png';
+import avatarCorgi from '@/assets/avatars/avatar-corgi.png';
+import avatarAlien from '@/assets/avatars/avatar-alien.png';
+import avatarFish from '@/assets/avatars/avatar-fish.png';
 
 const defaultAvatars = [
-  cuteCat,
-  cuteDog,
-  cuteRobot,
-  cuteBunny,
-  cuteBear,
-  cuteFox,
-  cuteOwl,
-  cutePanda,
+  avatarElephant,
+  avatarWolf,
+  avatarBeetle,
+  avatarLadybug,
+  avatarAngel,
+  avatarCowboy,
+  avatarWhale,
+  avatarDuck,
+  avatarTomato,
+  avatarRabbit,
+  avatarSpottedBunny,
+  avatarCorgi,
+  avatarAlien,
+  avatarFish,
 ];
 
 export default function StudentProfile() {
