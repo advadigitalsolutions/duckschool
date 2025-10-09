@@ -188,9 +188,11 @@ export default function StudentDashboard() {
         .from('students')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      setStudent(studentData);
+      if (studentData) {
+        setStudent(studentData);
+      }
 
       // Fetch today's assignments
       const { data: assignmentsData } = await supabase
