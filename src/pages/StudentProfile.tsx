@@ -164,10 +164,10 @@ export default function StudentProfile() {
         <Tabs defaultValue="profile" className="space-y-4">
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="assessment">
+            <TabsTrigger value="assessment" className="transition-all hover:scale-105 hover:shadow-md">
               Learning Assessment
               {!student?.profile_assessment_completed && (
-                <span className="ml-2 h-2 w-2 rounded-full bg-primary" />
+                <span className="ml-2 h-2 w-2 rounded-full bg-primary animate-pulse" />
               )}
             </TabsTrigger>
           </TabsList>
