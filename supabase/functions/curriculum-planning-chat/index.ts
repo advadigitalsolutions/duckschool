@@ -275,25 +275,108 @@ function extractDataFromMessage(message: string, existingData: any, stage: strin
 
   if (foundExtracurriculars.length > 0) {
     data.extracurriculars = data.extracurriculars || [];
+    data.interests = data.interests || [];
     // Add new ones that aren't already in the list
     foundExtracurriculars.forEach(extra => {
       if (!data.extracurriculars.some((e: string) => e.toLowerCase().includes(extra))) {
         data.extracurriculars.push(extra);
+        data.interests.push(extra);
       }
     });
   }
 
-  // Also capture accommodations and learning needs
-  const accommodationKeywords = ['adhd', 'dyslexia', 'autism', 'anxiety', 'fatigue', 'visual', 'auditory'];
-  const foundAccommodations = accommodationKeywords.filter(keyword => 
-    lowerMessage.includes(keyword)
-  );
+  // Capture accommodations and learning needs
+  const accommodationKeywords = {
+    'adhd': 'ADHD',
+    'attention deficit': 'ADHD',
+    'dyslexia': 'Dyslexia',
+    'autism': 'Autism Spectrum',
+    'anxiety': 'Anxiety',
+    'social anxiety': 'Social Anxiety',
+    'fatigue': 'Fatigue/Energy Management',
+    'visual processing': 'Visual Processing',
+    'auditory processing': 'Auditory Processing',
+    'executive function': 'Executive Function Challenges'
+  };
   
-  if (foundAccommodations.length > 0) {
-    data.accommodations = data.accommodations || [];
-    foundAccommodations.forEach(acc => {
-      if (!data.accommodations.includes(acc)) {
-        data.accommodations.push(acc);
+  Object.entries(accommodationKeywords).forEach(([keyword, label]) => {
+    if (lowerMessage.includes(keyword)) {
+      data.accommodations = data.accommodations || [];
+      data.challenges = data.challenges || [];
+      if (!data.accommodations.includes(label)) {
+        data.accommodations.push(label);
+        data.challenges.push(label);
+      }
+    }
+  });
+
+  // Capture effective strategies mentioned by parent
+  const strategyKeywords = {
+    'visual timer': 'Visual timers',
+    'quiet room': 'Quiet environment',
+    'quiet space': 'Quiet environment',
+    'small tasks': 'Breaking tasks into smaller steps',
+    'building momentum': 'Building momentum with easy tasks first',
+    'talking through': 'Verbal processing and discussion',
+    'hands-on': 'Hands-on activities',
+    'movement break': 'Movement breaks',
+    'fidget': 'Fidget tools'
+  };
+
+  Object.entries(strategyKeywords).forEach(([keyword, strategy]) => {
+    if (lowerMessage.includes(keyword)) {
+      data.strategies = data.strategies || [];
+      if (!data.strategies.includes(strategy)) {
+        data.strategies.push(strategy);
+      }
+    }
+  });
+
+  // Capture learning preferences and strengths
+  if (lowerMessage.includes('introvert')) {
+    data.communicationStyle = 'Introverted - prefers independent work';
+  }
+  
+  if (lowerMessage.includes('self taught') || lowerMessage.includes('self-taught')) {
+    data.strengths = data.strengths || [];
+    if (!data.strengths.includes('Self-directed learning')) {
+      data.strengths.push('Self-directed learning');
+    }
+  }
+
+  if (lowerMessage.includes('game developer') || lowerMessage.includes('game development')) {
+    data.interests = data.interests || [];
+    data.strengths = data.strengths || [];
+    if (!data.interests.includes('game development')) {
+      data.interests.push('game development');
+    }
+    if (!data.strengths.includes('Game development')) {
+      data.strengths.push('Game development');
+    }
+  }
+
+  if (lowerMessage.includes('challenged') || lowerMessage.includes('rigorous')) {
+    data.motivators = data.motivators || [];
+    if (!data.motivators.includes('Intellectual challenge')) {
+      data.motivators.push('Intellectual challenge');
+    }
+  }
+
+  if (lowerMessage.includes('autonomy') || lowerMessage.includes('creative')) {
+    data.motivators = data.motivators || [];
+    if (!data.motivators.includes('Creative autonomy')) {
+      data.motivators.push('Creative autonomy');
+    }
+  }
+
+  // Capture school history
+  const schoolTypes = ['montessori', 'catholic school', 'arts school', 'public school', 'private school', 'unschool'];
+  const mentionedSchools = schoolTypes.filter(school => lowerMessage.includes(school));
+  if (mentionedSchools.length > 0) {
+    data.educationalBackground = data.educationalBackground || '';
+    mentionedSchools.forEach(school => {
+      if (!data.educationalBackground.includes(school)) {
+        data.educationalBackground += (data.educationalBackground ? ', ' : '') + school;
       }
     });
   }

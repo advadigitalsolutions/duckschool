@@ -34,20 +34,39 @@ export const CurriculumPlanningDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Build comprehensive learning profile from collected data
+      const learningProfile = {
+        pedagogicalApproach: collectedData.pedagogicalApproach || 'Project-based learning with rigorous academics',
+        learningStyle: collectedData.learningStyle || 'Visual and hands-on learner',
+        interests: collectedData.interests || collectedData.extracurriculars || [],
+        challenges: collectedData.challenges || collectedData.accommodations || [],
+        strengths: collectedData.strengths || [],
+        preferredEnvironment: collectedData.preferredEnvironment || 'Quiet, structured environment',
+        motivators: collectedData.motivators || [],
+        communicationStyle: collectedData.communicationStyle || 'Direct and concise',
+        educationalBackground: collectedData.educationalBackground || '',
+        notes: collectedData.notes || ''
+      };
+
+      // Build accommodations from collected information
+      const accommodations = {
+        conditions: collectedData.accommodations || [],
+        strategies: collectedData.strategies || [],
+        tools: collectedData.tools || [],
+        notes: collectedData.accommodationNotes || ''
+      };
+
       // Create student profile
       const { data: student, error: studentError } = await supabase
         .from('students')
         .insert({
           parent_id: user.id,
           name: collectedData.studentName,
+          display_name: collectedData.studentName,
           grade_level: collectedData.gradeLevel,
-          learning_profile: {
-            pedagogicalApproach: collectedData.pedagogicalApproach,
-            learningStyle: collectedData.learningProfile?.style,
-            interests: collectedData.learningProfile?.interests,
-            challenges: collectedData.learningProfile?.challenges
-          },
-          accommodations: collectedData.learningProfile?.specialNeeds || {}
+          learning_profile: learningProfile,
+          accommodations: accommodations,
+          profile_assessment_completed: true // Mark as having info from chat
         })
         .select()
         .single();
