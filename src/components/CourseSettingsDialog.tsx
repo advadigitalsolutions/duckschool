@@ -23,6 +23,7 @@ const FRAMEWORKS = [
   { value: 'TX-TEKS', label: 'Texas Essential Knowledge and Skills' },
   { value: 'FL-BEST', label: 'Florida B.E.S.T. Standards' },
   { value: 'NY-CCLS', label: 'New York Common Core Learning Standards' },
+  { value: 'CUSTOM', label: 'Custom Framework (Goals-Based)' },
 ];
 
 const PEDAGOGIES = [
@@ -56,6 +57,7 @@ export function CourseSettingsDialog({
   const [targetCompletionDate, setTargetCompletionDate] = useState('');
   const [weeklyMinutes, setWeeklyMinutes] = useState('');
   const [goals, setGoals] = useState('');
+  const [customFrameworkName, setCustomFrameworkName] = useState('');
 
   // Load existing course data when dialog opens
   useEffect(() => {
@@ -126,12 +128,22 @@ export function CourseSettingsDialog({
       return;
     }
 
+    if (framework === 'CUSTOM' && !goals) {
+      toast.error('Please provide course goals for custom framework');
+      return;
+    }
+
     setSaving(true);
     try {
       const updates: any = {
         grade_level: gradeLevel,
         goals: goals || null,
-        standards_scope: [{ 
+        standards_scope: framework === 'CUSTOM' ? [{ 
+          framework: 'CUSTOM',
+          subject: currentSubject,
+          grade_band: gradeLevel,
+          custom_name: customFrameworkName || `Custom ${currentSubject} Framework`
+        }] : [{ 
           framework,
           subject: currentSubject,
           grade_band: gradeLevel
@@ -243,7 +255,27 @@ export function CourseSettingsDialog({
                 ))}
               </SelectContent>
             </Select>
+            {framework === 'CUSTOM' && (
+              <p className="text-sm text-muted-foreground">
+                Custom framework will use AI to create curriculum based on your course goals
+              </p>
+            )}
           </div>
+
+          {framework === 'CUSTOM' && (
+            <div className="space-y-2">
+              <Label htmlFor="custom-framework-name">Custom Framework Name (Optional)</Label>
+              <Input
+                id="custom-framework-name"
+                placeholder={`Custom ${currentSubject} Framework`}
+                value={customFrameworkName}
+                onChange={(e) => setCustomFrameworkName(e.target.value)}
+              />
+              <p className="text-sm text-muted-foreground">
+                Give your custom framework a memorable name
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="target-date">Target Completion Date (Optional)</Label>
