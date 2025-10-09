@@ -7,6 +7,7 @@ import { Loader2, Send, Sparkles, Bookmark, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { cleanMarkdown } from '@/utils/textFormatting';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -217,7 +218,7 @@ export const CurriculumPlanningChat = ({ onComplete, existingSessionId }: Curric
                   }`}
                 >
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {msg.content}
+                    {cleanMarkdown(msg.content)}
                   </p>
                   {msg.role === 'assistant' && msg.content.includes('**') && (
                     <div className="mt-3 pt-3 border-t border-border/50">
