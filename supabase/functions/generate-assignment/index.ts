@@ -12,14 +12,44 @@ serve(async (req) => {
   }
 
   try {
-    const { courseTitle, courseSubject, topic, gradeLevel, standards } = await req.json();
+    const { courseTitle, courseSubject, topic, gradeLevel, standards, studentProfile, isInitialAssessment } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('Generating assignment for:', { courseTitle, courseSubject, topic, gradeLevel });
+    console.log('Generating assignment for:', { courseTitle, courseSubject, topic, gradeLevel, isInitialAssessment });
+
+    const studentContext = studentProfile ? `
+
+STUDENT PROFILE:
+- Display Name: ${studentProfile.display_name || 'Student'}
+- Personality Type: ${studentProfile.personality_type || 'Not assessed'}
+- Learning Profile: ${JSON.stringify(studentProfile.learning_profile || {})}
+- ADHD Accommodations: ${JSON.stringify(studentProfile.accommodations || {})}
+- Goals: ${JSON.stringify(studentProfile.goals || {})}
+
+Use this profile to personalize the assignment. Consider:
+- Their learning style and preferences
+- Their interests and hobbies (incorporate them into examples/scenarios)
+- Their strengths and weaknesses
+- Any ADHD accommodations needed
+- Their personality type and how they engage best
+` : '';
+
+    const assessmentContext = isInitialAssessment ? `
+This is an INITIAL COURSE ASSESSMENT assignment. 
+
+Purpose: Evaluate the student's current knowledge and skills for this course to:
+1. Identify strengths and areas for growth
+2. Establish a baseline for progress tracking
+3. Inform future lesson planning
+4. Adapt difficulty level to student's current abilities
+
+Make questions diagnostic - covering key concepts and skills from throughout the course at varying difficulty levels.
+Include questions that assess prerequisite knowledge as well as course content.
+` : '';
 
     const systemPrompt = `You are an expert curriculum designer creating interactive digital assignments for homeschool students. 
 Generate a complete assignment that includes:
@@ -31,6 +61,9 @@ Generate a complete assignment that includes:
 6. Assessment rubric with criteria
 7. Expected time to complete
 8. Differentiation suggestions for ADHD learners
+
+${studentContext}
+${assessmentContext}
 
 CRITICAL: Every assignment MUST include actual questions that students can answer digitally. Questions should test understanding and allow for mastery-based learning through multiple attempts.`;
 

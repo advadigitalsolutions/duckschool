@@ -10,6 +10,7 @@ import ParentDashboard from "./pages/ParentDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentDetail from "./pages/StudentDetail";
 import AssignmentDetail from "./pages/AssignmentDetail";
+import StudentProfile from "./pages/StudentProfile";
 import NotFound from "./pages/NotFound";
 import { AuthGuard } from "./components/AuthGuard";
 
@@ -54,6 +55,14 @@ const App = () => (
               element={
                 <AuthGuard>
                   <StudentDashboard />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/student/profile" 
+              element={
+                <AuthGuard>
+                  <StudentProfile />
                 </AuthGuard>
               } 
             />

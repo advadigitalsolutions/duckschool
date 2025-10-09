@@ -56,7 +56,7 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
     const gradeLevel = formData.get('gradeLevel') as string;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('courses')
         .insert({
           student_id: studentId,
@@ -65,11 +65,68 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
           description: description || null,
           credits,
           grade_level: gradeLevel,
-        });
+        })
+        .select();
 
       if (error) throw error;
 
-      toast.success('Course added successfully!');
+      // Get student data for profile context
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('*')
+        .eq('id', studentId)
+        .single();
+
+      // Create initial assessment assignment
+      try {
+        toast.info('Generating initial course assessment...');
+        
+        const { data: assessmentData, error: assessmentError } = await supabase.functions.invoke('generate-assignment', {
+          body: {
+            courseTitle: title,
+            courseSubject: subject,
+            topic: 'Initial Course Assessment',
+            gradeLevel: gradeLevel || 'K-12',
+            standards: [],
+            studentProfile: studentData,
+            isInitialAssessment: true
+          }
+        });
+
+        if (assessmentError) throw assessmentError;
+
+        // Create curriculum item for the assessment
+        const { data: curriculumItem, error: ciError } = await supabase
+          .from('curriculum_items')
+          .insert({
+            course_id: data[0].id,
+            title: 'Initial Course Assessment',
+            type: 'assignment',
+            body: assessmentData,
+            est_minutes: assessmentData.estimated_minutes || 45
+          })
+          .select()
+          .single();
+
+        if (ciError) throw ciError;
+
+        // Create the assignment
+        const { error: assignmentError } = await supabase
+          .from('assignments')
+          .insert({
+            curriculum_item_id: curriculumItem.id,
+            status: 'assigned',
+            max_attempts: 3
+          });
+
+        if (assignmentError) throw assignmentError;
+
+        toast.success('Course created with initial assessment!');
+      } catch (assessmentError: any) {
+        console.error('Error creating initial assessment:', assessmentError);
+        toast.warning('Course created, but initial assessment generation failed');
+      }
+
       setOpen(false);
       onCourseAdded();
       

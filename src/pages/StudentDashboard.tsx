@@ -146,6 +146,9 @@ export default function StudentDashboard() {
             <p className="text-sm text-muted-foreground">Let's make today count 🎯</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Button variant="ghost" onClick={() => navigate('/student/profile')}>
+              My Profile
+            </Button>
             <ThemeToggle />
             <Button variant="outline" size="icon" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />

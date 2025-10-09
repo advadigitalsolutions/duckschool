@@ -49,6 +49,13 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
       const selectedCourseData = courses.find(c => c.id === selectedCourse);
       if (!selectedCourseData) throw new Error('Course not found');
 
+      // Get student data for profile context
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('*')
+        .eq('id', studentId)
+        .single();
+
       // Generate assignment content with AI
       const { data: generatedContent, error: generateError } = await supabase.functions.invoke(
         'generate-assignment',
@@ -58,7 +65,9 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
             courseSubject: selectedCourseData.subject,
             topic: topic,
             gradeLevel: selectedCourseData.grade_level,
-            standards: selectedCourseData.standards_scope
+            standards: selectedCourseData.standards_scope,
+            studentProfile: studentData,
+            isInitialAssessment: false
           }
         }
       );

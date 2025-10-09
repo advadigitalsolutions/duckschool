@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.generate-assignment]
 verify_jwt = false
+
+[functions.generate-profile-assessment]
+verify_jwt = false

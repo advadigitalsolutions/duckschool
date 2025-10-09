@@ -545,35 +545,50 @@ export type Database = {
       students: {
         Row: {
           accommodations: Json | null
+          avatar_url: string | null
           created_at: string | null
+          display_name: string | null
           dob: string | null
           goals: Json | null
           grade_level: string | null
           id: string
+          learning_profile: Json | null
           name: string
           parent_id: string | null
+          personality_type: string | null
+          profile_assessment_completed: boolean | null
           user_id: string | null
         }
         Insert: {
           accommodations?: Json | null
+          avatar_url?: string | null
           created_at?: string | null
+          display_name?: string | null
           dob?: string | null
           goals?: Json | null
           grade_level?: string | null
           id?: string
+          learning_profile?: Json | null
           name: string
           parent_id?: string | null
+          personality_type?: string | null
+          profile_assessment_completed?: boolean | null
           user_id?: string | null
         }
         Update: {
           accommodations?: Json | null
+          avatar_url?: string | null
           created_at?: string | null
+          display_name?: string | null
           dob?: string | null
           goals?: Json | null
           grade_level?: string | null
           id?: string
+          learning_profile?: Json | null
           name?: string
           parent_id?: string | null
+          personality_type?: string | null
+          profile_assessment_completed?: boolean | null
           user_id?: string | null
         }
         Relationships: [
