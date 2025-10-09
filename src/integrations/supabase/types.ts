@@ -249,6 +249,7 @@ export type Database = {
       }
       courses: {
         Row: {
+          archived: boolean | null
           created_at: string | null
           credits: number | null
           description: string | null
@@ -258,8 +259,10 @@ export type Database = {
           student_id: string | null
           subject: string
           title: string
+          updated_at: string | null
         }
         Insert: {
+          archived?: boolean | null
           created_at?: string | null
           credits?: number | null
           description?: string | null
@@ -269,8 +272,10 @@ export type Database = {
           student_id?: string | null
           subject: string
           title: string
+          updated_at?: string | null
         }
         Update: {
+          archived?: boolean | null
           created_at?: string | null
           credits?: number | null
           description?: string | null
@@ -280,6 +285,7 @@ export type Database = {
           student_id?: string | null
           subject?: string
           title?: string
+          updated_at?: string | null
         }
         Relationships: [
           {

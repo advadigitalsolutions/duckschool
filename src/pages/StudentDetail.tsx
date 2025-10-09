@@ -16,7 +16,9 @@ import {
   ChevronDown,
   BarChart3,
   Pencil,
-  Trash2
+  Trash2,
+  Archive,
+  ArchiveRestore
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -25,6 +27,9 @@ import { AddAssignmentDialog } from '@/components/AddAssignmentDialog';
 import { AssignmentAnalytics } from '@/components/AssignmentAnalytics';
 import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
 import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
+import { EditCourseDialog } from '@/components/EditCourseDialog';
+import { DeleteCourseDialog } from '@/components/DeleteCourseDialog';
+import { ArchiveCourseDialog } from '@/components/ArchiveCourseDialog';
 
 export default function StudentDetail() {
   const { id } = useParams();
@@ -34,10 +39,11 @@ export default function StudentDetail() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedAssignments, setExpandedAssignments] = useState<Set<string>>(new Set());
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     fetchStudentData();
-  }, [id]);
+  }, [id, showArchived]);
 
   const fetchStudentData = async () => {
     try {
@@ -51,12 +57,18 @@ export default function StudentDetail() {
       if (studentError) throw studentError;
       setStudent(studentData);
 
-      // Fetch courses
-      const { data: coursesData } = await supabase
+      // Fetch courses (include archived based on toggle)
+      const coursesQuery = supabase
         .from('courses')
         .select('*')
-        .eq('student_id', id);
+        .eq('student_id', id)
+        .order('created_at', { ascending: false });
 
+      if (!showArchived) {
+        coursesQuery.eq('archived', false);
+      }
+
+      const { data: coursesData } = await coursesQuery;
       setCourses(coursesData || []);
 
       // Fetch curriculum items for the student's courses
@@ -195,7 +207,16 @@ export default function StudentDetail() {
                     <CardTitle>Courses</CardTitle>
                     <CardDescription>Manage courses for {student.name}</CardDescription>
                   </div>
-                  <AddCourseDialog studentId={student.id} onCourseAdded={fetchStudentData} />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowArchived(!showArchived)}
+                    >
+                      {showArchived ? 'Hide Archived' : 'Show Archived'}
+                    </Button>
+                    <AddCourseDialog studentId={student.id} onCourseAdded={fetchStudentData} />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -208,14 +229,50 @@ export default function StudentDetail() {
                 ) : (
                   <div className="space-y-4">
                     {courses.map((course) => (
-                      <Card key={course.id}>
+                      <Card key={course.id} className={course.archived ? 'opacity-60' : ''}>
                         <CardHeader>
                           <div className="flex items-start justify-between">
-                            <div>
-                              <CardTitle className="text-lg">{course.title}</CardTitle>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <CardTitle className="text-lg">{course.title}</CardTitle>
+                                {course.archived && <Badge variant="secondary">Archived</Badge>}
+                              </div>
                               <CardDescription>{course.subject}</CardDescription>
                             </div>
-                            <Badge>{course.credits} credit{course.credits !== 1 ? 's' : ''}</Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge>{course.credits} credit{course.credits !== 1 ? 's' : ''}</Badge>
+                              <EditCourseDialog
+                                course={course}
+                                onCourseUpdated={fetchStudentData}
+                                trigger={
+                                  <Button variant="ghost" size="icon">
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                }
+                              />
+                              <ArchiveCourseDialog
+                                course={course}
+                                onCourseUpdated={fetchStudentData}
+                                trigger={
+                                  <Button variant="ghost" size="icon">
+                                    {course.archived ? (
+                                      <ArchiveRestore className="h-4 w-4" />
+                                    ) : (
+                                      <Archive className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                }
+                              />
+                              <DeleteCourseDialog
+                                course={course}
+                                onCourseDeleted={fetchStudentData}
+                                trigger={
+                                  <Button variant="ghost" size="icon">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                }
+                              />
+                            </div>
                           </div>
                         </CardHeader>
                         {course.description && (
