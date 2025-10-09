@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,10 +38,61 @@ export function CourseSettingsDialog({
   onUpdate
 }: CourseSettingsDialogProps) {
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [gradeLevel, setGradeLevel] = useState(currentGradeLevel || '');
   const [framework, setFramework] = useState('');
   const [targetCompletionDate, setTargetCompletionDate] = useState('');
   const [weeklyMinutes, setWeeklyMinutes] = useState('');
+
+  // Load existing course data when dialog opens
+  useEffect(() => {
+    if (open && courseId) {
+      loadCourseData();
+    }
+  }, [open, courseId]);
+
+  const loadCourseData = async () => {
+    setLoading(true);
+    try {
+      const { data: course, error } = await supabase
+        .from('courses')
+        .select('grade_level, standards_scope, pacing_config')
+        .eq('id', courseId)
+        .single();
+
+      if (error) throw error;
+
+      if (course) {
+        setGradeLevel(course.grade_level || currentGradeLevel || '');
+        
+        // Extract framework from standards_scope
+        if (Array.isArray(course.standards_scope) && course.standards_scope.length > 0) {
+          const scopeItem = course.standards_scope[0];
+          if (typeof scopeItem === 'object' && scopeItem !== null && 'framework' in scopeItem) {
+            const scopeFramework = (scopeItem as any).framework;
+            if (typeof scopeFramework === 'string') {
+              setFramework(scopeFramework);
+            }
+          }
+        }
+
+        // Extract pacing config
+        const pacingConfig = course.pacing_config as any;
+        if (pacingConfig) {
+          if (pacingConfig.target_completion_date) {
+            setTargetCompletionDate(pacingConfig.target_completion_date);
+          }
+          if (pacingConfig.weekly_minutes) {
+            setWeeklyMinutes(pacingConfig.weekly_minutes.toString());
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading course data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!gradeLevel || !framework) {
@@ -91,7 +142,12 @@ export function CourseSettingsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="grade-level">Grade Level *</Label>
             <Select value={gradeLevel} onValueChange={setGradeLevel}>
@@ -149,6 +205,7 @@ export function CourseSettingsDialog({
             </p>
           </div>
         </div>
+        )}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
