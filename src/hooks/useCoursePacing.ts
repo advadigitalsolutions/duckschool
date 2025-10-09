@@ -224,6 +224,9 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         percentage: allStandards.size > 0 ? (coveredStandards.size / allStandards.size) * 100 : 0
       };
 
+      // Extract framework for display
+      const framework = course.standards_scope?.[0]?.framework || null;
+
       setMetrics({
         totalEstimatedMinutes,
         completedMinutes,
@@ -235,8 +238,9 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         recommendedDailyMinutes,
         masteryData,
         needsConfiguration,
-        missingData
-      });
+        missingData,
+        framework
+      } as any);
 
       setStandardsCoverage(standardsCoverage);
 

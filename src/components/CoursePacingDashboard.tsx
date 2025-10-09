@@ -5,12 +5,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, TrendingUp, TrendingDown, Minus, AlertTriangle, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCoursePacing } from '@/hooks/useCoursePacing';
 import { CourseMasteryChart } from './CourseMasteryChart';
 import { CourseProgressCharts } from './CourseProgressCharts';
 import { CourseConfigurationPrompt } from './CourseConfigurationPrompt';
+import { CourseSettingsDialog } from './CourseSettingsDialog';
 import { cn } from '@/lib/utils';
 
 interface CoursePacingDashboardProps {
@@ -23,6 +24,7 @@ interface CoursePacingDashboardProps {
 
 export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, studentId, gradeLevel }: CoursePacingDashboardProps) {
   const [targetDate, setTargetDate] = useState<Date | undefined>();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { loading, metrics, timeBySubject, standardsCoverage, refreshMetrics } = useCoursePacing(
     courseId,
     targetDate
@@ -79,12 +81,35 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
   const totalHours = Math.floor(metrics.totalEstimatedMinutes / 60);
   const totalMinutes = Math.round(metrics.totalEstimatedMinutes % 60);
 
+  const getFrameworkName = () => {
+    if (!metrics?.needsConfiguration && metrics) {
+      const framework = (metrics as any).framework;
+      if (framework === 'CA-CCSS') return 'California Common Core State Standards';
+      if (framework === 'CCSS') return 'Common Core State Standards';
+      if (framework === 'TX-TEKS') return 'Texas Essential Knowledge and Skills';
+      if (framework === 'FL-BEST') return 'Florida B.E.S.T. Standards';
+      if (framework === 'NY-CCLS') return 'New York Common Core Learning Standards';
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2">{courseTitle}</h1>
-        <p className="text-muted-foreground">{courseSubject} - Course Progress Dashboard</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">{courseTitle}</h1>
+          <p className="text-muted-foreground">{courseSubject} - Course Progress Dashboard</p>
+          {getFrameworkName() && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Framework: {getFrameworkName()}
+            </p>
+          )}
+        </div>
+        <Button variant="outline" onClick={() => setSettingsOpen(true)}>
+          <Settings className="mr-2 h-4 w-4" />
+          Edit Settings
+        </Button>
       </div>
 
       {/* Configuration Prompt if needed */}
@@ -224,6 +249,16 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
       <CourseProgressCharts 
         timeBySubject={timeBySubject}
         standardsCoverage={standardsCoverage}
+      />
+
+      {/* Settings Dialog */}
+      <CourseSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        courseId={courseId}
+        currentGradeLevel={gradeLevel}
+        currentSubject={courseSubject}
+        onUpdate={refreshMetrics}
       />
     </div>
   );
