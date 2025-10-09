@@ -26,6 +26,83 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
   const IconComponent = iconMap[config.icon] || Sparkles;
   const learningProfile = student?.learning_profile || {};
   const categories = learningProfile.categories || {};
+  
+  // Generate personalized tips based on actual responses
+  const generatePersonalizedTips = () => {
+    const tips: string[] = [];
+    const responses = learningProfile.responses || {};
+    const personalityType = student?.personality_type || '';
+    
+    // Analyze their specific preferences from responses
+    Object.values(responses).forEach((response: any) => {
+      const resp = String(response).toLowerCase();
+      
+      // Visual preferences
+      if (resp.includes('video') || resp.includes('diagram') || resp.includes('visual')) {
+        tips.push('When studying new material, start by creating a visual representation - draw a diagram, make a flowchart, or use color-coded notes to map out the key concepts before reading in detail.');
+      }
+      if (resp.includes('quiet') && !tips.some(t => t.includes('noise-canceling'))) {
+        tips.push('Since you prefer quiet environments, invest in noise-canceling headphones or find a dedicated quiet study space. Even 15 minutes of focused, silent study is more effective than an hour with distractions.');
+      }
+      
+      // Kinesthetic preferences
+      if (resp.includes('hands-on') || resp.includes('practice') || resp.includes('building')) {
+        tips.push('Before diving into reading, try to physically interact with the material - build a model, create flashcards you can sort and arrange, or use manipulatives to represent concepts you\'re learning.');
+      }
+      if (resp.includes('walk') || resp.includes('move')) {
+        tips.push('Turn your study sessions into movement sessions: walk while reviewing flashcards, pace while reciting key points, or do light stretches between practice problems. Your brain processes better when your body is in motion.');
+      }
+      
+      // Auditory preferences  
+      if (resp.includes('discuss') || resp.includes('talk') || resp.includes('explain')) {
+        tips.push('After each study session, explain what you learned out loud - either to someone else, to a stuffed animal, or even to yourself in the mirror. The act of verbalizing helps cement the information in your memory.');
+      }
+      if (resp.includes('listen') || resp.includes('audio')) {
+        tips.push('Record yourself reading your notes aloud and listen back during downtime (commute, before bed, during exercise). Hearing the information in your own voice is particularly effective for your learning style.');
+      }
+      
+      // Reading/Writing preferences
+      if (resp.includes('read') || resp.includes('write') || resp.includes('notes')) {
+        tips.push('After every lesson or reading, write a one-paragraph summary in your own words. This active processing transforms passive reading into active learning and reveals gaps in your understanding.');
+      }
+      if (resp.includes('list') || resp.includes('organize')) {
+        tips.push('Start each study session by creating a structured outline of what you need to learn. Break complex topics into numbered lists and sub-points - your brain processes information better when it\'s organized hierarchically.');
+      }
+      
+      // Group vs solo preferences
+      if (resp.includes('group') || resp.includes('collaborative')) {
+        tips.push('Schedule at least one study group session per week, even if just 30 minutes. Teaching concepts to peers or hearing their explanations will deepen your understanding far more than solo study alone.');
+      }
+      if (resp.includes('solo') || resp.includes('independent')) {
+        tips.push('Protect your independent study time by setting clear boundaries. Turn off notifications, use a "do not disturb" sign, and commit to focused 25-minute blocks followed by 5-minute breaks (Pomodoro technique).');
+      }
+      
+      // Time preferences
+      if (resp.includes('morning')) {
+        tips.push('Since you work best in the morning, tackle your most challenging subjects first thing when your mental energy is highest. Save easier tasks like organizing notes or reviewing for later in the day.');
+      }
+      if (resp.includes('evening') || resp.includes('night')) {
+        tips.push('Your peak focus hours are in the evening, so structure your day accordingly. Do lighter activities earlier and save deep learning work for when your brain is naturally most alert.');
+      }
+    });
+    
+    // Add personality-type specific tips
+    if (personalityType.includes('Visual')) {
+      tips.push('Create a visual "memory palace" for complex topics - assign physical locations in a familiar space to different concepts, then mentally walk through that space to recall the information during tests.');
+    } else if (personalityType.includes('Kinesthetic')) {
+      tips.push('Use physical gestures or actions to represent key concepts. When you need to recall information, reproduce those movements - your muscle memory will trigger the mental recall.');
+    } else if (personalityType.includes('Auditory')) {
+      tips.push('Create mnemonics, rhymes, or songs for information you need to memorize. Your auditory memory is strong, so setting facts to a familiar tune can make them stick permanently.');
+    } else if (personalityType.includes('Reading/Writing')) {
+      tips.push('Maintain a learning journal where you reflect on what you learned each day. Writing "Today I learned..." and explaining it forces deeper processing than just highlighting text.');
+    }
+    
+    // Ensure we have at least 5 unique tips
+    const uniqueTips = [...new Set(tips)];
+    return uniqueTips.slice(0, 6);
+  };
+  
+  const personalizedTips = generatePersonalizedTips();
 
   return (
     <ScrollArea className="h-[calc(100vh-12rem)]">
@@ -186,8 +263,35 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
           </Card>
         )}
 
-        {/* Lifelong Learning Section */}
+        {/* Personalized Action Plan */}
         <Card className="border-primary/20 animate-fade-in" style={{ animationDelay: '600ms' }}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Your Personalized Action Plan
+            </CardTitle>
+            <CardDescription>
+              Based on your specific responses, here are concrete ways to apply your learning style starting today
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {personalizedTips.map((tip, index) => (
+                <div key={index} className="flex gap-3 p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-lg border-l-2 border-primary">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-xs font-bold text-primary">{index + 1}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm leading-relaxed">{tip}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Lifelong Learning Section */}
+        <Card className="border-primary/20 animate-fade-in" style={{ animationDelay: '700ms' }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-primary" />
@@ -199,31 +303,13 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
               <div className="p-4 bg-primary/5 rounded-lg">
                 <h4 className="font-semibold mb-2 flex items-center gap-2">
                   <Star className="h-4 w-4 text-primary" />
-                  Use This Knowledge to Deepen Your Learning
+                  Understanding Your Unique Learning DNA
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  Understanding your learning style is the first step to becoming a more effective learner. 
-                  Now that you know how you learn best, you can actively choose study methods and environments 
-                  that work with your natural strengths rather than against them.
+                  Your assessment revealed specific patterns in how you process information. This isn't just about 
+                  being "visual" or "hands-on" - it's about understanding the precise combination of factors that 
+                  make learning click for YOU. Use the personalized tips above as your starting playbook.
                 </p>
-              </div>
-
-              <div className="p-4 bg-muted/30 rounded-lg">
-                <h4 className="font-semibold mb-2">Apply Your Style Daily</h4>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Before starting any assignment, ask yourself: "How can I use my learning style to understand this better?"</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Experiment with the strategies listed above and notice which ones help you learn faster and retain more</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Don't be afraid to combine multiple approaches - most successful learners use several modalities</span>
-                  </li>
-                </ul>
               </div>
 
               <div className="p-4 bg-muted/30 rounded-lg">
@@ -266,7 +352,7 @@ export function PersonalityReport({ student, onRetake }: PersonalityReportProps)
         </Card>
 
         {/* Call to Action */}
-        <Card className="border-primary/20 animate-fade-in" style={{ animationDelay: '700ms' }}>
+        <Card className="border-primary/20 animate-fade-in" style={{ animationDelay: '800ms' }}>
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center gap-2 text-primary">
