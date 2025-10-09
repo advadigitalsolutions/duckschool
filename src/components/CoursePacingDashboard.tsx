@@ -177,9 +177,10 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
             </span>
           </div>
           <div>
-            <span className="font-semibold">Average Pace:</span>{' '}
+            <span className="font-semibold">Average/Expected Pace:</span>{' '}
             <span className="text-muted-foreground">
-              Calculated from student activity over the last 30 days. Used to project completion dates.
+              If student has worked: calculated from activity over the last 30 days. 
+              If no work yet: shows your configured pacing goal from weekly minutes setting.
             </span>
           </div>
           <div>
@@ -249,7 +250,12 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
           {/* Key Metrics Grid */}
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border p-4">
-              <div className="text-sm text-muted-foreground mb-1">Average Pace</div>
+              <div className="text-sm text-muted-foreground mb-1">
+                {metrics.averageMinutesPerDay > 0 && (metrics as any).isConfiguredPace 
+                  ? 'Expected Pace (Configured)'
+                  : 'Average Pace (Last 30 Days)'
+                }
+              </div>
               <div className="text-2xl font-bold">
                 {metrics.averageMinutesPerDay > 0 
                   ? `${Math.round(metrics.averageMinutesPerDay)} min/day`
@@ -258,6 +264,11 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
               </div>
               {metrics.averageMinutesPerDay === 0 && !metrics.needsConfiguration && (
                 <div className="text-xs text-muted-foreground mt-1">No activity yet</div>
+              )}
+              {(metrics as any).isConfiguredPace && (
+                <div className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                  Based on your pacing goal. Actual student pace not yet available.
+                </div>
               )}
             </div>
             

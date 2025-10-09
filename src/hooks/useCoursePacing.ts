@@ -164,6 +164,17 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         return sum + (estimatedHours * 60);
       }, 0);
 
+      console.log('🔍 PACING DEBUG:', {
+        isCustomFramework,
+        hasCustomStandards: !!customStandards,
+        standardsCount: (standards || []).length,
+        totalRequiredMinutes,
+        totalRequiredHours: totalRequiredMinutes / 60,
+        curriculumCreatedMinutes,
+        curriculumCreatedHours: curriculumCreatedMinutes / 60,
+        sampleStandard: standards?.[0]
+      });
+
       // Check for missing critical configuration
       const missingData: string[] = [];
       const hasStandards = (standards || []).length > 0;
@@ -263,6 +274,7 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
 
       // Use pacing_config if available, otherwise fall back to historical data
       let averageMinutesPerDay = recentMinutes / 30 || 0;
+      let isConfiguredPace = false;
       
       // If pacing_config.weekly_minutes is set, use that as baseline
       if (pacingConfig?.weekly_minutes && pacingConfig.weekly_minutes > 0) {
@@ -270,10 +282,20 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         // Use configured value if we have no history, or take the average of both
         if (averageMinutesPerDay === 0) {
           averageMinutesPerDay = configuredDailyMinutes;
+          isConfiguredPace = true;
         } else {
           averageMinutesPerDay = (averageMinutesPerDay + configuredDailyMinutes) / 2;
         }
       }
+
+      console.log('⏱️ PACE DEBUG:', {
+        recentMinutes,
+        recentMinutesPerDay: recentMinutes / 30,
+        configuredWeeklyMinutes: pacingConfig?.weekly_minutes,
+        configuredDailyMinutes: pacingConfig?.weekly_minutes ? pacingConfig.weekly_minutes / 7 : 0,
+        finalAverageMinutesPerDay: averageMinutesPerDay,
+        isConfiguredPace
+      });
 
       // Calculate projected completion based on required hours
       const remainingMinutes = effectiveTotalMinutes - completedMinutes;
@@ -312,6 +334,17 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         const daysUntilTarget = Math.max(1, Math.ceil((targetDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
         recommendedDailyMinutes = remainingMinutes / daysUntilTarget;
       }
+
+      console.log('📊 RECOMMENDATION DEBUG:', {
+        remainingMinutes,
+        remainingHours: remainingMinutes / 60,
+        daysUntilTarget: targetDate ? Math.ceil((targetDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)) : null,
+        recommendedDailyMinutes,
+        effectiveTotalMinutes,
+        effectiveTotalHours: effectiveTotalMinutes / 60,
+        completedMinutes,
+        completedHours: completedMinutes / 60
+      });
 
       // Check if curriculum creation is keeping pace
       const needsMoreCurriculum = curriculumCreatedMinutes < (completedMinutes + (recommendedDailyMinutes * 7));
@@ -355,7 +388,8 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         needsMoreCurriculum,
         missingData,
         framework: courseFramework,
-        trackingMode
+        trackingMode,
+        isConfiguredPace
       } as any);
 
       setStandardsCoverage(standardsCoverage);
