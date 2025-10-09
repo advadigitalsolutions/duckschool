@@ -69,7 +69,8 @@ export const CurriculumPlanningChat = ({ onComplete, existingSessionId }: Curric
         data.gradeLevel &&
         data.location &&
         data.standardsFramework &&
-        data.pedagogicalApproach
+        data.subjects &&
+        data.goals
       ));
 
       toast.success('Resumed your planning session');
@@ -83,13 +84,9 @@ export const CurriculumPlanningChat = ({ onComplete, existingSessionId }: Curric
   };
 
   const determineStage = (data: any): string => {
-    if (!data.studentName) return 'initial';
-    if (!data.location) return 'location';
-    if (!data.standardsFramework) return 'standards';
-    if (!data.pedagogicalApproach) return 'pedagogy';
-    if (!data.learningProfile) return 'student_profile';
-    if (!data.familyContext) return 'family_context';
-    if (!data.subjectPlanning) return 'subject_planning';
+    if (!data.studentName || !data.gradeLevel) return 'initial';
+    if (!data.location || !data.standardsFramework) return 'framework';
+    if (!data.subjects || !data.goals) return 'goals';
     return 'ready';
   };
 
@@ -164,13 +161,9 @@ export const CurriculumPlanningChat = ({ onComplete, existingSessionId }: Curric
 
   const getStageLabel = (stage: string): string => {
     const labels: Record<string, string> = {
-      'initial': 'Getting Started',
-      'location': 'Location & Standards',
-      'standards': 'Educational Framework',
-      'pedagogy': 'Teaching Approach',
-      'student_profile': 'Student Profile',
-      'family_context': 'Family Context',
-      'subject_planning': 'Subject Planning',
+      'initial': 'Student Information',
+      'framework': 'Educational Standards',
+      'goals': 'Subjects & Goals',
       'ready': 'Ready to Create'
     };
     return labels[stage] || stage;

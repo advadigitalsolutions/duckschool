@@ -47,7 +47,7 @@ serve(async (req) => {
 
       const initialMessage = {
         role: 'assistant',
-        content: "Hi! I'm here to help you create a personalized educational plan for your student.\n\nHere's how this works:\n✨ We'll create an initial assessment to understand your student's current level\n📚 Based on their results, I'll build a custom curriculum that adapts to their needs\n🎯 Together we'll set a timeline to reach their educational goals\n\nLet's get started! What's your student's name and current grade level?"
+        content: "Hi! I'll help you create a personalized curriculum plan for your student. This will include an initial assessment to gauge their level, then an adaptive curriculum that adjusts to their progress.\n\nWhat's your student's name, grade level, and where are you located?"
       };
 
       return new Response(JSON.stringify({
@@ -157,48 +157,37 @@ serve(async (req) => {
 });
 
 function determineStage(data: any): string {
-  if (!data.studentName) return 'initial';
-  if (!data.location) return 'location';
-  if (!data.standardsFramework) return 'standards';
-  if (!data.pedagogicalApproach) return 'pedagogy';
-  if (!data.learningProfile) return 'student_profile';
-  if (!data.familyContext) return 'family_context';
-  if (!data.subjectPlanning) return 'subject_planning';
+  if (!data.studentName || !data.gradeLevel) return 'initial';
+  if (!data.location || !data.standardsFramework) return 'framework';
+  if (!data.subjects || !data.goals) return 'goals';
   return 'ready';
 }
 
 function buildSystemPrompt(stage: string, data: any): string {
   const basePrompt = `You are an expert educational consultant helping parents create personalized homeschool curriculum plans.
 
-CRITICAL: Keep responses CONCISE (2-3 sentences max). Be efficient and focused.
+CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
+1. Keep ALL responses to 2-3 sentences MAXIMUM
+2. Ask ONLY ONE question per response
+3. Move through stages QUICKLY - don't dig for unnecessary details
+4. Accept brief answers and move forward
+5. NEVER ask follow-up questions if you have enough to proceed
 
-Your goals:
-1. Gather essential information through brief, focused questions
-2. Extract key data about student needs and educational goals
-3. Recommend appropriate standards based on their location
-4. Ask ONE focused question at a time (not multiple)
-5. Be warm but brief - respect their time
-
-IMPORTANT CONTEXT TO CONVEY:
-- The system will CREATE INITIAL ASSESSMENTS to understand the student's current level
-- The curriculum will ADAPT IN REAL-TIME based on assessment results
-- We'll create a PERSONALIZED TIMELINE to reach their specific goals
-- The plan is flexible and adjusts to the student's progress
+KEY MESSAGING:
+- We'll create an INITIAL ASSESSMENT to understand the student's current level
+- The curriculum ADAPTS IN REAL-TIME based on their progress
+- Everything is PERSONALIZED to their timeline and goals
 
 Current stage: ${stage}
-Data collected so far: ${JSON.stringify(data, null, 2)}
+Data collected: ${JSON.stringify(data, null, 2)}
 
 `;
 
   const stagePrompts: Record<string, string> = {
-    'initial': 'Ask for student name, grade level, and their location. Keep it simple and welcoming.',
-    'location': 'Based on their location, suggest appropriate educational standards (e.g., California → Common Core + NGSS). Ask if this sounds good or if they prefer something else. Be brief.',
-    'standards': 'Ask about their teaching philosophy in ONE sentence. Options: Montessori, Classical, Project-based, Charlotte Mason, or eclectic mix. Keep it short.',
-    'pedagogy': 'Ask ONE focused question: What are the student\'s main learning goals and any special considerations (learning differences, interests, challenges)? Brief response expected.',
-    'student_profile': 'Quick question: What subjects should we focus on, and what are their end goals (e.g., college prep, skill mastery, enrichment)? Keep brief.',
-    'family_context': 'IMPORTANT: Provide a brief 2-3 sentence summary showing you understand their needs. Then mention: "I\'ll create an initial assessment to gauge {student name}\'s current level, then build an adaptive curriculum that adjusts to their progress toward {their goal}." Ask if they\'re ready to proceed.',
-    'subject_planning': 'Confirm the plan briefly and emphasize the assessment will help create a perfectly tailored curriculum. Ask if ready to start.',
-    'ready': 'Great! Summarize the plan in 2-3 sentences. Remind them: "We\'ll start with an assessment to understand {student}\'s current level, then create a personalized curriculum that adapts in real-time to help them reach {goal} on your timeline." Confirm they\'re ready.'
+    'initial': 'Get: student name, grade level, and location in ONE question. Example: "What\'s your student\'s name, grade level, and where are you located?" Keep it friendly but brief.',
+    'framework': `Based on their location (${data.location || 'provided'}), quickly suggest appropriate standards. Example: "I recommend Common Core for ${data.location || 'your area'}. Does that work?" Just 1-2 sentences.`,
+    'goals': `Ask ONE combined question: "What subjects should we focus on, and what's the main goal (e.g., college prep, grade-level mastery)?" That's it - don't elaborate.`,
+    'ready': `Confirm in 2-3 sentences: "Perfect! I'll create an assessment for ${data.studentName || 'your student'} to gauge their current level in ${data.subjects || 'the subjects'}, then build a curriculum that adapts to help them reach ${data.goals || 'their goals'}. Ready to start?" STOP THERE.`
   };
 
   return basePrompt + (stagePrompts[stage] || stagePrompts['initial']);
@@ -208,44 +197,58 @@ function extractDataFromMessage(message: string, existingData: any, stage: strin
   const data = { ...existingData };
   const lowerMessage = message.toLowerCase();
 
-  // Simple extraction (in production, use more sophisticated NLP)
-  if (stage === 'initial') {
-    // Extract name and grade patterns
+  // Extract grade level
+  if (!data.gradeLevel) {
     const gradeMatch = message.match(/\b(\d+)(th|st|nd|rd)?\s*grade\b/i) || 
-                       message.match(/\bgrade\s*(\d+)/i);
+                       message.match(/\bgrade\s*(\d+)/i) ||
+                       message.match(/\b(kindergarten|k)\b/i);
     if (gradeMatch) {
-      data.gradeLevel = gradeMatch[1] + 'th grade';
+      data.gradeLevel = gradeMatch[1] === 'kindergarten' || gradeMatch[1] === 'k' ? 'Kindergarten' : `Grade ${gradeMatch[1]}`;
     }
-    
-    // Simple name extraction (first capitalized word)
+  }
+  
+  // Extract name (first capitalized word that's not a location)
+  if (!data.studentName) {
     const nameMatch = message.match(/\b([A-Z][a-z]+)\b/);
-    if (nameMatch && !data.studentName) {
+    if (nameMatch && !['California', 'Texas', 'Florida', 'New', 'Common', 'Core'].includes(nameMatch[1])) {
       data.studentName = nameMatch[1];
     }
   }
 
-  if (stage === 'location') {
-    if (lowerMessage.includes('california') || lowerMessage.includes('ca')) {
-      data.location = 'California, USA';
-      data.region = 'california';
-    }
-    // Add more location patterns...
-  }
-
-  if (stage === 'standards' && !data.standardsFramework) {
-    if (lowerMessage.includes('common core') || lowerMessage.includes('ccss')) {
-      data.standardsFramework = ['CCSS'];
-    }
-    if (lowerMessage.includes('ngss') || lowerMessage.includes('science')) {
-      data.standardsFramework = [...(data.standardsFramework || []), 'NGSS'];
-    }
-  }
-
-  if (stage === 'pedagogy' && !data.pedagogicalApproach) {
-    const approaches = ['montessori', 'waldorf', 'classical', 'charlotte mason', 'unschool', 'project-based'];
-    const found = approaches.find(a => lowerMessage.includes(a));
+  // Extract location
+  if (!data.location) {
+    const locations = ['california', 'texas', 'florida', 'new york', 'illinois', 'pennsylvania', 'ohio'];
+    const found = locations.find(loc => lowerMessage.includes(loc));
     if (found) {
-      data.pedagogicalApproach = found;
+      data.location = found.charAt(0).toUpperCase() + found.slice(1);
+    }
+  }
+
+  // Extract standards framework
+  if (!data.standardsFramework && (lowerMessage.includes('yes') || lowerMessage.includes('common core') || lowerMessage.includes('sounds good'))) {
+    data.standardsFramework = 'Common Core';
+  }
+
+  // Extract subjects and goals - be generous with any subject/goal keywords
+  if (stage === 'goals') {
+    if (!data.subjects) {
+      const subjects = ['math', 'reading', 'science', 'history', 'english', 'language arts', 'social studies'];
+      const mentioned = subjects.filter(s => lowerMessage.includes(s));
+      if (mentioned.length > 0) {
+        data.subjects = mentioned.join(', ');
+      } else if (message.length > 10) {
+        data.subjects = 'core subjects'; // Default if they mentioned anything
+      }
+    }
+    
+    if (!data.goals) {
+      const goals = ['college', 'grade level', 'mastery', 'enrichment', 'catch up', 'advanced', 'prep'];
+      const mentioned = goals.find(g => lowerMessage.includes(g));
+      if (mentioned) {
+        data.goals = mentioned;
+      } else if (message.length > 15) {
+        data.goals = 'grade-level mastery'; // Reasonable default
+      }
     }
   }
 
@@ -253,11 +256,13 @@ function extractDataFromMessage(message: string, existingData: any, stage: strin
 }
 
 function isReadyToFinalize(data: any): boolean {
+  // Only need the essentials - be generous
   return !!(
     data.studentName &&
     data.gradeLevel &&
     data.location &&
     data.standardsFramework &&
-    data.pedagogicalApproach
+    data.subjects &&
+    data.goals
   );
 }
