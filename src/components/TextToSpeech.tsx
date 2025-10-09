@@ -5,12 +5,6 @@ import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { cleanMarkdown } from '@/utils/textFormatting';
 import { supabase } from '@/integrations/supabase/client';
 
-interface WordTimestamp {
-  word: string;
-  start: number;
-  end: number;
-}
-
 interface TextToSpeechProps {
   text: string;
   children?: ReactNode;
@@ -23,7 +17,6 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
   const [paused, setPaused] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [words, setWords] = useState<string[]>([]);
-  const [wordTimestamps, setWordTimestamps] = useState<WordTimestamp[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -65,7 +58,6 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
         
         console.log('Calling text-to-speech edge function...');
         
-        // Call OpenAI TTS through edge function
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/text-to-speech`,
           {
@@ -83,17 +75,9 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
           throw new Error(errorData.error || 'Failed to generate speech');
         }
 
-        console.log('Audio received with timestamps...');
-        const { audio: base64Audio, words: timestamps } = await response.json();
-        setWordTimestamps(timestamps);
-        
-        // Convert base64 to blob
-        const binaryString = atob(base64Audio);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+        console.log('Audio received, creating blob...');
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
         const audioUrl = URL.createObjectURL(audioBlob);
         
         console.log('Creating audio element with URL:', audioUrl);
@@ -135,27 +119,32 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
   };
 
   const startWordTracking = () => {
-    if (!audioRef.current || wordTimestamps.length === 0) return;
+    if (!audioRef.current) return;
     
     const audio = audioRef.current;
+    const wordList = words.filter(w => !/^\s+$/.test(w));
     
-    timeUpdateIntervalRef.current = setInterval(() => {
-      if (!audio) return;
-      
-      const currentTime = audio.currentTime;
-      
-      // Find which word is currently being spoken based on timestamps
-      const currentIndex = wordTimestamps.findIndex(
-        (word, idx) => {
-          const nextWord = wordTimestamps[idx + 1];
-          return currentTime >= word.start && (!nextWord || currentTime < nextWord.start);
-        }
-      );
-      
-      if (currentIndex !== -1) {
-        setCurrentWordIndex(currentIndex);
+    // Wait for metadata to load to get accurate duration
+    const startTracking = () => {
+      if (audio.duration && audio.duration > 0) {
+        timeUpdateIntervalRef.current = setInterval(() => {
+          if (!audio || audio.paused) return;
+          
+          const progress = audio.currentTime / audio.duration;
+          const estimatedIndex = Math.floor(progress * wordList.length);
+          
+          // Clamp to valid range
+          const clampedIndex = Math.max(0, Math.min(estimatedIndex, wordList.length - 1));
+          setCurrentWordIndex(clampedIndex);
+        }, 100);
       }
-    }, 50);
+    };
+    
+    if (audio.duration) {
+      startTracking();
+    } else {
+      audio.addEventListener('loadedmetadata', startTracking, { once: true });
+    }
   };
 
   const handleStop = () => {

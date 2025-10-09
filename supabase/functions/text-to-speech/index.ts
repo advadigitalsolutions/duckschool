@@ -23,32 +23,8 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // First, get word timestamps
-    const timestampResponse = await fetch('https://api.openai.com/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'tts-1',
-        input: text,
-        voice: 'alloy',
-        speed: 0.9,
-        response_format: 'verbose_json',
-        timestamp_granularities: ['word'],
-      }),
-    });
-
-    if (!timestampResponse.ok) {
-      const error = await timestampResponse.json();
-      throw new Error(error.error?.message || 'Failed to generate speech with timestamps');
-    }
-
-    const timestampData = await timestampResponse.json();
-
-    // Then get the actual audio
-    const audioResponse = await fetch('https://api.openai.com/v1/audio/speech', {
+    // Generate speech
+    const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -63,26 +39,19 @@ serve(async (req) => {
       }),
     });
 
-    if (!audioResponse.ok) {
-      const error = await audioResponse.json();
-      throw new Error(error.error?.message || 'Failed to generate audio');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to generate speech');
     }
 
-    const audioBuffer = await audioResponse.arrayBuffer();
-    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+    const audioBuffer = await response.arrayBuffer();
     
-    return new Response(
-      JSON.stringify({
-        audio: base64Audio,
-        words: timestampData.words || [],
-      }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return new Response(audioBuffer, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'audio/mpeg',
+      },
+    });
   } catch (error) {
     console.error('Error in text-to-speech function:', error);
     return new Response(
