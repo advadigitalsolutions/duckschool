@@ -277,7 +277,10 @@ export default function StudentDashboard() {
                             {assignment.curriculum_items?.est_minutes || 30} minutes
                           </CardDescription>
                         </div>
-                        <Button size="sm">
+                        <Button 
+                          size="sm"
+                          onClick={() => navigate(`/assignment/${assignment.id}`)}
+                        >
                           Start
                         </Button>
                       </div>
