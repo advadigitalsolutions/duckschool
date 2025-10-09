@@ -31,14 +31,28 @@ export function BionicReadingProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const { data } = await supabase
+      // Try student table first
+      const { data: student } = await supabase
         .from('students')
         .select('bionic_reading_enabled')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (data) {
-        setEnabledState(data.bionic_reading_enabled || false);
+      if (student) {
+        setEnabledState(student.bionic_reading_enabled || false);
+        setLoading(false);
+        return;
+      }
+
+      // If not a student, try profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('bionic_reading_enabled')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile) {
+        setEnabledState(profile.bionic_reading_enabled || false);
       }
     } catch (error) {
       console.error('Error fetching bionic reading setting:', error);
@@ -52,11 +66,12 @@ export function BionicReadingProvider({ children }: { children: ReactNode }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Try to update student table first
       const { data: student } = await supabase
         .from('students')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (student) {
         await supabase
@@ -65,7 +80,16 @@ export function BionicReadingProvider({ children }: { children: ReactNode }) {
           .eq('id', student.id);
 
         setEnabledState(newEnabled);
+        return;
       }
+
+      // If not a student, update profiles table
+      await supabase
+        .from('profiles')
+        .update({ bionic_reading_enabled: newEnabled })
+        .eq('id', user.id);
+
+      setEnabledState(newEnabled);
     } catch (error) {
       console.error('Error updating bionic reading setting:', error);
     }
