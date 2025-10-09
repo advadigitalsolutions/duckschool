@@ -92,53 +92,63 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       const courseFramework = course.standards_scope?.[0]?.framework || pacingConfig?.framework || 'CA-CCSS';
       const isCustomFramework = courseFramework === 'CUSTOM';
       
-      // Normalize subject names for flexible matching
-      const subjectVariations = [
-        course.subject,
-        course.subject.replace(/\//g, ' '), // "English/Language Arts" -> "English Language Arts"
-        course.subject.replace(/ /g, '/'),   // "English Language Arts" -> "English/Language Arts"
-      ];
+      // For custom frameworks, check if we have AI-generated standards
+      const customStandards = isCustomFramework ? course.standards_scope?.[0]?.custom_standards : null;
       
-      // Try to find standards with flexible subject and grade matching
+      // For CUSTOM framework, use AI-generated standards if available
       let standards = null;
-      for (const subjectVariant of subjectVariations) {
-        const { data } = await supabase
-          .from('standards')
-          .select('*')
-          .eq('framework', courseFramework)
-          .eq('subject', subjectVariant)
-          .eq('grade_band', course.grade_level);
-        
-        if (data && data.length > 0) {
-          standards = data;
-          break;
-        }
-      }
       
-      // If no exact grade match, try grade ranges that include this grade
-      if (!standards || standards.length === 0) {
-        const gradeNum = parseInt(course.grade_level) || 12;
+      if (isCustomFramework && customStandards) {
+        // Use the custom standards generated from goals
+        standards = customStandards;
+      } else if (!isCustomFramework) {
+        // Normalize subject names for flexible matching
+        const subjectVariations = [
+          course.subject,
+          course.subject.replace(/\//g, ' '), // "English/Language Arts" -> "English Language Arts"
+          course.subject.replace(/ /g, '/'),   // "English Language Arts" -> "English/Language Arts"
+        ];
+        
+        // Try to find standards with flexible subject and grade matching
         for (const subjectVariant of subjectVariations) {
           const { data } = await supabase
             .from('standards')
             .select('*')
             .eq('framework', courseFramework)
-            .eq('subject', subjectVariant);
+            .eq('subject', subjectVariant)
+            .eq('grade_band', course.grade_level);
           
           if (data && data.length > 0) {
-            // Filter for grade ranges that include our grade
-            const filtered = data.filter((s: any) => {
-              const gradeBand = s.grade_band;
-              if (gradeBand.includes('-')) {
-                const [start, end] = gradeBand.split('-').map((g: string) => parseInt(g));
-                return gradeNum >= start && gradeNum <= end;
-              }
-              return parseInt(gradeBand) === gradeNum;
-            });
+            standards = data;
+            break;
+          }
+        }
+        
+        // If no exact grade match, try grade ranges that include this grade
+        if (!standards || standards.length === 0) {
+          const gradeNum = parseInt(course.grade_level) || 12;
+          for (const subjectVariant of subjectVariations) {
+            const { data } = await supabase
+              .from('standards')
+              .select('*')
+              .eq('framework', courseFramework)
+              .eq('subject', subjectVariant);
             
-            if (filtered.length > 0) {
-              standards = filtered;
-              break;
+            if (data && data.length > 0) {
+              // Filter for grade ranges that include our grade
+              const filtered = data.filter((s: any) => {
+                const gradeBand = s.grade_band;
+                if (gradeBand.includes('-')) {
+                  const [start, end] = gradeBand.split('-').map((g: string) => parseInt(g));
+                  return gradeNum >= start && gradeNum <= end;
+                }
+                return parseInt(gradeBand) === gradeNum;
+              });
+              
+              if (filtered.length > 0) {
+                standards = filtered;
+                break;
+              }
             }
           }
         }

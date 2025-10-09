@@ -129,7 +129,9 @@ export function CurriculumGenerationDialog({
               <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold mb-2">Generate AI-Powered Curriculum</h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Our AI will analyze uncovered standards and create personalized assignment recommendations based on your student's learning profile and selected pedagogy.
+                {framework === 'CUSTOM' 
+                  ? 'Our AI will analyze your course goals and learning milestones to create personalized assignment recommendations.'
+                  : 'Our AI will analyze uncovered standards and create personalized assignment recommendations based on your student\'s learning profile and selected pedagogy.'}
               </p>
               <Button onClick={handleGenerate} disabled={generating}>
                 {generating ? (
@@ -153,7 +155,9 @@ export function CurriculumGenerationDialog({
                     {suggestions.length} Assignment Suggestions
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {uncoveredCount} uncovered standards • {pedagogy} pedagogy • {framework}
+                    {framework === 'CUSTOM' 
+                      ? `${uncoveredCount} learning milestones • ${pedagogy} pedagogy • Custom Framework`
+                      : `${uncoveredCount} uncovered standards • ${pedagogy} pedagogy • ${framework}`}
                   </p>
                 </div>
                 <Button variant="outline" onClick={handleGenerate} disabled={generating}>

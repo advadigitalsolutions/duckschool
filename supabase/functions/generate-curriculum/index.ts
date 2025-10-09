@@ -63,17 +63,27 @@ serve(async (req) => {
     const framework = pacingConfig.framework || course.standards_scope?.[0]?.framework || 'CA-CCSS';
     const gradeLevel = course.grade_level || '10';
     const courseGoals = course.goals;
+    const isCustomFramework = framework === 'CUSTOM';
 
-    // Get all standards for this course
-    const { data: allStandards, error: standardsError } = await supabaseClient
-      .from('standards')
-      .select('*')
-      .eq('framework', framework)
-      .eq('subject', course.subject)
-      .eq('grade_band', gradeLevel);
+    // Get standards - either custom or from database
+    let allStandards = null;
+    
+    if (isCustomFramework) {
+      // Use AI-generated custom standards
+      allStandards = course.standards_scope?.[0]?.custom_standards || null;
+    } else {
+      // Get standards from database
+      const { data, error: standardsError } = await supabaseClient
+        .from('standards')
+        .select('*')
+        .eq('framework', framework)
+        .eq('subject', course.subject)
+        .eq('grade_band', gradeLevel);
 
-    if (standardsError) {
-      console.error('Standards error:', standardsError);
+      if (standardsError) {
+        console.error('Standards error:', standardsError);
+      }
+      allStandards = data;
     }
 
     // Get covered standards from existing curriculum
@@ -93,7 +103,9 @@ serve(async (req) => {
     
     if (useGoalsBasedGeneration && !courseGoals) {
       return new Response(JSON.stringify({ 
-        message: 'No standards available and no course goals set. Please configure course goals in settings.',
+        message: isCustomFramework 
+          ? 'No learning milestones generated yet. Please edit course settings to generate milestones from your goals.'
+          : 'No standards available and no course goals set. Please configure course goals in settings.',
         suggestions: []
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

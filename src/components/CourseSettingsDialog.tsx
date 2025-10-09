@@ -165,7 +165,28 @@ export function CourseSettingsDialog({
 
       if (error) throw error;
 
-      toast.success('Course settings updated successfully');
+      // If CUSTOM framework with goals, generate AI standards
+      if (framework === 'CUSTOM' && goals) {
+        toast.info('Generating learning milestones from your goals...');
+        const { error: standardsError } = await supabase.functions.invoke('generate-course-standards', {
+          body: { 
+            courseId, 
+            goals, 
+            subject: currentSubject, 
+            gradeLevel 
+          }
+        });
+        
+        if (standardsError) {
+          console.error('Error generating standards:', standardsError);
+          toast.warning('Course saved, but failed to generate learning milestones. Try editing settings again.');
+        } else {
+          toast.success('Course settings and learning milestones updated!');
+        }
+      } else {
+        toast.success('Course settings updated successfully');
+      }
+
       onUpdate();
       onOpenChange(false);
     } catch (error: any) {
@@ -182,7 +203,7 @@ export function CourseSettingsDialog({
         <DialogHeader>
           <DialogTitle>Configure Course Settings</DialogTitle>
           <DialogDescription>
-            Set the regional standards and pacing requirements for this course. This information helps provide accurate progress tracking.
+            Set the regional standards and pacing requirements for this course. For custom frameworks, AI will generate personalized learning milestones from your course goals.
           </DialogDescription>
         </DialogHeader>
 
@@ -257,7 +278,7 @@ export function CourseSettingsDialog({
             </Select>
             {framework === 'CUSTOM' && (
               <p className="text-sm text-muted-foreground">
-                Custom framework will use AI to create curriculum based on your course goals
+                Custom framework will use AI to create curriculum based on your course goals. Learning milestones will be automatically generated.
               </p>
             )}
           </div>
