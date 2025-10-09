@@ -16,16 +16,24 @@ import { useBionicReading } from '@/contexts/BionicReadingContext';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { BionicText } from '@/components/BionicText';
 import { Slider } from '@/components/ui/slider';
+import cuteCat from '@/assets/avatars/cute-cat.png';
+import cuteDog from '@/assets/avatars/cute-dog.png';
+import cuteRobot from '@/assets/avatars/cute-robot.png';
+import cuteBunny from '@/assets/avatars/cute-bunny.png';
+import cuteBear from '@/assets/avatars/cute-bear.png';
+import cuteFox from '@/assets/avatars/cute-fox.png';
+import cuteOwl from '@/assets/avatars/cute-owl.png';
+import cutePanda from '@/assets/avatars/cute-panda.png';
 
 const defaultAvatars = [
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=HappyTeacher&backgroundColor=b6e3f4',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=FunEducator&backgroundColor=c0aede',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=SmileyParent&backgroundColor=ffd5dc',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=RobotTeacher&backgroundColor=ffdfbf',
-  'https://api.dicebear.com/7.x/big-ears/svg?seed=CuteTeacher&backgroundColor=d1d4f9',
-  'https://api.dicebear.com/7.x/big-ears/svg?seed=HappyParent&backgroundColor=ffd5dc',
-  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Owl',
-  'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Bear',
+  cuteCat,
+  cuteDog,
+  cuteRobot,
+  cuteBunny,
+  cuteBear,
+  cuteFox,
+  cuteOwl,
+  cutePanda,
 ];
 
 export default function ParentProfile() {
@@ -183,7 +191,7 @@ export default function ParentProfile() {
               <CardContent className="space-y-6">
                 <div className="flex flex-col items-center space-y-4">
                   <Avatar className="h-32 w-32">
-                    <AvatarImage src={selectedAvatar} />
+                    <AvatarImage src={selectedAvatar} className="object-cover" />
                     <AvatarFallback>
                       <User className="h-16 w-16" />
                     </AvatarFallback>
@@ -214,14 +222,14 @@ export default function ParentProfile() {
                       <button
                         key={index}
                         onClick={() => setSelectedAvatar(avatar)}
-                        className={`rounded-full border-2 transition-all ${
+                        className={`rounded-full border-2 transition-all overflow-hidden aspect-square ${
                           selectedAvatar === avatar
                             ? 'border-primary scale-110'
                             : 'border-transparent hover:border-muted-foreground'
                         }`}
                       >
                         <Avatar className="h-16 w-16">
-                          <AvatarImage src={avatar} />
+                          <AvatarImage src={avatar} className="object-cover" />
                           <AvatarFallback>
                             <User className="h-8 w-8" />
                           </AvatarFallback>
