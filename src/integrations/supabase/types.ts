@@ -723,6 +723,7 @@ export type Database = {
           focus_mode_glow_intensity: number | null
           focus_mode_overlay_opacity: number | null
           high_contrast_enabled: boolean | null
+          hotkey_settings: Json | null
           id: string
           letter_spacing: string | null
           line_spacing: string | null
@@ -746,6 +747,7 @@ export type Database = {
           focus_mode_glow_intensity?: number | null
           focus_mode_overlay_opacity?: number | null
           high_contrast_enabled?: boolean | null
+          hotkey_settings?: Json | null
           id: string
           letter_spacing?: string | null
           line_spacing?: string | null
@@ -769,6 +771,7 @@ export type Database = {
           focus_mode_glow_intensity?: number | null
           focus_mode_overlay_opacity?: number | null
           high_contrast_enabled?: boolean | null
+          hotkey_settings?: Json | null
           id?: string
           letter_spacing?: string | null
           line_spacing?: string | null
@@ -1063,6 +1066,7 @@ export type Database = {
           goals: Json | null
           grade_level: string | null
           high_contrast_enabled: boolean | null
+          hotkey_settings: Json | null
           id: string
           learning_profile: Json | null
           letter_spacing: string | null
@@ -1095,6 +1099,7 @@ export type Database = {
           goals?: Json | null
           grade_level?: string | null
           high_contrast_enabled?: boolean | null
+          hotkey_settings?: Json | null
           id?: string
           learning_profile?: Json | null
           letter_spacing?: string | null
@@ -1127,6 +1132,7 @@ export type Database = {
           goals?: Json | null
           grade_level?: string | null
           high_contrast_enabled?: boolean | null
+          hotkey_settings?: Json | null
           id?: string
           learning_profile?: Json | null
           letter_spacing?: string | null

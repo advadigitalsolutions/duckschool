@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Upload, User, X } from 'lucide-react';
+import { AccessibilityControls } from '@/components/AccessibilityControls';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -237,10 +238,62 @@ export default function StudentProfile() {
           <TabsContent value="profile">
             <Card>
               <CardHeader>
+                <CardTitle>Quick Access Controls</CardTitle>
+                <CardDescription>Toggle accessibility features on/off with one click or keyboard shortcuts</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AccessibilityControls />
+              </CardContent>
+            </Card>
+
+            <Card className="mt-4">
+              <CardHeader>
                 <CardTitle>Profile Settings</CardTitle>
                 <CardDescription>Customize your profile</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Display Name / Nickname</Label>
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Enter your preferred name"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    <BionicText>This is how your name will appear throughout the app</BionicText>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="pronouns">Pronouns (optional)</Label>
+                  <Select value={pronouns} onValueChange={setPronouns}>
+                    <SelectTrigger id="pronouns" className="bg-background">
+                      <SelectValue placeholder="Select your pronouns" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="she/her">she/her</SelectItem>
+                      <SelectItem value="he/him">he/him</SelectItem>
+                      <SelectItem value="they/them">they/them</SelectItem>
+                      <SelectItem value="ze/hir">ze/hir</SelectItem>
+                      <SelectItem value="xe/xem">xe/xem</SelectItem>
+                      <SelectItem value="custom">Custom pronouns</SelectItem>
+                      <SelectItem value="">Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {pronouns === 'custom' && (
+                    <Input
+                      value={customPronouns}
+                      onChange={(e) => setCustomPronouns(e.target.value)}
+                      placeholder="Enter your pronouns (e.g., fae/faer)"
+                      className="mt-2"
+                    />
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    <BionicText>Your pronouns help others respect your identity 🏳️‍🌈</BionicText>
+                  </p>
+                </div>
+
                 <div className="flex flex-col items-center space-y-4">
                   <Avatar className="h-32 w-32">
                     <AvatarImage src={selectedAvatar} className="object-cover" />
@@ -290,48 +343,6 @@ export default function StudentProfile() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Display Name / Nickname</Label>
-                  <Input
-                    id="displayName"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Enter your preferred name"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    <BionicText>This is how your name will appear throughout the app</BionicText>
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="pronouns">Pronouns (optional)</Label>
-                  <Select value={pronouns} onValueChange={setPronouns}>
-                    <SelectTrigger id="pronouns" className="bg-background">
-                      <SelectValue placeholder="Select your pronouns" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      <SelectItem value="she/her">she/her</SelectItem>
-                      <SelectItem value="he/him">he/him</SelectItem>
-                      <SelectItem value="they/them">they/them</SelectItem>
-                      <SelectItem value="ze/hir">ze/hir</SelectItem>
-                      <SelectItem value="xe/xem">xe/xem</SelectItem>
-                      <SelectItem value="custom">Custom pronouns</SelectItem>
-                      <SelectItem value="">Prefer not to say</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {pronouns === 'custom' && (
-                    <Input
-                      value={customPronouns}
-                      onChange={(e) => setCustomPronouns(e.target.value)}
-                      placeholder="Enter your pronouns (e.g., fae/faer)"
-                      className="mt-2"
-                    />
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    <BionicText>Your pronouns help others respect your identity 🏳️‍🌈</BionicText>
-                  </p>
-                </div>
-
                 <Button onClick={handleSaveProfile} className="w-full">
                   Save Profile
                 </Button>
@@ -340,8 +351,8 @@ export default function StudentProfile() {
 
             <Card className="mt-4">
               <CardHeader>
-                <CardTitle>Accessibility Settings</CardTitle>
-                <CardDescription>Customize your reading experience</CardDescription>
+                <CardTitle>Advanced Accessibility Settings</CardTitle>
+                <CardDescription>Fine-tune your reading experience</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Reading Assistance */}
