@@ -13,6 +13,8 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { usePomodoro } from '@/contexts/PomodoroContext';
+import cloudSet1 from '@/assets/clouds/cloud-set-1.png';
+import cloudSet2 from '@/assets/clouds/cloud-set-2.png';
 
 interface HeaderSettings {
   showName: boolean;
@@ -83,7 +85,7 @@ export function CustomizableHeader({
   const [weather, setWeather] = useState<string | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [starPositions, setStarPositions] = useState<Array<{x: number, y: number}>>([]);
-  const [cloudPositions, setCloudPositions] = useState<Array<{x: number, y: number, width: number, height: number, duration: number, delay: number}>>([]);
+  const [cloudPositions, setCloudPositions] = useState<Array<{x: number, y: number, width: number, height: number, duration: number, delay: number, imageSet: number}>>([]);
   const [fallingBadges, setFallingBadges] = useState<Array<{id: string, x: number, y: number, text: string}>>([]);
   const [hoveredReminder, setHoveredReminder] = useState<number | null>(null);
   const navigate = useNavigate();
@@ -173,6 +175,7 @@ export function CustomizableHeader({
         height: 10 + Math.random() * 15, // Height between 10-25%
         duration: 35 + Math.random() * 25, // Duration between 35-60s
         delay: Math.random() * 20, // Stagger start times
+        imageSet: Math.random() > 0.5 ? 1 : 2, // Randomly choose between cloud set 1 or 2
       }));
     };
 
@@ -390,56 +393,15 @@ export function CustomizableHeader({
                   animationDelay: `${cloud.delay}s`,
                 }}
               >
-                {/* 8-bit pixel art cloud */}
-                <div className="relative w-full h-full opacity-80" style={{ 
-                  filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.15))',
-                  imageRendering: 'pixelated',
-                  WebkitFontSmoothing: 'none'
-                }}>
-                  {(() => {
-                    // Parse cloud color to get RGB values
-                    const cloudColor = settings.cloudColor || 'rgba(255, 255, 255, 0.7)';
-                    // Extract RGB and convert to opaque version
-                    const opaqueColor = cloudColor.includes('rgba') 
-                      ? cloudColor.replace(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/, 'rgb($1, $2, $3)')
-                      : cloudColor.includes('rgb')
-                      ? cloudColor
-                      : 'rgb(255, 255, 255)';
-                    
-                    const pixelSize = 8; // Size of each pixel block
-                    const gap = 1; // Gap between pixels
-                    
-                    // Pixel art cloud pattern (1 = pixel, 0 = empty)
-                    const pattern = [
-                      [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],      // Row 0 (top)
-                      [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],      // Row 1
-                      [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],      // Row 2
-                      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],      // Row 3 (widest)
-                      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],      // Row 4
-                      [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],      // Row 5
-                      [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],      // Row 6 (bottom)
-                    ];
-                    
-                    return pattern.map((row, rowIndex) =>
-                      row.map((cell, colIndex) => 
-                        cell === 1 ? (
-                          <div
-                            key={`${rowIndex}-${colIndex}`}
-                            className="absolute"
-                            style={{
-                              left: `${colIndex * (pixelSize + gap)}px`,
-                              top: `${rowIndex * (pixelSize + gap)}px`,
-                              width: `${pixelSize}px`,
-                              height: `${pixelSize}px`,
-                              backgroundColor: opaqueColor,
-                              boxShadow: `0 0 2px ${opaqueColor}`,
-                            }}
-                          />
-                        ) : null
-                      )
-                    );
-                  })()}
-                </div>
+                {/* Use actual cloud images */}
+                <img
+                  src={cloud.imageSet === 1 ? cloudSet1 : cloudSet2}
+                  alt=""
+                  className="pointer-events-none w-full h-full object-contain"
+                  style={{
+                    filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.15))',
+                  }}
+                />
               </div>
             ))}
           </div>
