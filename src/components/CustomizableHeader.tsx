@@ -49,6 +49,7 @@ interface HeaderSettings {
     numberColor: string;
     showMinutesInside: boolean;
     timerStyle: 'doughnut' | 'traditional';
+    soundEffect: 'beep' | 'chime' | 'bell' | 'gong' | 'airhorn' | 'duck' | 'none';
   };
   celebrateWins: boolean;
   show8BitStars: boolean;
@@ -73,13 +74,6 @@ export function CustomizableHeader({
   onSignOut,
   onDemoCelebration,
 }: CustomizableHeaderProps) {
-  console.log('Header settings:', { 
-    locationsCount: settings.locations?.length || 0, 
-    countdownsCount: settings.countdowns?.length || 0,
-    locations: settings.locations,
-    countdowns: settings.countdowns
-  });
-  
   const [showModal, setShowModal] = useState(false);
   const [modalInitialTab, setModalInitialTab] = useState<string>('display');
   const [rotatingText, setRotatingText] = useState('');
@@ -528,7 +522,6 @@ export function CustomizableHeader({
               )}
               
               {settings.locations.map((loc, index) => {
-                console.log('Rendering timezone:', loc);
                 try {
                   const timeString = currentTime.toLocaleTimeString('en-US', { 
                     timeZone: loc.timezone,
@@ -613,7 +606,6 @@ export function CustomizableHeader({
               ))}
               
               {settings.countdowns.map((countdown, index) => {
-                if (index === 0) console.log('Rendering countdowns:', settings.countdowns);
                 const isComplete = countdown.isComplete || formatCountdown(countdown) === 'Complete!';
                 return (
                   <Badge 

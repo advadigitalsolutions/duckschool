@@ -65,6 +65,7 @@ interface HeaderSettings {
     numberColor: string;
     showMinutesInside: boolean;
     timerStyle: 'doughnut' | 'traditional';
+    soundEffect: 'beep' | 'chime' | 'bell' | 'gong' | 'airhorn' | 'duck' | 'none';
   };
   celebrateWins: boolean;
   show8BitStars: boolean;
@@ -658,6 +659,50 @@ export function HeaderCustomizationModal({
                         }
                         className="h-10"
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Completion Sound</Label>
+                      <Select
+                        value={settings.pomodoroSettings.soundEffect || 'beep'}
+                        onValueChange={(value: any) =>
+                          updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, soundEffect: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beep">🔔 Beep (Subtle)</SelectItem>
+                          <SelectItem value="chime">🎵 Chime (Pleasant)</SelectItem>
+                          <SelectItem value="bell">🔔 Bell (Classic)</SelectItem>
+                          <SelectItem value="gong">⚡ Gong (Dramatic)</SelectItem>
+                          <SelectItem value="airhorn">📢 Airhorn (Loud!)</SelectItem>
+                          <SelectItem value="duck">🦆 Duck Quack (Funny)</SelectItem>
+                          <SelectItem value="none">🔇 None (Silent)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Sound that plays when timer completes
+                      </p>
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2"
+                        onClick={() => {
+                          window.open('/pomodoro-fullscreen', '_blank', 'width=1200,height=800');
+                        }}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5v4m0-4h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                        </svg>
+                        Open Fullscreen Timer
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2 text-center">
+                        Opens timer in new window with fullscreen mode
+                      </p>
                     </div>
                   </div>
                 )}

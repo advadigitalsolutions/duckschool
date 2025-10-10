@@ -73,6 +73,7 @@ export default function StudentDashboard() {
       numberColor: 'hsl(var(--foreground))',
       showMinutesInside: true,
       timerStyle: 'doughnut' as const,
+      soundEffect: 'beep' as const,
     },
     celebrateWins: true,
     show8BitStars: false,

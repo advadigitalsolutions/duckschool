@@ -11,6 +11,7 @@ interface PomodoroSettings {
   numberColor: string;
   showMinutesInside: boolean;
   timerStyle: 'doughnut' | 'traditional';
+  soundEffect: 'beep' | 'chime' | 'bell' | 'gong' | 'airhorn' | 'duck' | 'none';
 }
 
 interface PomodoroContextType {
@@ -40,6 +41,7 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   numberColor: 'hsl(var(--foreground))',
   showMinutesInside: true,
   timerStyle: 'doughnut',
+  soundEffect: 'beep',
 };
 
 export function PomodoroProvider({ children }: { children: React.ReactNode }) {
@@ -111,30 +113,155 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   const playAlarmSound = () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      switch (settings.soundEffect) {
+        case 'beep':
+          playBeepSound(audioContext);
+          break;
+        case 'chime':
+          playChimeSound(audioContext);
+          break;
+        case 'bell':
+          playBellSound(audioContext);
+          break;
+        case 'gong':
+          playGongSound(audioContext);
+          break;
+        case 'airhorn':
+          playAirhornSound(audioContext);
+          break;
+        case 'duck':
+          playDuckSound(audioContext);
+          break;
+        case 'none':
+          // No sound
+          break;
+      }
+    } catch (e) {
+      console.error('Failed to play alarm sound:', e);
+    }
+  };
+
+  const playBeepSound = (audioContext: AudioContext) => {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    
+    oscillator.start();
+    setTimeout(() => oscillator.stop(), 200);
+    
+    // Second beep
+    setTimeout(() => {
+      const osc2 = audioContext.createOscillator();
+      osc2.connect(gainNode);
+      osc2.frequency.value = 1000;
+      osc2.type = 'sine';
+      osc2.start();
+      setTimeout(() => osc2.stop(), 200);
+    }, 300);
+  };
+
+  const playChimeSound = (audioContext: AudioContext) => {
+    const frequencies = [523.25, 659.25, 783.99]; // C, E, G chord
+    frequencies.forEach((freq, i) => {
+      setTimeout(() => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = freq;
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 1);
+      }, i * 150);
+    });
+  };
+
+  const playBellSound = (audioContext: AudioContext) => {
+    const frequencies = [800, 1000, 1200, 1500];
+    frequencies.forEach((freq) => {
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      oscillator.frequency.value = 800;
+      oscillator.frequency.value = freq;
       oscillator.type = 'sine';
-      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 2);
       
       oscillator.start();
-      setTimeout(() => oscillator.stop(), 200);
-      
-      // Second beep
+      oscillator.stop(audioContext.currentTime + 2);
+    });
+  };
+
+  const playGongSound = (audioContext: AudioContext) => {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 3);
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 3);
+  };
+
+  const playAirhornSound = (audioContext: AudioContext) => {
+    for (let i = 0; i < 3; i++) {
       setTimeout(() => {
-        const osc2 = audioContext.createOscillator();
-        osc2.connect(gainNode);
-        osc2.frequency.value = 1000;
-        osc2.type = 'sine';
-        osc2.start();
-        setTimeout(() => osc2.stop(), 200);
-      }, 300);
-    } catch (e) {
-      console.error('Failed to play alarm sound:', e);
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 220 + Math.random() * 50;
+        oscillator.type = 'sawtooth';
+        gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.3);
+      }, i * 400);
+    }
+  };
+
+  const playDuckSound = (audioContext: AudioContext) => {
+    // Quack sound effect using multiple oscillators
+    for (let i = 0; i < 2; i++) {
+      setTimeout(() => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.1);
+        oscillator.type = 'sawtooth';
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.15);
+      }, i * 200);
     }
   };
 

@@ -13,6 +13,7 @@ import StudentDetail from "./pages/StudentDetail";
 import AssignmentDetail from "./pages/AssignmentDetail";
 import StudentProfile from "./pages/StudentProfile";
 import CourseDashboard from "./pages/CourseDashboard";
+import PomodoroFullscreen from "./pages/PomodoroFullscreen";
 import NotFound from "./pages/NotFound";
 import { AuthGuard } from "./components/AuthGuard";
 import { BionicReadingProvider } from "./contexts/BionicReadingContext";
@@ -91,6 +92,10 @@ const App = () => (
                     <CourseDashboard />
                   </AuthGuard>
                 } 
+              />
+              <Route 
+                path="/pomodoro-fullscreen" 
+                element={<PomodoroFullscreen />} 
               />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
