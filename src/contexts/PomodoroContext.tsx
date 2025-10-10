@@ -198,7 +198,13 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
             
             isUpdatingFromRealtime.current = true;
             const session = payload.new as any;
-            setTimeLeft(session.time_left);
+            
+            // Only update timeLeft if the timer is NOT running locally
+            // This prevents remote updates from interfering with the local countdown
+            if (!isRunning) {
+              setTimeLeft(session.time_left);
+            }
+            
             setIsRunning(session.is_running);
             setIsBreak(session.is_break);
             setSessionsCompleted(session.sessions_completed);
@@ -210,7 +216,10 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
                   : sessionSettings.breakMinutes) * 60
               : sessionSettings.workMinutes * 60
             );
-            lastSavedTimeLeft.current = session.time_left;
+            
+            if (!isRunning) {
+              lastSavedTimeLeft.current = session.time_left;
+            }
             
             // Reset flag after a short delay
             setTimeout(() => {
@@ -224,7 +233,7 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [studentId]);
+  }, [studentId, isRunning]);
 
   // Save important state changes to Supabase immediately (not timer ticks)
   useEffect(() => {
