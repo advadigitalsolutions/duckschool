@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus, Trash2, Sparkles, Palette, Clock, Save } from 'lucide-react';
+import { CalendarIcon, Plus, Trash2, Sparkles, Palette, Clock, Save, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -242,6 +242,45 @@ export function HeaderCustomizationModal({
                   </Select>
                 </div>
               </Card>
+
+              <Card className="p-4 space-y-4 border-2 border-primary/50 bg-primary/5">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                    <CheckSquare className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-semibold">Quick Task Reminders</Label>
+                    <p className="text-xs text-muted-foreground">Add tasks to display in your header</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {settings.customReminders.map((reminder, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-background/50 p-2 rounded-md">
+                      <Input value={reminder.text} disabled className="flex-1 border-0 bg-transparent" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeReminder(index)}
+                        className="hover:bg-destructive/20"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2 pt-2">
+                    <Input
+                      placeholder="Add a task reminder..."
+                      value={newReminder}
+                      onChange={(e) => setNewReminder(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && addReminder()}
+                      className="flex-1"
+                    />
+                    <Button onClick={addReminder} size="icon" className="bg-primary hover:bg-primary/90">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
             </TabsContent>
 
             <TabsContent value="rotating" className="space-y-4 mt-4">
@@ -361,33 +400,6 @@ export function HeaderCustomizationModal({
                       </Button>
                     </div>
                   )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Task Reminders</Label>
-                  {settings.customReminders.map((reminder, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Input value={reminder.text} disabled className="flex-1" />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeReminder(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add a task reminder..."
-                      value={newReminder}
-                      onChange={(e) => setNewReminder(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && addReminder()}
-                    />
-                    <Button onClick={addReminder} size="icon">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
 
                 <div className="space-y-2">
