@@ -52,11 +52,13 @@ export default function StudentDashboard() {
     customName: null,
     showGrade: true,
     customGrade: null,
-    greetingType: 'name',
-    rotatingDisplay: 'quote',
+    greetingType: 'name' as const,
+    rotatingDisplay: 'quote' as const,
+    rotationFrequency: 'hour' as const,
     funFactTopic: null,
     locations: [],
     showWeather: false,
+    weatherZipCode: null,
     customReminders: [],
     countdowns: [],
     pomodoroEnabled: false,
@@ -71,6 +73,7 @@ export default function StudentDashboard() {
     },
     celebrateWins: true,
     show8BitStars: false,
+    starColor: '#fbbf24',
   });
 
   const saveHeaderSettings = async (newSettings: any) => {

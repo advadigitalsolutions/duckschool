@@ -11,22 +11,47 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus, Trash2, Sparkles } from 'lucide-react';
+import { CalendarIcon, Plus, Trash2, Sparkles, Palette, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+
+const TIMEZONES = [
+  { value: 'America/New_York', label: 'Eastern Time (ET)' },
+  { value: 'America/Chicago', label: 'Central Time (CT)' },
+  { value: 'America/Denver', label: 'Mountain Time (MT)' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+  { value: 'America/Anchorage', label: 'Alaska Time (AKT)' },
+  { value: 'Pacific/Honolulu', label: 'Hawaii Time (HST)' },
+  { value: 'Europe/London', label: 'London (GMT/BST)' },
+  { value: 'Europe/Paris', label: 'Paris (CET)' },
+  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+  { value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
+  { value: 'Australia/Sydney', label: 'Sydney (AEDT)' },
+];
 
 interface HeaderSettings {
   showName: boolean;
   customName: string | null;
   showGrade: boolean;
   customGrade: string | null;
-  greetingType: 'name' | 'time-based' | 'custom';
+  greetingType: 'name' | 'time-based';
   rotatingDisplay: 'none' | 'quote' | 'affirmation' | 'funFact';
+  rotationFrequency: 'minute' | 'hour' | 'day';
   funFactTopic: string | null;
   locations: Array<{ name: string; timezone: string }>;
   showWeather: boolean;
+  weatherZipCode: string | null;
   customReminders: Array<{ text: string; completed: boolean }>;
-  countdowns: Array<{ name: string; date: Date; showTime: boolean }>;
+  countdowns: Array<{ 
+    name: string; 
+    date: Date; 
+    time?: string;
+    showDays: boolean;
+    showHours: boolean;
+    showMinutes: boolean;
+    showSeconds: boolean;
+    isComplete?: boolean;
+  }>;
   pomodoroEnabled: boolean;
   pomodoroSettings: {
     workMinutes: number;
@@ -39,6 +64,7 @@ interface HeaderSettings {
   };
   celebrateWins: boolean;
   show8BitStars: boolean;
+  starColor: string;
 }
 
 interface HeaderCustomizationModalProps {
@@ -61,7 +87,16 @@ export function HeaderCustomizationModal({
   const [settings, setSettings] = useState<HeaderSettings>(initialSettings);
   const [newLocation, setNewLocation] = useState({ name: '', timezone: '' });
   const [newReminder, setNewReminder] = useState('');
-  const [newCountdown, setNewCountdown] = useState({ name: '', date: new Date(), showTime: false });
+  const [newCountdown, setNewCountdown] = useState({ 
+    name: '', 
+    date: new Date(), 
+    time: '',
+    showDays: true,
+    showHours: true,
+    showMinutes: true,
+    showSeconds: true
+  });
+  const [showColorPicker, setShowColorPicker] = useState<'stars' | 'timer' | 'number' | null>(null);
 
   const updateSetting = <K extends keyof HeaderSettings>(key: K, value: HeaderSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -92,7 +127,15 @@ export function HeaderCustomizationModal({
   const addCountdown = () => {
     if (newCountdown.name.trim()) {
       updateSetting('countdowns', [...settings.countdowns, { ...newCountdown }]);
-      setNewCountdown({ name: '', date: new Date(), showTime: false });
+      setNewCountdown({ 
+        name: '', 
+        date: new Date(), 
+        time: '',
+        showDays: true,
+        showHours: true,
+        showMinutes: true,
+        showSeconds: true
+      });
     }
   };
 
@@ -168,7 +211,6 @@ export function HeaderCustomizationModal({
                     <SelectContent>
                       <SelectItem value="name">Welcome back, [Name]</SelectItem>
                       <SelectItem value="time-based">Good [morning/afternoon/evening], [Name]</SelectItem>
-                      <SelectItem value="custom">Custom greeting</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -195,6 +237,25 @@ export function HeaderCustomizationModal({
                   </Select>
                 </div>
 
+                {settings.rotatingDisplay !== 'none' && (
+                  <div className="space-y-2">
+                    <Label>Rotation Frequency</Label>
+                    <Select
+                      value={settings.rotationFrequency}
+                      onValueChange={(value: any) => updateSetting('rotationFrequency', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="minute">Every Minute</SelectItem>
+                        <SelectItem value="hour">Every Hour</SelectItem>
+                        <SelectItem value="day">Once Per Day</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 {settings.rotatingDisplay === 'funFact' && (
                   <div className="space-y-2">
                     <Label>Fun Facts Topic</Label>
@@ -204,7 +265,7 @@ export function HeaderCustomizationModal({
                       onChange={(e) => updateSetting('funFactTopic', e.target.value || null)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      AI will generate 100 unique fun facts about this topic
+                      AI will generate fun facts about this topic
                     </p>
                   </div>
                 )}
@@ -213,20 +274,29 @@ export function HeaderCustomizationModal({
 
             <TabsContent value="info" className="space-y-4 mt-4">
               <Card className="p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Show Local Weather</Label>
-                  <Switch
-                    checked={settings.showWeather}
-                    onCheckedChange={(checked) => updateSetting('showWeather', checked)}
-                  />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Show Local Weather</Label>
+                    <Switch
+                      checked={settings.showWeather}
+                      onCheckedChange={(checked) => updateSetting('showWeather', checked)}
+                    />
+                  </div>
+                  {settings.showWeather && (
+                    <Input
+                      placeholder="ZIP / Postal Code (optional, uses browser location if empty)"
+                      value={settings.weatherZipCode || ''}
+                      onChange={(e) => updateSetting('weatherZipCode', e.target.value || null)}
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Additional Locations (up to 3)</Label>
+                  <Label>Additional Time Zones (up to 3)</Label>
                   {settings.locations.map((loc, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input value={loc.name} disabled className="flex-1" />
-                      <Input value={loc.timezone} disabled className="flex-1" />
+                      <Input value={TIMEZONES.find(tz => tz.value === loc.timezone)?.label || loc.timezone} disabled className="flex-1" />
                       <Button
                         variant="ghost"
                         size="icon"
@@ -242,12 +312,23 @@ export function HeaderCustomizationModal({
                         placeholder="Location name"
                         value={newLocation.name}
                         onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                        className="flex-1"
                       />
-                      <Input
-                        placeholder="Timezone"
+                      <Select
                         value={newLocation.timezone}
-                        onChange={(e) => setNewLocation({ ...newLocation, timezone: e.target.value })}
-                      />
+                        onValueChange={(value) => setNewLocation({ ...newLocation, timezone: value })}
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TIMEZONES.map((tz) => (
+                            <SelectItem key={tz.value} value={tz.value}>
+                              {tz.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Button onClick={addLocation} size="icon">
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -256,7 +337,7 @@ export function HeaderCustomizationModal({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Custom Reminders</Label>
+                  <Label>Task Reminders</Label>
                   {settings.customReminders.map((reminder, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input value={reminder.text} disabled className="flex-1" />
@@ -271,7 +352,7 @@ export function HeaderCustomizationModal({
                   ))}
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Add a reminder..."
+                      placeholder="Add a task reminder..."
                       value={newReminder}
                       onChange={(e) => setNewReminder(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && addReminder()}
@@ -285,9 +366,13 @@ export function HeaderCustomizationModal({
                 <div className="space-y-2">
                   <Label>Countdown Timers</Label>
                   {settings.countdowns.map((countdown, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Input value={countdown.name} disabled className="flex-1" />
-                      <Input value={format(new Date(countdown.date), 'PPP')} disabled />
+                    <div key={index} className="flex items-center gap-2 flex-wrap">
+                      <Input value={countdown.name} disabled className="flex-1 min-w-[150px]" />
+                      <Input 
+                        value={`${format(new Date(countdown.date), 'PPP')}${countdown.time ? ` ${countdown.time}` : ''}`} 
+                        disabled 
+                        className="flex-1 min-w-[200px]"
+                      />
                       <Button
                         variant="ghost"
                         size="icon"
@@ -297,33 +382,80 @@ export function HeaderCustomizationModal({
                       </Button>
                     </div>
                   ))}
-                  <div className="flex gap-2 flex-wrap">
-                    <Input
-                      placeholder="Event name"
-                      value={newCountdown.name}
-                      onChange={(e) => setNewCountdown({ ...newCountdown, name: e.target.value })}
-                      className="flex-1"
-                    />
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("justify-start text-left font-normal")}>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {format(newCountdown.date, "PPP")}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={newCountdown.date}
-                          onSelect={(date) => date && setNewCountdown({ ...newCountdown, date })}
-                          initialFocus
-                          className="pointer-events-auto"
+                  <div className="space-y-3">
+                    <div className="flex gap-2 flex-wrap">
+                      <Input
+                        placeholder="Event name"
+                        value={newCountdown.name}
+                        onChange={(e) => setNewCountdown({ ...newCountdown, name: e.target.value })}
+                        className="flex-1 min-w-[150px]"
+                      />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className={cn("justify-start text-left font-normal")}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {format(newCountdown.date, "PPP")}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={newCountdown.date}
+                            onSelect={(date) => date && setNewCountdown({ ...newCountdown, date })}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline">
+                            <Clock className="mr-2 h-4 w-4" />
+                            {newCountdown.time || 'Time'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-3" align="start">
+                          <Input
+                            type="time"
+                            value={newCountdown.time}
+                            onChange={(e) => setNewCountdown({ ...newCountdown, time: e.target.value })}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <Button onClick={addCountdown} size="icon">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex gap-3 text-sm">
+                      <Label className="flex items-center gap-2">
+                        <Switch
+                          checked={newCountdown.showDays}
+                          onCheckedChange={(checked) => setNewCountdown({ ...newCountdown, showDays: checked })}
                         />
-                      </PopoverContent>
-                    </Popover>
-                    <Button onClick={addCountdown} size="icon">
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                        Days
+                      </Label>
+                      <Label className="flex items-center gap-2">
+                        <Switch
+                          checked={newCountdown.showHours}
+                          onCheckedChange={(checked) => setNewCountdown({ ...newCountdown, showHours: checked })}
+                        />
+                        Hours
+                      </Label>
+                      <Label className="flex items-center gap-2">
+                        <Switch
+                          checked={newCountdown.showMinutes}
+                          onCheckedChange={(checked) => setNewCountdown({ ...newCountdown, showMinutes: checked })}
+                        />
+                        Minutes
+                      </Label>
+                      <Label className="flex items-center gap-2">
+                        <Switch
+                          checked={newCountdown.showSeconds}
+                          onCheckedChange={(checked) => setNewCountdown({ ...newCountdown, showSeconds: checked })}
+                        />
+                        Seconds
+                      </Label>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -403,27 +535,69 @@ export function HeaderCustomizationModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Timer Color</Label>
-                      <Input
-                        type="text"
-                        placeholder="e.g., #FF5733 or hsl(var(--primary))"
-                        value={settings.pomodoroSettings.timerColor}
-                        onChange={(e) =>
-                          updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerColor: e.target.value })
-                        }
-                      />
+                      <Label className="flex items-center gap-2">
+                        Timer Color
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => setShowColorPicker(showColorPicker === 'timer' ? null : 'timer')}
+                        >
+                          <Palette className="h-4 w-4" />
+                        </Button>
+                      </Label>
+                      {showColorPicker === 'timer' ? (
+                        <Input
+                          type="color"
+                          value={settings.pomodoroSettings.timerColor.startsWith('#') ? settings.pomodoroSettings.timerColor : '#3b82f6'}
+                          onChange={(e) =>
+                            updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerColor: e.target.value })
+                          }
+                          className="h-10"
+                        />
+                      ) : (
+                        <Input
+                          type="text"
+                          placeholder="e.g., #FF5733 or hsl(var(--primary))"
+                          value={settings.pomodoroSettings.timerColor}
+                          onChange={(e) =>
+                            updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerColor: e.target.value })
+                          }
+                        />
+                      )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Number Color</Label>
-                      <Input
-                        type="text"
-                        placeholder="e.g., #FFFFFF or hsl(var(--foreground))"
-                        value={settings.pomodoroSettings.numberColor}
-                        onChange={(e) =>
-                          updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, numberColor: e.target.value })
-                        }
-                      />
+                      <Label className="flex items-center gap-2">
+                        Number Color
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => setShowColorPicker(showColorPicker === 'number' ? null : 'number')}
+                        >
+                          <Palette className="h-4 w-4" />
+                        </Button>
+                      </Label>
+                      {showColorPicker === 'number' ? (
+                        <Input
+                          type="color"
+                          value={settings.pomodoroSettings.numberColor.startsWith('#') ? settings.pomodoroSettings.numberColor : '#ffffff'}
+                          onChange={(e) =>
+                            updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, numberColor: e.target.value })
+                          }
+                          className="h-10"
+                        />
+                      ) : (
+                        <Input
+                          type="text"
+                          placeholder="e.g., #FFFFFF or hsl(var(--foreground))"
+                          value={settings.pomodoroSettings.numberColor}
+                          onChange={(e) =>
+                            updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, numberColor: e.target.value })
+                          }
+                        />
+                      )}
                     </div>
                   </div>
                 )}
@@ -433,11 +607,21 @@ export function HeaderCustomizationModal({
             <TabsContent value="effects" className="space-y-4 mt-4">
               <Card className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Celebrate Wins 🎉</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Confetti explosions when you complete assignments!
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <Label>Celebrate Wins 🎉</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Epic celebrations when you complete work!
+                      </p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={onDemo}
+                      className="ml-2"
+                    >
+                      Demo
+                    </Button>
                   </div>
                   <Switch
                     checked={settings.celebrateWins}
@@ -445,17 +629,35 @@ export function HeaderCustomizationModal({
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>8-bit Twinkling Stars ✨</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Pixelated stars in your header
-                    </p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Label>8-bit Twinkling Stars ✨</Label>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => setShowColorPicker(showColorPicker === 'stars' ? null : 'stars')}
+                      >
+                        <Palette className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Switch
+                      checked={settings.show8BitStars}
+                      onCheckedChange={(checked) => updateSetting('show8BitStars', checked)}
+                    />
                   </div>
-                  <Switch
-                    checked={settings.show8BitStars}
-                    onCheckedChange={(checked) => updateSetting('show8BitStars', checked)}
-                  />
+                  {settings.show8BitStars && showColorPicker === 'stars' && (
+                    <Input
+                      type="color"
+                      value={settings.starColor.startsWith('#') ? settings.starColor : '#fbbf24'}
+                      onChange={(e) => updateSetting('starColor', e.target.value)}
+                      className="h-10"
+                    />
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Pixelated stars in your header
+                  </p>
                 </div>
               </Card>
             </TabsContent>
@@ -463,10 +665,6 @@ export function HeaderCustomizationModal({
         </Tabs>
 
         <div className="flex gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onDemo} className="gap-2">
-            <Sparkles className="h-4 w-4" />
-            Demo Win Celebration
-          </Button>
           <div className="flex-1" />
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel

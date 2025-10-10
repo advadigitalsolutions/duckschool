@@ -10,19 +10,31 @@ import { LogOut, User, Settings } from 'lucide-react';
 import { getRandomQuote } from '@/utils/inspirationalQuotes';
 import { getRandomAffirmation } from '@/utils/affirmations';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface HeaderSettings {
   showName: boolean;
   customName: string | null;
   showGrade: boolean;
   customGrade: string | null;
-  greetingType: 'name' | 'time-based' | 'custom';
+  greetingType: 'name' | 'time-based';
   rotatingDisplay: 'none' | 'quote' | 'affirmation' | 'funFact';
+  rotationFrequency: 'minute' | 'hour' | 'day';
   funFactTopic: string | null;
   locations: Array<{ name: string; timezone: string }>;
   showWeather: boolean;
+  weatherZipCode: string | null;
   customReminders: Array<{ text: string; completed: boolean }>;
-  countdowns: Array<{ name: string; date: Date; showTime: boolean }>;
+  countdowns: Array<{ 
+    name: string; 
+    date: Date; 
+    time?: string;
+    showDays: boolean;
+    showHours: boolean;
+    showMinutes: boolean;
+    showSeconds: boolean;
+    isComplete?: boolean;
+  }>;
   pomodoroEnabled: boolean;
   pomodoroSettings: {
     workMinutes: number;
@@ -35,6 +47,7 @@ interface HeaderSettings {
   };
   celebrateWins: boolean;
   show8BitStars: boolean;
+  starColor: string;
 }
 
 interface CustomizableHeaderProps {
@@ -99,20 +112,42 @@ export function CustomizableHeader({
     return `Welcome back, ${name}!`;
   };
 
-  const formatCountdown = (targetDate: Date | string) => {
+  const formatCountdown = (countdown: any) => {
     try {
       const now = new Date();
-      const target = typeof targetDate === 'string' ? new Date(targetDate) : targetDate;
+      let target = typeof countdown.date === 'string' ? new Date(countdown.date) : countdown.date;
+      
+      if (countdown.time) {
+        const [hours, minutes] = countdown.time.split(':');
+        target.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      }
+      
       const diff = target.getTime() - now.getTime();
       
-      if (diff <= 0) return 'Event has passed';
+      if (diff <= 0) {
+        if (!countdown.isComplete) {
+          const updatedCountdowns = settings.countdowns.map((c: any) => 
+            c.name === countdown.name && c.date === countdown.date 
+              ? { ...c, isComplete: true } 
+              : c
+          );
+          onSaveSettings({ ...settings, countdowns: updatedCountdowns });
+        }
+        return 'Complete!';
+      }
       
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
       
-      return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      const parts = [];
+      if (countdown.showDays) parts.push(`${days}d`);
+      if (countdown.showHours) parts.push(`${hours}h`);
+      if (countdown.showMinutes) parts.push(`${minutes}m`);
+      if (countdown.showSeconds) parts.push(`${seconds}s`);
+      
+      return parts.join(' ') || 'No units selected';
     } catch (error) {
       console.error('Error formatting countdown:', error);
       return 'Invalid date';
@@ -121,17 +156,18 @@ export function CustomizableHeader({
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur-xl backdrop-saturate-150 shadow-lg">
         {settings.show8BitStars && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {Array.from({ length: 20 }).map((_, i) => (
               <div
                 key={i}
-                className="absolute w-2 h-2 bg-yellow-400 animate-pulse"
+                className="absolute w-2 h-2 animate-pulse"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
                   animationDelay: `${Math.random() * 2}s`,
+                  backgroundColor: settings.starColor || '#fbbf24',
                   clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
                 }}
               />
@@ -224,7 +260,7 @@ export function CustomizableHeader({
                 <Badge 
                   key={`reminder-${index}`} 
                   variant="outline" 
-                  className="gap-2 bg-yellow-500/10 border-yellow-500/50"
+                  className="gap-2 bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20 transition-colors"
                 >
                   <Checkbox 
                     checked={reminder.completed}
@@ -234,21 +270,29 @@ export function CustomizableHeader({
                       onSaveSettings({ ...settings, customReminders: newReminders });
                     }}
                   />
-                  <span className={reminder.completed ? 'line-through' : ''}>
-                    📌 {reminder.text}
+                  <span className={reminder.completed ? 'line-through opacity-60' : ''}>
+                    {reminder.text}
                   </span>
                 </Badge>
               ))}
               
-              {settings.countdowns.map((countdown, index) => (
-                <Badge 
-                  key={`countdown-${index}`} 
-                  variant="outline"
-                  className="bg-blue-500/10 border-blue-500/50"
-                >
-                  ⏰ {countdown.name}: {formatCountdown(countdown.date)}
-                </Badge>
-              ))}
+              {settings.countdowns.map((countdown, index) => {
+                const isComplete = countdown.isComplete || formatCountdown(countdown) === 'Complete!';
+                return (
+                  <Badge 
+                    key={`countdown-${index}`} 
+                    variant="outline"
+                    className={cn(
+                      "transition-all duration-300",
+                      isComplete 
+                        ? "bg-gradient-to-r from-green-500/20 to-blue-500/20 border-green-500/50 animate-pulse" 
+                        : "bg-blue-500/10 border-blue-500/50 hover:bg-blue-500/20"
+                    )}
+                  >
+                    ⏰ {countdown.name}: {formatCountdown(countdown)}
+                  </Badge>
+                );
+              })}
             </div>
           )}
         </div>
