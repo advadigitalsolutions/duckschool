@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -13,7 +12,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Loader2, Undo2 } from 'lucide-react';
 
 interface DeleteCourseDialogProps {
   course: any;
@@ -21,22 +20,55 @@ interface DeleteCourseDialogProps {
   trigger?: React.ReactNode;
 }
 
+interface ImpactData {
+  curriculumItemsCount: number;
+  assignmentsCount: number;
+  submissionsCount: number;
+  gradesCount: number;
+}
+
 export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteCourseDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [loadingImpact, setLoadingImpact] = useState(false);
+  const [impactData, setImpactData] = useState<ImpactData | null>(null);
 
-  const handleDelete = async () => {
-    setLoading(true);
+  useEffect(() => {
+    if (open && course) {
+      loadImpactData();
+    }
+  }, [open, course]);
+
+  const loadImpactData = async () => {
+    setLoadingImpact(true);
     try {
-      // First, get all curriculum items for this course
+      // Get curriculum items count
+      const { count: curriculumCount } = await supabase
+        .from('curriculum_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('course_id', course.id);
+
+      // Get curriculum items for further queries
       const { data: curriculumItems } = await supabase
         .from('curriculum_items')
         .select('id')
         .eq('course_id', course.id);
 
+      let assignmentsCount = 0;
+      let submissionsCount = 0;
+      let gradesCount = 0;
+
       if (curriculumItems && curriculumItems.length > 0) {
         const curriculumItemIds = curriculumItems.map(ci => ci.id);
 
-        // Get all assignments for these curriculum items
+        // Get assignments count
+        const { count: aCount } = await supabase
+          .from('assignments')
+          .select('*', { count: 'exact', head: true })
+          .in('curriculum_item_id', curriculumItemIds);
+        assignmentsCount = aCount || 0;
+
+        // Get assignments for further queries
         const { data: assignments } = await supabase
           .from('assignments')
           .select('id')
@@ -45,16 +77,95 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
         if (assignments && assignments.length > 0) {
           const assignmentIds = assignments.map(a => a.id);
 
-          // Delete submissions and related data
+          // Get submissions count
+          const { count: sCount } = await supabase
+            .from('submissions')
+            .select('*', { count: 'exact', head: true })
+            .in('assignment_id', assignmentIds);
+          submissionsCount = sCount || 0;
+
+          // Get grades count
+          const { count: gCount } = await supabase
+            .from('grades')
+            .select('*', { count: 'exact', head: true })
+            .in('assignment_id', assignmentIds);
+          gradesCount = gCount || 0;
+        }
+      }
+
+      setImpactData({
+        curriculumItemsCount: curriculumCount || 0,
+        assignmentsCount,
+        submissionsCount,
+        gradesCount,
+      });
+    } catch (error) {
+      console.error('Error loading impact data:', error);
+    } finally {
+      setLoadingImpact(false);
+    }
+  };
+
+  const backupAndDelete = async () => {
+    setLoading(true);
+    try {
+      // Backup all data before deletion
+      const backup: any = { course };
+
+      // Get all curriculum items
+      const { data: curriculumItems } = await supabase
+        .from('curriculum_items')
+        .select('*')
+        .eq('course_id', course.id);
+      backup.curriculumItems = curriculumItems;
+
+      if (curriculumItems && curriculumItems.length > 0) {
+        const curriculumItemIds = curriculumItems.map((ci: any) => ci.id);
+
+        // Get all assignments
+        const { data: assignments } = await supabase
+          .from('assignments')
+          .select('*')
+          .in('curriculum_item_id', curriculumItemIds);
+        backup.assignments = assignments;
+
+        if (assignments && assignments.length > 0) {
+          const assignmentIds = assignments.map((a: any) => a.id);
+
+          // Get submissions
           const { data: submissions } = await supabase
             .from('submissions')
-            .select('id')
+            .select('*')
             .in('assignment_id', assignmentIds);
+          backup.submissions = submissions;
 
+          // Get grades
+          const { data: grades } = await supabase
+            .from('grades')
+            .select('*')
+            .in('assignment_id', assignmentIds);
+          backup.grades = grades;
+
+          // Get question responses
           if (submissions && submissions.length > 0) {
-            const submissionIds = submissions.map(s => s.id);
+            const submissionIds = submissions.map((s: any) => s.id);
+            const { data: responses } = await supabase
+              .from('question_responses')
+              .select('*')
+              .in('submission_id', submissionIds);
+            backup.questionResponses = responses;
+          }
 
-            // Delete question responses
+          // Get progress events
+          const { data: progressEvents } = await supabase
+            .from('progress_events')
+            .select('*')
+            .in('assignment_id', assignmentIds);
+          backup.progressEvents = progressEvents;
+
+          // Delete question responses
+          if (submissions && submissions.length > 0) {
+            const submissionIds = submissions.map((s: any) => s.id);
             await supabase
               .from('question_responses')
               .delete()
@@ -93,6 +204,19 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
           .eq('course_id', course.id);
       }
 
+      // Get and backup progress gaps
+      const { data: progressGaps } = await supabase
+        .from('progress_gaps')
+        .select('*')
+        .eq('course_id', course.id);
+      backup.progressGaps = progressGaps;
+
+      // Delete progress gaps
+      await supabase
+        .from('progress_gaps')
+        .delete()
+        .eq('course_id', course.id);
+
       // Finally, delete the course
       const { error: courseError } = await supabase
         .from('courses')
@@ -101,7 +225,22 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
 
       if (courseError) throw courseError;
 
-      toast.success('Course deleted successfully');
+      // Show success toast with undo button
+      const toastId = toast.success(
+        `${course.title} deleted successfully`,
+        {
+          duration: 30000, // 30 seconds
+          action: {
+            label: <div className="flex items-center gap-1"><Undo2 className="h-3 w-3" /> Undo</div>,
+            onClick: async () => {
+              await restoreCourse(backup);
+              toast.dismiss(toastId);
+            },
+          },
+        }
+      );
+
+      setOpen(false);
       onCourseDeleted();
     } catch (error: any) {
       toast.error('Failed to delete course');
@@ -111,8 +250,61 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
     }
   };
 
+  const restoreCourse = async (backup: any) => {
+    try {
+      toast.info('Restoring course data...');
+
+      // Restore course
+      const { error: courseError } = await supabase
+        .from('courses')
+        .insert([backup.course]);
+      if (courseError) throw courseError;
+
+      // Restore curriculum items
+      if (backup.curriculumItems && backup.curriculumItems.length > 0) {
+        await supabase.from('curriculum_items').insert(backup.curriculumItems);
+      }
+
+      // Restore assignments
+      if (backup.assignments && backup.assignments.length > 0) {
+        await supabase.from('assignments').insert(backup.assignments);
+      }
+
+      // Restore submissions
+      if (backup.submissions && backup.submissions.length > 0) {
+        await supabase.from('submissions').insert(backup.submissions);
+      }
+
+      // Restore grades
+      if (backup.grades && backup.grades.length > 0) {
+        await supabase.from('grades').insert(backup.grades);
+      }
+
+      // Restore question responses
+      if (backup.questionResponses && backup.questionResponses.length > 0) {
+        await supabase.from('question_responses').insert(backup.questionResponses);
+      }
+
+      // Restore progress events
+      if (backup.progressEvents && backup.progressEvents.length > 0) {
+        await supabase.from('progress_events').insert(backup.progressEvents);
+      }
+
+      // Restore progress gaps
+      if (backup.progressGaps && backup.progressGaps.length > 0) {
+        await supabase.from('progress_gaps').insert(backup.progressGaps);
+      }
+
+      toast.success('Course restored successfully');
+      onCourseDeleted(); // Refresh the list
+    } catch (error: any) {
+      console.error('Error restoring course:', error);
+      toast.error('Failed to restore course. Please contact support.');
+    }
+  };
+
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         {trigger || (
           <Button variant="outline" size="sm">
@@ -121,33 +313,63 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
           </Button>
         )}
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Course?</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>
-              This will permanently delete the course "{course.title}" and all associated data including:
+          <AlertDialogTitle>⚠️ Delete Course?</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-3">
+            <p className="font-medium text-foreground">
+              Are you sure you want to delete <strong>"{course.title}"</strong>?
             </p>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>All curriculum items and lesson plans</li>
-              <li>All assignments and questions</li>
-              <li>All student submissions and responses</li>
-              <li>All grades and progress data</li>
-            </ul>
-            <p className="font-medium text-destructive mt-2">
-              This action cannot be undone.
-            </p>
+
+            {loadingImpact ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : impactData ? (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 space-y-2">
+                <p className="text-sm font-medium text-foreground">This will permanently delete:</p>
+                <ul className="text-sm space-y-1">
+                  {impactData.curriculumItemsCount > 0 && (
+                    <li>• {impactData.curriculumItemsCount} curriculum item{impactData.curriculumItemsCount !== 1 ? 's' : ''} (lessons)</li>
+                  )}
+                  {impactData.assignmentsCount > 0 && (
+                    <li>• {impactData.assignmentsCount} assignment{impactData.assignmentsCount !== 1 ? 's' : ''}</li>
+                  )}
+                  {impactData.submissionsCount > 0 && (
+                    <li>• {impactData.submissionsCount} student submission{impactData.submissionsCount !== 1 ? 's' : ''}</li>
+                  )}
+                  {impactData.gradesCount > 0 && (
+                    <li>• {impactData.gradesCount} grade{impactData.gradesCount !== 1 ? 's' : ''}</li>
+                  )}
+                  <li>• All question responses</li>
+                  <li>• All progress tracking data</li>
+                </ul>
+              </div>
+            ) : null}
+
+            <div className="bg-muted p-3 rounded-md">
+              <p className="text-sm">
+                💡 <strong>You'll have 30 seconds to undo</strong> this action after deletion.
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={loading}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          <Button
+            onClick={backupAndDelete}
+            disabled={loading || loadingImpact}
+            variant="destructive"
           >
-            {loading ? 'Deleting...' : 'Delete Course'}
-          </AlertDialogAction>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              'Delete Course'
+            )}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
