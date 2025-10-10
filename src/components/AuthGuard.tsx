@@ -15,23 +15,69 @@ export const AuthGuard = ({ children, requireRole }: AuthGuardProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let mounted = true;
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      async (event, session) => {
+        if (!mounted) return;
+        
+        // If signing out, clear everything
+        if (event === 'SIGNED_OUT') {
+          localStorage.removeItem('supabase.auth.token');
+          sessionStorage.clear();
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
+        // Validate the session before setting it
+        if (session?.user) {
+          const { data: { user }, error } = await supabase.auth.getUser();
+          
+          if (error || !user || user.id !== session.user.id) {
+            // Invalid session, clear it
+            await supabase.auth.signOut();
+            setSession(null);
+            setUser(null);
+          } else {
+            setSession(session);
+            setUser(user);
+          }
+        } else {
+          setSession(null);
+          setUser(null);
+        }
+        
         setLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Check for existing session with validation
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
+      
+      if (session?.user) {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user || user.id !== session.user.id) {
+          // Invalid session, clear it
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(session);
+          setUser(user);
+        }
+      }
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

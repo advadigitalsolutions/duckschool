@@ -91,6 +91,10 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   };
 
   const handleSignOut = async () => {
+    // Clear all auth-related storage
+    localStorage.removeItem('supabase.auth.token');
+    sessionStorage.clear();
+    
     await supabase.auth.signOut();
     navigate('/auth');
   };

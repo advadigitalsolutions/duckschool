@@ -11,25 +11,39 @@ const Index = () => {
   useEffect(() => {
     // Check if user is already logged in and redirect to appropriate dashboard
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Get user roles from user_roles table
-        const { data: roles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id);
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      // If there's an error or invalid session, clear everything and don't redirect
+      if (error || !session?.user) {
+        // Clear any stale localStorage data
+        localStorage.removeItem('supabase.auth.token');
+        return;
+      }
 
-        if (roles && roles.length > 0) {
-          const userRoles = roles.map(r => r.role);
-          
-          // Redirect based on role priority
-          if (userRoles.includes('student')) {
-            navigate('/student');
-          } else if (userRoles.includes('self_directed_learner')) {
-            navigate('/parent'); // Will show unified dashboard
-          } else {
-            navigate('/parent');
-          }
+      // Validate the session is actually active by checking the user exists
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user || user.id !== session.user.id) {
+        // Session is invalid, clear it
+        await supabase.auth.signOut();
+        return;
+      }
+
+      // Get user roles from user_roles table
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
+
+      if (roles && roles.length > 0) {
+        const userRoles = roles.map(r => r.role);
+        
+        // Redirect based on role priority
+        if (userRoles.includes('student')) {
+          navigate('/student');
+        } else if (userRoles.includes('self_directed_learner')) {
+          navigate('/parent'); // Will show unified dashboard
+        } else {
+          navigate('/parent');
         }
       }
     };
