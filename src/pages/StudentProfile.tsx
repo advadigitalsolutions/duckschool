@@ -59,6 +59,8 @@ export default function StudentProfile() {
   const [loading, setLoading] = useState(true);
   const [specialInterests, setSpecialInterests] = useState<string[]>([]);
   const [newInterest, setNewInterest] = useState('');
+  const [pronouns, setPronouns] = useState('');
+  const [customPronouns, setCustomPronouns] = useState('');
   const { enabled: bionicEnabled, setEnabled: setBionicEnabled } = useBionicReading();
   const {
     dyslexiaFontEnabled,
@@ -111,6 +113,17 @@ export default function StudentProfile() {
       setDisplayName(studentData.display_name || studentData.name);
       setSelectedAvatar(studentData.avatar_url || defaultAvatars[0]);
       setSpecialInterests((studentData.special_interests as string[]) || []);
+      
+      // Load pronouns
+      if (studentData.pronouns) {
+        const commonPronouns = ['she/her', 'he/him', 'they/them', 'ze/hir', 'xe/xem'];
+        if (commonPronouns.includes(studentData.pronouns)) {
+          setPronouns(studentData.pronouns);
+        } else {
+          setPronouns('custom');
+          setCustomPronouns(studentData.pronouns);
+        }
+      }
     } catch (error: any) {
       console.error('Error fetching profile:', error);
       toast.error('Failed to load profile');
@@ -153,19 +166,22 @@ export default function StudentProfile() {
 
   const handleSaveProfile = async () => {
     try {
+      const finalPronouns = pronouns === 'custom' ? customPronouns : pronouns;
+      
       const { error } = await supabase
         .from('students')
         .update({
           display_name: displayName,
           avatar_url: selectedAvatar,
           special_interests: specialInterests,
+          pronouns: finalPronouns || null,
         })
         .eq('id', student.id);
 
       if (error) throw error;
       
       toast.success('Profile updated!');
-      setStudent({ ...student, display_name: displayName, avatar_url: selectedAvatar, special_interests: specialInterests });
+      setStudent({ ...student, display_name: displayName, avatar_url: selectedAvatar, special_interests: specialInterests, pronouns: finalPronouns });
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -284,6 +300,35 @@ export default function StudentProfile() {
                   />
                   <p className="text-xs text-muted-foreground">
                     <BionicText>This is how your name will appear throughout the app</BionicText>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="pronouns">Pronouns (optional)</Label>
+                  <Select value={pronouns} onValueChange={setPronouns}>
+                    <SelectTrigger id="pronouns" className="bg-background">
+                      <SelectValue placeholder="Select your pronouns" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="she/her">she/her</SelectItem>
+                      <SelectItem value="he/him">he/him</SelectItem>
+                      <SelectItem value="they/them">they/them</SelectItem>
+                      <SelectItem value="ze/hir">ze/hir</SelectItem>
+                      <SelectItem value="xe/xem">xe/xem</SelectItem>
+                      <SelectItem value="custom">Custom pronouns</SelectItem>
+                      <SelectItem value="">Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {pronouns === 'custom' && (
+                    <Input
+                      value={customPronouns}
+                      onChange={(e) => setCustomPronouns(e.target.value)}
+                      placeholder="Enter your pronouns (e.g., fae/faer)"
+                      className="mt-2"
+                    />
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    <BionicText>Your pronouns help others respect your identity 🏳️‍🌈</BionicText>
                   </p>
                 </div>
 

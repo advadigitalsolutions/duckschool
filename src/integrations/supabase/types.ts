@@ -728,6 +728,7 @@ export type Database = {
           line_spacing: string | null
           locale: string | null
           name: string | null
+          pronouns: string | null
           reading_ruler_enabled: boolean | null
           text_to_speech_enabled: boolean | null
           text_to_speech_voice: string | null
@@ -750,6 +751,7 @@ export type Database = {
           line_spacing?: string | null
           locale?: string | null
           name?: string | null
+          pronouns?: string | null
           reading_ruler_enabled?: boolean | null
           text_to_speech_enabled?: boolean | null
           text_to_speech_voice?: string | null
@@ -772,6 +774,7 @@ export type Database = {
           line_spacing?: string | null
           locale?: string | null
           name?: string | null
+          pronouns?: string | null
           reading_ruler_enabled?: boolean | null
           text_to_speech_enabled?: boolean | null
           text_to_speech_voice?: string | null
@@ -1068,6 +1071,7 @@ export type Database = {
           parent_id: string | null
           personality_type: string | null
           profile_assessment_completed: boolean | null
+          pronouns: string | null
           reading_ruler_enabled: boolean | null
           special_interests: Json | null
           text_to_speech_enabled: boolean | null
@@ -1099,6 +1103,7 @@ export type Database = {
           parent_id?: string | null
           personality_type?: string | null
           profile_assessment_completed?: boolean | null
+          pronouns?: string | null
           reading_ruler_enabled?: boolean | null
           special_interests?: Json | null
           text_to_speech_enabled?: boolean | null
@@ -1130,6 +1135,7 @@ export type Database = {
           parent_id?: string | null
           personality_type?: string | null
           profile_assessment_completed?: boolean | null
+          pronouns?: string | null
           reading_ruler_enabled?: boolean | null
           special_interests?: Json | null
           text_to_speech_enabled?: boolean | null
