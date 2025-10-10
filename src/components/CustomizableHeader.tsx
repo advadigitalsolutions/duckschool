@@ -386,12 +386,76 @@ export function CustomizableHeader({
                   top: `${cloud.y}%`,
                   width: `${cloud.width}%`,
                   height: `${cloud.height}%`,
-                  background: `radial-gradient(ellipse 80% 70% at 50% 50%, ${settings.cloudColor || 'rgba(255, 255, 255, 0.15)'} 0%, ${settings.cloudColor || 'rgba(255, 255, 255, 0.08)'} 40%, transparent 70%)`,
                   animation: `cloud-drift ${cloud.duration}s ease-in-out infinite`,
                   animationDelay: `${cloud.delay}s`,
-                  filter: 'blur(2px)',
                 }}
-              />
+              >
+                {/* 8-bit pixel cloud made of blocks */}
+                <div className="relative w-full h-full" style={{ 
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+                  imageRendering: 'pixelated'
+                }}>
+                  {/* Main cloud body - center large block */}
+                  <div className="absolute" style={{
+                    left: '25%',
+                    top: '35%',
+                    width: '50%',
+                    height: '30%',
+                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.25)',
+                    borderRadius: '2px',
+                  }} />
+                  
+                  {/* Left puff */}
+                  <div className="absolute" style={{
+                    left: '10%',
+                    top: '40%',
+                    width: '30%',
+                    height: '25%',
+                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.22)',
+                    borderRadius: '2px',
+                  }} />
+                  
+                  {/* Right puff */}
+                  <div className="absolute" style={{
+                    right: '10%',
+                    top: '40%',
+                    width: '30%',
+                    height: '25%',
+                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.22)',
+                    borderRadius: '2px',
+                  }} />
+                  
+                  {/* Top left puff */}
+                  <div className="absolute" style={{
+                    left: '20%',
+                    top: '20%',
+                    width: '25%',
+                    height: '22%',
+                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: '2px',
+                  }} />
+                  
+                  {/* Top center puff */}
+                  <div className="absolute" style={{
+                    left: '40%',
+                    top: '15%',
+                    width: '25%',
+                    height: '25%',
+                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.23)',
+                    borderRadius: '2px',
+                  }} />
+                  
+                  {/* Top right puff */}
+                  <div className="absolute" style={{
+                    right: '18%',
+                    top: '20%',
+                    width: '25%',
+                    height: '22%',
+                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: '2px',
+                  }} />
+                </div>
+              </div>
             ))}
           </div>
         )}
