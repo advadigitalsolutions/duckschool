@@ -299,8 +299,8 @@ export function ParentPomodoroControls() {
                   <Label>Foreground Color</Label>
                   <Input
                     type="color"
-                    value={session.settings.timerForegroundColor || '#3b82f6'}
-                    onChange={(e) => updateSettings(student.id, 'timerForegroundColor', e.target.value)}
+                    value={session.settings.timerColor || '#3b82f6'}
+                    onChange={(e) => updateSettings(student.id, 'timerColor', e.target.value)}
                   />
                 </div>
 
@@ -308,8 +308,8 @@ export function ParentPomodoroControls() {
                   <Label>Background Color</Label>
                   <Input
                     type="color"
-                    value={session.settings.timerBackgroundColor || '#94a3b8'}
-                    onChange={(e) => updateSettings(student.id, 'timerBackgroundColor', e.target.value)}
+                    value={session.settings.numberColor || '#94a3b8'}
+                    onChange={(e) => updateSettings(student.id, 'numberColor', e.target.value)}
                   />
                 </div>
               </div>
