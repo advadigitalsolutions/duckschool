@@ -46,37 +46,60 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
         
         {settings.visualTimer && (
           <div className="relative w-10 h-10">
-            <svg className="transform -rotate-90 w-10 h-10">
-              <circle
-                cx="20"
-                cy="20"
-                r="16"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                fill="none"
-                className="text-muted opacity-20"
-              />
-              <circle
-                cx="20"
-                cy="20"
-                r="16"
-                stroke={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerColor}
-                strokeWidth="2.5"
-                fill="none"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                className="transition-all duration-1000"
-                style={{ strokeLinecap: 'round' }}
-              />
-            </svg>
-            <div 
-              className="absolute inset-0 flex items-center justify-center font-mono text-xs font-bold cursor-pointer hover:scale-110 transition-transform"
-              style={{ color: settings.numberColor }}
-              onClick={onTimeClick}
-              title="Click to adjust timer settings"
-            >
-              {Math.ceil(timeLeft / 60)}
-            </div>
+            {settings.timerStyle === 'doughnut' ? (
+              <>
+                <svg className="transform -rotate-90 w-10 h-10">
+                  <circle
+                    cx="20"
+                    cy="20"
+                    r="16"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    fill="none"
+                    className="text-muted opacity-20"
+                  />
+                  <circle
+                    cx="20"
+                    cy="20"
+                    r="16"
+                    stroke={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerColor}
+                    strokeWidth="2.5"
+                    fill="none"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    className="transition-all duration-1000"
+                    style={{ strokeLinecap: 'round' }}
+                  />
+                </svg>
+                {settings.showMinutesInside && (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center font-mono text-xs font-bold cursor-pointer hover:scale-110 transition-transform"
+                    style={{ color: settings.numberColor }}
+                    onClick={onTimeClick}
+                    title="Click to adjust timer settings"
+                  >
+                    {Math.ceil(timeLeft / 60)}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div 
+                className="transform -rotate-90 w-10 h-10 cursor-pointer hover:scale-110 transition-transform"
+                onClick={onTimeClick}
+              >
+                <svg className="w-10 h-10">
+                  <circle cx="20" cy="20" r="19" fill="currentColor" className="text-muted opacity-20" />
+                  <path
+                    d={`M 20 20 L 20 1 A 19 19 0 ${progress > 50 ? 1 : 0} 1 ${
+                      20 + 19 * Math.sin((progress / 100) * 2 * Math.PI)
+                    } ${20 - 19 * Math.cos((progress / 100) * 2 * Math.PI)} Z`}
+                    fill={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerColor}
+                    className="transition-all duration-1000"
+                  />
+                  <circle cx="20" cy="20" r="2" fill="currentColor" className="text-background" />
+                </svg>
+              </div>
+            )}
           </div>
         )}
         
@@ -137,40 +160,86 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
         
         {settings.visualTimer && (
           <div className="relative w-48 h-48">
-            <svg className="transform -rotate-90 w-48 h-48">
-              <circle
-                cx="96"
-                cy="96"
-                r="88"
-                stroke="currentColor"
-                strokeWidth="12"
-                fill="none"
-                className="text-muted opacity-20"
-              />
-              <circle
-                cx="96"
-                cy="96"
-                r="88"
-                stroke={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerColor}
-                strokeWidth="12"
-                fill="none"
-                strokeDasharray={circumference * 1.95}
-                strokeDashoffset={(circumference * 1.95) - (progress / 100) * (circumference * 1.95)}
-                className="transition-all duration-1000 drop-shadow-lg"
-                style={{ strokeLinecap: 'round' }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform" onClick={onTimeClick} title="Click to adjust timer settings">
-              <div 
-                className="font-mono text-5xl font-bold tabular-nums"
-                style={{ color: settings.numberColor }}
-              >
-                {formatTime(timeLeft)}
-              </div>
-              <div className="text-sm text-muted-foreground mt-2">
-                {Math.ceil(timeLeft / 60)} minutes left
-              </div>
-            </div>
+            {settings.timerStyle === 'doughnut' ? (
+              <>
+                <svg className="transform -rotate-90 w-48 h-48">
+                  <circle
+                    cx="96"
+                    cy="96"
+                    r="88"
+                    stroke="currentColor"
+                    strokeWidth="12"
+                    fill="none"
+                    className="text-muted opacity-20"
+                  />
+                  <circle
+                    cx="96"
+                    cy="96"
+                    r="88"
+                    stroke={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerColor}
+                    strokeWidth="12"
+                    fill="none"
+                    strokeDasharray={circumference * 1.95}
+                    strokeDashoffset={(circumference * 1.95) - (progress / 100) * (circumference * 1.95)}
+                    className="transition-all duration-1000 drop-shadow-lg"
+                    style={{ strokeLinecap: 'round' }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform" onClick={onTimeClick} title="Click to adjust timer settings">
+                  <div 
+                    className="font-mono text-5xl font-bold tabular-nums"
+                    style={{ color: settings.numberColor }}
+                  >
+                    {formatTime(timeLeft)}
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-2">
+                    {Math.ceil(timeLeft / 60)} minutes left
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <svg className="w-48 h-48 transform -rotate-90">
+                  <circle cx="96" cy="96" r="93" fill="currentColor" className="text-muted opacity-20" />
+                  <path
+                    d={`M 96 96 L 96 3 A 93 93 0 ${progress > 50 ? 1 : 0} 1 ${
+                      96 + 93 * Math.sin((progress / 100) * 2 * Math.PI)
+                    } ${96 - 93 * Math.cos((progress / 100) * 2 * Math.PI)} Z`}
+                    fill={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerColor}
+                    className="transition-all duration-1000 drop-shadow-lg"
+                  />
+                  <circle cx="96" cy="96" r="6" fill="currentColor" className="text-background" />
+                  {/* Clock tick marks and numbers */}
+                  {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((num, i) => {
+                    const angle = (i * 30) * (Math.PI / 180);
+                    const x = 96 + 78 * Math.sin(angle);
+                    const y = 96 - 78 * Math.cos(angle);
+                    return (
+                      <text
+                        key={num}
+                        x={x}
+                        y={y + 4}
+                        textAnchor="middle"
+                        className="text-[10px] font-semibold fill-current"
+                      >
+                        {num}
+                      </text>
+                    );
+                  })}
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform" onClick={onTimeClick} title="Click to adjust timer settings">
+                  <div 
+                    className="font-mono text-4xl font-bold tabular-nums"
+                    style={{ color: settings.numberColor }}
+                  >
+                    {formatTime(timeLeft)}
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-2">
+                    {Math.ceil(timeLeft / 60)} minutes left
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 

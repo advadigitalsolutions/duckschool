@@ -8,6 +8,8 @@ interface PomodoroSettings {
   visualTimer: boolean;
   timerColor: string;
   numberColor: string;
+  showMinutesInside: boolean;
+  timerStyle: 'doughnut' | 'traditional';
 }
 
 interface PomodoroContextType {
@@ -34,6 +36,8 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   visualTimer: true,
   timerColor: 'hsl(var(--primary))',
   numberColor: 'hsl(var(--foreground))',
+  showMinutesInside: true,
+  timerStyle: 'doughnut',
 };
 
 export function PomodoroProvider({ children }: { children: React.ReactNode }) {

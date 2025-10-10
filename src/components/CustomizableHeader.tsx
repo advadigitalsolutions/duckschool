@@ -46,6 +46,8 @@ interface HeaderSettings {
     visualTimer: boolean;
     timerColor: string;
     numberColor: string;
+    showMinutesInside: boolean;
+    timerStyle: 'doughnut' | 'traditional';
   };
   celebrateWins: boolean;
   show8BitStars: boolean;

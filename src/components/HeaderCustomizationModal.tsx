@@ -62,6 +62,8 @@ interface HeaderSettings {
     visualTimer: boolean;
     timerColor: string;
     numberColor: string;
+    showMinutesInside: boolean;
+    timerStyle: 'doughnut' | 'traditional';
   };
   celebrateWins: boolean;
   show8BitStars: boolean;
@@ -582,6 +584,43 @@ export function HeaderCustomizationModal({
                         }
                       />
                     </div>
+
+                    {settings.pomodoroSettings.visualTimer && (
+                      <>
+                        <div className="space-y-2">
+                          <Label>Timer Style</Label>
+                          <Select
+                            value={settings.pomodoroSettings.timerStyle || 'doughnut'}
+                            onValueChange={(value: 'doughnut' | 'traditional') =>
+                              updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerStyle: value })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="doughnut">Doughnut (Ring)</SelectItem>
+                              <SelectItem value="traditional">Traditional (Pie Chart)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            Choose between a ring-style or classic pie-chart timer
+                          </p>
+                        </div>
+
+                        {settings.pomodoroSettings.timerStyle === 'doughnut' && (
+                          <div className="flex items-center justify-between">
+                            <Label>Show Minutes Inside Timer</Label>
+                            <Switch
+                              checked={settings.pomodoroSettings.showMinutesInside ?? true}
+                              onCheckedChange={(checked) =>
+                                updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, showMinutesInside: checked })
+                              }
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
 
                     <div className="space-y-2">
                       <Label>Timer Color</Label>

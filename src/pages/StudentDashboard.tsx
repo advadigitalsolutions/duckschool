@@ -70,6 +70,8 @@ export default function StudentDashboard() {
       visualTimer: true,
       timerColor: 'hsl(var(--primary))',
       numberColor: 'hsl(var(--foreground))',
+      showMinutesInside: true,
+      timerStyle: 'doughnut' as const,
     },
     celebrateWins: true,
     show8BitStars: false,
