@@ -6,12 +6,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { HeaderCustomizationModal } from '@/components/HeaderCustomizationModal';
-import { LogOut, User, Settings } from 'lucide-react';
+import { LogOut, User, Settings, Trash2 } from 'lucide-react';
 import { getRandomQuote } from '@/utils/inspirationalQuotes';
 import { getRandomAffirmation } from '@/utils/affirmations';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { usePomodoro } from '@/contexts/PomodoroContext';
 
 interface HeaderSettings {
   showName: boolean;
@@ -75,7 +76,10 @@ export function CustomizableHeader({
   const [weather, setWeather] = useState<string | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [starPositions, setStarPositions] = useState<Array<{x: number, y: number}>>([]);
+  const [fallingBadges, setFallingBadges] = useState<Array<{id: string, x: number, y: number, text: string}>>([]);
+  const [hoveredReminder, setHoveredReminder] = useState<number | null>(null);
   const navigate = useNavigate();
+  const { updateSettings: updatePomodoroSettings } = usePomodoro();
 
   useEffect(() => {
     const updateRotatingText = async () => {
@@ -137,6 +141,11 @@ export function CustomizableHeader({
 
     return () => clearInterval(interval);
   }, [settings.show8BitStars]);
+
+  // Sync Pomodoro settings with context
+  useEffect(() => {
+    updatePomodoroSettings(settings.pomodoroSettings);
+  }, [settings.pomodoroSettings, updatePomodoroSettings]);
 
   // Weather fetching
   useEffect(() => {
@@ -267,6 +276,28 @@ export function CustomizableHeader({
       console.error('Error formatting countdown:', error, countdown);
       return 'Invalid date';
     }
+  };
+
+  const handleRemoveReminder = (index: number, event: React.MouseEvent) => {
+    const badge = event.currentTarget.closest('.reminder-badge') as HTMLElement;
+    if (!badge) return;
+    
+    const rect = badge.getBoundingClientRect();
+    const badgeId = `falling-${Date.now()}-${index}`;
+    
+    setFallingBadges(prev => [...prev, {
+      id: badgeId,
+      x: rect.left,
+      y: rect.top,
+      text: settings.customReminders[index].text,
+    }]);
+    
+    // Remove after animation completes
+    setTimeout(() => {
+      setFallingBadges(prev => prev.filter(b => b.id !== badgeId));
+      const newReminders = settings.customReminders.filter((_, i) => i !== index);
+      onSaveSettings({ ...settings, customReminders: newReminders });
+    }, 1500);
   };
 
   const headerClasses = cn(
@@ -422,7 +453,7 @@ export function CustomizableHeader({
             {/* Center section - Pomodoro */}
             {settings.pomodoroEnabled && (
               <div className="flex-shrink-0">
-                <PomodoroTimer settings={settings.pomodoroSettings} compact />
+                <PomodoroTimer compact />
               </div>
             )}
 
@@ -470,36 +501,48 @@ export function CustomizableHeader({
                 <Badge 
                   key={`reminder-${index}`} 
                   variant="outline" 
-                  className="gap-2 bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20 transition-colors"
+                  className="reminder-badge gap-2 bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20 transition-all cursor-pointer relative"
+                  onMouseEnter={() => reminder.completed && setHoveredReminder(index)}
+                  onMouseLeave={() => setHoveredReminder(null)}
                 >
-                  <Checkbox 
-                    checked={reminder.completed}
-                    onCheckedChange={async () => {
-                      const wasCompleted = reminder.completed;
-                      const newReminders = [...settings.customReminders];
-                      newReminders[index].completed = !newReminders[index].completed;
-                      onSaveSettings({ ...settings, customReminders: newReminders });
-                      
-                      // Trigger celebration and log to parent dashboard when checking off
-                      if (!wasCompleted && newReminders[index].completed) {
-                        if (settings.celebrateWins) {
-                          onDemoCelebration();
-                        }
+                  {reminder.completed && hoveredReminder === index ? (
+                    <Trash2 
+                      className="h-4 w-4 text-destructive cursor-pointer hover:scale-110 transition-transform"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveReminder(index, e);
+                      }}
+                    />
+                  ) : (
+                    <Checkbox 
+                      checked={reminder.completed}
+                      onCheckedChange={async () => {
+                        const wasCompleted = reminder.completed;
+                        const newReminders = [...settings.customReminders];
+                        newReminders[index].completed = !newReminders[index].completed;
+                        onSaveSettings({ ...settings, customReminders: newReminders });
                         
-                        // Log to parent dashboard via XP event
-                        try {
-                          await supabase.from('xp_events').insert({
-                            student_id: student?.id,
-                            event_type: 'reminder_completed',
-                            amount: 0,
-                            description: `Completed reminder: ${reminder.text}`,
-                          });
-                        } catch (error) {
-                          console.error('Error logging reminder completion:', error);
+                        // Trigger celebration and log to parent dashboard when checking off
+                        if (!wasCompleted && newReminders[index].completed) {
+                          if (settings.celebrateWins) {
+                            onDemoCelebration();
+                          }
+                          
+                          // Log to parent dashboard via XP event
+                          try {
+                            await supabase.from('xp_events').insert({
+                              student_id: student?.id,
+                              event_type: 'reminder_completed',
+                              amount: 0,
+                              description: `Completed reminder: ${reminder.text}`,
+                            });
+                          } catch (error) {
+                            console.error('Error logging reminder completion:', error);
+                          }
                         }
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                  )}
                   <span className={reminder.completed ? 'line-through opacity-60' : ''}>
                     {reminder.text}
                   </span>
@@ -527,6 +570,42 @@ export function CustomizableHeader({
           )}
         </div>
       </header>
+
+      {/* Falling badges animation */}
+      {fallingBadges.map((badge) => (
+        <div
+          key={badge.id}
+          className="fixed pointer-events-none z-50"
+          style={{
+            left: badge.x,
+            top: badge.y,
+            animation: 'fall-and-spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards',
+          }}
+        >
+          <Badge 
+            variant="outline" 
+            className="gap-2 bg-amber-500/10 border-amber-500/50 line-through opacity-60"
+          >
+            <Trash2 className="h-4 w-4" />
+            {badge.text}
+          </Badge>
+        </div>
+      ))}
+      
+      <style>
+        {`
+          @keyframes fall-and-spin {
+            0% {
+              transform: translateY(0) rotateZ(0deg) rotateX(0deg);
+              opacity: 1;
+            }
+            100% {
+              transform: translateY(100vh) rotateZ(720deg) rotateX(360deg);
+              opacity: 0;
+            }
+          }
+        `}
+      </style>
 
       <HeaderCustomizationModal
         open={showModal}

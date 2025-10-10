@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import { AuthGuard } from "./components/AuthGuard";
 import { BionicReadingProvider } from "./contexts/BionicReadingContext";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
+import { PomodoroProvider } from "./contexts/PomodoroContext";
 import { ReadingRuler } from "./components/ReadingRuler";
 
 const queryClient = new QueryClient();
@@ -24,79 +25,81 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <BionicReadingProvider>
-        <AccessibilityProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <ReadingRuler />
-            <BrowserRouter>
-            <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route 
-              path="/parent" 
-              element={
-                <AuthGuard>
-                  <ParentDashboard />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/parent/profile" 
-              element={
-                <AuthGuard>
-                  <ParentProfile />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/student/:id"
-              element={
-                <AuthGuard>
-                  <StudentDetail />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/assignment/:id" 
-              element={
-                <AuthGuard>
-                  <AssignmentDetail />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/student" 
-              element={
-                <AuthGuard>
-                  <StudentDashboard />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/student/profile" 
-              element={
-                <AuthGuard>
-                  <StudentProfile />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/course/:courseId" 
-              element={
-                <AuthGuard>
-                  <CourseDashboard />
-                </AuthGuard>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-          </TooltipProvider>
-        </AccessibilityProvider>
-      </BionicReadingProvider>
+      <PomodoroProvider>
+        <BionicReadingProvider>
+          <AccessibilityProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <ReadingRuler />
+              <BrowserRouter>
+              <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route 
+                path="/parent" 
+                element={
+                  <AuthGuard>
+                    <ParentDashboard />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/parent/profile" 
+                element={
+                  <AuthGuard>
+                    <ParentProfile />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/student/:id"
+                element={
+                  <AuthGuard>
+                    <StudentDetail />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/assignment/:id" 
+                element={
+                  <AuthGuard>
+                    <AssignmentDetail />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/student" 
+                element={
+                  <AuthGuard>
+                    <StudentDashboard />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/student/profile" 
+                element={
+                  <AuthGuard>
+                    <StudentProfile />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/course/:courseId" 
+                element={
+                  <AuthGuard>
+                    <CourseDashboard />
+                  </AuthGuard>
+                } 
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+            </TooltipProvider>
+          </AccessibilityProvider>
+        </BionicReadingProvider>
+      </PomodoroProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
