@@ -275,6 +275,7 @@ export default function StudentDashboard() {
 
       if (studentData) {
         setStudent(studentData);
+        setStudentDbId(studentData.id);
         // Ensure header_settings has proper defaults
         const loadedSettings = (studentData.header_settings && typeof studentData.header_settings === 'object' && !Array.isArray(studentData.header_settings))
           ? studentData.header_settings as any
@@ -292,6 +293,10 @@ export default function StudentDashboard() {
               }))
             : [],
         });
+      } else {
+        // No student record found, redirect to auth
+        navigate('/auth');
+        return;
       }
 
       // Fetch today's assignments

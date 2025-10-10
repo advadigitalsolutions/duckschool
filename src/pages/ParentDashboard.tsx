@@ -61,7 +61,10 @@ export default function ParentDashboard() {
   const checkRoleAndFetch = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
 
       // Check user role
       const { data: roleData } = await supabase
@@ -72,13 +75,27 @@ export default function ParentDashboard() {
 
       if (roleData?.role === 'student') {
         // Redirect to student dashboard if they're a student
-        navigate('/student');
+        navigate('/student', { replace: true });
         return;
       }
 
       fetchDashboardData();
     } catch (error) {
       console.error('Error checking role:', error);
+      // On error, still try to check if user is student by checking students table
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: studentData } = await supabase
+          .from('students')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (studentData) {
+          navigate('/student', { replace: true });
+          return;
+        }
+      }
       fetchDashboardData();
     }
   };
