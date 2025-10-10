@@ -171,8 +171,8 @@ export function CustomizableHeader({
       return Array.from({ length: 5 }).map(() => ({
         x: -20 - Math.random() * 30, // Start off-screen left
         y: Math.random() * 80, // Random vertical position (0-80%)
-        width: 15 + Math.random() * 25, // Width between 15-40%
-        height: 10 + Math.random() * 15, // Height between 10-25%
+        width: 20 + Math.random() * 30, // Width between 20-50% (increased size)
+        height: 15 + Math.random() * 20, // Height between 15-35% (increased size)
         duration: 35 + Math.random() * 25, // Duration between 35-60s
         delay: Math.random() * 20, // Stagger start times
         imageSet: Math.random() > 0.5 ? 1 : 2, // Randomly choose between cloud set 1 or 2
