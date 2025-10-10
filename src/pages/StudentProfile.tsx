@@ -156,7 +156,9 @@ export default function StudentProfile() {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      setSelectedAvatar(publicUrl);
+      // Add cache-busting timestamp to force browser to reload the new image
+      const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`;
+      setSelectedAvatar(cacheBustedUrl);
       toast.success('Avatar uploaded!');
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
