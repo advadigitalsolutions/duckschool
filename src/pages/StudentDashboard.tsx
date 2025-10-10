@@ -47,6 +47,7 @@ export default function StudentDashboard() {
   const [headerSettings, setHeaderSettings] = useState<any>(null);
   const navigate = useNavigate();
 
+
   const motivationalQuotes = [
     "Your potential is endless. Go do what you were created to do.",
     "Success is the sum of small efforts repeated day in and day out.",
