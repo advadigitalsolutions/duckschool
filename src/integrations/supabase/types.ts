@@ -197,33 +197,42 @@ export type Database = {
       }
       assignments: {
         Row: {
+          assigned_date: string | null
           created_at: string | null
           curriculum_item_id: string | null
+          day_of_week: string | null
           due_at: string | null
           id: string
           max_attempts: number | null
           rubric: Json | null
           status: Database["public"]["Enums"]["status_t"]
+          week_id: string | null
           weight: number | null
         }
         Insert: {
+          assigned_date?: string | null
           created_at?: string | null
           curriculum_item_id?: string | null
+          day_of_week?: string | null
           due_at?: string | null
           id?: string
           max_attempts?: number | null
           rubric?: Json | null
           status?: Database["public"]["Enums"]["status_t"]
+          week_id?: string | null
           weight?: number | null
         }
         Update: {
+          assigned_date?: string | null
           created_at?: string | null
           curriculum_item_id?: string | null
+          day_of_week?: string | null
           due_at?: string | null
           id?: string
           max_attempts?: number | null
           rubric?: Json | null
           status?: Database["public"]["Enums"]["status_t"]
+          week_id?: string | null
           weight?: number | null
         }
         Relationships: [
@@ -232,6 +241,13 @@ export type Database = {
             columns: ["curriculum_item_id"]
             isOneToOne: false
             referencedRelation: "curriculum_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "curriculum_weeks"
             referencedColumns: ["id"]
           },
         ]
@@ -342,12 +358,14 @@ export type Database = {
       courses: {
         Row: {
           archived: boolean | null
+          auto_generate_weekly: boolean | null
           created_at: string | null
           credits: number | null
           description: string | null
           goals: string | null
           grade_level: string | null
           id: string
+          next_generation_date: string | null
           pacing_config: Json | null
           skeleton: Json | null
           standards_scope: Json | null
@@ -359,12 +377,14 @@ export type Database = {
         }
         Insert: {
           archived?: boolean | null
+          auto_generate_weekly?: boolean | null
           created_at?: string | null
           credits?: number | null
           description?: string | null
           goals?: string | null
           grade_level?: string | null
           id?: string
+          next_generation_date?: string | null
           pacing_config?: Json | null
           skeleton?: Json | null
           standards_scope?: Json | null
@@ -376,12 +396,14 @@ export type Database = {
         }
         Update: {
           archived?: boolean | null
+          auto_generate_weekly?: boolean | null
           created_at?: string | null
           credits?: number | null
           description?: string | null
           goals?: string | null
           grade_level?: string | null
           id?: string
+          next_generation_date?: string | null
           pacing_config?: Json | null
           skeleton?: Json | null
           standards_scope?: Json | null
@@ -544,6 +566,60 @@ export type Database = {
           subjects?: Json | null
         }
         Relationships: []
+      }
+      curriculum_weeks: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          end_date: string
+          focus_areas: Json | null
+          id: string
+          start_date: string
+          status: string | null
+          student_id: string
+          theme: string | null
+          week_number: number
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          end_date: string
+          focus_areas?: Json | null
+          id?: string
+          start_date: string
+          status?: string | null
+          student_id: string
+          theme?: string | null
+          week_number: number
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          end_date?: string
+          focus_areas?: Json | null
+          id?: string
+          start_date?: string
+          status?: string | null
+          student_id?: string
+          theme?: string | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "curriculum_weeks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "curriculum_weeks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_goals: {
         Row: {
@@ -738,6 +814,57 @@ export type Database = {
           },
           {
             foreignKeyName: "progress_events_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      progress_gaps: {
+        Row: {
+          addressed_at: string | null
+          confidence_score: number | null
+          course_id: string
+          gap_type: string
+          id: string
+          identified_at: string | null
+          metadata: Json | null
+          standard_code: string
+          student_id: string
+        }
+        Insert: {
+          addressed_at?: string | null
+          confidence_score?: number | null
+          course_id: string
+          gap_type: string
+          id?: string
+          identified_at?: string | null
+          metadata?: Json | null
+          standard_code: string
+          student_id: string
+        }
+        Update: {
+          addressed_at?: string | null
+          confidence_score?: number | null
+          course_id?: string
+          gap_type?: string
+          id?: string
+          identified_at?: string | null
+          metadata?: Json | null
+          standard_code?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_gaps_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_gaps_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
