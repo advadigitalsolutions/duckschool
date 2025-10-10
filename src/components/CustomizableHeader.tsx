@@ -13,8 +13,8 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { usePomodoro } from '@/contexts/PomodoroContext';
-import cloudSet1 from '@/assets/clouds/cloud-set-1.png';
-import cloudSet2 from '@/assets/clouds/cloud-set-2.png';
+import cloudSet1 from '@/assets/clouds/cloud-1.svg';
+import cloudSet2 from '@/assets/clouds/cloud-2.svg';
 
 interface HeaderSettings {
   showName: boolean;

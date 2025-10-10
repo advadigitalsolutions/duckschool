@@ -1,0 +1,7 @@
+<svg width="200" height="100" viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main cloud body -->
+  <path d="M30 50h140v30H30V50zM40 40h120v10H40V40zM50 30h100v10H50V30zM70 40h60v10H70V40zM100 60h40v10h-40V60z" fill="#FFFFFF"/>
+  
+  <!-- Light blue shading -->
+  <path d="M30 70h140v10H30V70zM50 60h100v10H50V60zM70 50h60v10H70V50z" fill="#B3D9FF" opacity="0.5"/>
+</svg>
