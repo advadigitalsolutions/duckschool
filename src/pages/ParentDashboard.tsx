@@ -59,12 +59,16 @@ export default function ParentDashboard() {
   }, []);
 
   const checkRoleAndFetch = async () => {
+    console.log('[ParentDashboard] Checking role...');
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate('/auth');
+        console.log('[ParentDashboard] No user, redirecting to auth');
+        navigate('/auth', { replace: true });
         return;
       }
+
+      console.log('[ParentDashboard] User ID:', user.id);
 
       // Check user role
       const { data: roleData } = await supabase
@@ -73,15 +77,19 @@ export default function ParentDashboard() {
         .eq('user_id', user.id)
         .single();
 
+      console.log('[ParentDashboard] Role data:', roleData);
+
       if (roleData?.role === 'student') {
         // Redirect to student dashboard if they're a student
+        console.log('[ParentDashboard] User is student, redirecting to /student');
         navigate('/student', { replace: true });
         return;
       }
 
+      console.log('[ParentDashboard] Fetching dashboard data...');
       fetchDashboardData();
     } catch (error) {
-      console.error('Error checking role:', error);
+      console.error('[ParentDashboard] Error checking role:', error);
       // On error, still try to check if user is student by checking students table
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -91,7 +99,10 @@ export default function ParentDashboard() {
           .eq('user_id', user.id)
           .maybeSingle();
         
+        console.log('[ParentDashboard] Student check result:', studentData);
+        
         if (studentData) {
+          console.log('[ParentDashboard] Found student record, redirecting to /student');
           navigate('/student', { replace: true });
           return;
         }

@@ -225,9 +225,16 @@ export default function StudentDashboard() {
   }, []);
 
   const checkRoleAndFetch = async () => {
+    console.log('[StudentDashboard] Checking role...');
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('[StudentDashboard] No user, redirecting to auth');
+        navigate('/auth', { replace: true });
+        return;
+      }
+
+      console.log('[StudentDashboard] User ID:', user.id);
 
       // Check user role
       const { data: roleData } = await supabase
@@ -236,15 +243,19 @@ export default function StudentDashboard() {
         .eq('user_id', user.id)
         .single();
 
+      console.log('[StudentDashboard] Role data:', roleData);
+
       if (roleData?.role === 'parent') {
         // Redirect to parent dashboard if they're a parent
-        navigate('/parent');
+        console.log('[StudentDashboard] User is parent, redirecting to /parent');
+        navigate('/parent', { replace: true });
         return;
       }
 
+      console.log('[StudentDashboard] Fetching student data...');
       fetchStudentData();
     } catch (error) {
-      console.error('Error checking role:', error);
+      console.error('[StudentDashboard] Error checking role:', error);
       fetchStudentData();
     }
   };
@@ -262,26 +273,37 @@ export default function StudentDashboard() {
   }, [timerRunning, timeLeft]);
 
   const fetchStudentData = async () => {
+    console.log('[StudentDashboard] fetchStudentData called');
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('[StudentDashboard] No user in fetchStudentData');
+        return;
+      }
+
+      console.log('[StudentDashboard] Fetching student for user:', user.id);
 
       // Fetch student profile
-      const { data: studentData } = await supabase
+      const { data: studentData, error: studentError } = await supabase
         .from('students')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
+      console.log('[StudentDashboard] Student data:', studentData);
+      console.log('[StudentDashboard] Student error:', studentError);
+
       if (studentData) {
         setStudent(studentData);
         setStudentDbId(studentData.id);
+        console.log('[StudentDashboard] Student set, header_settings:', studentData.header_settings);
+        
         // Ensure header_settings has proper defaults
         const loadedSettings = (studentData.header_settings && typeof studentData.header_settings === 'object' && !Array.isArray(studentData.header_settings))
           ? studentData.header_settings as any
           : getDefaultHeaderSettings();
         // Ensure all arrays exist and deserialize dates
-        setHeaderSettings({
+        const finalSettings = {
           ...getDefaultHeaderSettings(),
           ...loadedSettings,
           locations: Array.isArray(loadedSettings.locations) ? loadedSettings.locations : [],
@@ -292,43 +314,54 @@ export default function StudentDashboard() {
                 date: typeof countdown.date === 'string' ? new Date(countdown.date) : countdown.date
               }))
             : [],
-        });
+        };
+        console.log('[StudentDashboard] Final header settings:', finalSettings);
+        setHeaderSettings(finalSettings);
       } else {
         // No student record found, redirect to auth
-        navigate('/auth');
+        console.log('[StudentDashboard] No student record found, redirecting to auth');
+        navigate('/auth', { replace: true });
         return;
       }
 
       // Fetch today's assignments
-      const { data: assignmentsData } = await supabase
+      console.log('[StudentDashboard] Fetching assignments for student:', studentData.id);
+      const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('assignments')
         .select(`
           *,
-          curriculum_items (
+          curriculum_items!inner (
             title,
             type,
             est_minutes,
             body,
             course_id,
-            courses (
-              title
+            courses!inner (
+              title,
+              student_id
             )
           )
         `)
+        .eq('curriculum_items.courses.student_id', studentData.id)
         .eq('status', 'assigned')
         .order('due_at', { ascending: true })
         .limit(5);
 
+      console.log('[StudentDashboard] Assignments data:', assignmentsData);
+      console.log('[StudentDashboard] Assignments error:', assignmentsError);
       setAssignments(assignmentsData || []);
 
       // Fetch courses
-      const { data: coursesData } = await supabase
+      console.log('[StudentDashboard] Fetching courses for student:', studentData.id);
+      const { data: coursesData, error: coursesError } = await supabase
         .from('courses')
         .select('*')
-        .eq('student_id', studentData?.id)
+        .eq('student_id', studentData.id)
         .eq('archived', false)
         .order('created_at', { ascending: false });
 
+      console.log('[StudentDashboard] Courses data:', coursesData);
+      console.log('[StudentDashboard] Courses error:', coursesError);
       setCourses(coursesData || []);
 
       // Calculate completed today
