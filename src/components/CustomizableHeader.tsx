@@ -50,6 +50,8 @@ interface HeaderSettings {
     showMinutesInside: boolean;
     timerStyle: 'doughnut' | 'traditional';
     soundEffect: 'beep' | 'chime' | 'bell' | 'gong' | 'airhorn' | 'duck' | 'none';
+    timerForegroundColor: string;
+    timerBackgroundColor: string;
   };
   celebrateWins: boolean;
   show8BitStars: boolean;

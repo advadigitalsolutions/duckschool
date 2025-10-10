@@ -76,6 +76,8 @@ export default function StudentDashboard() {
       showMinutesInside: true,
       timerStyle: 'doughnut' as const,
       soundEffect: 'beep' as const,
+      timerForegroundColor: 'hsl(var(--primary))',
+      timerBackgroundColor: 'hsl(var(--muted))',
     },
     celebrateWins: true,
     show8BitStars: false,

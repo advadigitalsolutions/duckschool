@@ -30,8 +30,10 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
   };
 
   const progress = ((totalDuration - timeLeft) / totalDuration) * 100;
-  const circumference = 2 * Math.PI * 45;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  const radius = 16;
+  const circumference = 2 * Math.PI * radius;
+  // For kitchen timer: start at 0% (small gap at top) and fill to 100% (complete circle)
+  const filledCircumference = (progress / 100) * circumference;
 
   if (compact) {
     return (
@@ -48,25 +50,25 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
           <div className="relative w-10 h-10">
             {settings.timerStyle === 'doughnut' ? (
               <>
-                <svg className="transform -rotate-90 w-10 h-10">
+                <svg className="w-10 h-10" style={{ transform: 'rotate(-90deg)' }}>
                   <circle
                     cx="20"
                     cy="20"
-                    r="16"
-                    stroke="currentColor"
+                    r={radius}
+                    stroke={settings.timerBackgroundColor}
                     strokeWidth="2.5"
                     fill="none"
-                    className="text-muted opacity-20"
+                    opacity="0.3"
                   />
                   <circle
                     cx="20"
                     cy="20"
-                    r="16"
-                    stroke={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerColor}
+                    r={radius}
+                    stroke={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerForegroundColor}
                     strokeWidth="2.5"
                     fill="none"
                     strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
+                    strokeDashoffset={circumference - filledCircumference}
                     className="transition-all duration-1000"
                     style={{ strokeLinecap: 'round' }}
                   />
@@ -164,25 +166,25 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
           <div className="relative w-48 h-48">
             {settings.timerStyle === 'doughnut' ? (
               <>
-                <svg className="transform -rotate-90 w-48 h-48">
+                <svg className="w-48 h-48" style={{ transform: 'rotate(-90deg)' }}>
                   <circle
                     cx="96"
                     cy="96"
                     r="88"
-                    stroke="currentColor"
+                    stroke={settings.timerBackgroundColor}
                     strokeWidth="12"
                     fill="none"
-                    className="text-muted opacity-20"
+                    opacity="0.3"
                   />
                   <circle
                     cx="96"
                     cy="96"
                     r="88"
-                    stroke={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerColor}
+                    stroke={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerForegroundColor}
                     strokeWidth="12"
                     fill="none"
-                    strokeDasharray={circumference * 1.95}
-                    strokeDashoffset={(circumference * 1.95) - (progress / 100) * (circumference * 1.95)}
+                    strokeDasharray={2 * Math.PI * 88}
+                    strokeDashoffset={2 * Math.PI * 88 - (progress / 100) * 2 * Math.PI * 88}
                     className="transition-all duration-1000 drop-shadow-lg"
                     style={{ strokeLinecap: 'round' }}
                   />

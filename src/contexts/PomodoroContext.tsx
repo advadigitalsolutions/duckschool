@@ -13,6 +13,8 @@ interface PomodoroSettings {
   showMinutesInside: boolean;
   timerStyle: 'doughnut' | 'traditional';
   soundEffect: 'beep' | 'chime' | 'bell' | 'gong' | 'airhorn' | 'duck' | 'none';
+  timerForegroundColor: string;
+  timerBackgroundColor: string;
 }
 
 interface PomodoroContextType {
@@ -43,6 +45,8 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   showMinutesInside: true,
   timerStyle: 'doughnut',
   soundEffect: 'beep',
+  timerForegroundColor: 'hsl(var(--primary))',
+  timerBackgroundColor: 'hsl(var(--muted))',
 };
 
 interface PomodoroProviderProps {

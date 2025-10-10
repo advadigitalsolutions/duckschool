@@ -66,6 +66,8 @@ interface HeaderSettings {
     showMinutesInside: boolean;
     timerStyle: 'doughnut' | 'traditional';
     soundEffect: 'beep' | 'chime' | 'bell' | 'gong' | 'airhorn' | 'duck' | 'none';
+    timerForegroundColor: string;
+    timerBackgroundColor: string;
   };
   celebrateWins: boolean;
   show8BitStars: boolean;
@@ -789,12 +791,36 @@ export function HeaderCustomizationModal({
                     )}
 
                     <div className="space-y-2">
-                      <Label>Timer Color</Label>
+                      <Label>Timer Color (Legacy)</Label>
                       <Input
                         type="color"
                         value={settings.pomodoroSettings.timerColor.startsWith('#') ? settings.pomodoroSettings.timerColor : '#3b82f6'}
                         onChange={(e) =>
                           updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerColor: e.target.value })
+                        }
+                        className="h-10"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Timer Foreground Color (Pie Wedge)</Label>
+                      <Input
+                        type="color"
+                        value={settings.pomodoroSettings.timerForegroundColor?.startsWith('#') ? settings.pomodoroSettings.timerForegroundColor : '#3b82f6'}
+                        onChange={(e) =>
+                          updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerForegroundColor: e.target.value })
+                        }
+                        className="h-10"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Timer Background Color (Pie Wedge)</Label>
+                      <Input
+                        type="color"
+                        value={settings.pomodoroSettings.timerBackgroundColor?.startsWith('#') ? settings.pomodoroSettings.timerBackgroundColor : '#94a3b8'}
+                        onChange={(e) =>
+                          updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerBackgroundColor: e.target.value })
                         }
                         className="h-10"
                       />

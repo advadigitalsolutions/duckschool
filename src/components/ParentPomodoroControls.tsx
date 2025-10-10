@@ -294,6 +294,24 @@ export function ParentPomodoroControls() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Foreground Color</Label>
+                  <Input
+                    type="color"
+                    value={session.settings.timerForegroundColor || '#3b82f6'}
+                    onChange={(e) => updateSettings(student.id, 'timerForegroundColor', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Background Color</Label>
+                  <Input
+                    type="color"
+                    value={session.settings.timerBackgroundColor || '#94a3b8'}
+                    onChange={(e) => updateSettings(student.id, 'timerBackgroundColor', e.target.value)}
+                  />
+                </div>
               </div>
 
               <div className="text-sm text-muted-foreground pt-2 border-t">
