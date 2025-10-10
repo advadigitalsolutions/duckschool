@@ -68,6 +68,7 @@ export default function StudentDashboard() {
       longBreakMinutes: 15,
       sessionsUntilLongBreak: 4,
       visualTimer: true,
+      showTimeText: true,
       timerColor: 'hsl(var(--primary))',
       numberColor: 'hsl(var(--foreground))',
       showMinutesInside: true,

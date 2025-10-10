@@ -6,6 +6,7 @@ interface PomodoroSettings {
   longBreakMinutes: number;
   sessionsUntilLongBreak: number;
   visualTimer: boolean;
+  showTimeText: boolean;
   timerColor: string;
   numberColor: string;
   showMinutesInside: boolean;
@@ -34,6 +35,7 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   longBreakMinutes: 15,
   sessionsUntilLongBreak: 4,
   visualTimer: true,
+  showTimeText: true,
   timerColor: 'hsl(var(--primary))',
   numberColor: 'hsl(var(--foreground))',
   showMinutesInside: true,
@@ -139,6 +141,15 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   const handleTimerComplete = useCallback(() => {
     setIsRunning(false);
     playAlarmSound();
+    
+    // Flash the screen for Pomodoro completion
+    const flashInterval = setInterval(() => {
+      document.querySelector('header')?.classList.toggle('flash-rainbow');
+    }, 300);
+    setTimeout(() => {
+      clearInterval(flashInterval);
+      document.querySelector('header')?.classList.remove('flash-rainbow');
+    }, 5000);
     
     if (!isBreak) {
       const newSessionCount = sessionsCompleted + 1;

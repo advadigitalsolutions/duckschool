@@ -60,6 +60,7 @@ interface HeaderSettings {
     longBreakMinutes: number;
     sessionsUntilLongBreak: number;
     visualTimer: boolean;
+    showTimeText: boolean;
     timerColor: string;
     numberColor: string;
     showMinutesInside: boolean;
@@ -584,6 +585,19 @@ export function HeaderCustomizationModal({
                         }
                       />
                     </div>
+
+                    <div className="flex items-center justify-between">
+                      <Label>Show Time Text</Label>
+                      <Switch
+                        checked={settings.pomodoroSettings.showTimeText ?? true}
+                        onCheckedChange={(checked) =>
+                          updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, showTimeText: checked })
+                        }
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground -mt-2">
+                      You can enable visual timer, time text, or both
+                    </p>
 
                     {settings.pomodoroSettings.visualTimer && (
                       <>

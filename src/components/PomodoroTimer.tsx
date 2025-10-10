@@ -103,14 +103,16 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
           </div>
         )}
         
-        <div 
-          className="font-mono text-base font-bold tabular-nums cursor-pointer hover:text-primary transition-colors"
-          style={{ color: settings.numberColor }}
-          onClick={onTimeClick}
-          title="Click to adjust timer settings"
-        >
-          {formatTime(timeLeft)}
-        </div>
+        {settings.showTimeText && (
+          <div 
+            className="font-mono text-base font-bold tabular-nums cursor-pointer hover:text-primary transition-colors"
+            style={{ color: settings.numberColor }}
+            onClick={onTimeClick}
+            title="Click to adjust timer settings"
+          >
+            {formatTime(timeLeft)}
+          </div>
+        )}
         
         <div className="flex items-center gap-1">
           <Button 
@@ -185,17 +187,19 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
                     style={{ strokeLinecap: 'round' }}
                   />
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform" onClick={onTimeClick} title="Click to adjust timer settings">
-                  <div 
-                    className="font-mono text-5xl font-bold tabular-nums"
-                    style={{ color: settings.numberColor }}
-                  >
-                    {formatTime(timeLeft)}
+                {settings.showTimeText && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform" onClick={onTimeClick} title="Click to adjust timer settings">
+                    <div 
+                      className="font-mono text-5xl font-bold tabular-nums"
+                      style={{ color: settings.numberColor }}
+                    >
+                      {formatTime(timeLeft)}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-2">
+                      {Math.ceil(timeLeft / 60)} minutes left
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground mt-2">
-                    {Math.ceil(timeLeft / 60)} minutes left
-                  </div>
-                </div>
+                )}
               </>
             ) : (
               <>
@@ -227,23 +231,25 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
                     );
                   })}
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform" onClick={onTimeClick} title="Click to adjust timer settings">
-                  <div 
-                    className="font-mono text-4xl font-bold tabular-nums"
-                    style={{ color: settings.numberColor }}
-                  >
-                    {formatTime(timeLeft)}
+                {settings.showTimeText && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform" onClick={onTimeClick} title="Click to adjust timer settings">
+                    <div 
+                      className="font-mono text-4xl font-bold tabular-nums"
+                      style={{ color: settings.numberColor }}
+                    >
+                      {formatTime(timeLeft)}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-2">
+                      {Math.ceil(timeLeft / 60)} minutes left
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground mt-2">
-                    {Math.ceil(timeLeft / 60)} minutes left
-                  </div>
-                </div>
+                )}
               </>
             )}
           </div>
         )}
 
-        {!settings.visualTimer && (
+        {!settings.visualTimer && settings.showTimeText && (
           <div className="flex flex-col items-center gap-2 cursor-pointer hover:scale-105 transition-transform" onClick={onTimeClick} title="Click to adjust timer settings">
             <div 
               className="font-mono text-7xl font-bold tabular-nums"

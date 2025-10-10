@@ -44,6 +44,7 @@ interface HeaderSettings {
     longBreakMinutes: number;
     sessionsUntilLongBreak: number;
     visualTimer: boolean;
+    showTimeText: boolean;
     timerColor: string;
     numberColor: string;
     showMinutesInside: boolean;
@@ -72,6 +73,13 @@ export function CustomizableHeader({
   onSignOut,
   onDemoCelebration,
 }: CustomizableHeaderProps) {
+  console.log('Header settings:', { 
+    locationsCount: settings.locations?.length || 0, 
+    countdownsCount: settings.countdowns?.length || 0,
+    locations: settings.locations,
+    countdowns: settings.countdowns
+  });
+  
   const [showModal, setShowModal] = useState(false);
   const [modalInitialTab, setModalInitialTab] = useState<string>('display');
   const [rotatingText, setRotatingText] = useState('');
@@ -520,6 +528,7 @@ export function CustomizableHeader({
               )}
               
               {settings.locations.map((loc, index) => {
+                console.log('Rendering timezone:', loc);
                 try {
                   const timeString = currentTime.toLocaleTimeString('en-US', { 
                     timeZone: loc.timezone,
@@ -527,14 +536,14 @@ export function CustomizableHeader({
                     minute: '2-digit'
                   });
                   return (
-                    <Badge key={index} variant="outline" className="hidden md:inline-flex">
+                    <Badge key={index} variant="outline">
                       {loc.name}: {timeString}
                     </Badge>
                   );
                 } catch (error) {
                   console.error(`Invalid timezone: ${loc.timezone}`, error);
                   return (
-                    <Badge key={index} variant="outline" className="hidden md:inline-flex text-destructive">
+                    <Badge key={index} variant="outline" className="text-destructive">
                       {loc.name}: Invalid timezone
                     </Badge>
                   );
@@ -604,6 +613,7 @@ export function CustomizableHeader({
               ))}
               
               {settings.countdowns.map((countdown, index) => {
+                if (index === 0) console.log('Rendering countdowns:', settings.countdowns);
                 const isComplete = countdown.isComplete || formatCountdown(countdown) === 'Complete!';
                 return (
                   <Badge 
