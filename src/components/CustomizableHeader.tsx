@@ -72,6 +72,7 @@ export function CustomizableHeader({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [weather, setWeather] = useState<string | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [starPositions, setStarPositions] = useState<Array<{x: number, y: number}>>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -116,6 +117,24 @@ export function CustomizableHeader({
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Initialize and regenerate star positions every 16 seconds (during "gone" phase)
+  useEffect(() => {
+    const generateStarPositions = () => {
+      return Array.from({ length: 20 }).map(() => ({
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+      }));
+    };
+
+    setStarPositions(generateStarPositions());
+
+    const interval = setInterval(() => {
+      setStarPositions(generateStarPositions());
+    }, 16000); // Regenerate every 16 seconds (full animation cycle)
+
+    return () => clearInterval(interval);
+  }, [settings.show8BitStars]);
 
   // Weather fetching
   useEffect(() => {
@@ -260,13 +279,13 @@ export function CustomizableHeader({
       <header className={headerClasses}>
         {settings.show8BitStars && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {Array.from({ length: 20 }).map((_, i) => (
+            {starPositions.map((pos, i) => (
               <div
                 key={i}
                 className="absolute w-2 h-2"
                 style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
+                  left: `${pos.x}%`,
+                  top: `${pos.y}%`,
                   backgroundColor: settings.starColor || '#fbbf24',
                   clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
                   animation: `twinkle-${i % 3} 16s ease-in-out infinite`,
