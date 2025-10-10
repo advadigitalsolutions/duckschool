@@ -194,7 +194,7 @@ export function HeaderCustomizationModal({
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="display">Display</TabsTrigger>
-            <TabsTrigger value="rotating">Rotating</TabsTrigger>
+            <TabsTrigger value="rotating">Subtext</TabsTrigger>
             <TabsTrigger value="info">Info</TabsTrigger>
             <TabsTrigger value="tools">Tools</TabsTrigger>
             <TabsTrigger value="effects">Effects</TabsTrigger>
