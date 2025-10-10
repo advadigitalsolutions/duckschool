@@ -124,7 +124,7 @@ export function CustomizableHeader({
     return () => clearInterval(timer);
   }, []);
 
-  // Initialize and regenerate star positions every 16 seconds (during "gone" phase)
+  // Initialize and regenerate star positions only during "gone" phase (when invisible)
   useEffect(() => {
     const generateStarPositions = () => {
       return Array.from({ length: 20 }).map(() => ({
@@ -135,11 +135,19 @@ export function CustomizableHeader({
 
     setStarPositions(generateStarPositions());
 
-    const interval = setInterval(() => {
+    // Wait 12 seconds (75% of cycle) before first regeneration, then every 16 seconds
+    // This ensures stars are regenerated during the "gone" phase (last 4 seconds)
+    const initialTimeout = setTimeout(() => {
       setStarPositions(generateStarPositions());
-    }, 16000); // Regenerate every 16 seconds (full animation cycle)
+      
+      const interval = setInterval(() => {
+        setStarPositions(generateStarPositions());
+      }, 16000);
+      
+      return () => clearInterval(interval);
+    }, 12000);
 
-    return () => clearInterval(interval);
+    return () => clearTimeout(initialTimeout);
   }, [settings.show8BitStars]);
 
   // Sync Pomodoro settings with context
