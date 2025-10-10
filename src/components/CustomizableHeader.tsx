@@ -188,15 +188,27 @@ export function CustomizableHeader({
 
             {/* Right section */}
             <div className="flex items-center gap-2">
-              {settings.locations.map((loc, index) => (
-                <Badge key={index} variant="outline" className="hidden md:inline-flex">
-                  {loc.name}: {currentTime.toLocaleTimeString('en-US', { 
+              {settings.locations.map((loc, index) => {
+                try {
+                  const timeString = currentTime.toLocaleTimeString('en-US', { 
                     timeZone: loc.timezone,
                     hour: '2-digit',
                     minute: '2-digit'
-                  })}
-                </Badge>
-              ))}
+                  });
+                  return (
+                    <Badge key={index} variant="outline" className="hidden md:inline-flex">
+                      {loc.name}: {timeString}
+                    </Badge>
+                  );
+                } catch (error) {
+                  console.error(`Invalid timezone: ${loc.timezone}`, error);
+                  return (
+                    <Badge key={index} variant="outline" className="hidden md:inline-flex text-destructive">
+                      {loc.name}: Invalid timezone
+                    </Badge>
+                  );
+                }
+              })}
               
               <ThemeToggle />
               <Button variant="outline" size="icon" onClick={onSignOut}>
