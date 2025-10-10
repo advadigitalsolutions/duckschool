@@ -390,70 +390,55 @@ export function CustomizableHeader({
                   animationDelay: `${cloud.delay}s`,
                 }}
               >
-                {/* 8-bit pixel cloud made of blocks */}
-                <div className="relative w-full h-full" style={{ 
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-                  imageRendering: 'pixelated'
+                {/* 8-bit pixel art cloud */}
+                <div className="relative w-full h-full opacity-80" style={{ 
+                  filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.15))',
+                  imageRendering: 'pixelated',
+                  WebkitFontSmoothing: 'none'
                 }}>
-                  {/* Main cloud body - center large block */}
-                  <div className="absolute" style={{
-                    left: '25%',
-                    top: '35%',
-                    width: '50%',
-                    height: '30%',
-                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.25)',
-                    borderRadius: '2px',
-                  }} />
-                  
-                  {/* Left puff */}
-                  <div className="absolute" style={{
-                    left: '10%',
-                    top: '40%',
-                    width: '30%',
-                    height: '25%',
-                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.22)',
-                    borderRadius: '2px',
-                  }} />
-                  
-                  {/* Right puff */}
-                  <div className="absolute" style={{
-                    right: '10%',
-                    top: '40%',
-                    width: '30%',
-                    height: '25%',
-                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.22)',
-                    borderRadius: '2px',
-                  }} />
-                  
-                  {/* Top left puff */}
-                  <div className="absolute" style={{
-                    left: '20%',
-                    top: '20%',
-                    width: '25%',
-                    height: '22%',
-                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.2)',
-                    borderRadius: '2px',
-                  }} />
-                  
-                  {/* Top center puff */}
-                  <div className="absolute" style={{
-                    left: '40%',
-                    top: '15%',
-                    width: '25%',
-                    height: '25%',
-                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.23)',
-                    borderRadius: '2px',
-                  }} />
-                  
-                  {/* Top right puff */}
-                  <div className="absolute" style={{
-                    right: '18%',
-                    top: '20%',
-                    width: '25%',
-                    height: '22%',
-                    backgroundColor: settings.cloudColor || 'rgba(255, 255, 255, 0.2)',
-                    borderRadius: '2px',
-                  }} />
+                  {(() => {
+                    // Parse cloud color to get RGB values
+                    const cloudColor = settings.cloudColor || 'rgba(255, 255, 255, 0.7)';
+                    // Extract RGB and convert to opaque version
+                    const opaqueColor = cloudColor.includes('rgba') 
+                      ? cloudColor.replace(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/, 'rgb($1, $2, $3)')
+                      : cloudColor.includes('rgb')
+                      ? cloudColor
+                      : 'rgb(255, 255, 255)';
+                    
+                    const pixelSize = 8; // Size of each pixel block
+                    const gap = 1; // Gap between pixels
+                    
+                    // Pixel art cloud pattern (1 = pixel, 0 = empty)
+                    const pattern = [
+                      [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],      // Row 0 (top)
+                      [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],      // Row 1
+                      [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],      // Row 2
+                      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],      // Row 3 (widest)
+                      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],      // Row 4
+                      [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],      // Row 5
+                      [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],      // Row 6 (bottom)
+                    ];
+                    
+                    return pattern.map((row, rowIndex) =>
+                      row.map((cell, colIndex) => 
+                        cell === 1 ? (
+                          <div
+                            key={`${rowIndex}-${colIndex}`}
+                            className="absolute"
+                            style={{
+                              left: `${colIndex * (pixelSize + gap)}px`,
+                              top: `${rowIndex * (pixelSize + gap)}px`,
+                              width: `${pixelSize}px`,
+                              height: `${pixelSize}px`,
+                              backgroundColor: opaqueColor,
+                              boxShadow: `0 0 2px ${opaqueColor}`,
+                            }}
+                          />
+                        ) : null
+                      )
+                    );
+                  })()}
                 </div>
               </div>
             ))}
