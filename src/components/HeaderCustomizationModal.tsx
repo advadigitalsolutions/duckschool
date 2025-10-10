@@ -66,6 +66,8 @@ interface HeaderSettings {
   celebrateWins: boolean;
   show8BitStars: boolean;
   starColor: string;
+  showClouds: boolean;
+  cloudColor: string;
   headerVisibility: 'sticky' | 'auto-hide' | 'normal';
 }
 
@@ -98,7 +100,7 @@ export function HeaderCustomizationModal({
     showMinutes: true,
     showSeconds: true
   });
-  const [showColorPicker, setShowColorPicker] = useState<'stars' | 'timer' | 'number' | null>(null);
+  const [showColorPicker, setShowColorPicker] = useState<'stars' | 'clouds' | 'timer' | 'number' | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showSavedTooltip, setShowSavedTooltip] = useState(false);
 
@@ -678,6 +680,46 @@ export function HeaderCustomizationModal({
                     <Switch
                       checked={settings.show8BitStars}
                       onCheckedChange={(checked) => updateSetting('show8BitStars', checked)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5 flex-1">
+                    <Label>Night Sky Clouds</Label>
+                    <p className="text-xs text-muted-foreground">Wispy clouds drifting over background</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-8 w-8">
+                          <Palette className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-3">
+                        <div className="space-y-2">
+                          <Label>Cloud Color (with transparency)</Label>
+                          <input
+                            type="color"
+                            value={settings.cloudColor?.startsWith('rgba') ? '#ffffff' : settings.cloudColor || '#ffffff'}
+                            onChange={(e) => {
+                              const hex = e.target.value;
+                              const r = parseInt(hex.slice(1, 3), 16);
+                              const g = parseInt(hex.slice(3, 5), 16);
+                              const b = parseInt(hex.slice(5, 7), 16);
+                              updateSetting('cloudColor', `rgba(${r}, ${g}, ${b}, 0.15)`);
+                            }}
+                            className="h-10 w-full cursor-pointer rounded border"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Transparency is automatically applied
+                          </p>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <Switch
+                      checked={settings.showClouds}
+                      onCheckedChange={(checked) => updateSetting('showClouds', checked)}
                     />
                   </div>
                 </div>

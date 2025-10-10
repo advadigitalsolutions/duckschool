@@ -49,6 +49,8 @@ interface HeaderSettings {
   celebrateWins: boolean;
   show8BitStars: boolean;
   starColor: string;
+  showClouds: boolean;
+  cloudColor: string;
   headerVisibility: 'sticky' | 'auto-hide' | 'normal';
 }
 
@@ -295,6 +297,21 @@ export function CustomizableHeader({
             ))}
           </div>
         )}
+        {settings.showClouds && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={`cloud-${i}`}
+                className="absolute inset-0"
+                style={{
+                  background: `radial-gradient(ellipse ${60 + i * 20}% ${40 + i * 15}% at ${30 + i * 20}% ${40 + i * 10}%, ${settings.cloudColor || 'rgba(255, 255, 255, 0.15)'} 0%, transparent 50%)`,
+                  animation: `cloud-drift-${i} ${30 + i * 10}s ease-in-out infinite`,
+                  animationDelay: `${i * 10}s`,
+                }}
+              />
+            ))}
+          </div>
+        )}
         <style>
           {`
             @keyframes twinkle-0 {
@@ -317,6 +334,27 @@ export function CustomizableHeader({
               50% { opacity: 0.9; transform: scale(1.1); }
               75% { opacity: 0; transform: scale(0.4); }
               100% { opacity: 0; transform: scale(0.4); }
+            }
+            @keyframes cloud-drift-0 {
+              0% { opacity: 0; transform: translateX(-30%); }
+              25% { opacity: 1; }
+              50% { opacity: 1; }
+              75% { opacity: 0; }
+              100% { opacity: 0; transform: translateX(130%); }
+            }
+            @keyframes cloud-drift-1 {
+              0% { opacity: 0; transform: translateX(-40%); }
+              25% { opacity: 0.8; }
+              50% { opacity: 0.8; }
+              75% { opacity: 0; }
+              100% { opacity: 0; transform: translateX(140%); }
+            }
+            @keyframes cloud-drift-2 {
+              0% { opacity: 0; transform: translateX(-50%); }
+              25% { opacity: 0.6; }
+              50% { opacity: 0.6; }
+              75% { opacity: 0; }
+              100% { opacity: 0; transform: translateX(150%); }
             }
             @keyframes flash-rainbow {
               0% { border-color: hsl(0, 100%, 50%); }

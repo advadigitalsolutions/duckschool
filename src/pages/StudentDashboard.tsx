@@ -74,6 +74,8 @@ export default function StudentDashboard() {
     celebrateWins: true,
     show8BitStars: false,
     starColor: '#fbbf24',
+    showClouds: false,
+    cloudColor: 'rgba(255, 255, 255, 0.15)',
     headerVisibility: 'sticky' as const,
   });
 
