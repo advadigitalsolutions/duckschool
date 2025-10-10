@@ -269,8 +269,8 @@ export function CustomizableHeader({
                   top: `${Math.random() * 100}%`,
                   backgroundColor: settings.starColor || '#fbbf24',
                   clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
-                  animation: `twinkle-${i % 3} ${6 + (i % 3) * 2}s ease-in-out infinite`,
-                  animationDelay: `${(i * 0.8) % 4}s`,
+                  animation: `twinkle-${i % 3} ${28 + (i % 3) * 2}s ease-in-out infinite`,
+                  animationDelay: `${(i * 2) % 10}s`,
                 }}
               />
             ))}
