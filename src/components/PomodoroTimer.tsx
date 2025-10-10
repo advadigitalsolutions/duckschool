@@ -90,12 +90,12 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
                 onClick={onTimeClick}
               >
                 <svg className="w-10 h-10">
-                  <circle cx="20" cy="20" r="19" fill="currentColor" className="text-muted opacity-20" />
+                  <circle cx="20" cy="20" r="19" fill={settings.timerBackgroundColor} opacity="0.3" />
                   <path
                     d={`M 20 20 L 20 1 A 19 19 0 ${progress > 50 ? 1 : 0} 1 ${
                       20 + 19 * Math.sin((progress / 100) * 2 * Math.PI)
                     } ${20 - 19 * Math.cos((progress / 100) * 2 * Math.PI)} Z`}
-                    fill={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerColor}
+                    fill={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerForegroundColor}
                     className="transition-all duration-1000"
                   />
                   <circle cx="20" cy="20" r="2" fill="currentColor" className="text-background" />
@@ -122,11 +122,15 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
             size="icon" 
             onClick={toggleTimer} 
             className={cn(
-              "h-8 w-8 transition-all",
+              "h-8 w-8 transition-all duration-200",
               isRunning && "text-primary"
             )}
           >
-            {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            {isRunning ? (
+              <Pause className="h-4 w-4 animate-fade-in" />
+            ) : (
+              <Play className="h-4 w-4 animate-fade-in" />
+            )}
           </Button>
           <Button 
             variant="ghost" 
@@ -206,12 +210,12 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
             ) : (
               <>
                 <svg className="w-48 h-48 transform -rotate-90">
-                  <circle cx="96" cy="96" r="93" fill="currentColor" className="text-muted opacity-20" />
+                  <circle cx="96" cy="96" r="93" fill={settings.timerBackgroundColor} opacity="0.3" />
                   <path
                     d={`M 96 96 L 96 3 A 93 93 0 ${progress > 50 ? 1 : 0} 1 ${
                       96 + 93 * Math.sin((progress / 100) * 2 * Math.PI)
                     } ${96 - 93 * Math.cos((progress / 100) * 2 * Math.PI)} Z`}
-                    fill={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerColor}
+                    fill={isBreak ? 'hsl(142, 76%, 36%)' : settings.timerForegroundColor}
                     className="transition-all duration-1000 drop-shadow-lg"
                   />
                   <circle cx="96" cy="96" r="6" fill="currentColor" className="text-background" />
@@ -270,19 +274,19 @@ export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerPro
             onClick={toggleTimer} 
             size="lg"
             className={cn(
-              "gap-2 min-w-[140px] transition-all shadow-lg",
+              "gap-2 min-w-[140px] transition-all duration-200 shadow-lg",
               isRunning && "bg-primary/90"
             )}
           >
             {isRunning ? (
               <>
-                <Pause className="h-5 w-5" />
-                Pause
+                <Pause className="h-5 w-5 animate-fade-in" />
+                <span className="animate-fade-in">Pause</span>
               </>
             ) : (
               <>
-                <Play className="h-5 w-5" />
-                {timeLeft === totalDuration ? 'Start' : 'Resume'}
+                <Play className="h-5 w-5 animate-fade-in" />
+                <span className="animate-fade-in">{timeLeft === totalDuration ? 'Start' : 'Resume'}</span>
               </>
             )}
           </Button>
