@@ -47,6 +47,47 @@ export default function StudentDashboard() {
   const [headerSettings, setHeaderSettings] = useState<any>(null);
   const navigate = useNavigate();
 
+  const getDefaultHeaderSettings = () => ({
+    showName: true,
+    customName: null,
+    showGrade: true,
+    customGrade: null,
+    greetingType: 'name',
+    rotatingDisplay: 'quote',
+    funFactTopic: null,
+    locations: [],
+    showWeather: false,
+    customReminders: [],
+    countdowns: [],
+    pomodoroEnabled: false,
+    pomodoroSettings: {
+      workMinutes: 25,
+      breakMinutes: 5,
+      longBreakMinutes: 15,
+      sessionsUntilLongBreak: 4,
+      visualTimer: true,
+      timerColor: 'hsl(var(--primary))',
+      numberColor: 'hsl(var(--foreground))',
+    },
+    celebrateWins: true,
+    show8BitStars: false,
+  });
+
+  const saveHeaderSettings = async (newSettings: any) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({ header_settings: newSettings })
+        .eq('id', student?.id);
+
+      if (error) throw error;
+      setHeaderSettings(newSettings);
+      toast.success('Header settings saved!');
+    } catch (error: any) {
+      toast.error('Failed to save header settings');
+    }
+  };
+
 
   const motivationalQuotes = [
     "Your potential is endless. Go do what you were created to do.",
@@ -447,48 +488,6 @@ export default function StudentDashboard() {
       </div>
     );
   }
-
-  const getDefaultHeaderSettings = () => ({
-    showName: true,
-    customName: null,
-    showGrade: true,
-    customGrade: null,
-    greetingType: 'name',
-    rotatingDisplay: 'quote',
-    funFactTopic: null,
-    locations: [],
-    showWeather: false,
-    customReminders: [],
-    countdowns: [],
-    pomodoroEnabled: false,
-    pomodoroSettings: {
-      workMinutes: 25,
-      breakMinutes: 5,
-      longBreakMinutes: 15,
-      sessionsUntilLongBreak: 4,
-      visualTimer: true,
-      timerColor: 'hsl(var(--primary))',
-      numberColor: 'hsl(var(--foreground))',
-    },
-    celebrateWins: true,
-    show8BitStars: false,
-  });
-
-  const saveHeaderSettings = async (newSettings: any) => {
-    try {
-      const { error } = await supabase
-        .from('students')
-        .update({ header_settings: newSettings })
-        .eq('id', student.id);
-      
-      if (error) throw error;
-      setHeaderSettings(newSettings);
-      toast.success('Header settings saved!');
-    } catch (error) {
-      console.error('Error saving header settings:', error);
-      toast.error('Failed to save settings');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
