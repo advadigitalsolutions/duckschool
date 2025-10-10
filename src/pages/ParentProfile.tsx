@@ -162,7 +162,7 @@ export default function ParentProfile() {
 
   const handleSaveProfile = async () => {
     try {
-      const finalPronouns = pronouns === 'custom' ? customPronouns : pronouns;
+      const finalPronouns = pronouns === 'custom' ? customPronouns : (pronouns === 'prefer-not-to-say' ? null : pronouns);
       
       const { error } = await supabase
         .from('profiles')
@@ -254,7 +254,7 @@ export default function ParentProfile() {
                       <SelectItem value="ze/hir">ze/hir</SelectItem>
                       <SelectItem value="xe/xem">xe/xem</SelectItem>
                       <SelectItem value="custom">Custom pronouns</SelectItem>
-                      <SelectItem value="">Prefer not to say</SelectItem>
+                      <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
                     </SelectContent>
                   </Select>
                   {pronouns === 'custom' && (
