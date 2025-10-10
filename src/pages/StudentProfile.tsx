@@ -19,6 +19,7 @@ import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BionicText } from '@/components/BionicText';
 import { Slider } from '@/components/ui/slider';
+import { StudentLayout } from '@/components/StudentLayout';
 import avatarElephant from '@/assets/avatars/avatar-elephant.png';
 import avatarWolf from '@/assets/avatars/avatar-wolf.png';
 import avatarBeetle from '@/assets/avatars/avatar-beetle.png';
@@ -209,20 +210,13 @@ export default function StudentProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/student')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-2xl font-bold">My Profile</h1>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
+    <StudentLayout>
+      <div className="container mx-auto px-4 py-6">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/student')} className="mb-4">
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl font-bold mb-6">My Profile</h1>
 
-      <div className="container mx-auto p-4 md:p-8 max-w-4xl">
         <Tabs defaultValue="profile" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -658,6 +652,6 @@ export default function StudentProfile() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </StudentLayout>
   );
 }

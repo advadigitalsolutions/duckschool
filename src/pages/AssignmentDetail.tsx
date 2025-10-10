@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { BionicText } from '@/components/BionicText';
 import { StudyGuidePanel } from '@/components/StudyGuidePanel';
 import { TextToSpeech } from '@/components/TextToSpeech';
 import { AssignmentNotes } from '@/components/AssignmentNotes';
+import { StudentLayout } from '@/components/StudentLayout';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -264,29 +265,24 @@ export default function AssignmentDetail() {
   const studentId = assignment.curriculum_items?.courses?.student_id;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto flex items-center justify-between px-4 py-6">
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate(`/student/${studentId}`)}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold">{content.title || assignment.curriculum_items?.title}</h1>
-              <p className="text-sm text-muted-foreground">
-                {assignment.curriculum_items?.courses?.subject}
-              </p>
-            </div>
-          </div>
-          <ThemeToggle />
-        </div>
-      </header>
+    <StudentLayout>
+      <div className="container mx-auto px-4 py-6">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => navigate(`/student/${studentId}`)}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
 
-      <div className="container mx-auto p-6 md:p-8">
+        <div className="space-y-1 mb-6">
+          <h1 className="text-2xl font-bold">{content.title || assignment.curriculum_items?.title}</h1>
+          <p className="text-sm text-muted-foreground">
+            {assignment.curriculum_items?.courses?.subject}
+          </p>
+        </div>
+
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Badge variant={
@@ -802,6 +798,6 @@ export default function AssignmentDetail() {
           )}
         </Tabs>
       </div>
-    </div>
+    </StudentLayout>
   );
 }

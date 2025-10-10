@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,7 @@ const TIMEZONES = [
   { value: 'Pacific/Honolulu', label: 'Hawaii Time (HST)' },
   { value: 'Europe/London', label: 'London (GMT/BST)' },
   { value: 'Europe/Paris', label: 'Paris (CET)' },
+  { value: 'Europe/Madrid', label: 'Barcelona/Madrid (CET)' },
   { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
   { value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
   { value: 'Australia/Sydney', label: 'Sydney (AEDT)' },
@@ -100,6 +101,12 @@ export function HeaderCustomizationModal({
   const [showColorPicker, setShowColorPicker] = useState<'stars' | 'timer' | 'number' | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showSavedTooltip, setShowSavedTooltip] = useState(false);
+
+  // Sync settings when initialSettings change
+  useEffect(() => {
+    setSettings(initialSettings);
+    setHasUnsavedChanges(false);
+  }, [initialSettings, open]);
 
   const updateSetting = <K extends keyof HeaderSettings>(key: K, value: HeaderSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }));

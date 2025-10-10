@@ -201,10 +201,12 @@ export function CustomizableHeader({
   const formatCountdown = (countdown: any) => {
     try {
       const now = new Date();
-      let target = typeof countdown.date === 'string' ? new Date(countdown.date) : countdown.date;
+      // Handle date string deserialization
+      let target = countdown.date instanceof Date ? countdown.date : new Date(countdown.date);
       
       if (countdown.time) {
         const [hours, minutes] = countdown.time.split(':');
+        target = new Date(target); // Create new instance to avoid mutation
         target.setHours(parseInt(hours), parseInt(minutes), 0, 0);
       }
       
@@ -218,6 +220,12 @@ export function CustomizableHeader({
               : c
           );
           onSaveSettings({ ...settings, countdowns: updatedCountdowns });
+          
+          // Flash the header for 30 seconds
+          const flashInterval = setInterval(() => {
+            document.querySelector('header')?.classList.toggle('flash-rainbow');
+          }, 300);
+          setTimeout(() => clearInterval(flashInterval), 30000);
         }
         return 'Complete!';
       }
@@ -228,14 +236,14 @@ export function CustomizableHeader({
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
       
       const parts = [];
-      if (countdown.showDays) parts.push(`${days}d`);
-      if (countdown.showHours) parts.push(`${hours}h`);
-      if (countdown.showMinutes) parts.push(`${minutes}m`);
-      if (countdown.showSeconds) parts.push(`${seconds}s`);
+      if (countdown.showDays !== false) parts.push(`${days}d`);
+      if (countdown.showHours !== false) parts.push(`${hours}h`);
+      if (countdown.showMinutes !== false) parts.push(`${minutes}m`);
+      if (countdown.showSeconds !== false) parts.push(`${seconds}s`);
       
       return parts.join(' ') || 'No units selected';
     } catch (error) {
-      console.error('Error formatting countdown:', error);
+      console.error('Error formatting countdown:', error, countdown);
       return 'Invalid date';
     }
   };
@@ -282,13 +290,26 @@ export function CustomizableHeader({
               0%, 100% { opacity: 0.1; transform: scale(0.7); }
               50% { opacity: 1; transform: scale(1.2); }
             }
+            @keyframes flash-rainbow {
+              0% { border-color: hsl(0, 100%, 50%); }
+              16% { border-color: hsl(60, 100%, 50%); }
+              33% { border-color: hsl(120, 100%, 50%); }
+              50% { border-color: hsl(180, 100%, 50%); }
+              66% { border-color: hsl(240, 100%, 50%); }
+              83% { border-color: hsl(300, 100%, 50%); }
+              100% { border-color: hsl(360, 100%, 50%); }
+            }
+            .flash-rainbow {
+              animation: flash-rainbow 0.3s linear infinite;
+              border-width: 3px;
+            }
           `}
         </style>
         
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             {/* Left section */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-1 min-w-0 group">
               <Avatar 
                 className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity" 
                 onClick={() => navigate('/student/profile')}
@@ -299,30 +320,37 @@ export function CustomizableHeader({
                 </AvatarFallback>
               </Avatar>
               
-              <div>
-                <div 
-                  className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity group"
-                  onClick={() => setShowModal(true)}
-                >
-                  {settings.showName && settings.greetingType !== 'none' && (
+              {settings.showName && settings.greetingType !== 'none' ? (
+                <div>
+                  <div 
+                    className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity group"
+                    onClick={() => setShowModal(true)}
+                  >
                     <h1 className="text-xl md:text-2xl font-bold group-hover:underline">
                       {getGreeting()}
                     </h1>
+                    {settings.showGrade && (
+                      <Badge variant="secondary">
+                        {settings.customGrade || student?.grade_level || 'Grade N/A'}
+                      </Badge>
+                    )}
+                    <Settings className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  
+                  {settings.rotatingDisplay !== 'none' && (
+                    <p className="text-sm text-muted-foreground mt-1 max-w-2xl truncate">
+                      {rotatingText}
+                    </p>
                   )}
-                  {settings.showGrade && (
-                    <Badge variant="secondary">
-                      {settings.customGrade || student?.grade_level || 'Grade N/A'}
-                    </Badge>
-                  )}
-                  <Settings className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                
-                {settings.rotatingDisplay !== 'none' && (
-                  <p className="text-sm text-muted-foreground mt-1 max-w-2xl truncate">
-                    {rotatingText}
-                  </p>
-                )}
-              </div>
+              ) : (
+                <div 
+                  className="flex-1 min-h-[3rem] flex items-center cursor-pointer"
+                  onClick={() => setShowModal(true)}
+                >
+                  <Settings className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+                </div>
+              )}
             </div>
 
             {/* Center section - Pomodoro */}
