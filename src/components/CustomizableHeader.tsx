@@ -269,8 +269,8 @@ export function CustomizableHeader({
                   top: `${Math.random() * 100}%`,
                   backgroundColor: settings.starColor || '#fbbf24',
                   clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
-                  animation: `twinkle-${i % 3} ${28 + (i % 3) * 2}s ease-in-out infinite`,
-                  animationDelay: `${(i * 2) % 10}s`,
+                  animation: `twinkle-${i % 3} 16s ease-in-out infinite`,
+                  animationDelay: `${(i * 1.6) % 8}s`,
                 }}
               />
             ))}
@@ -279,16 +279,25 @@ export function CustomizableHeader({
         <style>
           {`
             @keyframes twinkle-0 {
-              0%, 100% { opacity: 0; transform: scale(0.5); }
+              0% { opacity: 0; transform: scale(0.5); }
+              25% { opacity: 0.8; transform: scale(1); }
               50% { opacity: 0.8; transform: scale(1); }
+              75% { opacity: 0; transform: scale(0.5); }
+              100% { opacity: 0; transform: scale(0.5); }
             }
             @keyframes twinkle-1 {
-              0%, 100% { opacity: 0; transform: scale(0.6); }
+              0% { opacity: 0; transform: scale(0.6); }
+              25% { opacity: 0.7; transform: scale(1); }
               50% { opacity: 0.7; transform: scale(1); }
+              75% { opacity: 0; transform: scale(0.6); }
+              100% { opacity: 0; transform: scale(0.6); }
             }
             @keyframes twinkle-2 {
-              0%, 100% { opacity: 0; transform: scale(0.4); }
+              0% { opacity: 0; transform: scale(0.4); }
+              25% { opacity: 0.9; transform: scale(1.1); }
               50% { opacity: 0.9; transform: scale(1.1); }
+              75% { opacity: 0; transform: scale(0.4); }
+              100% { opacity: 0; transform: scale(0.4); }
             }
             @keyframes flash-rainbow {
               0% { border-color: hsl(0, 100%, 50%); }
