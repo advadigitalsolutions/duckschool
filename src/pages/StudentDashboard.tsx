@@ -25,6 +25,8 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { XPDisplay } from '@/components/XPDisplay';
 import { RewardsShop } from '@/components/RewardsShop';
 import { StudentGrades } from '@/components/StudentGrades';
+import { WeeklyView } from '@/components/WeeklyView';
+import { OverdueWorkTab } from '@/components/OverdueWorkTab';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -459,6 +461,80 @@ export default function StudentDashboard() {
       </header>
 
       <div className="container mx-auto p-4 md:p-8 max-w-4xl">
+        {/* Weekly Progress Overview */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Weekly Progress</CardTitle>
+            <CardDescription>Your progress for this week</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-muted-foreground">Weekly Completion</span>
+              <span className="text-2xl font-bold">{completedToday}/5 days</span>
+            </div>
+            <Progress value={(completedToday / 5) * 100} className="h-2" />
+          </CardContent>
+        </Card>
+
+        {/* Overdue Work Alert */}
+        {student?.id && <OverdueWorkTab studentId={student.id} />}
+
+        {/* Today's Work */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Today's Work</CardTitle>
+            <CardDescription>Assignments for today</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {assignments.length === 0 ? (
+              <div className="text-center py-8">
+                <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No assignments for today</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {assignments.map((assignment) => (
+                  <Card 
+                    key={assignment.id}
+                    className="cursor-pointer hover:border-primary transition-colors"
+                    onClick={() => navigate(`/assignment/${assignment.id}`)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium mb-1">
+                            {assignment.curriculum_items?.title}
+                          </h4>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            <span>{assignment.curriculum_items?.est_minutes || 30} min</span>
+                            <span>•</span>
+                            <span>{assignment.curriculum_items?.courses?.title}</span>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm">Start</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* This Week's View */}
+        {student?.id && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>This Week's Schedule</CardTitle>
+              <CardDescription>Your assignments for the week</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WeeklyView studentId={student.id} />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Pomodoro Timer Card */}
         <Card className="mb-8 border-2 shadow-lg">
           <CardHeader className="text-center">

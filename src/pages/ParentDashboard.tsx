@@ -27,6 +27,7 @@ import { CurriculumPlanningDialog } from '@/components/CurriculumPlanningDialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Pencil, Trash2, User, Sparkles } from 'lucide-react';
 import { ActivityFeed } from '@/components/ActivityFeed';
+import { WeeklyView } from '@/components/WeeklyView';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -244,6 +245,7 @@ export default function ParentDashboard() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="weekly-plans">Weekly Plans</TabsTrigger>
             <TabsTrigger value="curriculum">Curriculum Planning</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
             <TabsTrigger value="todo">To Do List</TabsTrigger>
@@ -335,6 +337,62 @@ export default function ParentDashboard() {
                       </Card>
                     ))}
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="weekly-plans" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>AI Weekly Curriculum</CardTitle>
+                    <CardDescription>Automated personalized learning plans for your students</CardDescription>
+                  </div>
+                  <Button onClick={() => navigate('/weekly-curriculum')}>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Manage Weekly Curriculum
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {students.length === 0 ? (
+                  <div className="text-center py-12">
+                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Add students to start generating weekly curriculum</p>
+                  </div>
+                ) : (
+                  students.map((student) => (
+                    <Card key={student.id}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              <AvatarImage src={student.avatar_url || ''} />
+                              <AvatarFallback>
+                                <User className="h-5 w-5" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <CardTitle className="text-lg">{student.name}</CardTitle>
+                              <CardDescription>This week's learning plan</CardDescription>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/student/${student.id}`)}
+                          >
+                            View Details
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <WeeklyView studentId={student.id} />
+                      </CardContent>
+                    </Card>
+                  ))
                 )}
               </CardContent>
             </Card>

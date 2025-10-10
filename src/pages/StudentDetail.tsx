@@ -23,6 +23,8 @@ import {
   User,
   Check
 } from 'lucide-react';
+import { WeeklyView } from '@/components/WeeklyView';
+import { OverdueWorkTab } from '@/components/OverdueWorkTab';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AddCourseDialog } from '@/components/AddCourseDialog';
@@ -274,18 +276,28 @@ export default function StudentDetail() {
         )}
 
         {/* Tabs */}
-        <Tabs defaultValue="courses" className="space-y-4">
+        <Tabs defaultValue="this-week" className="space-y-4">
           <TabsList>
+            <TabsTrigger value="this-week">This Week</TabsTrigger>
+            <TabsTrigger value="overdue">Overdue</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="all-assignments">All Assignments</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="learning-profile">
               Learning Profile
               {student?.profile_assessment_completed && (
                 <Check className="ml-2 h-4 w-4 text-success" />
               )}
             </TabsTrigger>
-            <TabsTrigger value="progress">Progress</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="this-week" className="space-y-4">
+            <WeeklyView studentId={student.id} />
+          </TabsContent>
+
+          <TabsContent value="overdue" className="space-y-4">
+            <OverdueWorkTab studentId={student.id} />
+          </TabsContent>
 
           <TabsContent value="courses" className="space-y-4">
             <Card>
@@ -393,7 +405,7 @@ export default function StudentDetail() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="assignments" className="space-y-4">
+          <TabsContent value="all-assignments" className="space-y-4">
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -510,6 +522,45 @@ export default function StudentDetail() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="analytics" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Course Analytics</CardTitle>
+                <CardDescription>Select a course to view detailed analytics and progress</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {courses.length === 0 ? (
+                  <div className="text-center py-12">
+                    <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No courses yet</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {courses.filter(c => !c.archived).map((course) => (
+                      <Card 
+                        key={course.id} 
+                        className="cursor-pointer hover:border-primary transition-colors"
+                        onClick={() => navigate(`/course/${course.id}`)}
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-lg">{course.title}</CardTitle>
+                          <CardDescription>{course.subject}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <Button variant="ghost" className="w-full">
+                            <BarChart3 className="mr-2 h-4 w-4" />
+                            View Detailed Analytics
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <StudentGrades studentId={student.id} />
+          </TabsContent>
+
           <TabsContent value="learning-profile" className="space-y-4">
             <Card>
               <CardHeader>
@@ -520,20 +571,6 @@ export default function StudentDetail() {
               </CardHeader>
               <CardContent>
                 <PersonalityReportView student={student} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="progress" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Grades & Progress</CardTitle>
-                <CardDescription>
-                  View {student.name}'s academic performance and grade tracking
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <StudentGrades studentId={student.id} />
               </CardContent>
             </Card>
           </TabsContent>
