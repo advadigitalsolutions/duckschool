@@ -165,37 +165,7 @@ export function CourseSettingsDialog({
 
       if (error) throw error;
 
-      // If CUSTOM framework with goals, generate AI standards
-      if (framework === 'CUSTOM' && goals) {
-        toast.info('🤖 AI is generating learning milestones from your goals...');
-        
-        const { data: standardsData, error: standardsError } = await supabase.functions.invoke('generate-course-standards', {
-          body: { 
-            courseId, 
-            goals, 
-            subject: currentSubject, 
-            gradeLevel 
-          }
-        });
-        
-        if (standardsError) {
-          console.error('Error generating standards:', standardsError);
-          toast.error('Failed to generate learning milestones. Please check your goals and try again.');
-          // Don't close dialog on error - let user fix and retry
-          setSaving(false);
-          return;
-        }
-        
-        if (!standardsData?.standards || standardsData.standards.length === 0) {
-          toast.error('AI failed to generate milestones. Please refine your goals and try again.');
-          setSaving(false);
-          return;
-        }
-        
-        toast.success(`✨ Generated ${standardsData.count} learning milestones! Progress tracking now active.`);
-      } else {
-        toast.success('Course settings updated successfully');
-      }
+      toast.success('Course settings updated successfully');
 
       onUpdate();
       onOpenChange(false);
