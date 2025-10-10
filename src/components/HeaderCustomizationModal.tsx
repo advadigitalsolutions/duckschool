@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Plus, Trash2, Sparkles, Palette, Clock } from 'lucide-react';
+import { CalendarIcon, Plus, Trash2, Sparkles, Palette, Clock, Save } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -34,7 +34,7 @@ interface HeaderSettings {
   customName: string | null;
   showGrade: boolean;
   customGrade: string | null;
-  greetingType: 'name' | 'time-based';
+  greetingType: 'none' | 'name' | 'time-based';
   rotatingDisplay: 'none' | 'quote' | 'affirmation' | 'funFact';
   rotationFrequency: 'minute' | 'hour' | 'day';
   funFactTopic: string | null;
@@ -98,9 +98,12 @@ export function HeaderCustomizationModal({
     showSeconds: true
   });
   const [showColorPicker, setShowColorPicker] = useState<'stars' | 'timer' | 'number' | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showSavedTooltip, setShowSavedTooltip] = useState(false);
 
   const updateSetting = <K extends keyof HeaderSettings>(key: K, value: HeaderSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }));
+    setHasUnsavedChanges(true);
   };
 
   const addLocation = () => {
@@ -142,6 +145,19 @@ export function HeaderCustomizationModal({
 
   const removeCountdown = (index: number) => {
     updateSetting('countdowns', settings.countdowns.filter((_, i) => i !== index));
+  };
+
+  const handleSave = () => {
+    onSave(settings);
+    setHasUnsavedChanges(false);
+    setShowSavedTooltip(true);
+    setTimeout(() => setShowSavedTooltip(false), 1000);
+  };
+
+  const handleSaveAndClose = () => {
+    onSave(settings);
+    setHasUnsavedChanges(false);
+    onOpenChange(false);
   };
 
   return (
@@ -210,6 +226,7 @@ export function HeaderCustomizationModal({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">None (no greeting)</SelectItem>
                       <SelectItem value="name">Welcome back, [Name]</SelectItem>
                       <SelectItem value="time-based">Good [morning/afternoon/evening], [Name]</SelectItem>
                     </SelectContent>
@@ -684,14 +701,31 @@ export function HeaderCustomizationModal({
 
         <div className="flex gap-2 pt-4 border-t">
           <div className="flex-1" />
+          <Popover open={showSavedTooltip}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={handleSave}
+                disabled={!hasUnsavedChanges}
+                className={cn(
+                  "transition-all",
+                  hasUnsavedChanges && "text-primary border-primary hover:bg-primary hover:text-primary-foreground"
+                )}
+              >
+                <Save className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2 text-sm">
+              Saved!
+            </PopoverContent>
+          </Popover>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={() => {
-            onSave(settings);
-            onOpenChange(false);
-          }}>
-            Save Changes
+          <Button onClick={handleSaveAndClose}>
+            <Save className="mr-2 h-4 w-4" />
+            Save & Close
           </Button>
         </div>
       </DialogContent>

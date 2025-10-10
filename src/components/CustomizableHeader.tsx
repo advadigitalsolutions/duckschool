@@ -18,7 +18,7 @@ interface HeaderSettings {
   customName: string | null;
   showGrade: boolean;
   customGrade: string | null;
-  greetingType: 'name' | 'time-based';
+  greetingType: 'none' | 'name' | 'time-based';
   rotatingDisplay: 'none' | 'quote' | 'affirmation' | 'funFact';
   rotationFrequency: 'minute' | 'hour' | 'day';
   funFactTopic: string | null;
@@ -181,6 +181,10 @@ export function CustomizableHeader({
   }, [settings.headerVisibility]);
 
   const getGreeting = () => {
+    if (settings.greetingType === 'none') {
+      return null;
+    }
+    
     const name = settings.customName || student?.display_name || student?.name || 'Student';
     
     if (settings.greetingType === 'time-based') {
@@ -300,7 +304,7 @@ export function CustomizableHeader({
                   className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity group"
                   onClick={() => setShowModal(true)}
                 >
-                  {settings.showName && (
+                  {settings.showName && settings.greetingType !== 'none' && (
                     <h1 className="text-xl md:text-2xl font-bold group-hover:underline">
                       {getGreeting()}
                     </h1>

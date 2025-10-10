@@ -169,11 +169,17 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // Focus mode - set CSS variables and classes for customization
     body.classList.toggle('focus-mode', settings.focusModeEnabled);
     root.style.setProperty('--focus-overlay-opacity', `${settings.focusModeOverlayOpacity / 100}`);
-    root.style.setProperty('--focus-glow-intensity', `${settings.focusModeGlowIntensity / 100}`);
     
-    // Remove all glow classes and add the selected one
+    // Only apply glow intensity if focus mode is enabled
+    if (settings.focusModeEnabled) {
+      root.style.setProperty('--focus-glow-intensity', `${settings.focusModeGlowIntensity / 100}`);
+    } else {
+      root.style.setProperty('--focus-glow-intensity', '0');
+    }
+    
+    // Remove all glow color classes
     body.classList.remove('focus-glow-yellow', 'focus-glow-blue', 'focus-glow-green', 'focus-glow-purple', 'focus-glow-red', 'focus-glow-rainbow', 'focus-glow-trans', 'focus-glow-none');
-    if (settings.focusModeGlowColor !== 'yellow') {
+    if (settings.focusModeEnabled && settings.focusModeGlowColor !== 'yellow') {
       body.classList.add(`focus-glow-${settings.focusModeGlowColor}`);
     }
   };
