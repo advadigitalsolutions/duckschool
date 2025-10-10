@@ -28,6 +28,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Pencil, Trash2, User, Sparkles } from 'lucide-react';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { WeeklyView } from '@/components/WeeklyView';
+import { ParentPomodoroControls } from '@/components/ParentPomodoroControls';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -245,6 +246,7 @@ export default function ParentDashboard() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="pomodoro">Pomodoro Timers</TabsTrigger>
             <TabsTrigger value="weekly-plans">Weekly Plans</TabsTrigger>
             <TabsTrigger value="curriculum">Curriculum Planning</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -271,6 +273,10 @@ export default function ParentDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="pomodoro" className="space-y-4">
+            <ParentPomodoroControls />
           </TabsContent>
 
           <TabsContent value="students" className="space-y-4">

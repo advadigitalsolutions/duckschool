@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PomodoroSettings {
   workMinutes: number;
@@ -44,52 +45,216 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   soundEffect: 'beep',
 };
 
-export function PomodoroProvider({ children }: { children: React.ReactNode }) {
-  // Load state from localStorage
-  const loadState = () => {
-    try {
-      const saved = localStorage.getItem('pomodoroState');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          timeLeft: parsed.timeLeft || DEFAULT_SETTINGS.workMinutes * 60,
-          isBreak: parsed.isBreak || false,
-          sessionsCompleted: parsed.sessionsCompleted || 0,
-          totalDuration: parsed.totalDuration || DEFAULT_SETTINGS.workMinutes * 60,
-          settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
-        };
+interface PomodoroProviderProps {
+  children: React.ReactNode;
+  studentId?: string;
+}
+
+export function PomodoroProvider({ children, studentId }: PomodoroProviderProps) {
+  const [settings, setSettings] = useState<PomodoroSettings>(DEFAULT_SETTINGS);
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_SETTINGS.workMinutes * 60);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isBreak, setIsBreak] = useState(false);
+  const [sessionsCompleted, setSessionsCompleted] = useState(0);
+  const [totalDuration, setTotalDuration] = useState(DEFAULT_SETTINGS.workMinutes * 60);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [broadcastChannel, setBroadcastChannel] = useState<BroadcastChannel | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Initialize: Load from Supabase if studentId provided, otherwise from localStorage
+  useEffect(() => {
+    const initialize = async () => {
+      if (studentId) {
+        await loadFromSupabase();
+      } else {
+        loadFromLocalStorage();
       }
-    } catch (e) {
-      console.error('Failed to load pomodoro state:', e);
-    }
-    return {
-      timeLeft: DEFAULT_SETTINGS.workMinutes * 60,
-      isBreak: false,
-      sessionsCompleted: 0,
-      totalDuration: DEFAULT_SETTINGS.workMinutes * 60,
-      settings: DEFAULT_SETTINGS,
+      setIsInitializing(false);
     };
+
+    // Set up BroadcastChannel for cross-window sync
+    const channel = new BroadcastChannel('pomodoro_sync');
+    setBroadcastChannel(channel);
+
+    channel.onmessage = (event) => {
+      const { type, data } = event.data;
+      if (type === 'state_update' && !studentId) { // Only sync locally if not using Supabase
+        setTimeLeft(data.timeLeft);
+        setIsRunning(data.isRunning);
+        setIsBreak(data.isBreak);
+        setSessionsCompleted(data.sessionsCompleted);
+        setTotalDuration(data.totalDuration);
+        setSettings(data.settings);
+      }
+    };
+
+    initialize();
+
+    return () => {
+      channel.close();
+    };
+  }, [studentId]);
+
+  const loadFromSupabase = async () => {
+    if (!studentId) return;
+
+    try {
+      const { data: session, error } = await supabase
+        .from('pomodoro_sessions')
+        .select('*')
+        .eq('student_id', studentId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
+        console.error('Error loading session:', error);
+        return;
+      }
+
+      if (session) {
+        setSessionId(session.id);
+        setTimeLeft(session.time_left);
+        setIsRunning(session.is_running);
+        setIsBreak(session.is_break);
+        setSessionsCompleted(session.sessions_completed);
+        const sessionSettings = session.settings as any;
+        setSettings({ ...DEFAULT_SETTINGS, ...sessionSettings });
+        setTotalDuration(session.is_break 
+          ? (session.sessions_completed % sessionSettings.sessionsUntilLongBreak === 0
+              ? sessionSettings.longBreakMinutes
+              : sessionSettings.breakMinutes) * 60
+          : sessionSettings.workMinutes * 60
+        );
+      } else {
+        // Create new session
+        const { data: newSession, error: createError } = await supabase
+          .from('pomodoro_sessions')
+          .insert([{
+            student_id: studentId,
+            time_left: DEFAULT_SETTINGS.workMinutes * 60,
+            is_running: false,
+            is_break: false,
+            sessions_completed: 0,
+            settings: DEFAULT_SETTINGS as any,
+          }])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating session:', createError);
+        } else if (newSession) {
+          setSessionId(newSession.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error in loadFromSupabase:', error);
+    }
   };
 
-  const initialState = loadState();
-  const [timeLeft, setTimeLeft] = useState(initialState.timeLeft);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isBreak, setIsBreak] = useState(initialState.isBreak);
-  const [sessionsCompleted, setSessionsCompleted] = useState(initialState.sessionsCompleted);
-  const [totalDuration, setTotalDuration] = useState(initialState.totalDuration);
-  const [settings, setSettings] = useState<PomodoroSettings>(initialState.settings);
+  const loadFromLocalStorage = () => {
+    const savedState = localStorage.getItem('pomodoroState');
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState);
+        setTimeLeft(state.timeLeft || DEFAULT_SETTINGS.workMinutes * 60);
+        setIsBreak(state.isBreak || false);
+        setSessionsCompleted(state.sessionsCompleted || 0);
+        setTotalDuration(state.totalDuration || DEFAULT_SETTINGS.workMinutes * 60);
+        if (state.settings) {
+          setSettings({ ...DEFAULT_SETTINGS, ...state.settings });
+        }
+      } catch (error) {
+        console.error('Error loading pomodoro state:', error);
+      }
+    }
+  };
 
-  // Save state to localStorage whenever it changes
+  // Set up Realtime subscription for Supabase sync
   useEffect(() => {
-    const state = {
-      timeLeft,
-      isBreak,
-      sessionsCompleted,
-      totalDuration,
-      settings,
+    if (!studentId) return;
+
+    const channel = supabase
+      .channel(`pomodoro_session_${studentId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pomodoro_sessions',
+          filter: `student_id=eq.${studentId}`
+        },
+        (payload) => {
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            const session = payload.new as any;
+            setTimeLeft(session.time_left);
+            setIsRunning(session.is_running);
+            setIsBreak(session.is_break);
+            setSessionsCompleted(session.sessions_completed);
+            const sessionSettings = session.settings as any;
+            setSettings({ ...DEFAULT_SETTINGS, ...sessionSettings });
+            setTotalDuration(session.is_break 
+              ? (session.sessions_completed % sessionSettings.sessionsUntilLongBreak === 0
+                  ? sessionSettings.longBreakMinutes
+                  : sessionSettings.breakMinutes) * 60
+              : sessionSettings.workMinutes * 60
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-    localStorage.setItem('pomodoroState', JSON.stringify(state));
-  }, [timeLeft, isBreak, sessionsCompleted, totalDuration, settings]);
+  }, [studentId]);
+
+  // Save state to Supabase or localStorage and broadcast to other windows
+  useEffect(() => {
+    if (isInitializing) return;
+
+    const saveState = async () => {
+      if (studentId && sessionId) {
+        // Save to Supabase
+        await supabase
+          .from('pomodoro_sessions')
+          .update({
+            time_left: timeLeft,
+            is_running: isRunning,
+            is_break: isBreak,
+            sessions_completed: sessionsCompleted,
+            settings: settings as any,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', sessionId);
+      } else {
+        // Save to localStorage
+        const state = {
+          timeLeft,
+          isBreak,
+          sessionsCompleted,
+          totalDuration,
+          settings,
+        };
+        localStorage.setItem('pomodoroState', JSON.stringify(state));
+
+        // Broadcast to other windows
+        if (broadcastChannel) {
+          broadcastChannel.postMessage({
+            type: 'state_update',
+            data: {
+              timeLeft,
+              isRunning,
+              isBreak,
+              sessionsCompleted,
+              totalDuration,
+              settings,
+            }
+          });
+        }
+      }
+    };
+
+    saveState();
+  }, [timeLeft, isRunning, isBreak, sessionsCompleted, totalDuration, settings, studentId, sessionId, isInitializing, broadcastChannel]);
 
   // Timer countdown
   useEffect(() => {
@@ -110,38 +275,6 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [isRunning, timeLeft]);
 
-  const playAlarmSound = () => {
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
-      switch (settings.soundEffect) {
-        case 'beep':
-          playBeepSound(audioContext);
-          break;
-        case 'chime':
-          playChimeSound(audioContext);
-          break;
-        case 'bell':
-          playBellSound(audioContext);
-          break;
-        case 'gong':
-          playGongSound(audioContext);
-          break;
-        case 'airhorn':
-          playAirhornSound(audioContext);
-          break;
-        case 'duck':
-          playDuckSound(audioContext);
-          break;
-        case 'none':
-          // No sound
-          break;
-      }
-    } catch (e) {
-      console.error('Failed to play alarm sound:', e);
-    }
-  };
-
   const playBeepSound = (audioContext: AudioContext) => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -156,7 +289,6 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     oscillator.start();
     setTimeout(() => oscillator.stop(), 200);
     
-    // Second beep
     setTimeout(() => {
       const osc2 = audioContext.createOscillator();
       osc2.connect(gainNode);
@@ -168,7 +300,7 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   };
 
   const playChimeSound = (audioContext: AudioContext) => {
-    const frequencies = [523.25, 659.25, 783.99]; // C, E, G chord
+    const frequencies = [523.25, 659.25, 783.99];
     frequencies.forEach((freq, i) => {
       setTimeout(() => {
         const oscillator = audioContext.createOscillator();
@@ -244,7 +376,6 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
   };
 
   const playDuckSound = (audioContext: AudioContext) => {
-    // Quack sound effect using multiple oscillators
     for (let i = 0; i < 2; i++) {
       setTimeout(() => {
         const oscillator = audioContext.createOscillator();
@@ -262,6 +393,37 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
         oscillator.start();
         oscillator.stop(audioContext.currentTime + 0.15);
       }, i * 200);
+    }
+  };
+
+  const playAlarmSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      switch (settings.soundEffect) {
+        case 'beep':
+          playBeepSound(audioContext);
+          break;
+        case 'chime':
+          playChimeSound(audioContext);
+          break;
+        case 'bell':
+          playBellSound(audioContext);
+          break;
+        case 'gong':
+          playGongSound(audioContext);
+          break;
+        case 'airhorn':
+          playAirhornSound(audioContext);
+          break;
+        case 'duck':
+          playDuckSound(audioContext);
+          break;
+        case 'none':
+          break;
+      }
+    } catch (e) {
+      console.error('Failed to play alarm sound:', e);
     }
   };
 
@@ -330,7 +492,6 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
 
   const updateSettings = useCallback((newSettings: PomodoroSettings) => {
     setSettings(newSettings);
-    // If timer is not running, update duration to match new settings
     if (!isRunning) {
       const duration = isBreak 
         ? (sessionsCompleted % newSettings.sessionsUntilLongBreak === 0 ? newSettings.longBreakMinutes : newSettings.breakMinutes) * 60

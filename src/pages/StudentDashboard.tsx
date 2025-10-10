@@ -29,10 +29,12 @@ import { WeeklyView } from '@/components/WeeklyView';
 import { OverdueWorkTab } from '@/components/OverdueWorkTab';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
+import { PomodoroProvider } from '@/contexts/PomodoroContext';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<any>(null);
+  const [studentDbId, setStudentDbId] = useState<string | null>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [timerRunning, setTimerRunning] = useState(false);
@@ -500,8 +502,9 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
+    <PomodoroProvider studentId={studentDbId || undefined}>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
       
       {headerSettings && (
         <CustomizableHeader
@@ -826,6 +829,7 @@ export default function StudentDashboard() {
           </Card>
         )}
       </div>
-    </div>
+      </div>
+    </PomodoroProvider>
   );
 }

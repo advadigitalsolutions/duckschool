@@ -710,6 +710,47 @@ export type Database = {
           },
         ]
       }
+      pomodoro_sessions: {
+        Row: {
+          id: string
+          is_break: boolean
+          is_running: boolean
+          sessions_completed: number
+          settings: Json
+          student_id: string
+          time_left: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          is_break?: boolean
+          is_running?: boolean
+          sessions_completed?: number
+          settings?: Json
+          student_id: string
+          time_left?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          is_break?: boolean
+          is_running?: boolean
+          sessions_completed?: number
+          settings?: Json
+          student_id?: string
+          time_left?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pomodoro_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
