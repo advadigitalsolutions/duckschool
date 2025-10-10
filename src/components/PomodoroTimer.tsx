@@ -40,6 +40,10 @@ export function PomodoroTimer({ settings, compact = false }: PomodoroTimerProps)
   const handleTimerComplete = () => {
     setIsRunning(false);
     
+    // Play alarm sound and flash screen
+    playAlarmSound();
+    flashScreen();
+    
     if (!isBreak) {
       const newSessionCount = sessionsCompleted + 1;
       setSessionsCompleted(newSessionCount);
@@ -55,6 +59,67 @@ export function PomodoroTimer({ settings, compact = false }: PomodoroTimerProps)
       setTotalDuration(settings.workMinutes * 60);
       setIsBreak(false);
     }
+  };
+
+  const playAlarmSound = () => {
+    // Create an oscillator for alarm sound
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    
+    // Repeat alarm until user interacts
+    let isPlaying = true;
+    const playBeep = () => {
+      if (!isPlaying) return;
+      oscillator.start();
+      setTimeout(() => {
+        oscillator.stop();
+        setTimeout(() => {
+          if (isPlaying) {
+            const newOsc = audioContext.createOscillator();
+            newOsc.connect(gainNode);
+            newOsc.frequency.value = 800;
+            newOsc.type = 'sine';
+            newOsc.start();
+            setTimeout(() => newOsc.stop(), 200);
+            setTimeout(playBeep, 500);
+          }
+        }, 200);
+      }, 200);
+    };
+    
+    playBeep();
+    
+    // Stop sound after 10 seconds or when user clicks reset/pause
+    setTimeout(() => { isPlaying = false; }, 10000);
+  };
+
+  const flashScreen = () => {
+    const root = document.documentElement;
+    let flashCount = 0;
+    const flashInterval = setInterval(() => {
+      if (flashCount >= 6) {
+        clearInterval(flashInterval);
+        return;
+      }
+      
+      // Toggle between light and dark mode classes
+      if (flashCount % 2 === 0) {
+        root.classList.toggle('dark');
+      } else {
+        root.classList.toggle('dark');
+      }
+      
+      flashCount++;
+    }, 300);
   };
 
   const toggleTimer = () => setIsRunning(!isRunning);

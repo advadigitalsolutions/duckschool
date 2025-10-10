@@ -65,6 +65,7 @@ interface HeaderSettings {
   celebrateWins: boolean;
   show8BitStars: boolean;
   starColor: string;
+  headerVisibility: 'sticky' | 'auto-hide' | 'normal';
 }
 
 interface HeaderCustomizationModalProps {
@@ -607,56 +608,73 @@ export function HeaderCustomizationModal({
             <TabsContent value="effects" className="space-y-4 mt-4">
               <Card className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <Label>Celebrate Wins 🎉</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Epic celebrations when you complete work!
-                      </p>
-                    </div>
+                  <div className="space-y-0.5 flex-1">
+                    <Label>Celebrate Wins</Label>
+                    <p className="text-xs text-muted-foreground">Show celebration effects</p>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <Button 
                       variant="outline" 
-                      size="sm" 
+                      size="sm"
                       onClick={onDemo}
-                      className="ml-2"
                     >
                       Demo
                     </Button>
+                    <Switch
+                      checked={settings.celebrateWins}
+                      onCheckedChange={(checked) => updateSetting('celebrateWins', checked)}
+                    />
                   </div>
-                  <Switch
-                    checked={settings.celebrateWins}
-                    onCheckedChange={(checked) => updateSetting('celebrateWins', checked)}
-                  />
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Label>8-bit Twinkling Stars ✨</Label>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => setShowColorPicker(showColorPicker === 'stars' ? null : 'stars')}
-                      >
-                        <Palette className="h-4 w-4" />
-                      </Button>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5 flex-1">
+                    <Label>8-bit Twinkling Stars</Label>
+                    <p className="text-xs text-muted-foreground">Decorative stars in header</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-8 w-8">
+                          <Palette className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-3">
+                        <div className="space-y-2">
+                          <Label>Star Color</Label>
+                          <input
+                            type="color"
+                            value={settings.starColor}
+                            onChange={(e) => updateSetting('starColor', e.target.value)}
+                            className="h-10 w-full cursor-pointer rounded border"
+                          />
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                     <Switch
                       checked={settings.show8BitStars}
                       onCheckedChange={(checked) => updateSetting('show8BitStars', checked)}
                     />
                   </div>
-                  {settings.show8BitStars && showColorPicker === 'stars' && (
-                    <Input
-                      type="color"
-                      value={settings.starColor.startsWith('#') ? settings.starColor : '#fbbf24'}
-                      onChange={(e) => updateSetting('starColor', e.target.value)}
-                      className="h-10"
-                    />
-                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Header Visibility</Label>
+                  <Select
+                    value={settings.headerVisibility}
+                    onValueChange={(value: any) => updateSetting('headerVisibility', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sticky">Always Visible (Sticky)</SelectItem>
+                      <SelectItem value="auto-hide">Auto-Hide on Scroll</SelectItem>
+                      <SelectItem value="normal">Normal (Not Sticky)</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground">
-                    Pixelated stars in your header
+                    Control how the header behaves when scrolling
                   </p>
                 </div>
               </Card>

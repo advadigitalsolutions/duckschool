@@ -74,6 +74,7 @@ export default function StudentDashboard() {
     celebrateWins: true,
     show8BitStars: false,
     starColor: '#fbbf24',
+    headerVisibility: 'sticky' as const,
   });
 
   const saveHeaderSettings = async (newSettings: any) => {

@@ -11,6 +11,7 @@ import { getRandomQuote } from '@/utils/inspirationalQuotes';
 import { getRandomAffirmation } from '@/utils/affirmations';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HeaderSettings {
   showName: boolean;
@@ -48,6 +49,7 @@ interface HeaderSettings {
   celebrateWins: boolean;
   show8BitStars: boolean;
   starColor: string;
+  headerVisibility: 'sticky' | 'auto-hide' | 'normal';
 }
 
 interface CustomizableHeaderProps {
@@ -68,35 +70,115 @@ export function CustomizableHeader({
   const [showModal, setShowModal] = useState(false);
   const [rotatingText, setRotatingText] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [weather, setWeather] = useState<string | null>(null);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Update rotating text based on settings
-    if (settings.rotatingDisplay === 'quote') {
-      const quote = getRandomQuote();
-      setRotatingText(`"${quote.quote}" - ${quote.author}`);
-    } else if (settings.rotatingDisplay === 'affirmation') {
-      setRotatingText(getRandomAffirmation(student?.display_name || student?.name || 'You'));
-    }
-
-    // Update every 30 seconds
-    const interval = setInterval(() => {
+    const updateRotatingText = async () => {
       if (settings.rotatingDisplay === 'quote') {
         const quote = getRandomQuote();
         setRotatingText(`"${quote.quote}" - ${quote.author}`);
       } else if (settings.rotatingDisplay === 'affirmation') {
-        setRotatingText(getRandomAffirmation(student?.display_name || student?.name || 'You'));
+        setRotatingText(getRandomAffirmation(student?.display_name || student?.name || 'You', student?.pronouns));
+      } else if (settings.rotatingDisplay === 'funFact' && settings.funFactTopic) {
+        try {
+          const { data, error } = await supabase.functions.invoke('generate-fun-fact', {
+            body: { topic: settings.funFactTopic }
+          });
+          if (!error && data?.fact) {
+            setRotatingText(data.fact);
+          }
+        } catch (error) {
+          console.error('Failed to generate fun fact:', error);
+        }
       }
-    }, 30000);
+    };
 
+    updateRotatingText();
+
+    // Determine interval based on rotation frequency
+    const getInterval = () => {
+      switch (settings.rotationFrequency) {
+        case 'minute': return 60000; // 1 minute
+        case 'hour': return 3600000; // 1 hour
+        case 'day': return 86400000; // 24 hours
+        default: return 3600000;
+      }
+    };
+
+    const interval = setInterval(updateRotatingText, getInterval());
     return () => clearInterval(interval);
-  }, [settings.rotatingDisplay, student]);
+  }, [settings.rotatingDisplay, settings.rotationFrequency, settings.funFactTopic, student]);
 
   useEffect(() => {
     // Update time every second
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Weather fetching
+  useEffect(() => {
+    const fetchWeather = async () => {
+      if (!settings.showWeather) {
+        setWeather(null);
+        return;
+      }
+
+      try {
+        let location = settings.weatherZipCode;
+        
+        // If no zip code, try to get browser location
+        if (!location && navigator.geolocation) {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+          });
+          location = `${position.coords.latitude},${position.coords.longitude}`;
+        }
+
+        if (location) {
+          // Using wttr.in as a simple weather API
+          const response = await fetch(`https://wttr.in/${location}?format=%C+%t`);
+          const weatherText = await response.text();
+          setWeather(weatherText.trim());
+        }
+      } catch (error) {
+        console.error('Failed to fetch weather:', error);
+        setWeather(null);
+      }
+    };
+
+    fetchWeather();
+    // Update weather every 30 minutes
+    const interval = setInterval(fetchWeather, 1800000);
+    return () => clearInterval(interval);
+  }, [settings.showWeather, settings.weatherZipCode]);
+
+  // Auto-hide header on scroll
+  useEffect(() => {
+    if (settings.headerVisibility !== 'auto-hide') return;
+
+    let lastScrollY = window.scrollY;
+    
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY < 50) {
+        setIsHeaderVisible(true);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        setIsHeaderVisible(true);
+      } else if (currentScrollY > lastScrollY) {
+        // Scrolling down
+        setIsHeaderVisible(false);
+      }
+      
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [settings.headerVisibility]);
 
   const getGreeting = () => {
     const name = settings.customName || student?.display_name || student?.name || 'Student';
@@ -154,26 +236,50 @@ export function CustomizableHeader({
     }
   };
 
+  const headerClasses = cn(
+    "top-0 z-40 border-b bg-background/70 backdrop-blur-xl backdrop-saturate-150 shadow-lg transition-transform duration-300",
+    settings.headerVisibility === 'sticky' && "sticky",
+    settings.headerVisibility === 'auto-hide' && "sticky",
+    settings.headerVisibility === 'auto-hide' && !isHeaderVisible && "-translate-y-full"
+  );
+
   return (
     <>
-      <header className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur-xl backdrop-saturate-150 shadow-lg">
+      <header className={headerClasses}>
         {settings.show8BitStars && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {Array.from({ length: 20 }).map((_, i) => (
               <div
                 key={i}
-                className="absolute w-2 h-2 animate-pulse"
+                className="absolute w-2 h-2"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
                   backgroundColor: settings.starColor || '#fbbf24',
                   clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+                  animation: `twinkle-${i % 3} ${2 + (i % 3)}s ease-in-out infinite`,
+                  animationDelay: `${(i * 0.3) % 2}s`,
                 }}
               />
             ))}
           </div>
         )}
+        <style>
+          {`
+            @keyframes twinkle-0 {
+              0%, 100% { opacity: 0.2; transform: scale(0.8); }
+              50% { opacity: 1; transform: scale(1); }
+            }
+            @keyframes twinkle-1 {
+              0%, 100% { opacity: 0.3; transform: scale(0.9); }
+              50% { opacity: 0.9; transform: scale(1.1); }
+            }
+            @keyframes twinkle-2 {
+              0%, 100% { opacity: 0.1; transform: scale(0.7); }
+              50% { opacity: 1; transform: scale(1.2); }
+            }
+          `}
+        </style>
         
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -224,6 +330,12 @@ export function CustomizableHeader({
 
             {/* Right section */}
             <div className="flex items-center gap-2">
+              {weather && (
+                <Badge variant="outline" className="hidden md:inline-flex">
+                  🌤️ {weather}
+                </Badge>
+              )}
+              
               {settings.locations.map((loc, index) => {
                 try {
                   const timeString = currentTime.toLocaleTimeString('en-US', { 
