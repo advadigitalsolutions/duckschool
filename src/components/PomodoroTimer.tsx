@@ -6,9 +6,10 @@ import { cn } from '@/lib/utils';
 
 interface PomodoroTimerProps {
   compact?: boolean;
+  onTimeClick?: () => void;
 }
 
-export function PomodoroTimer({ compact = false }: PomodoroTimerProps) {
+export function PomodoroTimer({ compact = false, onTimeClick }: PomodoroTimerProps) {
   const {
     timeLeft,
     isRunning,
@@ -69,8 +70,10 @@ export function PomodoroTimer({ compact = false }: PomodoroTimerProps) {
               />
             </svg>
             <div 
-              className="absolute inset-0 flex items-center justify-center font-mono text-xs font-bold"
+              className="absolute inset-0 flex items-center justify-center font-mono text-xs font-bold cursor-pointer hover:scale-110 transition-transform"
               style={{ color: settings.numberColor }}
+              onClick={onTimeClick}
+              title="Click to adjust timer settings"
             >
               {Math.ceil(timeLeft / 60)}
             </div>
@@ -78,8 +81,10 @@ export function PomodoroTimer({ compact = false }: PomodoroTimerProps) {
         )}
         
         <div 
-          className="font-mono text-base font-bold tabular-nums"
+          className="font-mono text-base font-bold tabular-nums cursor-pointer hover:text-primary transition-colors"
           style={{ color: settings.numberColor }}
+          onClick={onTimeClick}
+          title="Click to adjust timer settings"
         >
           {formatTime(timeLeft)}
         </div>
@@ -155,7 +160,7 @@ export function PomodoroTimer({ compact = false }: PomodoroTimerProps) {
                 style={{ strokeLinecap: 'round' }}
               />
             </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform" onClick={onTimeClick} title="Click to adjust timer settings">
               <div 
                 className="font-mono text-5xl font-bold tabular-nums"
                 style={{ color: settings.numberColor }}
@@ -170,7 +175,7 @@ export function PomodoroTimer({ compact = false }: PomodoroTimerProps) {
         )}
 
         {!settings.visualTimer && (
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-2 cursor-pointer hover:scale-105 transition-transform" onClick={onTimeClick} title="Click to adjust timer settings">
             <div 
               className="font-mono text-7xl font-bold tabular-nums"
               style={{ color: settings.numberColor }}

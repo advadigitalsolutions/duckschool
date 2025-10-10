@@ -71,6 +71,7 @@ export function CustomizableHeader({
   onDemoCelebration,
 }: CustomizableHeaderProps) {
   const [showModal, setShowModal] = useState(false);
+  const [modalInitialTab, setModalInitialTab] = useState<string>('display');
   const [rotatingText, setRotatingText] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [weather, setWeather] = useState<string | null>(null);
@@ -81,6 +82,11 @@ export function CustomizableHeader({
   const [hoveredReminder, setHoveredReminder] = useState<number | null>(null);
   const navigate = useNavigate();
   const { updateSettings: updatePomodoroSettings } = usePomodoro();
+
+  const handleOpenSettingsAtTab = (tab: string) => {
+    setModalInitialTab(tab);
+    setShowModal(true);
+  };
 
   useEffect(() => {
     const updateRotatingText = async () => {
@@ -467,7 +473,7 @@ export function CustomizableHeader({
                 <div>
                   <div 
                     className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity group"
-                    onClick={() => setShowModal(true)}
+                    onClick={() => handleOpenSettingsAtTab('display')}
                   >
                     <h1 className="text-xl md:text-2xl font-bold group-hover:underline">
                       {getGreeting()}
@@ -489,7 +495,7 @@ export function CustomizableHeader({
               ) : (
                 <div 
                   className="flex-1 min-h-[3rem] flex items-center cursor-pointer"
-                  onClick={() => setShowModal(true)}
+                  onClick={() => handleOpenSettingsAtTab('display')}
                 >
                   <Settings className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
                 </div>
@@ -499,7 +505,7 @@ export function CustomizableHeader({
             {/* Center section - Pomodoro */}
             {settings.pomodoroEnabled && (
               <div className="flex-shrink-0">
-                <PomodoroTimer compact />
+                <PomodoroTimer compact onTimeClick={() => handleOpenSettingsAtTab('tools')} />
               </div>
             )}
 
@@ -660,6 +666,7 @@ export function CustomizableHeader({
         onSave={onSaveSettings}
         onDemo={onDemoCelebration}
         studentName={student?.display_name || student?.name || 'Student'}
+        initialTab={modalInitialTab}
       />
     </>
   );

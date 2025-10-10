@@ -78,6 +78,7 @@ interface HeaderCustomizationModalProps {
   onSave: (settings: HeaderSettings) => void;
   onDemo: () => void;
   studentName: string;
+  initialTab?: string;
 }
 
 export function HeaderCustomizationModal({
@@ -87,8 +88,10 @@ export function HeaderCustomizationModal({
   onSave,
   onDemo,
   studentName,
+  initialTab = 'display',
 }: HeaderCustomizationModalProps) {
   const [settings, setSettings] = useState<HeaderSettings>(initialSettings);
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [newLocation, setNewLocation] = useState({ name: '', timezone: '' });
   const [newReminder, setNewReminder] = useState('');
   const [newCountdown, setNewCountdown] = useState({ 
@@ -109,6 +112,13 @@ export function HeaderCustomizationModal({
     setSettings(initialSettings);
     setHasUnsavedChanges(false);
   }, [initialSettings, open]);
+
+  // Sync active tab when modal opens with initialTab
+  useEffect(() => {
+    if (open) {
+      setActiveTab(initialTab);
+    }
+  }, [open, initialTab]);
 
   const updateSetting = <K extends keyof HeaderSettings>(key: K, value: HeaderSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -179,7 +189,7 @@ export function HeaderCustomizationModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="display" className="flex-1 overflow-hidden flex flex-col">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="display">Display</TabsTrigger>
             <TabsTrigger value="rotating">Rotating</TabsTrigger>
