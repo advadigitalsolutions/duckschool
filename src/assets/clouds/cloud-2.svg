@@ -1,7 +1,15 @@
-<svg width="200" height="100" viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Main cloud body -->
-  <path d="M30 50h140v30H30V50zM40 40h120v10H40V40zM50 30h100v10H50V30zM70 40h60v10H70V40zM100 60h40v10h-40V60z" fill="#FFFFFF"/>
+<svg width="220" height="120" viewBox="0 0 220 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Larger fluffy cloud with more puffs -->
+  <ellipse cx="70" cy="65" rx="38" ry="32" fill="#FFFFFF"/>
+  <ellipse cx="110" cy="60" rx="45" ry="38" fill="#FFFFFF"/>
+  <ellipse cx="150" cy="65" rx="38" ry="32" fill="#FFFFFF"/>
+  <ellipse cx="55" cy="75" rx="28" ry="24" fill="#FFFFFF"/>
+  <ellipse cx="90" cy="78" rx="35" ry="28" fill="#FFFFFF"/>
+  <ellipse cx="130" cy="78" rx="35" ry="28" fill="#FFFFFF"/>
+  <ellipse cx="165" cy="75" rx="28" ry="24" fill="#FFFFFF"/>
   
-  <!-- Light blue shading -->
-  <path d="M30 70h140v10H30V70zM50 60h100v10H50V60zM70 50h60v10H70V50z" fill="#B3D9FF" opacity="0.5"/>
+  <!-- Light blue shading for depth -->
+  <ellipse cx="70" cy="78" rx="33" ry="22" fill="#B3D9FF" opacity="0.3"/>
+  <ellipse cx="110" cy="75" rx="40" ry="25" fill="#B3D9FF" opacity="0.3"/>
+  <ellipse cx="150" cy="78" rx="33" ry="22" fill="#B3D9FF" opacity="0.3"/>
 </svg>
