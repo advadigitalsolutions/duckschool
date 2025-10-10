@@ -437,7 +437,10 @@ export default function StudentDashboard() {
       <header className="border-b bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-4">
-            <Avatar className="h-12 w-12">
+            <Avatar 
+              className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity" 
+              onClick={() => navigate('/student/profile')}
+            >
               <AvatarImage src={student?.avatar_url || ''} />
               <AvatarFallback>
                 <User className="h-6 w-6" />
@@ -449,9 +452,6 @@ export default function StudentDashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" onClick={() => navigate('/student/profile')}>
-              My Profile
-            </Button>
             <ThemeToggle />
             <Button variant="outline" size="icon" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />

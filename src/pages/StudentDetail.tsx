@@ -185,7 +185,10 @@ export default function StudentDetail() {
             <Button variant="ghost" size="icon" onClick={() => navigate('/parent')}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <Avatar className="h-16 w-16">
+            <Avatar 
+              className="h-16 w-16 cursor-pointer hover:opacity-80 transition-opacity" 
+              onClick={() => navigate('/parent/profile')}
+            >
               <AvatarImage src={student.avatar_url || ''} />
               <AvatarFallback>
                 <User className="h-8 w-8" />
