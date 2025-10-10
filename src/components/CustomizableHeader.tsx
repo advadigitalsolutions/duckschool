@@ -269,8 +269,8 @@ export function CustomizableHeader({
                   top: `${Math.random() * 100}%`,
                   backgroundColor: settings.starColor || '#fbbf24',
                   clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
-                  animation: `twinkle-${i % 3} ${2 + (i % 3)}s ease-in-out infinite`,
-                  animationDelay: `${(i * 0.3) % 2}s`,
+                  animation: `twinkle-${i % 3} ${6 + (i % 3) * 2}s ease-in-out infinite`,
+                  animationDelay: `${(i * 0.8) % 4}s`,
                 }}
               />
             ))}
@@ -279,16 +279,16 @@ export function CustomizableHeader({
         <style>
           {`
             @keyframes twinkle-0 {
-              0%, 100% { opacity: 0.2; transform: scale(0.8); }
-              50% { opacity: 1; transform: scale(1); }
+              0%, 100% { opacity: 0; transform: scale(0.5); }
+              50% { opacity: 0.8; transform: scale(1); }
             }
             @keyframes twinkle-1 {
-              0%, 100% { opacity: 0.3; transform: scale(0.9); }
-              50% { opacity: 0.9; transform: scale(1.1); }
+              0%, 100% { opacity: 0; transform: scale(0.6); }
+              50% { opacity: 0.7; transform: scale(1); }
             }
             @keyframes twinkle-2 {
-              0%, 100% { opacity: 0.1; transform: scale(0.7); }
-              50% { opacity: 1; transform: scale(1.2); }
+              0%, 100% { opacity: 0; transform: scale(0.4); }
+              50% { opacity: 0.9; transform: scale(1.1); }
             }
             @keyframes flash-rainbow {
               0% { border-color: hsl(0, 100%, 50%); }
@@ -408,10 +408,30 @@ export function CustomizableHeader({
                 >
                   <Checkbox 
                     checked={reminder.completed}
-                    onCheckedChange={() => {
+                    onCheckedChange={async () => {
+                      const wasCompleted = reminder.completed;
                       const newReminders = [...settings.customReminders];
                       newReminders[index].completed = !newReminders[index].completed;
                       onSaveSettings({ ...settings, customReminders: newReminders });
+                      
+                      // Trigger celebration and log to parent dashboard when checking off
+                      if (!wasCompleted && newReminders[index].completed) {
+                        if (settings.celebrateWins) {
+                          onDemoCelebration();
+                        }
+                        
+                        // Log to parent dashboard via XP event
+                        try {
+                          await supabase.from('xp_events').insert({
+                            student_id: student?.id,
+                            event_type: 'reminder_completed',
+                            amount: 0,
+                            description: `Completed reminder: ${reminder.text}`,
+                          });
+                        } catch (error) {
+                          console.error('Error logging reminder completion:', error);
+                        }
+                      }
                     }}
                   />
                   <span className={reminder.completed ? 'line-through opacity-60' : ''}>
