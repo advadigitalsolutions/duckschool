@@ -562,69 +562,27 @@ export function HeaderCustomizationModal({
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        Timer Color
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => setShowColorPicker(showColorPicker === 'timer' ? null : 'timer')}
-                        >
-                          <Palette className="h-4 w-4" />
-                        </Button>
-                      </Label>
-                      {showColorPicker === 'timer' ? (
-                        <Input
-                          type="color"
-                          value={settings.pomodoroSettings.timerColor.startsWith('#') ? settings.pomodoroSettings.timerColor : '#3b82f6'}
-                          onChange={(e) =>
-                            updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerColor: e.target.value })
-                          }
-                          className="h-10"
-                        />
-                      ) : (
-                        <Input
-                          type="text"
-                          placeholder="e.g., #FF5733 or hsl(var(--primary))"
-                          value={settings.pomodoroSettings.timerColor}
-                          onChange={(e) =>
-                            updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerColor: e.target.value })
-                          }
-                        />
-                      )}
+                      <Label>Timer Color</Label>
+                      <Input
+                        type="color"
+                        value={settings.pomodoroSettings.timerColor.startsWith('#') ? settings.pomodoroSettings.timerColor : '#3b82f6'}
+                        onChange={(e) =>
+                          updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerColor: e.target.value })
+                        }
+                        className="h-10"
+                      />
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        Number Color
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => setShowColorPicker(showColorPicker === 'number' ? null : 'number')}
-                        >
-                          <Palette className="h-4 w-4" />
-                        </Button>
-                      </Label>
-                      {showColorPicker === 'number' ? (
-                        <Input
-                          type="color"
-                          value={settings.pomodoroSettings.numberColor.startsWith('#') ? settings.pomodoroSettings.numberColor : '#ffffff'}
-                          onChange={(e) =>
-                            updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, numberColor: e.target.value })
-                          }
-                          className="h-10"
-                        />
-                      ) : (
-                        <Input
-                          type="text"
-                          placeholder="e.g., #FFFFFF or hsl(var(--foreground))"
-                          value={settings.pomodoroSettings.numberColor}
-                          onChange={(e) =>
-                            updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, numberColor: e.target.value })
-                          }
-                        />
-                      )}
+                      <Label>Number Color</Label>
+                      <Input
+                        type="color"
+                        value={settings.pomodoroSettings.numberColor.startsWith('#') ? settings.pomodoroSettings.numberColor : '#ffffff'}
+                        onChange={(e) =>
+                          updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, numberColor: e.target.value })
+                        }
+                        className="h-10"
+                      />
                     </div>
                   </div>
                 )}
