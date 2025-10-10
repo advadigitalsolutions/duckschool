@@ -89,9 +89,18 @@ export default function StudentDashboard() {
 
   const saveHeaderSettings = async (newSettings: any) => {
     try {
+      // Serialize countdowns for database storage
+      const settingsToSave = {
+        ...newSettings,
+        countdowns: newSettings.countdowns?.map((countdown: any) => ({
+          ...countdown,
+          date: countdown.date instanceof Date ? countdown.date.toISOString() : countdown.date
+        })) || []
+      };
+
       const { error } = await supabase
         .from('students')
-        .update({ header_settings: newSettings })
+        .update({ header_settings: settingsToSave })
         .eq('id', student?.id);
 
       if (error) throw error;
@@ -270,13 +279,18 @@ export default function StudentDashboard() {
         const loadedSettings = (studentData.header_settings && typeof studentData.header_settings === 'object' && !Array.isArray(studentData.header_settings))
           ? studentData.header_settings as any
           : getDefaultHeaderSettings();
-        // Ensure all arrays exist
+        // Ensure all arrays exist and deserialize dates
         setHeaderSettings({
           ...getDefaultHeaderSettings(),
           ...loadedSettings,
           locations: Array.isArray(loadedSettings.locations) ? loadedSettings.locations : [],
           customReminders: Array.isArray(loadedSettings.customReminders) ? loadedSettings.customReminders : [],
-          countdowns: Array.isArray(loadedSettings.countdowns) ? loadedSettings.countdowns : [],
+          countdowns: Array.isArray(loadedSettings.countdowns) 
+            ? loadedSettings.countdowns.map((countdown: any) => ({
+                ...countdown,
+                date: typeof countdown.date === 'string' ? new Date(countdown.date) : countdown.date
+              }))
+            : [],
         });
       }
 
