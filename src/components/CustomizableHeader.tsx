@@ -329,6 +329,11 @@ export function CustomizableHeader({
     const rect = badge.getBoundingClientRect();
     const badgeId = `falling-${Date.now()}-${index}`;
     
+    // Immediately remove from settings (original badge disappears)
+    const newReminders = settings.customReminders.filter((_, i) => i !== index);
+    onSaveSettings({ ...settings, customReminders: newReminders });
+    
+    // Create falling animation
     setFallingBadges(prev => [...prev, {
       id: badgeId,
       x: rect.left,
@@ -336,11 +341,9 @@ export function CustomizableHeader({
       text: settings.customReminders[index].text,
     }]);
     
-    // Remove after animation completes
+    // Remove animation element after it completes
     setTimeout(() => {
       setFallingBadges(prev => prev.filter(b => b.id !== badgeId));
-      const newReminders = settings.customReminders.filter((_, i) => i !== index);
-      onSaveSettings({ ...settings, customReminders: newReminders });
     }, 1500);
   };
 
@@ -462,11 +465,11 @@ export function CustomizableHeader({
         </style>
         
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            {/* Left section */}
-            <div className="flex items-center gap-4 flex-1 min-w-0 group">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            {/* Left section - Avatar and greeting with reminders below */}
+            <div className="flex gap-4 flex-1 min-w-0">
               <Avatar 
-                className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity" 
+                className="h-12 w-12 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
                 onClick={() => navigate('/student/profile')}
               >
                 <AvatarImage src={student?.avatar_url || ''} />
@@ -475,37 +478,108 @@ export function CustomizableHeader({
                 </AvatarFallback>
               </Avatar>
               
-              {settings.showName && settings.greetingType !== 'none' ? (
-                <div>
+              <div className="flex-1 min-w-0">
+                {settings.showName && settings.greetingType !== 'none' ? (
+                  <div>
+                    <div 
+                      className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity group"
+                      onClick={() => handleOpenSettingsAtTab('display')}
+                    >
+                      <h1 className="text-xl md:text-2xl font-bold group-hover:underline">
+                        {getGreeting()}
+                      </h1>
+                      {settings.showGrade && (
+                        <Badge variant="secondary">
+                          {settings.customGrade || student?.grade_level || 'Grade N/A'}
+                        </Badge>
+                      )}
+                      <Settings className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    
+                    {settings.rotatingDisplay !== 'none' && (
+                      <p className="text-sm text-muted-foreground mt-1 max-w-2xl truncate">
+                        {rotatingText}
+                      </p>
+                    )}
+                  </div>
+                ) : (
                   <div 
-                    className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity group"
+                    className="flex-1 min-h-[3rem] flex items-center cursor-pointer"
                     onClick={() => handleOpenSettingsAtTab('display')}
                   >
-                    <h1 className="text-xl md:text-2xl font-bold group-hover:underline">
-                      {getGreeting()}
-                    </h1>
-                    {settings.showGrade && (
-                      <Badge variant="secondary">
-                        {settings.customGrade || student?.grade_level || 'Grade N/A'}
-                      </Badge>
-                    )}
-                    <Settings className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Settings className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
                   </div>
-                  
-                  {settings.rotatingDisplay !== 'none' && (
-                    <p className="text-sm text-muted-foreground mt-1 max-w-2xl truncate">
-                      {rotatingText}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div 
-                  className="flex-1 min-h-[3rem] flex items-center cursor-pointer"
-                  onClick={() => handleOpenSettingsAtTab('display')}
-                >
-                  <Settings className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
-                </div>
-              )}
+                )}
+                
+                {/* Reminders under greeting text */}
+                {settings.customReminders.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {settings.customReminders.map((reminder, index) => (
+                      <Badge 
+                        key={`reminder-${index}`} 
+                        variant="outline" 
+                        className="reminder-badge gap-2 bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20 transition-all cursor-pointer relative"
+                        onMouseEnter={() => reminder.completed && setHoveredReminder(index)}
+                        onMouseLeave={() => setHoveredReminder(null)}
+                      >
+                        {reminder.completed && hoveredReminder === index ? (
+                          <Trash2 
+                            className="h-4 w-4 text-destructive cursor-pointer hover:scale-110 transition-transform"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveReminder(index, e);
+                            }}
+                          />
+                        ) : (
+                          <Checkbox 
+                            checked={reminder.completed}
+                            onCheckedChange={async () => {
+                              const wasCompleted = reminder.completed;
+                              const newReminders = [...settings.customReminders];
+                              newReminders[index].completed = !newReminders[index].completed;
+                              onSaveSettings({ ...settings, customReminders: newReminders });
+                              
+                              // Trigger celebration and log to parent dashboard when checking off
+                              if (!wasCompleted && newReminders[index].completed) {
+                                if (settings.celebrateWins) {
+                                  onDemoCelebration();
+                                }
+                                
+                                // Log to parent dashboard via XP event
+                                try {
+                                  const { data: { user } } = await supabase.auth.getUser();
+                                  if (user) {
+                                    const { data: studentData } = await supabase
+                                      .from('students')
+                                      .select('id')
+                                      .eq('user_id', user.id)
+                                      .single();
+                                    
+                                     if (studentData) {
+                                      await supabase.from('xp_events').insert({
+                                        student_id: studentData.id,
+                                        event_type: 'task_completed',
+                                        amount: 10,
+                                        description: `Completed task: ${reminder.text}`
+                                      });
+                                    }
+                                  }
+                                } catch (error) {
+                                  console.error('Error logging task completion:', error);
+                                }
+                              }
+                            }}
+                            className="cursor-pointer"
+                          />
+                        )}
+                        <span className={reminder.completed ? 'line-through opacity-60' : ''}>
+                          {reminder.text}
+                        </span>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Center section - Pomodoro */}
@@ -552,61 +626,9 @@ export function CustomizableHeader({
             </div>
           </div>
 
-          {/* Second row - reminders and countdowns */}
-          {(settings.customReminders.length > 0 || settings.countdowns.length > 0) && (
+          {/* Countdowns row */}
+          {settings.countdowns.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
-              {settings.customReminders.map((reminder, index) => (
-                <Badge 
-                  key={`reminder-${index}`} 
-                  variant="outline" 
-                  className="reminder-badge gap-2 bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20 transition-all cursor-pointer relative"
-                  onMouseEnter={() => reminder.completed && setHoveredReminder(index)}
-                  onMouseLeave={() => setHoveredReminder(null)}
-                >
-                  {reminder.completed && hoveredReminder === index ? (
-                    <Trash2 
-                      className="h-4 w-4 text-destructive cursor-pointer hover:scale-110 transition-transform"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveReminder(index, e);
-                      }}
-                    />
-                  ) : (
-                    <Checkbox 
-                      checked={reminder.completed}
-                      onCheckedChange={async () => {
-                        const wasCompleted = reminder.completed;
-                        const newReminders = [...settings.customReminders];
-                        newReminders[index].completed = !newReminders[index].completed;
-                        onSaveSettings({ ...settings, customReminders: newReminders });
-                        
-                        // Trigger celebration and log to parent dashboard when checking off
-                        if (!wasCompleted && newReminders[index].completed) {
-                          if (settings.celebrateWins) {
-                            onDemoCelebration();
-                          }
-                          
-                          // Log to parent dashboard via XP event
-                          try {
-                            await supabase.from('xp_events').insert({
-                              student_id: student?.id,
-                              event_type: 'reminder_completed',
-                              amount: 0,
-                              description: `Completed reminder: ${reminder.text}`,
-                            });
-                          } catch (error) {
-                            console.error('Error logging reminder completion:', error);
-                          }
-                        }
-                      }}
-                    />
-                  )}
-                  <span className={reminder.completed ? 'line-through opacity-60' : ''}>
-                    {reminder.text}
-                  </span>
-                </Badge>
-              ))}
-              
               {settings.countdowns.map((countdown, index) => {
                 const isComplete = countdown.isComplete || formatCountdown(countdown) === 'Complete!';
                 return (
@@ -642,7 +664,7 @@ export function CustomizableHeader({
         >
           <Badge 
             variant="outline" 
-            className="gap-2 bg-amber-500/10 border-amber-500/50 line-through opacity-60"
+            className="gap-2 bg-amber-500/10 border-amber-500/50"
           >
             <Trash2 className="h-4 w-4" />
             {badge.text}
@@ -655,6 +677,10 @@ export function CustomizableHeader({
           @keyframes fall-and-spin {
             0% {
               transform: translateY(0) rotateZ(0deg) rotateX(0deg);
+              opacity: 1;
+            }
+            15% {
+              transform: translateY(-50px) rotateZ(180deg) rotateX(90deg);
               opacity: 1;
             }
             100% {
