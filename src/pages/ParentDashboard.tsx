@@ -34,6 +34,8 @@ export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [todayMinutes, setTodayMinutes] = useState(0);
+  const [weekMinutes, setWeekMinutes] = useState(0);
+  const [allTimeMinutes, setAllTimeMinutes] = useState(0);
   const [completedToday, setCompletedToday] = useState(0);
   const [overdueCount, setOverdueCount] = useState(0);
   const [editingStudent, setEditingStudent] = useState<any>(null);
@@ -104,31 +106,61 @@ export default function ParentDashboard() {
 
       setStudents(studentsData || []);
 
-      // Fetch today's attendance for this parent's students only
+      // Fetch attendance data for this parent's students
       const today = new Date().toISOString().split('T')[0];
       const studentIds = studentsData?.map(s => s.id) || [];
       
       if (studentIds.length > 0) {
-        const { data: attendanceData } = await supabase
+        // Today's time
+        const { data: todayAttendance } = await supabase
           .from('attendance_logs')
           .select('minutes')
           .eq('date', today)
           .in('student_id', studentIds);
 
-        const totalMinutes = attendanceData?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
-        setTodayMinutes(totalMinutes);
+        const todayTotal = todayAttendance?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
+        setTodayMinutes(todayTotal);
+
+        // This week's time (last 7 days)
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const weekAgoStr = weekAgo.toISOString().split('T')[0];
+
+        const { data: weekAttendance } = await supabase
+          .from('attendance_logs')
+          .select('minutes')
+          .gte('date', weekAgoStr)
+          .in('student_id', studentIds);
+
+        const weekTotal = weekAttendance?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
+        setWeekMinutes(weekTotal);
+
+        // All time
+        const { data: allTimeAttendance } = await supabase
+          .from('attendance_logs')
+          .select('minutes')
+          .in('student_id', studentIds);
+
+        const allTimeTotal = allTimeAttendance?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
+        setAllTimeMinutes(allTimeTotal);
       } else {
         setTodayMinutes(0);
+        setWeekMinutes(0);
+        setAllTimeMinutes(0);
       }
 
-      // Fetch completed assignments today
-      const { data: completedData } = await supabase
-        .from('assignments')
-        .select('id')
-        .eq('status', 'graded')
-        .gte('created_at', new Date(today).toISOString());
+      // Fetch completed submissions today
+      if (studentIds.length > 0) {
+        const { data: completedData } = await supabase
+          .from('submissions')
+          .select('id')
+          .gte('submitted_at', new Date(today).toISOString())
+          .in('student_id', studentIds);
 
-      setCompletedToday(completedData?.length || 0);
+        setCompletedToday(completedData?.length || 0);
+      } else {
+        setCompletedToday(0);
+      }
 
       // Fetch overdue assignments
       const { data: overdueData } = await supabase
@@ -203,7 +235,7 @@ export default function ParentDashboard() {
 
       <div className="container mx-auto p-4 md:p-8">
         {/* KPI Cards */}
-        <div className="grid gap-4 md:grid-cols-3 mb-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Time Today</CardTitle>
@@ -212,9 +244,34 @@ export default function ParentDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{todayMinutes} min</div>
               <p className="text-xs text-muted-foreground">
-                Goal: 60 min/day
+                Across all students
               </p>
-              <Progress value={(todayMinutes / 60) * 100} className="mt-2" />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Time This Week</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{weekMinutes} min</div>
+              <p className="text-xs text-muted-foreground">
+                Last 7 days
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">All Time</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{Math.round(allTimeMinutes / 60)} hrs</div>
+              <p className="text-xs text-muted-foreground">
+                Total logged
+              </p>
             </CardContent>
           </Card>
 
@@ -226,7 +283,7 @@ export default function ParentDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{completedToday}</div>
               <p className="text-xs text-muted-foreground">
-                Assignments graded
+                Submissions completed
               </p>
             </CardContent>
           </Card>
