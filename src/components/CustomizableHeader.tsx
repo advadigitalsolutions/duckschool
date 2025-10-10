@@ -76,6 +76,7 @@ export function CustomizableHeader({
   const [weather, setWeather] = useState<string | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [starPositions, setStarPositions] = useState<Array<{x: number, y: number}>>([]);
+  const [cloudPositions, setCloudPositions] = useState<Array<{x: number, y: number, width: number, height: number, duration: number, delay: number}>>([]);
   const [fallingBadges, setFallingBadges] = useState<Array<{id: string, x: number, y: number, text: string}>>([]);
   const [hoveredReminder, setHoveredReminder] = useState<number | null>(null);
   const navigate = useNavigate();
@@ -149,6 +150,29 @@ export function CustomizableHeader({
 
     return () => clearTimeout(initialTimeout);
   }, [settings.show8BitStars]);
+
+  // Initialize and regenerate cloud positions during invisible phase
+  useEffect(() => {
+    const generateCloudPositions = () => {
+      return Array.from({ length: 5 }).map(() => ({
+        x: -20 - Math.random() * 30, // Start off-screen left
+        y: Math.random() * 80, // Random vertical position (0-80%)
+        width: 15 + Math.random() * 25, // Width between 15-40%
+        height: 10 + Math.random() * 15, // Height between 10-25%
+        duration: 35 + Math.random() * 25, // Duration between 35-60s
+        delay: Math.random() * 20, // Stagger start times
+      }));
+    };
+
+    setCloudPositions(generateCloudPositions());
+
+    // Regenerate cloud positions every 40 seconds (during fade-out phase)
+    const interval = setInterval(() => {
+      setCloudPositions(generateCloudPositions());
+    }, 40000);
+
+    return () => clearInterval(interval);
+  }, [settings.showClouds]);
 
   // Sync Pomodoro settings with context
   useEffect(() => {
@@ -338,14 +362,19 @@ export function CustomizableHeader({
         )}
         {settings.showClouds && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[0, 1, 2].map((i) => (
+            {cloudPositions.map((cloud, i) => (
               <div
                 key={`cloud-${i}`}
-                className="absolute inset-0"
+                className="absolute"
                 style={{
-                  background: `radial-gradient(ellipse ${60 + i * 20}% ${40 + i * 15}% at ${30 + i * 20}% ${40 + i * 10}%, ${settings.cloudColor || 'rgba(255, 255, 255, 0.15)'} 0%, transparent 50%)`,
-                  animation: `cloud-drift-${i} ${30 + i * 10}s ease-in-out infinite`,
-                  animationDelay: `${i * 10}s`,
+                  left: `${cloud.x}%`,
+                  top: `${cloud.y}%`,
+                  width: `${cloud.width}%`,
+                  height: `${cloud.height}%`,
+                  background: `radial-gradient(ellipse 80% 70% at 50% 50%, ${settings.cloudColor || 'rgba(255, 255, 255, 0.15)'} 0%, ${settings.cloudColor || 'rgba(255, 255, 255, 0.08)'} 40%, transparent 70%)`,
+                  animation: `cloud-drift ${cloud.duration}s ease-in-out infinite`,
+                  animationDelay: `${cloud.delay}s`,
+                  filter: 'blur(2px)',
                 }}
               />
             ))}
@@ -374,26 +403,35 @@ export function CustomizableHeader({
               75% { opacity: 0; transform: scale(0.4); }
               100% { opacity: 0; transform: scale(0.4); }
             }
-            @keyframes cloud-drift-0 {
-              0% { opacity: 0; transform: translateX(-30%); }
-              25% { opacity: 1; }
-              50% { opacity: 1; }
-              75% { opacity: 0; }
-              100% { opacity: 0; transform: translateX(130%); }
-            }
-            @keyframes cloud-drift-1 {
-              0% { opacity: 0; transform: translateX(-40%); }
-              25% { opacity: 0.8; }
-              50% { opacity: 0.8; }
-              75% { opacity: 0; }
-              100% { opacity: 0; transform: translateX(140%); }
-            }
-            @keyframes cloud-drift-2 {
-              0% { opacity: 0; transform: translateX(-50%); }
-              25% { opacity: 0.6; }
-              50% { opacity: 0.6; }
-              75% { opacity: 0; }
-              100% { opacity: 0; transform: translateX(150%); }
+            @keyframes cloud-drift {
+              0% { 
+                opacity: 0; 
+                transform: translateX(0) translateY(0); 
+              }
+              10% { 
+                opacity: 0.6; 
+                transform: translateX(15vw) translateY(-2vh); 
+              }
+              30% { 
+                opacity: 0.8; 
+                transform: translateX(45vw) translateY(1vh); 
+              }
+              50% { 
+                opacity: 0.7; 
+                transform: translateX(75vw) translateY(-1vh); 
+              }
+              70% { 
+                opacity: 0.5; 
+                transform: translateX(105vw) translateY(2vh); 
+              }
+              85% { 
+                opacity: 0.2; 
+                transform: translateX(120vw) translateY(0); 
+              }
+              100% { 
+                opacity: 0; 
+                transform: translateX(130vw) translateY(0); 
+              }
             }
             @keyframes flash-rainbow {
               0% { border-color: hsl(0, 100%, 50%); }
