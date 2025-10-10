@@ -346,8 +346,8 @@ export function HeaderCustomizationModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 min-h-0 flex flex-col">
+          <TabsList className="grid w-full grid-cols-5 flex-shrink-0">
             <TabsTrigger value="display">Display</TabsTrigger>
             <TabsTrigger value="rotating">Subtext</TabsTrigger>
             <TabsTrigger value="info">Info</TabsTrigger>
@@ -355,7 +355,7 @@ export function HeaderCustomizationModal({
             <TabsTrigger value="effects">Effects</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1 pr-4">
+          <ScrollArea className="flex-1 min-h-0 pr-4 max-h-[calc(90vh-12rem)]">
             <TabsContent value="display" className="space-y-4 mt-4">
               <Card className="p-4 space-y-4">
                 <div className="space-y-2">
