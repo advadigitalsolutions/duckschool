@@ -27,6 +27,8 @@ import { RewardsShop } from '@/components/RewardsShop';
 import { StudentGrades } from '@/components/StudentGrades';
 import { WeeklyView } from '@/components/WeeklyView';
 import { OverdueWorkTab } from '@/components/OverdueWorkTab';
+import { CustomizableHeader } from '@/components/CustomizableHeader';
+import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -41,6 +43,8 @@ export default function StudentDashboard() {
   const [dailyQuote, setDailyQuote] = useState('');
   const [dailyGoals, setDailyGoals] = useState<any[]>([]);
   const [newGoalText, setNewGoalText] = useState('');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [headerSettings, setHeaderSettings] = useState<any>(null);
   const navigate = useNavigate();
 
   const motivationalQuotes = [
@@ -206,6 +210,7 @@ export default function StudentDashboard() {
 
       if (studentData) {
         setStudent(studentData);
+        setHeaderSettings(studentData.header_settings || getDefaultHeaderSettings());
       }
 
       // Fetch today's assignments
@@ -431,34 +436,61 @@ export default function StudentDashboard() {
     );
   }
 
+  const getDefaultHeaderSettings = () => ({
+    showName: true,
+    customName: null,
+    showGrade: true,
+    customGrade: null,
+    greetingType: 'name',
+    rotatingDisplay: 'quote',
+    funFactTopic: null,
+    locations: [],
+    showWeather: false,
+    customReminders: [],
+    countdowns: [],
+    pomodoroEnabled: false,
+    pomodoroSettings: {
+      workMinutes: 25,
+      breakMinutes: 5,
+      longBreakMinutes: 15,
+      sessionsUntilLongBreak: 4,
+      visualTimer: true,
+      timerColor: 'hsl(var(--primary))',
+      numberColor: 'hsl(var(--foreground))',
+    },
+    celebrateWins: true,
+    show8BitStars: false,
+  });
+
+  const saveHeaderSettings = async (newSettings: any) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({ header_settings: newSettings })
+        .eq('id', student.id);
+      
+      if (error) throw error;
+      setHeaderSettings(newSettings);
+      toast.success('Header settings saved!');
+    } catch (error) {
+      console.error('Error saving header settings:', error);
+      toast.error('Failed to save settings');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      {/* Header */}
-      <header className="border-b bg-card/80 backdrop-blur-sm">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Avatar 
-              className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity" 
-              onClick={() => navigate('/student/profile')}
-            >
-              <AvatarImage src={student?.avatar_url || ''} />
-              <AvatarFallback>
-                <User className="h-6 w-6" />
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-2xl font-bold">Welcome back, {student?.display_name || student?.name || 'Student'}!</h1>
-              <p className="text-sm text-muted-foreground">{dailyQuote}</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
-            <Button variant="outline" size="icon" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
+      {headerSettings && (
+        <CustomizableHeader
+          student={student}
+          settings={headerSettings}
+          onSaveSettings={saveHeaderSettings}
+          onSignOut={handleSignOut}
+          onDemoCelebration={() => setShowConfetti(true)}
+        />
+      )}
 
       <div className="container mx-auto p-4 md:p-8 max-w-4xl">
         {/* Weekly Progress Overview */}

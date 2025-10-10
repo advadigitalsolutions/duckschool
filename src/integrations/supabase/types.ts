@@ -1065,6 +1065,7 @@ export type Database = {
           focus_mode_overlay_opacity: number | null
           goals: Json | null
           grade_level: string | null
+          header_settings: Json | null
           high_contrast_enabled: boolean | null
           hotkey_settings: Json | null
           id: string
@@ -1098,6 +1099,7 @@ export type Database = {
           focus_mode_overlay_opacity?: number | null
           goals?: Json | null
           grade_level?: string | null
+          header_settings?: Json | null
           high_contrast_enabled?: boolean | null
           hotkey_settings?: Json | null
           id?: string
@@ -1131,6 +1133,7 @@ export type Database = {
           focus_mode_overlay_opacity?: number | null
           goals?: Json | null
           grade_level?: string | null
+          header_settings?: Json | null
           high_contrast_enabled?: boolean | null
           hotkey_settings?: Json | null
           id?: string
