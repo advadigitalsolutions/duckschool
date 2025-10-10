@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PomodoroSettings {
@@ -64,6 +64,11 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [broadcastChannel, setBroadcastChannel] = useState<BroadcastChannel | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  
+  // Refs to prevent circular updates
+  const isUpdatingFromRealtime = useRef(false);
+  const lastSavedTimeLeft = useRef(timeLeft);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize: Load from Supabase if studentId provided, otherwise from localStorage
   useEffect(() => {
@@ -188,6 +193,10 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
         },
         (payload) => {
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            // Prevent circular updates - ignore updates we just triggered
+            if (isUpdatingFromRealtime.current) return;
+            
+            isUpdatingFromRealtime.current = true;
             const session = payload.new as any;
             setTimeLeft(session.time_left);
             setIsRunning(session.is_running);
@@ -201,6 +210,12 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
                   : sessionSettings.breakMinutes) * 60
               : sessionSettings.workMinutes * 60
             );
+            lastSavedTimeLeft.current = session.time_left;
+            
+            // Reset flag after a short delay
+            setTimeout(() => {
+              isUpdatingFromRealtime.current = false;
+            }, 100);
           }
         }
       )
@@ -211,13 +226,12 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
     };
   }, [studentId]);
 
-  // Save state to Supabase or localStorage and broadcast to other windows
+  // Save important state changes to Supabase immediately (not timer ticks)
   useEffect(() => {
-    if (isInitializing) return;
+    if (isInitializing || isUpdatingFromRealtime.current) return;
 
-    const saveState = async () => {
+    const saveImportantChanges = async () => {
       if (studentId && sessionId) {
-        // Save to Supabase
         await supabase
           .from('pomodoro_sessions')
           .update({
@@ -229,36 +243,77 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
             updated_at: new Date().toISOString(),
           })
           .eq('id', sessionId);
-      } else {
-        // Save to localStorage
-        const state = {
+        
+        lastSavedTimeLeft.current = timeLeft;
+      }
+    };
+
+    saveImportantChanges();
+  }, [isRunning, isBreak, sessionsCompleted, settings, studentId, sessionId, isInitializing]);
+
+  // Save timeLeft periodically (every 10 seconds) to reduce database writes
+  useEffect(() => {
+    if (isInitializing || isUpdatingFromRealtime.current || !isRunning) return;
+
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Only save if timeLeft changed significantly (more than 1 second difference)
+    const timeDiff = Math.abs(timeLeft - lastSavedTimeLeft.current);
+    if (timeDiff < 2) return;
+
+    // Debounce: Save every 10 seconds during active timer
+    saveTimeoutRef.current = setTimeout(async () => {
+      if (studentId && sessionId && !isUpdatingFromRealtime.current) {
+        await supabase
+          .from('pomodoro_sessions')
+          .update({
+            time_left: timeLeft,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', sessionId);
+        
+        lastSavedTimeLeft.current = timeLeft;
+      }
+    }, 10000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [timeLeft, isRunning, studentId, sessionId, isInitializing]);
+
+  // Save to localStorage for non-authenticated users
+  useEffect(() => {
+    if (isInitializing || studentId) return;
+
+    const state = {
+      timeLeft,
+      isBreak,
+      sessionsCompleted,
+      totalDuration,
+      settings,
+    };
+    localStorage.setItem('pomodoroState', JSON.stringify(state));
+
+    // Broadcast to other windows
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'state_update',
+        data: {
           timeLeft,
+          isRunning,
           isBreak,
           sessionsCompleted,
           totalDuration,
           settings,
-        };
-        localStorage.setItem('pomodoroState', JSON.stringify(state));
-
-        // Broadcast to other windows
-        if (broadcastChannel) {
-          broadcastChannel.postMessage({
-            type: 'state_update',
-            data: {
-              timeLeft,
-              isRunning,
-              isBreak,
-              sessionsCompleted,
-              totalDuration,
-              settings,
-            }
-          });
         }
-      }
-    };
-
-    saveState();
-  }, [timeLeft, isRunning, isBreak, sessionsCompleted, totalDuration, settings, studentId, sessionId, isInitializing, broadcastChannel]);
+      });
+    }
+  }, [timeLeft, isRunning, isBreak, sessionsCompleted, totalDuration, settings, studentId, isInitializing, broadcastChannel]);
 
   // Timer countdown
   useEffect(() => {
