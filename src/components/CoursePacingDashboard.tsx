@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -15,6 +15,8 @@ import { CurriculumGenerationDialog } from './CurriculumGenerationDialog';
 import { StandardsCoverageDashboard } from './StandardsCoverageDashboard';
 import { CustomMilestonesDashboard } from './CustomMilestonesDashboard';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface CoursePacingDashboardProps {
   courseId: string;
@@ -32,6 +34,39 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
     courseId,
     targetDate
   );
+
+  // Load persisted target date from database
+  useEffect(() => {
+    const loadTargetDate = async () => {
+      const { data } = await supabase
+        .from('courses')
+        .select('target_date')
+        .eq('id', courseId)
+        .single();
+      
+      if (data?.target_date) {
+        setTargetDate(new Date(data.target_date));
+      }
+    };
+    loadTargetDate();
+  }, [courseId]);
+
+  // Save target date to database when it changes
+  const handleTargetDateChange = async (date: Date | undefined) => {
+    setTargetDate(date);
+    
+    const { error } = await supabase
+      .from('courses')
+      .update({ target_date: date ? format(date, 'yyyy-MM-dd') : null })
+      .eq('id', courseId);
+    
+    if (error) {
+      toast.error('Failed to save target date');
+      console.error('Error saving target date:', error);
+    } else {
+      toast.success('Target date saved');
+    }
+  };
 
   if (loading) {
     return (
@@ -327,19 +362,20 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
                   {targetDate ? format(targetDate, "PPP") : <span>Pick a target date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={targetDate}
-                  onSelect={setTargetDate}
+                  onSelect={handleTargetDateChange}
                   initialFocus
                   disabled={(date) => date < new Date()}
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
             
             {targetDate && (
-              <Button variant="ghost" onClick={() => setTargetDate(undefined)}>
+              <Button variant="ghost" onClick={() => handleTargetDateChange(undefined)}>
                 Clear
               </Button>
             )}
