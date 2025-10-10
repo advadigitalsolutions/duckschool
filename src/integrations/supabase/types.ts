@@ -371,7 +371,6 @@ export type Database = {
           standards_scope: Json | null
           student_id: string | null
           subject: string
-          target_date: string | null
           template_id: string | null
           title: string
           updated_at: string | null
@@ -391,7 +390,6 @@ export type Database = {
           standards_scope?: Json | null
           student_id?: string | null
           subject: string
-          target_date?: string | null
           template_id?: string | null
           title: string
           updated_at?: string | null
@@ -411,7 +409,6 @@ export type Database = {
           standards_scope?: Json | null
           student_id?: string | null
           subject?: string
-          target_date?: string | null
           template_id?: string | null
           title?: string
           updated_at?: string | null

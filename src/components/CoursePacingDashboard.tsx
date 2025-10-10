@@ -35,29 +35,45 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
     targetDate
   );
 
-  // Load persisted target date from database
+  // Load persisted target date from pacing_config.target_completion_date
   useEffect(() => {
     const loadTargetDate = async () => {
       const { data } = await supabase
         .from('courses')
-        .select('target_date')
+        .select('pacing_config')
         .eq('id', courseId)
         .single();
       
-      if (data?.target_date) {
-        setTargetDate(new Date(data.target_date));
+      if (data?.pacing_config && typeof data.pacing_config === 'object' && 'target_completion_date' in data.pacing_config) {
+        const targetDateStr = (data.pacing_config as any).target_completion_date;
+        if (targetDateStr) {
+          setTargetDate(new Date(targetDateStr));
+        }
       }
     };
     loadTargetDate();
   }, [courseId]);
 
-  // Save target date to database when it changes
+  // Save target date to pacing_config when it changes
   const handleTargetDateChange = async (date: Date | undefined) => {
     setTargetDate(date);
     
+    // Get current pacing_config
+    const { data: courseData } = await supabase
+      .from('courses')
+      .select('pacing_config')
+      .eq('id', courseId)
+      .single();
+    
+    const currentConfig = (courseData?.pacing_config as any) || {};
+    const updatedConfig = {
+      ...currentConfig,
+      target_completion_date: date ? format(date, 'yyyy-MM-dd') : null
+    };
+    
     const { error } = await supabase
       .from('courses')
-      .update({ target_date: date ? format(date, 'yyyy-MM-dd') : null })
+      .update({ pacing_config: updatedConfig })
       .eq('id', courseId);
     
     if (error) {
