@@ -99,18 +99,24 @@ export function CustomizableHeader({
     return `Welcome back, ${name}!`;
   };
 
-  const formatCountdown = (targetDate: Date) => {
-    const now = new Date();
-    const diff = new Date(targetDate).getTime() - now.getTime();
-    
-    if (diff <= 0) return 'Event has passed';
-    
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  const formatCountdown = (targetDate: Date | string) => {
+    try {
+      const now = new Date();
+      const target = typeof targetDate === 'string' ? new Date(targetDate) : targetDate;
+      const diff = target.getTime() - now.getTime();
+      
+      if (diff <= 0) return 'Event has passed';
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    } catch (error) {
+      console.error('Error formatting countdown:', error);
+      return 'Invalid date';
+    }
   };
 
   return (
@@ -228,7 +234,7 @@ export function CustomizableHeader({
                   variant="outline"
                   className="bg-blue-500/10 border-blue-500/50"
                 >
-                  ⏰ {countdown.name}: {formatCountdown(new Date(countdown.date))}
+                  ⏰ {countdown.name}: {formatCountdown(countdown.date)}
                 </Badge>
               ))}
             </div>

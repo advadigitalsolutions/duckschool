@@ -210,7 +210,18 @@ export default function StudentDashboard() {
 
       if (studentData) {
         setStudent(studentData);
-        setHeaderSettings(studentData.header_settings || getDefaultHeaderSettings());
+        // Ensure header_settings has proper defaults
+        const loadedSettings = (studentData.header_settings && typeof studentData.header_settings === 'object' && !Array.isArray(studentData.header_settings))
+          ? studentData.header_settings as any
+          : getDefaultHeaderSettings();
+        // Ensure all arrays exist
+        setHeaderSettings({
+          ...getDefaultHeaderSettings(),
+          ...loadedSettings,
+          locations: Array.isArray(loadedSettings.locations) ? loadedSettings.locations : [],
+          customReminders: Array.isArray(loadedSettings.customReminders) ? loadedSettings.customReminders : [],
+          countdowns: Array.isArray(loadedSettings.countdowns) ? loadedSettings.countdowns : [],
+        });
       }
 
       // Fetch today's assignments
