@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -53,11 +54,15 @@ export function CourseSettingsDialog({
   const [loading, setLoading] = useState(false);
   const [gradeLevel, setGradeLevel] = useState(currentGradeLevel || '');
   const [framework, setFramework] = useState('');
+  const [originalFramework, setOriginalFramework] = useState('');
   const [pedagogy, setPedagogy] = useState('eclectic');
   const [targetCompletionDate, setTargetCompletionDate] = useState('');
   const [weeklyMinutes, setWeeklyMinutes] = useState('');
   const [goals, setGoals] = useState('');
   const [customFrameworkName, setCustomFrameworkName] = useState('');
+  const [showFrameworkWarning, setShowFrameworkWarning] = useState(false);
+  const [existingCurriculumCount, setExistingCurriculumCount] = useState(0);
+  const [remapping, setRemapping] = useState(false);
 
   // Load existing course data when dialog opens
   useEffect(() => {
@@ -101,6 +106,7 @@ export function CourseSettingsDialog({
         }
         
         setFramework(extractedFramework || 'CA-CCSS');
+        setOriginalFramework(extractedFramework || 'CA-CCSS');
 
         // Extract pacing config
         if (pacingConfig) {
@@ -133,6 +139,33 @@ export function CourseSettingsDialog({
       return;
     }
 
+    try {
+      // Check if framework changed and there's existing curriculum
+      const frameworkChanged = framework !== originalFramework;
+      
+      if (frameworkChanged) {
+        const { data: existingCurriculum } = await supabase
+          .from('curriculum_items')
+          .select('id, standards')
+          .eq('course_id', courseId)
+          .not('standards', 'is', null);
+        
+        if (existingCurriculum && existingCurriculum.length > 0) {
+          setExistingCurriculumCount(existingCurriculum.length);
+          setShowFrameworkWarning(true);
+          return;
+        }
+      }
+      
+      // Proceed with save if no framework change or no existing curriculum
+      await performSave();
+    } catch (error: any) {
+      console.error('Error in handleSave:', error);
+      toast.error('Failed to save settings');
+    }
+  };
+
+  const performSave = async () => {
     setSaving(true);
     try {
       const updates: any = {
@@ -166,6 +199,7 @@ export function CourseSettingsDialog({
       if (error) throw error;
 
       toast.success('Course settings updated successfully');
+      setOriginalFramework(framework);
 
       onUpdate();
       onOpenChange(false);
@@ -177,15 +211,125 @@ export function CourseSettingsDialog({
     }
   };
 
+  const handleRemapAndSwitch = async () => {
+    try {
+      setShowFrameworkWarning(false);
+      setRemapping(true);
+      toast.info('🤖 AI is analyzing and remapping your curriculum to the new framework...');
+      
+      // Fetch full curriculum data
+      const { data: curriculumItems, error: fetchError } = await supabase
+        .from('curriculum_items')
+        .select('id, title, body, standards')
+        .eq('course_id', courseId);
+      
+      if (fetchError) throw fetchError;
+      
+      // Call remap edge function
+      const { data: remapResult, error: remapError } = await supabase.functions.invoke(
+        'remap-curriculum-standards',
+        {
+          body: {
+            courseId,
+            oldFramework: originalFramework,
+            newFramework: framework,
+            curriculumItems: curriculumItems || []
+          }
+        }
+      );
+      
+      if (remapError) {
+        console.error('Remapping error:', remapError);
+        toast.error('AI remapping failed. Framework not changed.');
+        setRemapping(false);
+        return;
+      }
+      
+      toast.success(`✨ Remapped ${remapResult.remappedCount} of ${remapResult.total} lessons to new framework`);
+      
+      if (remapResult.failedCount > 0) {
+        toast.warning(`⚠️ ${remapResult.failedCount} lessons could not be remapped automatically`);
+      }
+      
+      // Reset progress tracking
+      await resetProgressTracking();
+      
+      // Now proceed with framework update
+      await performSave();
+    } catch (error: any) {
+      console.error('Error in remap and switch:', error);
+      toast.error('Failed to remap curriculum');
+    } finally {
+      setRemapping(false);
+    }
+  };
+
+  const handleSwitchOnly = async () => {
+    try {
+      setShowFrameworkWarning(false);
+      toast.info('Switching framework without remapping...');
+      
+      // Reset progress tracking
+      await resetProgressTracking();
+      
+      // Proceed with framework update
+      await performSave();
+    } catch (error: any) {
+      console.error('Error in switch only:', error);
+      toast.error('Failed to switch framework');
+    }
+  };
+
+  const resetProgressTracking = async () => {
+    try {
+      // First get curriculum items for this course
+      const { data: curriculumItems } = await supabase
+        .from('curriculum_items')
+        .select('id')
+        .eq('course_id', courseId);
+      
+      if (curriculumItems && curriculumItems.length > 0) {
+        const curriculumItemIds = curriculumItems.map(ci => ci.id);
+        
+        // Then get assignments for these curriculum items
+        const { data: assignments } = await supabase
+          .from('assignments')
+          .select('id')
+          .in('curriculum_item_id', curriculumItemIds);
+        
+        // Delete progress events for these assignments
+        if (assignments && assignments.length > 0) {
+          const assignmentIds = assignments.map(a => a.id);
+          await supabase
+            .from('progress_events')
+            .delete()
+            .in('assignment_id', assignmentIds);
+        }
+      }
+      
+      // Delete progress gaps
+      await supabase
+        .from('progress_gaps')
+        .delete()
+        .eq('course_id', courseId);
+      
+      console.log('Progress tracking reset completed');
+    } catch (error) {
+      console.error('Error resetting progress tracking:', error);
+      // Don't throw - this is not critical
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Configure Course Settings</DialogTitle>
-          <DialogDescription>
-            Set the regional standards and pacing requirements for this course. For custom frameworks, AI will generate personalized learning milestones from your course goals.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Configure Course Settings</DialogTitle>
+            <DialogDescription>
+              Set the regional standards and pacing requirements for this course. For custom frameworks, AI will generate personalized learning milestones from your course goals.
+            </DialogDescription>
+          </DialogHeader>
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
@@ -326,5 +470,47 @@ export function CourseSettingsDialog({
         </div>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showFrameworkWarning} onOpenChange={setShowFrameworkWarning}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>⚠️ Switch Framework & Standards?</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-4">
+            <div>
+              <p className="font-medium">You're changing from:</p>
+              <p className="text-sm">• {originalFramework} → {framework}</p>
+            </div>
+            
+            <div>
+              <p className="font-medium">This will affect:</p>
+              <p className="text-sm">• {existingCurriculumCount} lesson{existingCurriculumCount !== 1 ? 's' : ''} with standards references</p>
+              <p className="text-sm">• All progress tracking data</p>
+            </div>
+            
+            <div className="bg-muted p-3 rounded-md">
+              <p className="font-medium text-sm mb-1">⚙️ AI Remapping (Recommended)</p>
+              <p className="text-sm">Let AI analyze your lessons and map them to equivalent standards in the new framework. Takes 1-2 minutes.</p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <Button variant="outline" onClick={handleSwitchOnly} disabled={remapping}>
+            Switch Only
+          </Button>
+          <AlertDialogAction onClick={handleRemapAndSwitch} disabled={remapping}>
+            {remapping ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Remapping...
+              </>
+            ) : (
+              'Switch & Remap with AI'
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
