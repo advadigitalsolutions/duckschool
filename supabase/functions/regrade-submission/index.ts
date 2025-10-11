@@ -79,14 +79,15 @@ async function performRegrade(submissionId: string, authHeader: string) {
     if (respError) throw respError;
 
     const questions = submission.assignment.curriculum_items.body.questions || [];
-    let totalScore = 0;
-    let correctCount = 0;
     const maxScore = questions.reduce((sum: number, q: any) => sum + (q.points || 1), 0);
 
-    // Re-grade each question response
-    for (const response of responses) {
-      const question = questions.find((q: any) => q.id === response.question_id);
-      if (!question) continue;
+    console.log(`Processing ${responses.length} question responses in parallel...`);
+
+    // Grade all questions in parallel for speed
+    const gradingResults = await Promise.all(
+      responses.map(async (response) => {
+        const question = questions.find((q: any) => q.id === response.question_id);
+        if (!question) return null;
 
       let newScore = 0;
       let isCorrect = false;
@@ -211,27 +212,46 @@ Be generous with partial credit. If they show understanding but use different wo
         }
       }
 
-      console.log(`Final grade for question: score=${newScore}, correct=${isCorrect}`);
+        console.log(`Final grade for question: score=${newScore}, correct=${isCorrect}`);
 
-      // Update question response
-      await supabase
-        .from('question_responses')
-        .update({
-          is_correct: isCorrect,
-          answer: {
-            ...response.answer,
-            ai_score: newScore,
-            ai_feedback: feedback
-          }
-        })
-        .eq('id', response.id);
+        return {
+          responseId: response.id,
+          newScore,
+          isCorrect,
+          feedback,
+          points: question.points || 1,
+          answer: response.answer
+        };
+      })
+    );
 
-      totalScore += newScore * (question.points || 1);
-      if (isCorrect) correctCount++;
-    }
+    // Filter out null results and update all responses
+    const validResults = gradingResults.filter(r => r !== null);
+    
+    console.log(`Updating ${validResults.length} question responses...`);
+    
+    // Update all question responses in parallel
+    await Promise.all(
+      validResults.map(result => 
+        supabase
+          .from('question_responses')
+          .update({
+            is_correct: result.isCorrect,
+            answer: {
+              ...result.answer,
+              ai_score: result.newScore,
+              ai_feedback: result.feedback
+            }
+          })
+          .eq('id', result.responseId)
+      )
+    );
 
-    // Round total score to 2 decimal places
-    totalScore = Math.round(totalScore * 100) / 100;
+    // Calculate totals
+    const totalScore = Math.round(
+      validResults.reduce((sum, r) => sum + (r.newScore * r.points), 0) * 100
+    ) / 100;
+    const correctCount = validResults.filter(r => r.isCorrect).length;
 
     console.log('Final totals:', { totalScore, maxScore, correctCount, questionsGraded: responses.length });
 
