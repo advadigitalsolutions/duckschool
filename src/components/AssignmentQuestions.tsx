@@ -35,6 +35,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [results, setResults] = useState<Record<string, boolean>>({});
+  const [detailedResults, setDetailedResults] = useState<Record<string, { isCorrect: boolean; score: number; feedback?: string }>>({});
   const [attemptNumber, setAttemptNumber] = useState(1);
   const [questionTimes, setQuestionTimes] = useState<Record<string, number>>({});
   const [currentQuestionStart, setCurrentQuestionStart] = useState<Record<string, number>>({});
@@ -251,21 +252,46 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     trackQuestionTime(questionId);
   };
 
-  const gradeAnswer = (question: Question, answer: string | number): boolean => {
+  const gradeAnswer = async (question: Question, answer: string | number): Promise<{ isCorrect: boolean; score: number; feedback?: string }> => {
     if (question.type === 'numeric') {
       const numAnswer = typeof answer === 'number' ? answer : parseFloat(answer as string);
       const correctAnswer = typeof question.correct_answer === 'number' 
         ? question.correct_answer 
         : parseFloat(question.correct_answer as string);
       const tolerance = question.tolerance || 0.01;
-      return Math.abs(numAnswer - correctAnswer) <= tolerance;
+      const isCorrect = Math.abs(numAnswer - correctAnswer) <= tolerance;
+      return { isCorrect, score: isCorrect ? 1 : 0 };
     } else if (question.type === 'multiple_choice') {
-      return answer === question.correct_answer;
+      const isCorrect = answer === question.correct_answer;
+      return { isCorrect, score: isCorrect ? 1 : 0 };
     } else {
-      // For short answer, do case-insensitive comparison
-      const answerStr = (answer as string).toLowerCase().trim();
-      const correctStr = (question.correct_answer as string).toLowerCase().trim();
-      return answerStr.includes(correctStr) || correctStr.includes(answerStr);
+      // For short answer and essay, use AI grading
+      try {
+        const { data, error } = await supabase.functions.invoke('grade-open-response', {
+          body: {
+            question: question.question,
+            studentAnswer: answer,
+            correctAnswer: question.correct_answer,
+            maxPoints: question.points || 1
+          }
+        });
+
+        if (error) throw error;
+
+        // Consider it correct if score >= 0.7 (70% understanding)
+        return {
+          isCorrect: data.score >= 0.7,
+          score: data.score,
+          feedback: data.feedback
+        };
+      } catch (error) {
+        console.error('Error grading with AI:', error);
+        // Fallback to simple string matching if AI grading fails
+        const answerStr = (answer as string).toLowerCase().trim();
+        const correctStr = (question.correct_answer as string).toLowerCase().trim();
+        const isCorrect = answerStr.includes(correctStr) || correctStr.includes(answerStr);
+        return { isCorrect, score: isCorrect ? 1 : 0 };
+      }
     }
   };
 
@@ -292,19 +318,24 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     try {
       // Grade answers
       const gradedResults: Record<string, boolean> = {};
+      const detailedResults: Record<string, { isCorrect: boolean; score: number; feedback?: string }> = {};
       let score = 0;
       let correctCount = 0;
 
-      questions.forEach(question => {
-        const isCorrect = gradeAnswer(question, answers[question.id]);
-        gradedResults[question.id] = isCorrect;
-        if (isCorrect) {
-          score += question.points;
+      // Grade all questions (handle async grading)
+      for (const question of questions) {
+        const result = await gradeAnswer(question, answers[question.id]);
+        detailedResults[question.id] = result;
+        gradedResults[question.id] = result.isCorrect;
+        // Use the partial score for open-ended questions
+        score += result.score * question.points;
+        if (result.isCorrect) {
           correctCount++;
         }
-      });
+      }
 
       setResults(gradedResults);
+      setDetailedResults(detailedResults);
       setTotalScore(score);
 
       // Calculate total time spent
@@ -408,6 +439,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     setSubmitted(false);
     setAnswers({});
     setResults({});
+    setDetailedResults({});
     setQuestionTimes({});
     setCurrentQuestionStart({});
     setAttemptNumber(prev => prev + 1);
@@ -591,6 +623,20 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
                       </span>
                     )}
                   </div>
+                  
+                  {/* Show AI feedback for open-ended questions */}
+                  {detailedResults[question.id]?.feedback && (
+                    <div className="mb-3 p-3 bg-background/50 rounded border">
+                      <p className="text-sm font-medium mb-1">Feedback:</p>
+                      <p className="text-sm"><BionicText>{detailedResults[question.id].feedback}</BionicText></p>
+                      {detailedResults[question.id].score !== undefined && detailedResults[question.id].score < 1 && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Score: {Math.round(detailedResults[question.id].score * 100)}%
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
                   <p className="text-sm"><BionicText>{cleanMarkdown(question.explanation)}</BionicText></p>
                   {!results[question.id] && (
                     <p className="text-sm mt-2">
