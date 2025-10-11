@@ -91,7 +91,7 @@ export function CustomMilestonesDashboard({ courseId }: CustomMilestonesDashboar
       // Initialize from custom standards
       customStandards.forEach((s: any) => {
         milestonesMap.set(s.code, {
-          estimatedHours: s.metadata?.estimated_hours || 0,
+          estimatedHours: s.estimated_hours || 0,
           curriculumMinutes: 0,
           completedMinutes: 0,
           covered: false,
