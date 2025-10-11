@@ -19,6 +19,7 @@ import { StudyGuidePanel } from '@/components/StudyGuidePanel';
 import { TextToSpeech } from '@/components/TextToSpeech';
 import { AssignmentNotes } from '@/components/AssignmentNotes';
 import { StudentLayout } from '@/components/StudentLayout';
+import { RegradeButton } from '@/components/RegradeButton';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -534,14 +535,20 @@ export default function AssignmentDetail() {
                       <CardTitle className="text-lg">
                         Attempt #{submission.attempt_no}
                       </CardTitle>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {Math.floor(submission.time_spent_seconds / 60)} min
-                        </span>
-                        <span>
-                          {new Date(submission.submitted_at).toLocaleString()}
-                        </span>
+                      <div className="flex items-center gap-4">
+                        <RegradeButton 
+                          submissionId={submission.id} 
+                          onComplete={fetchAssignment}
+                        />
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {Math.floor(submission.time_spent_seconds / 60)} min
+                          </span>
+                          <span>
+                            {new Date(submission.submitted_at).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </CardHeader>
@@ -568,10 +575,25 @@ export default function AssignmentDetail() {
                                   <span className="font-medium">Student Answer: </span>
                                   <span className="text-muted-foreground">
                                     {typeof response.answer === 'object' 
-                                      ? JSON.stringify(response.answer) 
+                                      ? (response.answer.value || JSON.stringify(response.answer))
                                       : response.answer}
                                   </span>
                                 </div>
+                                
+                                {/* Show AI feedback if available */}
+                                {response.answer?.ai_feedback && (
+                                  <div className="p-3 bg-muted rounded-lg">
+                                    <span className="font-medium">AI Feedback: </span>
+                                    <p className="text-muted-foreground mt-1">
+                                      <BionicText>{response.answer.ai_feedback}</BionicText>
+                                    </p>
+                                    {response.answer?.ai_score !== undefined && (
+                                      <p className="text-xs text-muted-foreground mt-2">
+                                        Understanding Score: {Math.round(response.answer.ai_score * 100)}%
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
                                 
                                 {!response.is_correct && (
                                   <div>
