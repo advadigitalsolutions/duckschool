@@ -13,24 +13,26 @@ export function RegradeButton({ submissionId, onComplete }: RegradeButtonProps) 
   const [loading, setLoading] = useState(false);
 
   const handleRegrade = async () => {
+    setLoading(true);
+    toast.info('Re-grading in progress... Please stay on this page. This may take 30-60 seconds.', {
+      duration: 5000
+    });
+    
     try {
-      setLoading(true);
       const { error } = await supabase.functions.invoke('regrade-submission', {
         body: { submissionId }
       });
 
       if (error) throw error;
 
-      toast.success('Re-grading in progress! Feel free to navigate away. Refresh in 30 seconds to see results.');
-      setLoading(false);
-      
-      // Auto-refresh after 30 seconds
+      toast.success('Re-grading complete! Refreshing results...');
       setTimeout(() => {
         onComplete?.();
-      }, 30000);
+      }, 1000);
     } catch (error) {
       console.error('Error re-grading:', error);
-      toast.error('Failed to start re-grading');
+      toast.error('Failed to re-grade submission');
+    } finally {
       setLoading(false);
     }
   };

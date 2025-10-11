@@ -15,19 +15,18 @@ serve(async (req) => {
     const { submissionId } = await req.json();
     const authHeader = req.headers.get('Authorization')!;
     
-    // Start the re-grading process in the background
-    performRegrade(submissionId, authHeader);
+    // Process the re-grading synchronously so it completes
+    await performRegrade(submissionId, authHeader);
     
-    // Return immediately so the client doesn't time out
-    return new Response(JSON.stringify({
+    return new Response(JSON.stringify({ 
       success: true, 
-      message: 'Re-grading started. Refresh the page in a moment to see updated results.' 
+      message: 'Re-grading complete!' 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error starting regrade:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to start regrade';
+    console.error('Error in regrade:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to regrade';
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { 
