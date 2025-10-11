@@ -122,6 +122,98 @@ serve(async (req) => {
       specialInterests: student.special_interests,
     };
 
+    // Get progress data to inform curriculum
+    const { data: progressGaps } = await supabaseClient
+      .from('progress_gaps')
+      .select('*')
+      .eq('course_id', courseId)
+      .eq('student_id', student.id)
+      .is('addressed_at', null)
+      .order('confidence_score', { ascending: false })
+      .limit(10);
+
+    // Get recent assignment performance
+    const { data: recentGrades } = await supabaseClient
+      .from('grades')
+      .select(`
+        *,
+        assignments!inner (
+          id,
+          curriculum_item_id,
+          curriculum_items!inner (
+            title,
+            standards,
+            course_id
+          )
+        )
+      `)
+      .eq('student_id', student.id)
+      .eq('assignments.curriculum_items.course_id', courseId)
+      .order('graded_at', { ascending: false })
+      .limit(20);
+
+    // Get recent question-level performance
+    const { data: recentResponses } = await supabaseClient
+      .from('question_responses')
+      .select(`
+        *,
+        submissions!inner (
+          student_id,
+          assignments!inner (
+            curriculum_item_id,
+            curriculum_items!inner (
+              title,
+              standards,
+              course_id
+            )
+          )
+        )
+      `)
+      .eq('submissions.student_id', student.id)
+      .eq('submissions.assignments.curriculum_items.course_id', courseId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    // Analyze performance patterns
+    const weakStandards = new Set<string>();
+    const strongStandards = new Set<string>();
+    
+    // From grades
+    recentGrades?.forEach(grade => {
+      const standards = (grade.assignments?.curriculum_items as any)?.standards || [];
+      if (grade.score !== null && grade.max_score !== null) {
+        const percentage = (grade.score / grade.max_score) * 100;
+        standards.forEach((code: string) => {
+          if (percentage < 70) weakStandards.add(code);
+          else if (percentage >= 85) strongStandards.add(code);
+        });
+      }
+    });
+
+    // From question responses
+    recentResponses?.forEach(response => {
+      const standards = (response.submissions?.assignments?.curriculum_items as any)?.standards || [];
+      standards.forEach((code: string) => {
+        if (response.is_correct === false) weakStandards.add(code);
+        else if (response.is_correct === true) strongStandards.add(code);
+      });
+    });
+
+    const performanceContext = {
+      identifiedGaps: progressGaps?.map(g => ({
+        standard: g.standard_code,
+        gapType: g.gap_type,
+        confidence: g.confidence_score
+      })) || [],
+      weakStandards: Array.from(weakStandards),
+      strongStandards: Array.from(strongStandards),
+      recentAverageScore: (recentGrades && recentGrades.length > 0)
+        ? recentGrades.reduce((sum, g) => sum + (g.score || 0) / (g.max_score || 1), 0) / recentGrades.length * 100
+        : null,
+      totalQuestionsAnswered: recentResponses?.length || 0,
+      correctAnswers: recentResponses?.filter(r => r.is_correct === true).length || 0
+    };
+
     // Build AI prompt - different based on whether we have standards or goals
     const pedagogyGuidance = PEDAGOGY_PROMPTS[pedagogy] || PEDAGOGY_PROMPTS.eclectic;
     
@@ -138,23 +230,46 @@ ${pedagogyGuidance}
 STUDENT PROFILE:
 ${JSON.stringify(studentContext, null, 2)}
 
+RECENT PERFORMANCE DATA:
+${JSON.stringify(performanceContext, null, 2)}
+
 COURSE GOALS:
 ${courseGoals}
 
 Your task is to generate assignment recommendations that:
 1. Work toward achieving the stated course goals
-2. Match the student's learning style and interests
-3. Follow the specified pedagogy
-4. Are engaging and developmentally appropriate
-5. Include clear learning objectives and estimated time
-6. Progress logically toward the course goals`;
+2. Address identified weaknesses and gaps (prioritize these!)
+3. Build on demonstrated strengths
+4. Match the student's learning style and interests
+5. Follow the specified pedagogy
+6. Are engaging and developmentally appropriate
+7. Include clear learning objectives and estimated time
+8. Progress logically toward the course goals
+
+CRITICAL: If the student has shown weakness in specific areas, prioritize creating curriculum that addresses those gaps with additional practice and scaffolding.`;
 
       userPrompt = `Generate 3-5 high-quality assignment recommendations that will help the student work toward the course goals: "${courseGoals}"
 
-Consider what foundational knowledge and skills the student needs to achieve these goals, and create a logical progression of assignments. Each assignment should build toward the stated goals while matching the student's profile and pedagogy.`;
+${performanceContext.weakStandards.length > 0 ? `
+PRIORITY: The student has shown weakness in: ${performanceContext.weakStandards.slice(0, 5).join(', ')}
+Address these gaps first with targeted practice and support.` : ''}
+
+${performanceContext.strongStandards.length > 0 ? `
+Build on their strengths in: ${performanceContext.strongStandards.slice(0, 5).join(', ')}` : ''}
+
+Consider what foundational knowledge and skills the student needs to achieve these goals, create a logical progression of assignments, and adapt based on their actual performance data.`;
     } else {
       // Standards-based generation
       const priorityStandards = uncoveredStandards.slice(0, 5);
+      
+      // Prioritize weak standards if they're in uncovered list
+      const sortedUncovered = [...uncoveredStandards].sort((a, b) => {
+        const aWeak = performanceContext.weakStandards.includes(a.code);
+        const bWeak = performanceContext.weakStandards.includes(b.code);
+        if (aWeak && !bWeak) return -1;
+        if (!aWeak && bWeak) return 1;
+        return 0;
+      });
       
       systemPrompt = `You are an expert curriculum designer creating assignments for ${course.subject} at grade ${gradeLevel} using ${pedagogy} pedagogy.
 
@@ -164,18 +279,31 @@ ${pedagogyGuidance}
 STUDENT PROFILE:
 ${JSON.stringify(studentContext, null, 2)}
 
+RECENT PERFORMANCE DATA:
+${JSON.stringify(performanceContext, null, 2)}
+
 Your task is to generate assignment recommendations that:
 1. Target specific uncovered standards
-2. Match the student's learning style and interests
-3. Follow the specified pedagogy
-4. Are engaging and developmentally appropriate
-5. Include clear learning objectives and estimated time`;
+2. Address identified weaknesses and gaps (prioritize these!)
+3. Build on demonstrated strengths
+4. Match the student's learning style and interests
+5. Follow the specified pedagogy
+6. Are engaging and developmentally appropriate
+7. Include clear learning objectives and estimated time
 
-      userPrompt = `Generate assignment recommendations for the following uncovered standards:
+CRITICAL: If targeting standards where the student has shown weakness, provide extra scaffolding, practice, and support.`;
 
-${priorityStandards.map((s: any, i: number) => `${i + 1}. ${s.code}: ${s.text}`).join('\n\n')}
+      userPrompt = `Generate assignment recommendations for the following uncovered standards (ordered by priority based on student's identified gaps):
 
-For each standard, suggest 1-2 high-quality assignments that would effectively cover that standard while matching the student's profile and pedagogy.`;
+${sortedUncovered.slice(0, 5).map((s: any, i: number) => {
+  const isWeak = performanceContext.weakStandards.includes(s.code);
+  return `${i + 1}. ${s.code}: ${s.text}${isWeak ? ' ⚠️ IDENTIFIED WEAKNESS - needs reinforcement' : ''}`;
+}).join('\n\n')}
+
+For each standard, suggest 1-2 high-quality assignments that would effectively cover that standard while:
+- Addressing any identified weaknesses with appropriate scaffolding
+- Building on demonstrated strengths
+- Matching the student's profile and pedagogy`;
     }
 
     // Call Lovable AI with tool calling for structured output
