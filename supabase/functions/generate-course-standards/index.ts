@@ -32,10 +32,11 @@ serve(async (req) => {
 The standards should:
 1. Break down the course goals into 12-20 specific, measurable learning objectives
 2. Be sequenced in logical learning order (foundation → intermediate → advanced)
-3. Each standard should be achievable in 2-4 hours of study
+3. Each standard should represent 5-15 hours of realistic study time (including practice, exercises, and mastery)
 4. Cover all aspects needed to achieve the stated goals
 5. Be specific enough to create assignments for
-6. Follow standard educational objective format`;
+6. Follow standard educational objective format
+7. Use realistic hour estimates based on the complexity of each objective`;
 
     const userPrompt = `Create learning standards/milestones for this course:
 
@@ -43,7 +44,7 @@ SUBJECT: ${subject}
 GRADE LEVEL: ${gradeLevel}
 COURSE GOALS: ${goals}
 
-Generate 12-20 standards that will comprehensively cover what a student needs to learn to achieve these goals. Each standard should be a specific, measurable learning objective.`;
+Generate 12-20 standards that will comprehensively cover what a student needs to learn to achieve these goals. Each standard should be a specific, measurable learning objective with realistic hour estimates (5-15 hours each based on complexity).`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -85,7 +86,7 @@ Generate 12-20 standards that will comprehensively cover what a student needs to
                         },
                         estimated_hours: { 
                           type: 'number', 
-                          description: 'Estimated hours to master (2-4)' 
+                          description: 'Estimated hours to master (5-15 based on complexity)' 
                         },
                         category: {
                           type: 'string',
