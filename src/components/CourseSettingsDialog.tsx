@@ -168,20 +168,46 @@ export function CourseSettingsDialog({
   const performSave = async () => {
     setSaving(true);
     try {
+      // If switching to CUSTOM framework, generate milestones first
+      if (framework === 'CUSTOM' && goals) {
+        toast.info('🤖 AI is generating custom learning milestones...');
+        
+        const { data: generateResult, error: generateError } = await supabase.functions.invoke(
+          'generate-course-standards',
+          {
+            body: {
+              courseId,
+              goals,
+              subject: currentSubject,
+              gradeLevel
+            }
+          }
+        );
+        
+        if (generateError) {
+          console.error('Error generating standards:', generateError);
+          toast.error('Failed to generate learning milestones');
+          setSaving(false);
+          return;
+        }
+        
+        toast.success(`✨ Generated ${generateResult.count} learning milestones`);
+        // The edge function already updated standards_scope, so we don't need to include it here
+      }
+
       const updates: any = {
         grade_level: gradeLevel,
         goals: goals || null,
-        standards_scope: framework === 'CUSTOM' ? [{ 
-          framework: 'CUSTOM',
-          subject: currentSubject,
-          grade_band: gradeLevel,
-          custom_name: customFrameworkName || `Custom ${currentSubject} Framework`
-        }] : [{ 
+      };
+
+      // Only set standards_scope if NOT custom (custom was handled by edge function)
+      if (framework !== 'CUSTOM') {
+        updates.standards_scope = [{ 
           framework,
           subject: currentSubject,
           grade_band: gradeLevel
-        }],
-      };
+        }];
+      }
 
       // Always update pacing_config with framework
       updates.pacing_config = {
