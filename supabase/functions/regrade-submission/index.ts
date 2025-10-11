@@ -13,8 +13,35 @@ serve(async (req) => {
 
   try {
     const { submissionId } = await req.json();
-    
     const authHeader = req.headers.get('Authorization')!;
+    
+    // Start the re-grading process in the background
+    performRegrade(submissionId, authHeader);
+    
+    // Return immediately so the client doesn't time out
+    return new Response(JSON.stringify({
+      success: true, 
+      message: 'Re-grading started. Refresh the page in a moment to see updated results.' 
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error starting regrade:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to start regrade';
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+});
+
+async function performRegrade(submissionId: string, authHeader: string) {
+  try {
+    console.log('Starting re-grade for submission:', submissionId);
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -245,26 +272,8 @@ Be generous with partial credit. If they show understanding but use different wo
       .eq('id', submissionId);
 
     console.log('Re-grading complete:', { totalScore, maxScore, correctCount });
-
-    return new Response(JSON.stringify({
-      success: true,
-      totalScore,
-      maxScore,
-      correctCount,
-      totalQuestions: questions.length
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
   } catch (error) {
     console.error('Error in regrade-submission:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to regrade submission';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    throw error;
   }
-});
+}

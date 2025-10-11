@@ -21,11 +21,15 @@ export function RegradeButton({ submissionId, onComplete }: RegradeButtonProps) 
 
       if (error) throw error;
 
-      toast.success(`Re-graded! New score: ${data.totalScore}/${data.maxScore}`);
-      onComplete?.();
+      toast.success('Re-grading started! Refresh the page in a moment to see updated results.');
+      
+      // Wait 3 seconds then trigger the refresh callback
+      setTimeout(() => {
+        onComplete?.();
+      }, 3000);
     } catch (error) {
       console.error('Error re-grading:', error);
-      toast.error('Failed to re-grade submission');
+      toast.error('Failed to start re-grading');
     } finally {
       setLoading(false);
     }
