@@ -65,6 +65,10 @@ serve(async (req) => {
       let isCorrect = false;
       let feedback = null;
 
+      console.log(`Grading question ${response.question_id}, type: ${question.type}`);
+      console.log(`Student answer: "${response.answer.value}"`);
+      console.log(`Correct answer: "${question.correct_answer}"`);
+
       if (question.type === 'numeric') {
         const numAnswer = typeof response.answer.value === 'number' 
           ? response.answer.value 
@@ -75,11 +79,25 @@ serve(async (req) => {
         const tolerance = question.tolerance || 0.01;
         isCorrect = Math.abs(numAnswer - correctAnswer) <= tolerance;
         newScore = isCorrect ? 1 : 0;
+        console.log(`Numeric grading: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`);
       } else if (question.type === 'multiple_choice') {
         isCorrect = response.answer.value === question.correct_answer;
         newScore = isCorrect ? 1 : 0;
+        console.log(`Multiple choice grading: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`);
       } else {
-        // Use AI grading for open-ended questions
+        // First check for exact match (case-insensitive, trimmed)
+        const studentAnswer = String(response.answer.value || '').toLowerCase().trim();
+        const correctAnswer = String(question.correct_answer || '').toLowerCase().trim();
+        
+        if (studentAnswer === correctAnswer) {
+          // Exact match - give full credit without AI call
+          isCorrect = true;
+          newScore = 1;
+          feedback = "Perfect! Your answer matches exactly.";
+          console.log(`Exact match - CORRECT`);
+        } else {
+          // Use AI grading for open-ended questions that aren't exact matches
+          console.log(`Calling AI for grading...`);
         const gradeResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -148,17 +166,25 @@ Be generous with partial credit. If they show understanding but use different wo
           }),
         });
 
-        if (gradeResponse.ok) {
-          const gradeData = await gradeResponse.json();
-          const toolCall = gradeData.choices[0].message.tool_calls?.[0];
-          if (toolCall) {
-            const result = JSON.parse(toolCall.function.arguments);
-            newScore = result.score;
-            isCorrect = result.score >= 0.7;
-            feedback = result.feedback;
+          if (gradeResponse.ok) {
+            const gradeData = await gradeResponse.json();
+            const toolCall = gradeData.choices[0].message.tool_calls?.[0];
+            if (toolCall) {
+              const result = JSON.parse(toolCall.function.arguments);
+              newScore = result.score;
+              isCorrect = result.score >= 0.7;
+              feedback = result.feedback;
+              console.log(`AI grading result: score=${newScore}, correct=${isCorrect}`);
+            } else {
+              console.log(`No tool call in AI response`);
+            }
+          } else {
+            console.log(`AI grading failed: ${gradeResponse.status}`);
           }
         }
       }
+
+      console.log(`Final grade for question: score=${newScore}, correct=${isCorrect}`);
 
       // Update question response
       await supabase
@@ -177,8 +203,13 @@ Be generous with partial credit. If they show understanding but use different wo
       if (isCorrect) correctCount++;
     }
 
-    // Update grade
-    await supabase
+    // Round total score to 2 decimal places
+    totalScore = Math.round(totalScore * 100) / 100;
+
+    console.log('Final totals:', { totalScore, maxScore, correctCount, questionsGraded: responses.length });
+
+    // Update grade - try to update existing, if not found create new one
+    const { error: updateGradeError } = await supabase
       .from('grades')
       .update({
         score: totalScore,
@@ -186,6 +217,20 @@ Be generous with partial credit. If they show understanding but use different wo
       })
       .eq('assignment_id', submission.assignment_id)
       .eq('student_id', submission.student_id);
+
+    if (updateGradeError) {
+      console.error('Error updating grade:', updateGradeError);
+      // Try to insert if update failed (might not exist)
+      await supabase
+        .from('grades')
+        .insert({
+          assignment_id: submission.assignment_id,
+          student_id: submission.student_id,
+          score: totalScore,
+          max_score: maxScore,
+          grader: 'ai'
+        });
+    }
 
     // Update submission
     await supabase
