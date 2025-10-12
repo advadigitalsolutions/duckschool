@@ -32,12 +32,13 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
         .from('assignments')
         .select(`
           *,
-          curriculum_items (
+          curriculum_items!inner (
             *,
-            courses (
+            courses!inner (
               id,
               title,
-              subject
+              subject,
+              student_id
             )
           )
         `)
