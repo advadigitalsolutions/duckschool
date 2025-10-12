@@ -555,9 +555,19 @@ export default function AssignmentDetail() {
                   <CardContent>
                     {submission.question_responses && submission.question_responses.length > 0 ? (
                       <div className="space-y-4">
-                        {submission.question_responses.map((response: any, idx: number) => {
-                          const question = content.questions?.find((q: any) => q.id === response.question_id);
-                          if (!question) return null;
+                        {(() => {
+                          // Group responses by question_id and keep only the latest one for each
+                          const latestResponses = submission.question_responses.reduce((acc: any, response: any) => {
+                            const existing = acc[response.question_id];
+                            if (!existing || new Date(response.created_at) > new Date(existing.created_at)) {
+                              acc[response.question_id] = response;
+                            }
+                            return acc;
+                          }, {});
+                          
+                          return Object.values(latestResponses).map((response: any, idx: number) => {
+                            const question = content.questions?.find((q: any) => q.id === response.question_id);
+                            if (!question) return null;
                           
                           return (
                             <div key={response.id} className="border rounded-lg p-4">
@@ -624,7 +634,8 @@ export default function AssignmentDetail() {
                               </div>
                             </div>
                           );
-                        })}
+                        });
+                        })()}
                       </div>
                     ) : (
                       <p className="text-muted-foreground">No question responses recorded.</p>

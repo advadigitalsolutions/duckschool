@@ -234,8 +234,27 @@ Be generous with partial credit. If they show understanding but use different wo
     
     console.log(`Updating ${validResults.length} question responses...`);
     
+    // First, delete any duplicate question responses (keep only the one we're updating)
+    for (const result of validResults) {
+      const question = questions.find((q: any) => {
+        const resp = responses.find(r => r.id === result.responseId);
+        return resp && q.id === resp.question_id;
+      });
+      
+      if (question) {
+        const resp = responses.find(r => r.id === result.responseId);
+        // Delete all other responses for this question in this submission
+        await supabase
+          .from('question_responses')
+          .delete()
+          .eq('submission_id', submissionId)
+          .eq('question_id', resp.question_id)
+          .neq('id', result.responseId);
+      }
+    }
+    
     // Update all question responses in parallel
-    await Promise.all(
+    const updateResults = await Promise.all(
       validResults.map(result => 
         supabase
           .from('question_responses')
@@ -250,6 +269,13 @@ Be generous with partial credit. If they show understanding but use different wo
           .eq('id', result.responseId)
       )
     );
+    
+    // Log any update errors
+    updateResults.forEach((result, idx) => {
+      if (result.error) {
+        console.error(`Failed to update response ${validResults[idx].responseId}:`, result.error);
+      }
+    });
 
     // Calculate totals
     const totalScore = Math.round(
