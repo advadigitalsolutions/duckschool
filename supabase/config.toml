@@ -51,3 +51,6 @@ verify_jwt = true
 [functions.regrade-submission]
 verify_jwt = true
 
+[functions.regenerate-pe-course]
+verify_jwt = false
+

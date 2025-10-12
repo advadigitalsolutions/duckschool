@@ -10,6 +10,7 @@ import { ArrowLeft, Clock, Target, BookOpen, CheckCircle2, Brain, TrendingUp, Sp
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AssignmentQuestions } from '@/components/AssignmentQuestions';
+import { ActivitySubmission } from '@/components/ActivitySubmission';
 import { TeacherQuestionView } from '@/components/TeacherQuestionView';
 import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
 import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
@@ -343,7 +344,11 @@ export default function AssignmentDetail() {
             {isParent ? (
               <TeacherQuestionView questions={content.questions || []} />
             ) : currentStudentId ? (
-              <AssignmentQuestions assignment={assignment} studentId={currentStudentId} />
+              assignment?.curriculum_items?.type === 'activity' ? (
+                <ActivitySubmission assignment={assignment} studentId={currentStudentId} />
+              ) : (
+                <AssignmentQuestions assignment={assignment} studentId={currentStudentId} />
+              )
             ) : (
               <Card>
                 <CardContent className="py-12 text-center">
