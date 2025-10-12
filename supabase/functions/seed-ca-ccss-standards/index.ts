@@ -67,7 +67,7 @@ Return ONLY a JSON array with this structure:
   }
 ]`;
 
-        const aiResponse = await fetch('https://api.lovable.app/v1/ai-gateway/chat/completions', {
+        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
