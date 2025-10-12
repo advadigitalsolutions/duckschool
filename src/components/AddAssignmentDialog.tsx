@@ -33,6 +33,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
   const [open, setOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [topic, setTopic] = useState('');
+  const [assignedDate, setAssignedDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -128,6 +129,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
         .insert({
           curriculum_item_id: curriculumItem.id,
           status: 'draft',
+          assigned_date: assignedDate || null,
           due_at: dueDate || null,
           rubric: generatedContent.rubric || null
         } as any);
@@ -138,6 +140,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
       setOpen(false);
       setTopic('');
       setSelectedCourse('');
+      setAssignedDate('');
       setDueDate('');
       setSelectedStandards([]);
       onAssignmentAdded();
@@ -217,14 +220,33 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="dueDate">Due Date (Optional)</Label>
-            <Input
-              id="dueDate"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="assignedDate">Assigned Date</Label>
+              <Input
+                id="assignedDate"
+                type="date"
+                value={assignedDate}
+                onChange={(e) => setAssignedDate(e.target.value)}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                When should this work appear
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dueDate">Due Date (Optional)</Label>
+              <Input
+                id="dueDate"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                When must it be completed
+              </p>
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={isGenerating}>

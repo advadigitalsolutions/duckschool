@@ -34,6 +34,9 @@ export function EditAssignmentDialog({ assignment, onAssignmentUpdated, trigger 
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState(assignment.curriculum_items?.body?.title || assignment.curriculum_items?.title || '');
   const [instructions, setInstructions] = useState(assignment.curriculum_items?.body?.instructions || '');
+  const [assignedDate, setAssignedDate] = useState(
+    assignment.assigned_date ? new Date(assignment.assigned_date).toISOString().split('T')[0] : ''
+  );
   const [dueDate, setDueDate] = useState(
     assignment.due_at ? new Date(assignment.due_at).toISOString().split('T')[0] : ''
   );
@@ -65,6 +68,7 @@ export function EditAssignmentDialog({ assignment, onAssignmentUpdated, trigger 
       const { error: assignmentError } = await supabase
         .from('assignments')
         .update({
+          assigned_date: assignedDate || null,
           due_at: dueDate || null,
           status: status,
           max_attempts: maxAttempts ? parseInt(maxAttempts) : null,
@@ -128,6 +132,16 @@ export function EditAssignmentDialog({ assignment, onAssignmentUpdated, trigger 
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
+                <Label htmlFor="assignedDate">Assigned Date</Label>
+                <Input
+                  id="assignedDate"
+                  type="date"
+                  value={assignedDate}
+                  onChange={(e) => setAssignedDate(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="dueDate">Due Date</Label>
                 <Input
                   id="dueDate"
@@ -136,18 +150,18 @@ export function EditAssignmentDialog({ assignment, onAssignmentUpdated, trigger 
                   onChange={(e) => setDueDate(e.target.value)}
                 />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="maxAttempts">Maximum Attempts</Label>
-                <Input
-                  id="maxAttempts"
-                  type="number"
-                  min="1"
-                  value={maxAttempts}
-                  onChange={(e) => setMaxAttempts(e.target.value)}
-                  placeholder="Unlimited"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="maxAttempts">Maximum Attempts</Label>
+              <Input
+                id="maxAttempts"
+                type="number"
+                min="1"
+                value={maxAttempts}
+                onChange={(e) => setMaxAttempts(e.target.value)}
+                placeholder="Unlimited"
+              />
             </div>
 
             <div className="space-y-2">
