@@ -26,9 +26,11 @@ export function RegradeButton({ submissionId, onComplete }: RegradeButtonProps) 
       if (error) throw error;
 
       toast.success('Re-grading complete! Refreshing results...');
+      
+      // Force a hard page reload to ensure fresh data
       setTimeout(() => {
-        onComplete?.();
-      }, 1000);
+        window.location.reload();
+      }, 500);
     } catch (error) {
       console.error('Error re-grading:', error);
       toast.error('Failed to re-grade submission');
