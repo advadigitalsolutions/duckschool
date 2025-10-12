@@ -32,19 +32,10 @@ export const AuthGuard = ({ children, requireRole }: AuthGuardProps) => {
           return;
         }
         
-        // Validate the session before setting it
+        // Just use the session from the event - no extra validation needed
         if (session?.user) {
-          const { data: { user }, error } = await supabase.auth.getUser();
-          
-          if (error || !user || user.id !== session.user.id) {
-            // Invalid session, clear it
-            await supabase.auth.signOut();
-            setSession(null);
-            setUser(null);
-          } else {
-            setSession(session);
-            setUser(user);
-          }
+          setSession(session);
+          setUser(session.user);
         } else {
           setSession(null);
           setUser(null);
@@ -54,22 +45,13 @@ export const AuthGuard = ({ children, requireRole }: AuthGuardProps) => {
       }
     );
 
-    // Check for existing session with validation
+    // Check for existing session - single validation only
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!mounted) return;
       
       if (session?.user) {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error || !user || user.id !== session.user.id) {
-          // Invalid session, clear it
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-        } else {
-          setSession(session);
-          setUser(user);
-        }
+        setSession(session);
+        setUser(session.user);
       }
       setLoading(false);
     });
