@@ -29,6 +29,7 @@ import { Pencil, Trash2, User, Sparkles } from 'lucide-react';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { WeeklyView } from '@/components/WeeklyView';
 import { ParentPomodoroControls } from '@/components/ParentPomodoroControls';
+import { TriggerPERegeneration } from '@/components/TriggerPERegeneration';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -234,6 +235,7 @@ export default function ParentDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <TriggerPERegeneration />
       {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
