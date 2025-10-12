@@ -24,10 +24,10 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
   const fetchWeeklyData = async () => {
     try {
       const today = new Date();
-      const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-      const weekEnd = addDays(weekStart, 4); // Friday
+      const upcomingStart = today;
+      const upcomingEnd = addDays(today, 14); // Show next 14 days
 
-      // Fetch current week's assignments
+      // Fetch upcoming assignments
       const { data: assignmentsData, error } = await supabase
         .from('assignments')
         .select(`
@@ -41,8 +41,8 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
             )
           )
         `)
-        .gte('assigned_date', format(weekStart, 'yyyy-MM-dd'))
-        .lte('assigned_date', format(weekEnd, 'yyyy-MM-dd'))
+        .gte('assigned_date', format(upcomingStart, 'yyyy-MM-dd'))
+        .lte('assigned_date', format(upcomingEnd, 'yyyy-MM-dd'))
         .eq('curriculum_items.courses.student_id', studentId)
         .order('assigned_date', { ascending: true })
         .order('day_of_week', { ascending: true });
@@ -54,9 +54,9 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
         .from('curriculum_weeks')
         .select('*')
         .eq('student_id', studentId)
-        .gte('start_date', format(weekStart, 'yyyy-MM-dd'))
-        .lte('end_date', format(weekEnd, 'yyyy-MM-dd'))
-        .single();
+        .gte('start_date', format(upcomingStart, 'yyyy-MM-dd'))
+        .lte('end_date', format(upcomingEnd, 'yyyy-MM-dd'))
+        .maybeSingle();
 
       setWeeklyData(weekData);
       setAssignments(assignmentsData || []);
@@ -70,11 +70,16 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
   };
 
   const groupByDay = () => {
-    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
-    return days.map(day => ({
-      day,
-      assignments: assignments.filter(a => a.day_of_week === day)
-    }));
+    const today = new Date();
+    const next10Days = Array.from({ length: 10 }, (_, i) => addDays(today, i));
+    
+    return next10Days.map(date => ({
+      date,
+      assignments: assignments.filter(a => {
+        if (!a.assigned_date) return false;
+        return isSameDay(parseISO(a.assigned_date), date);
+      })
+    })).filter(day => day.assignments.length > 0); // Only show days with assignments
   };
 
   const calculateProgress = () => {
@@ -95,7 +100,7 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
 
   const dayGroups = groupByDay();
   const progress = calculateProgress();
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+  const todayDate = new Date();
 
   return (
     <div className="space-y-6">
@@ -106,7 +111,7 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                This Week's Learning
+                Upcoming Work
               </CardTitle>
               {weeklyData?.theme && (
                 <CardDescription className="mt-2">
@@ -148,24 +153,20 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
 
       {/* Daily Breakdown */}
       <div className="space-y-4">
-        {dayGroups.map(({ day, assignments: dayAssignments }) => {
-          const isToday = day === today;
-          const dayDate = addDays(
-            startOfWeek(new Date(), { weekStartsOn: 1 }),
-            ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].indexOf(day)
-          );
+        {dayGroups.map(({ date, assignments: dayAssignments }) => {
+          const isToday = isSameDay(date, todayDate);
 
           return (
-            <Card key={day} className={isToday ? 'border-primary shadow-md' : ''}>
+            <Card key={date.toISOString()} className={isToday ? 'border-primary shadow-md' : ''}>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="capitalize flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2">
                     {isToday && <ChevronRight className="h-5 w-5 text-primary" />}
-                    {day}
+                    {format(date, 'EEEE')}
                     {isToday && <Badge variant="default">Today</Badge>}
                   </CardTitle>
                   <span className="text-sm text-muted-foreground">
-                    {format(dayDate, 'MMM d')}
+                    {format(date, 'MMM d')}
                   </span>
                 </div>
               </CardHeader>
@@ -213,9 +214,9 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-8 text-center">
             <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No assignments this week</h3>
+            <h3 className="font-semibold text-lg mb-2">No upcoming assignments</h3>
             <p className="text-sm text-muted-foreground">
-              Your weekly curriculum hasn't been generated yet, or you're all caught up!
+              No assignments scheduled for the next two weeks. Check back later!
             </p>
           </CardContent>
         </Card>
