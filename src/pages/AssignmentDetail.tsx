@@ -591,16 +591,26 @@ export default function AssignmentDetail() {
                                 </div>
                                 
                                 {/* Show AI feedback if available */}
-                                {response.answer?.ai_feedback && (
+                                {(response.answer?.ai_feedback || response.feedback) && (
                                   <div className="p-3 bg-muted rounded-lg">
-                                    <span className="font-medium">AI Feedback: </span>
+                                    <span className="font-medium">
+                                      {(response.answer?.ai_feedback || response.feedback)?.includes('⚠️') 
+                                        ? 'Grading Status' 
+                                        : 'AI Feedback'}
+                                      : 
+                                    </span>
                                     <p className="text-muted-foreground mt-1">
-                                      <BionicText>{response.answer.ai_feedback}</BionicText>
+                                      <BionicText>{response.answer?.ai_feedback || response.feedback}</BionicText>
                                     </p>
                                     {response.answer?.ai_score !== undefined && (
                                       <p className="text-xs text-muted-foreground mt-2">
                                         Understanding Score: {Math.round(response.answer.ai_score * 100)}%
                                       </p>
+                                    )}
+                                    {(response.answer?.ai_feedback || response.feedback)?.includes('⚠️') && (
+                                      <div className="mt-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-xs text-yellow-800 dark:text-yellow-200">
+                                        ⚠️ This response requires manual review by the teacher
+                                      </div>
                                     )}
                                   </div>
                                 )}

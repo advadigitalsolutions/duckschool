@@ -129,19 +129,29 @@ async function performRegrade(submissionId: string, authHeader: string) {
           console.log(`Exact match - CORRECT`);
         } else {
           // Use AI grading for open-ended questions that aren't exact matches
-          console.log(`Calling AI for grading...`);
-        const gradeResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            messages: [
-              { 
-                role: 'system', 
-                content: `You are an expert educator grading student responses. Your job is to:
+          console.log(`Calling AI for grading (question: ${question.question?.substring(0, 50)}...)...`);
+          
+          // Retry logic with exponential backoff
+          let aiSuccess = false;
+          let lastError = null;
+          const maxRetries = 3;
+          
+          for (let attempt = 1; attempt <= maxRetries && !aiSuccess; attempt++) {
+            try {
+              console.log(`AI grading attempt ${attempt}/${maxRetries}...`);
+              
+              const gradeResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: 'google/gemini-2.5-flash',
+                  messages: [
+                    { 
+                      role: 'system', 
+                      content: `You are an expert educator grading student responses. Your job is to:
 1. Evaluate if the student demonstrates understanding of the concept, even if worded differently
 2. Give credit for partial understanding and correct ideas expressed in their own words
 3. Be generous but fair - recognize paraphrasing, synonyms, and alternative explanations
@@ -153,10 +163,10 @@ Return a score between 0 and 1 where:
 - 0.5-0.74 = Partially correct, has the right idea but incomplete or somewhat unclear
 - 0.25-0.49 = Shows some understanding but significant gaps or misconceptions
 - 0-0.24 = Incorrect or shows fundamental misunderstanding` 
-              },
-              { 
-                role: 'user', 
-                content: `Question: ${question.question}
+                    },
+                    { 
+                      role: 'user', 
+                      content: `Question: ${question.question}
 Expected Answer: ${question.correct_answer}
 Student's Answer: ${response.answer.value}
 
@@ -166,52 +176,109 @@ Grade this response and provide:
 3. Whether they demonstrated the core concept, even if worded differently
 
 Be generous with partial credit. If they show understanding but use different words, that's still correct.` 
-              }
-            ],
-            tools: [{
-              type: 'function',
-              function: {
-                name: 'grade_response',
-                description: 'Grade a student response with score and feedback',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    score: {
-                      type: 'number',
-                      description: 'Score between 0 and 1 reflecting understanding'
-                    },
-                    feedback: {
-                      type: 'string',
-                      description: 'Brief constructive feedback on the response'
-                    },
-                    has_core_understanding: {
-                      type: 'boolean',
-                      description: 'Whether student demonstrates the core concept'
                     }
-                  },
-                  required: ['score', 'feedback', 'has_core_understanding'],
-                  additionalProperties: false
-                }
-              }
-            }],
-            tool_choice: { type: 'function', function: { name: 'grade_response' } }
-          }),
-        });
+                  ],
+                  tools: [{
+                    type: 'function',
+                    function: {
+                      name: 'grade_response',
+                      description: 'Grade a student response with score and feedback',
+                      parameters: {
+                        type: 'object',
+                        properties: {
+                          score: {
+                            type: 'number',
+                            description: 'Score between 0 and 1 reflecting understanding'
+                          },
+                          feedback: {
+                            type: 'string',
+                            description: 'Brief constructive feedback on the response'
+                          },
+                          has_core_understanding: {
+                            type: 'boolean',
+                            description: 'Whether student demonstrates the core concept'
+                          }
+                        },
+                        required: ['score', 'feedback', 'has_core_understanding'],
+                        additionalProperties: false
+                      }
+                    }
+                  }],
+                  tool_choice: { type: 'function', function: { name: 'grade_response' } }
+                }),
+              });
 
-          if (gradeResponse.ok) {
-            const gradeData = await gradeResponse.json();
-            const toolCall = gradeData.choices[0].message.tool_calls?.[0];
-            if (toolCall) {
-              const result = JSON.parse(toolCall.function.arguments);
-              newScore = result.score;
-              isCorrect = result.score >= 0.7;
-              feedback = result.feedback;
-              console.log(`AI grading result: score=${newScore}, correct=${isCorrect}`);
-            } else {
-              console.log(`No tool call in AI response`);
+              if (gradeResponse.ok) {
+                const gradeData = await gradeResponse.json();
+                console.log(`AI response received:`, JSON.stringify(gradeData, null, 2));
+                
+                const toolCall = gradeData.choices[0].message.tool_calls?.[0];
+                if (toolCall) {
+                  const result = JSON.parse(toolCall.function.arguments);
+                  newScore = result.score;
+                  isCorrect = result.score >= 0.7;
+                  feedback = result.feedback;
+                  aiSuccess = true;
+                  console.log(`✓ AI grading successful: score=${newScore}, correct=${isCorrect}`);
+                } else {
+                  throw new Error('No tool call in AI response');
+                }
+              } else {
+                const errorText = await gradeResponse.text();
+                console.error(`✗ AI API returned error (${gradeResponse.status}):`, errorText);
+                
+                // Check for specific error types
+                if (gradeResponse.status === 429) {
+                  lastError = 'Rate limit exceeded';
+                } else if (gradeResponse.status === 402) {
+                  lastError = 'Payment required - AI credits exhausted';
+                } else {
+                  lastError = `AI API error: ${gradeResponse.status}`;
+                }
+                throw new Error(lastError);
+              }
+            } catch (error) {
+              lastError = error instanceof Error ? error.message : 'Unknown error';
+              console.error(`✗ AI grading attempt ${attempt} failed:`, lastError);
+              
+              // If not the last attempt, wait before retrying (exponential backoff)
+              if (attempt < maxRetries) {
+                const delayMs = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+                console.log(`Waiting ${delayMs}ms before retry...`);
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+              }
             }
-          } else {
-            console.log(`AI grading failed: ${gradeResponse.status}`);
+          }
+          
+          // If all retries failed, use fallback grading
+          if (!aiSuccess) {
+            console.error(`⚠️ All AI grading attempts failed. Using fallback strategy.`);
+            
+            // Keyword matching as fallback
+            const studentLower = String(response.answer.value || '').toLowerCase();
+            const correctLower = String(question.correct_answer || '').toLowerCase();
+            
+            // Extract key words (longer than 3 chars) from correct answer
+            const keyWords = correctLower
+              .split(/\s+/)
+              .filter(word => word.length > 3 && !['that', 'this', 'with', 'from', 'have', 'been'].includes(word));
+            
+            const matchedWords = keyWords.filter(word => studentLower.includes(word));
+            const matchRatio = keyWords.length > 0 ? matchedWords.length / keyWords.length : 0;
+            
+            if (matchRatio >= 0.5) {
+              // At least half the key words present - give partial credit
+              newScore = 0.5;
+              isCorrect = false;
+              feedback = `⚠️ Unable to grade with AI (${lastError}). Based on keyword matching, your answer shows some understanding but needs manual review. Key concepts mentioned: ${matchedWords.join(', ') || 'none'}.`;
+              console.log(`Using keyword fallback: ${matchRatio * 100}% match, gave 0.5 score`);
+            } else {
+              // Less than half matched - mark for manual review
+              newScore = 0;
+              isCorrect = false;
+              feedback = `⚠️ Unable to grade with AI (${lastError}). This answer requires manual review by your teacher. The automated grading system could not determine the correctness.`;
+              console.log(`Keyword fallback insufficient, marked for manual review`);
+            }
           }
         }
       }
