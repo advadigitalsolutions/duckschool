@@ -38,8 +38,13 @@ serve(async (req) => {
 });
 
 async function performRegrade(submissionId: string, authHeader: string) {
+  const startTime = Date.now();
+  const FUNCTION_TIMEOUT = 90000; // 90 second hard timeout
+  
   try {
-    console.log('Starting re-grade for submission:', submissionId);
+    console.log('=== STARTING RE-GRADE ===');
+    console.log('Submission ID:', submissionId);
+    console.log('Timestamp:', new Date().toISOString());
     
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -52,9 +57,8 @@ async function performRegrade(submissionId: string, authHeader: string) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('Re-grading submission:', submissionId);
-
-    // Fetch submission with assignment and questions
+    // STEP 1: Fetch submission data
+    console.log('\n[STEP 1] Fetching submission data...');
     const { data: submission, error: subError } = await supabase
       .from('submissions')
       .select(`
@@ -68,83 +72,112 @@ async function performRegrade(submissionId: string, authHeader: string) {
       .single();
 
     if (subError) throw subError;
+    console.log('✓ Submission loaded');
 
-    // Fetch question responses
-    const { data: responses, error: respError } = await supabase
+    // STEP 2: Delete ALL existing question responses (clean slate)
+    console.log('\n[STEP 2] Deleting all existing question responses...');
+    const { error: deleteError } = await supabase
       .from('question_responses')
-      .select('*')
+      .delete()
       .eq('submission_id', submissionId);
 
-    if (respError) throw respError;
+    if (deleteError) {
+      console.error('Error deleting old responses:', deleteError);
+      throw deleteError;
+    }
+    console.log('✓ Old responses deleted');
 
+    // STEP 3: Get questions and student answers from submission
     const questions = submission.assignment.curriculum_items.body.questions || [];
+    const studentAnswers = submission.content?.answers || {};
+    const attemptNumber = submission.attempt_no || 1;
+    
+    console.log(`\n[STEP 3] Found ${questions.length} questions to grade`);
+    console.log('Student answers:', Object.keys(studentAnswers).length);
+
     const maxScore = questions.reduce((sum: number, q: any) => sum + (q.points || 1), 0);
+    console.log('Maximum possible score:', maxScore);
 
-    console.log(`Processing ${responses.length} question responses in parallel...`);
+    // STEP 4: Grade questions SEQUENTIALLY (not parallel)
+    console.log('\n[STEP 4] Grading questions sequentially...');
+    const gradedResults: any[] = [];
+    
+    for (let i = 0; i < questions.length; i++) {
+      const question = questions[i];
+      const studentAnswer = studentAnswers[question.id];
+      
+      // Check timeout
+      if (Date.now() - startTime > FUNCTION_TIMEOUT) {
+        throw new Error(`Function timeout after ${FUNCTION_TIMEOUT}ms`);
+      }
 
-    // Grade all questions in parallel for speed
-    const gradingResults = await Promise.all(
-      responses.map(async (response) => {
-        const question = questions.find((q: any) => q.id === response.question_id);
-        if (!question) return null;
+      console.log(`\n--- Question ${i + 1}/${questions.length} (ID: ${question.id}) ---`);
+      console.log('Type:', question.type);
+      console.log('Points:', question.points || 1);
+      console.log('Student answer:', JSON.stringify(studentAnswer).substring(0, 100));
+      console.log('Correct answer:', JSON.stringify(question.correct_answer).substring(0, 100));
+
+      if (!studentAnswer?.value) {
+        console.log('⚠️ No answer provided - skipping');
+        continue;
+      }
 
       let newScore = 0;
       let isCorrect = false;
       let feedback = null;
 
-      console.log(`Grading question ${response.question_id}, type: ${question.type}`);
-      console.log(`Student answer: "${response.answer.value}"`);
-      console.log(`Correct answer: "${question.correct_answer}"`);
-
+      // Grade based on question type
       if (question.type === 'numeric') {
-        const numAnswer = typeof response.answer.value === 'number' 
-          ? response.answer.value 
-          : parseFloat(response.answer.value);
+        const numAnswer = typeof studentAnswer.value === 'number' 
+          ? studentAnswer.value 
+          : parseFloat(studentAnswer.value);
         const correctAnswer = typeof question.correct_answer === 'number' 
           ? question.correct_answer 
           : parseFloat(question.correct_answer);
         const tolerance = question.tolerance || 0.01;
         isCorrect = Math.abs(numAnswer - correctAnswer) <= tolerance;
         newScore = isCorrect ? 1 : 0;
-        console.log(`Numeric grading: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`);
-      } else if (question.type === 'multiple_choice') {
-        // Normalize both strings for comparison (lowercase, trim)
-        const studentAnswer = String(response.answer.value || '').toLowerCase().trim();
-        const correctAnswer = String(question.correct_answer || '').toLowerCase().trim();
-        isCorrect = studentAnswer === correctAnswer;
-        newScore = isCorrect ? 1 : 0;
-        console.log(`Multiple choice grading: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`);
-        console.log(`  Student: "${studentAnswer}"`);
-        console.log(`  Correct: "${correctAnswer}"`);
-      } else {
-        // First check for exact match (case-insensitive, trimmed)
-        const studentAnswer = String(response.answer.value || '').toLowerCase().trim();
-        const correctAnswer = String(question.correct_answer || '').toLowerCase().trim();
+        feedback = isCorrect 
+          ? 'Correct!' 
+          : `Incorrect. The correct answer is ${correctAnswer}.`;
+        console.log(`Result: ${isCorrect ? '✓ CORRECT' : '✗ INCORRECT'} (numeric)`);
         
-        if (studentAnswer === correctAnswer) {
-          // Exact match - give full credit without AI call
+      } else if (question.type === 'multiple_choice') {
+        const studentAns = String(studentAnswer.value || '').toLowerCase().trim();
+        const correctAns = String(question.correct_answer || '').toLowerCase().trim();
+        isCorrect = studentAns === correctAns;
+        newScore = isCorrect ? 1 : 0;
+        feedback = isCorrect 
+          ? 'Correct!' 
+          : `Incorrect. The correct answer is "${question.correct_answer}".`;
+        console.log(`Result: ${isCorrect ? '✓ CORRECT' : '✗ INCORRECT'} (multiple choice)`);
+        
+      } else {
+        // Open-ended: Check exact match first
+        const studentAns = String(studentAnswer.value || '').toLowerCase().trim();
+        const correctAns = String(question.correct_answer || '').toLowerCase().trim();
+        
+        if (studentAns === correctAns) {
           isCorrect = true;
           newScore = 1;
-          feedback = "Perfect! Your answer matches exactly.";
-          console.log(`Exact match - CORRECT`);
+          feedback = 'Perfect! Your answer matches exactly.';
+          console.log('Result: ✓ CORRECT (exact match)');
         } else {
-          // Use AI grading for open-ended questions that aren't exact matches
-          console.log(`Calling AI for grading (question: ${question.question?.substring(0, 50)}...)...`);
+          // Use AI grading
+          console.log('Calling AI for grading...');
           
-          // Retry logic with exponential backoff
+          const AI_TIMEOUT = 15000; // 15 second timeout
+          const MAX_RETRIES = 2; // Reduced retries
           let aiSuccess = false;
-          let lastError = null;
-          const maxRetries = 3;
-          const requestTimeout = 25000; // 25 second timeout per attempt
           
-          for (let attempt = 1; attempt <= maxRetries && !aiSuccess; attempt++) {
+          for (let attempt = 1; attempt <= MAX_RETRIES && !aiSuccess; attempt++) {
             try {
-              console.log(`AI grading attempt ${attempt}/${maxRetries}...`);
+              console.log(`  Attempt ${attempt}/${MAX_RETRIES}...`);
               
-              // Create an abort controller for timeout
               const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), requestTimeout);
+              const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT);
               
+              const aiStart = Date.now();
               const gradeResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -157,55 +190,25 @@ async function performRegrade(submissionId: string, authHeader: string) {
                   messages: [
                     { 
                       role: 'system', 
-                      content: `You are an expert educator grading student responses. Your job is to:
-1. Evaluate if the student demonstrates understanding of the concept, even if worded differently
-2. Give credit for partial understanding and correct ideas expressed in their own words
-3. Be generous but fair - recognize paraphrasing, synonyms, and alternative explanations
-4. Only mark wrong if the student shows fundamental misunderstanding or provides incorrect information
-
-Return a score between 0 and 1 where:
-- 1.0 = Fully correct, demonstrates complete understanding
-- 0.75-0.99 = Mostly correct, minor details missing or slight imprecision
-- 0.5-0.74 = Partially correct, has the right idea but incomplete or somewhat unclear
-- 0.25-0.49 = Shows some understanding but significant gaps or misconceptions
-- 0-0.24 = Incorrect or shows fundamental misunderstanding` 
+                      content: `Grade student responses generously. Give credit for understanding even if worded differently. Score 0-1 where 1.0=fully correct, 0.7+=mostly correct, 0.5-0.7=partially correct, <0.5=incorrect.` 
                     },
                     { 
                       role: 'user', 
-                      content: `Question: ${question.question}
-Expected Answer: ${question.correct_answer}
-Student's Answer: ${response.answer.value}
-
-Grade this response and provide:
-1. A score (0-1) reflecting the student's understanding
-2. Brief feedback explaining what they got right and what could be improved
-3. Whether they demonstrated the core concept, even if worded differently
-
-Be generous with partial credit. If they show understanding but use different words, that's still correct.` 
+                      content: `Question: ${question.question}\nExpected: ${question.correct_answer}\nStudent: ${studentAnswer.value}\n\nGrade with score (0-1) and brief feedback.` 
                     }
                   ],
                   tools: [{
                     type: 'function',
                     function: {
                       name: 'grade_response',
-                      description: 'Grade a student response with score and feedback',
+                      description: 'Grade with score and feedback',
                       parameters: {
                         type: 'object',
                         properties: {
-                          score: {
-                            type: 'number',
-                            description: 'Score between 0 and 1 reflecting understanding'
-                          },
-                          feedback: {
-                            type: 'string',
-                            description: 'Brief constructive feedback on the response'
-                          },
-                          has_core_understanding: {
-                            type: 'boolean',
-                            description: 'Whether student demonstrates the core concept'
-                          }
+                          score: { type: 'number', description: 'Score 0-1' },
+                          feedback: { type: 'string', description: 'Brief feedback' }
                         },
-                        required: ['score', 'feedback', 'has_core_understanding'],
+                        required: ['score', 'feedback'],
                         additionalProperties: false
                       }
                     }
@@ -213,186 +216,129 @@ Be generous with partial credit. If they show understanding but use different wo
                   tool_choice: { type: 'function', function: { name: 'grade_response' } }
                 }),
               });
-
+              
               clearTimeout(timeoutId);
-
+              const aiLatency = Date.now() - aiStart;
+              
               if (gradeResponse.ok) {
                 const gradeData = await gradeResponse.json();
-                console.log(`AI response status: ${gradeResponse.status}`);
-                
                 const toolCall = gradeData.choices[0].message.tool_calls?.[0];
+                
                 if (toolCall) {
                   const result = JSON.parse(toolCall.function.arguments);
                   newScore = result.score;
                   isCorrect = result.score >= 0.7;
                   feedback = result.feedback;
                   aiSuccess = true;
-                  console.log(`✓ AI grading successful: score=${newScore}, correct=${isCorrect}, feedback="${feedback.substring(0, 50)}..."`);
+                  console.log(`  ✓ AI success (${aiLatency}ms): score=${newScore}, correct=${isCorrect}`);
                 } else {
-                  throw new Error('No tool call in AI response');
+                  throw new Error('No tool call in response');
                 }
               } else {
                 const errorText = await gradeResponse.text();
-                console.error(`✗ AI API returned error (${gradeResponse.status}):`, errorText.substring(0, 200));
-                
-                // Check for specific error types
-                if (gradeResponse.status === 429) {
-                  lastError = 'Rate limit exceeded';
-                } else if (gradeResponse.status === 402) {
-                  lastError = 'Payment required - AI credits exhausted';
-                } else {
-                  lastError = `AI API error: ${gradeResponse.status}`;
-                }
-                throw new Error(lastError);
+                console.error(`  ✗ AI error ${gradeResponse.status}:`, errorText.substring(0, 150));
+                throw new Error(`AI error: ${gradeResponse.status}`);
               }
+              
             } catch (error) {
-              lastError = error instanceof Error ? error.message : 'Unknown error';
+              const errorMsg = error instanceof Error ? error.message : 'Unknown';
+              console.error(`  ✗ Attempt ${attempt} failed:`, errorMsg);
               
-              // Check if it's a timeout/abort error
-              if (error instanceof Error && error.name === 'AbortError') {
-                lastError = `Request timeout after ${requestTimeout}ms`;
-                console.error(`✗ AI grading attempt ${attempt} timed out after ${requestTimeout}ms`);
-              } else {
-                console.error(`✗ AI grading attempt ${attempt} failed:`, lastError);
-              }
-              
-              // If not the last attempt, wait before retrying (exponential backoff)
-              if (attempt < maxRetries) {
-                const delayMs = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-                console.log(`Waiting ${delayMs}ms before retry...`);
-                await new Promise(resolve => setTimeout(resolve, delayMs));
+              if (attempt < MAX_RETRIES) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
               }
             }
           }
           
-          // If all retries failed, use fallback grading
+          // If AI failed, mark for manual review
           if (!aiSuccess) {
-            console.error(`⚠️ All AI grading attempts failed. Using fallback strategy.`);
-            
-            // Keyword matching as fallback
-            const studentLower = String(response.answer.value || '').toLowerCase();
-            const correctLower = String(question.correct_answer || '').toLowerCase();
-            
-            // Extract key words (longer than 3 chars) from correct answer
-            const keyWords = correctLower
-              .split(/\s+/)
-              .filter(word => word.length > 3 && !['that', 'this', 'with', 'from', 'have', 'been'].includes(word));
-            
-            const matchedWords = keyWords.filter(word => studentLower.includes(word));
-            const matchRatio = keyWords.length > 0 ? matchedWords.length / keyWords.length : 0;
-            
-            if (matchRatio >= 0.5) {
-              // At least half the key words present - give partial credit
-              newScore = 0.5;
-              isCorrect = false;
-              feedback = `⚠️ Unable to grade with AI (${lastError}). Based on keyword matching, your answer shows some understanding but needs manual review. Key concepts mentioned: ${matchedWords.join(', ') || 'none'}.`;
-              console.log(`Using keyword fallback: ${matchRatio * 100}% match, gave 0.5 score`);
-            } else {
-              // Less than half matched - mark for manual review
-              newScore = 0;
-              isCorrect = false;
-              feedback = `⚠️ Unable to grade with AI (${lastError}). This answer requires manual review by your teacher. The automated grading system could not determine the correctness.`;
-              console.log(`Keyword fallback insufficient, marked for manual review`);
-            }
+            console.log('  ⚠️ AI grading failed - marking for manual review');
+            newScore = 0;
+            isCorrect = false;
+            feedback = '⚠️ This answer requires manual review by your teacher.';
           }
         }
       }
 
-        console.log(`Final grade for question: score=${newScore}, correct=${isCorrect}`);
-
-        return {
-          responseId: response.id,
-          newScore,
-          isCorrect,
-          feedback,
-          points: question.points || 1,
-          answer: response.answer
-        };
-      })
-    );
-
-    // Filter out null results and update all responses
-    const validResults = gradingResults.filter(r => r !== null);
-    
-    console.log(`Updating ${validResults.length} question responses...`);
-    
-    // First, delete any duplicate question responses (keep only the one we're updating)
-    for (const result of validResults) {
-      const question = questions.find((q: any) => {
-        const resp = responses.find(r => r.id === result.responseId);
-        return resp && q.id === resp.question_id;
+      // Store result in memory
+      gradedResults.push({
+        question_id: question.id,
+        submission_id: submissionId,
+        answer: studentAnswer,
+        is_correct: isCorrect,
+        attempt_number: attemptNumber,
+        time_spent_seconds: studentAnswer.timeSpent || 0,
+        ai_score: newScore,
+        ai_feedback: feedback,
+        points: question.points || 1
       });
       
-      if (question) {
-        const resp = responses.find(r => r.id === result.responseId);
-        // Delete all other responses for this question in this submission
-        await supabase
-          .from('question_responses')
-          .delete()
-          .eq('submission_id', submissionId)
-          .eq('question_id', resp.question_id)
-          .neq('id', result.responseId);
-      }
+      console.log(`Stored result: score=${newScore}, correct=${isCorrect}`);
     }
-    
-    // Update all question responses in parallel
-    const updateResults = await Promise.all(
-      validResults.map(result => 
-        supabase
-          .from('question_responses')
-          .update({
-            is_correct: result.isCorrect,
-            answer: {
-              ...result.answer,
-              ai_score: result.newScore,
-              ai_feedback: result.feedback
-            }
-          })
-          .eq('id', result.responseId)
-      )
-    );
-    
-    // Log any update errors
-    updateResults.forEach((result, idx) => {
-      if (result.error) {
-        console.error(`Failed to update response ${validResults[idx].responseId}:`, result.error);
-      }
-    });
 
-    // Calculate totals
+    console.log(`\n✓ Graded ${gradedResults.length} questions`);
+
+    // STEP 5: Insert ALL new question responses atomically
+    console.log('\n[STEP 5] Inserting new question responses...');
+    
+    const responsesToInsert = gradedResults.map(r => ({
+      question_id: r.question_id,
+      submission_id: r.submission_id,
+      answer: {
+        value: r.answer.value,
+        ai_score: r.ai_score,
+        ai_feedback: r.ai_feedback
+      },
+      is_correct: r.is_correct,
+      attempt_number: r.attempt_number,
+      time_spent_seconds: r.time_spent_seconds
+    }));
+    
+    const { error: insertError } = await supabase
+      .from('question_responses')
+      .insert(responsesToInsert);
+
+    if (insertError) {
+      console.error('Error inserting responses:', insertError);
+      throw insertError;
+    }
+    console.log(`✓ Inserted ${responsesToInsert.length} responses`);
+
+    // STEP 6: Calculate totals
+    console.log('\n[STEP 6] Calculating totals...');
     const totalScore = Math.round(
-      validResults.reduce((sum, r) => sum + (r.newScore * r.points), 0) * 100
+      gradedResults.reduce((sum, r) => sum + (r.ai_score * r.points), 0) * 100
     ) / 100;
-    const correctCount = validResults.filter(r => r.isCorrect).length;
+    const correctCount = gradedResults.filter(r => r.is_correct).length;
+    
+    console.log('Total score:', totalScore);
+    console.log('Max score:', maxScore);
+    console.log('Correct count:', correctCount);
 
-    console.log('Final totals:', { totalScore, maxScore, correctCount, questionsGraded: responses.length });
-
-    // Update grade - try to update existing, if not found create new one
-    const { error: updateGradeError } = await supabase
+    // STEP 7: Update grades table
+    console.log('\n[STEP 7] Updating grades table...');
+    const { error: upsertGradeError } = await supabase
       .from('grades')
-      .update({
+      .upsert({
+        assignment_id: submission.assignment_id,
+        student_id: submission.student_id,
         score: totalScore,
-        max_score: maxScore
-      })
-      .eq('assignment_id', submission.assignment_id)
-      .eq('student_id', submission.student_id);
+        max_score: maxScore,
+        grader: 'ai',
+        graded_at: new Date().toISOString()
+      }, {
+        onConflict: 'assignment_id,student_id'
+      });
 
-    if (updateGradeError) {
-      console.error('Error updating grade:', updateGradeError);
-      // Try to insert if update failed (might not exist)
-      await supabase
-        .from('grades')
-        .insert({
-          assignment_id: submission.assignment_id,
-          student_id: submission.student_id,
-          score: totalScore,
-          max_score: maxScore,
-          grader: 'ai'
-        });
+    if (upsertGradeError) {
+      console.error('Error upserting grade:', upsertGradeError);
+    } else {
+      console.log('✓ Grade updated');
     }
 
-    // Update submission
-    await supabase
+    // STEP 8: Update submission
+    console.log('\n[STEP 8] Updating submission...');
+    const { error: updateSubError } = await supabase
       .from('submissions')
       .update({
         content: {
@@ -403,9 +349,20 @@ Be generous with partial credit. If they show understanding but use different wo
       })
       .eq('id', submissionId);
 
-    console.log('Re-grading complete:', { totalScore, maxScore, correctCount });
+    if (updateSubError) {
+      console.error('Error updating submission:', updateSubError);
+    } else {
+      console.log('✓ Submission updated');
+    }
+
+    const totalTime = Date.now() - startTime;
+    console.log(`\n=== RE-GRADE COMPLETE (${totalTime}ms) ===`);
+    console.log('Final results:', { totalScore, maxScore, correctCount, questionsGraded: gradedResults.length });
+    
   } catch (error) {
-    console.error('Error in regrade-submission:', error);
+    const totalTime = Date.now() - startTime;
+    console.error(`\n=== RE-GRADE FAILED (${totalTime}ms) ===`);
+    console.error('Error:', error);
     throw error;
   }
 }
