@@ -41,16 +41,16 @@ async function performRegrade(submissionId: string, authHeader: string) {
   const startTime = Date.now();
   const FUNCTION_TIMEOUT = 90000; // 90 second hard timeout
   
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { global: { headers: { Authorization: authHeader } } }
+  );
+  
   try {
     console.log('=== STARTING RE-GRADE ===');
     console.log('Submission ID:', submissionId);
     console.log('Timestamp:', new Date().toISOString());
-    
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -74,8 +74,33 @@ async function performRegrade(submissionId: string, authHeader: string) {
     if (subError) throw subError;
     console.log('✓ Submission loaded');
 
-    // STEP 2: Fetch existing question responses to get student answers
-    console.log('\n[STEP 2] Fetching existing question responses...');
+    // STEP 2: Check if already grading (prevent concurrent re-grades)
+    console.log('\n[STEP 2] Checking submission status...');
+    const { data: subCheck } = await supabase
+      .from('submissions')
+      .select('content')
+      .eq('id', submissionId)
+      .single();
+    
+    if (subCheck?.content?.grading_in_progress) {
+      console.log('⚠️ Re-grading already in progress, aborting');
+      throw new Error('Re-grading already in progress');
+    }
+
+    // Mark as grading in progress
+    await supabase
+      .from('submissions')
+      .update({ 
+        content: { 
+          ...subCheck?.content, 
+          grading_in_progress: true 
+        } 
+      })
+      .eq('id', submissionId);
+    console.log('✓ Marked as grading in progress');
+
+    // STEP 3: Fetch existing question responses to get student answers
+    console.log('\n[STEP 3] Fetching existing question responses...');
     const { data: existingResponses, error: fetchError } = await supabase
       .from('question_responses')
       .select('*')
@@ -86,38 +111,48 @@ async function performRegrade(submissionId: string, authHeader: string) {
       throw fetchError;
     }
     console.log(`✓ Found ${existingResponses?.length || 0} existing responses`);
+    
+    // Get unique student answers (in case of duplicates, take the latest)
+    const responsesByQuestion = new Map();
+    for (const response of existingResponses || []) {
+      const existing = responsesByQuestion.get(response.question_id);
+      if (!existing || new Date(response.created_at) > new Date(existing.created_at)) {
+        responsesByQuestion.set(response.question_id, response);
+      }
+    }
+    console.log(`✓ Found ${responsesByQuestion.size} unique questions with answers`);
 
-    // STEP 3: Delete ALL existing question responses (clean slate)
-    console.log('\n[STEP 3] Deleting all existing question responses...');
-    const { error: deleteError } = await supabase
+    // STEP 4: Delete ALL existing question responses (clean slate)
+    console.log('\n[STEP 4] Deleting all existing question responses...');
+    const { error: deleteError, count } = await supabase
       .from('question_responses')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('submission_id', submissionId);
 
     if (deleteError) {
       console.error('Error deleting old responses:', deleteError);
       throw deleteError;
     }
-    console.log('✓ Old responses deleted');
+    console.log(`✓ Deleted ${count || 0} old responses`);
 
-    // STEP 4: Get questions and student answers from existing responses
+    // STEP 5: Get questions and student answers from unique responses
     const questions = submission.assignment.curriculum_items.body.questions || [];
     const attemptNumber = submission.attempt_no || 1;
     
-    // Build studentAnswers map from existing responses
+    // Build studentAnswers map from unique responses
     const studentAnswers: Record<string, any> = {};
-    for (const response of existingResponses || []) {
-      studentAnswers[response.question_id] = response.answer;
+    for (const [questionId, response] of responsesByQuestion.entries()) {
+      studentAnswers[questionId] = response.answer;
     }
     
-    console.log(`\n[STEP 4] Found ${questions.length} questions to grade`);
+    console.log(`\n[STEP 5] Found ${questions.length} questions to grade`);
     console.log('Student answers:', Object.keys(studentAnswers).length);
 
     const maxScore = questions.reduce((sum: number, q: any) => sum + (q.points || 1), 0);
     console.log('Maximum possible score:', maxScore);
 
-    // STEP 5: Grade questions SEQUENTIALLY (not parallel)
-    console.log('\n[STEP 5] Grading questions sequentially...');
+    // STEP 6: Grade questions SEQUENTIALLY (not parallel)
+    console.log('\n[STEP 6] Grading questions sequentially...');
     const gradedResults: any[] = [];
     
     for (let i = 0; i < questions.length; i++) {
@@ -296,8 +331,8 @@ async function performRegrade(submissionId: string, authHeader: string) {
 
     console.log(`\n✓ Graded ${gradedResults.length} questions`);
 
-    // STEP 6: Insert ALL new question responses atomically
-    console.log('\n[STEP 6] Inserting new question responses...');
+    // STEP 7: Insert ALL new question responses atomically
+    console.log('\n[STEP 7] Inserting new question responses...');
     
     const responsesToInsert = gradedResults.map(r => ({
       question_id: r.question_id,
@@ -322,10 +357,18 @@ async function performRegrade(submissionId: string, authHeader: string) {
     }
     console.log(`✓ Inserted ${responsesToInsert.length} responses`);
 
-    // STEP 7: Calculate totals
-    console.log('\n[STEP 7] Calculating totals...');
+    // STEP 8: Calculate totals
+    console.log('\n[STEP 8] Calculating totals...');
+    
+    // For multiple choice and numeric: ai_score is already 0 or 1, so multiply by points
+    // For open-ended: ai_score is 0-1 from AI, so multiply by points
+    // This gives us the actual points earned per question
     const totalScore = Math.round(
-      gradedResults.reduce((sum, r) => sum + (r.ai_score * r.points), 0) * 100
+      gradedResults.reduce((sum, r) => {
+        const pointsEarned = r.ai_score * r.points;
+        console.log(`Question ${r.question_id}: ${r.ai_score} * ${r.points} = ${pointsEarned} points`);
+        return sum + pointsEarned;
+      }, 0) * 100
     ) / 100;
     const correctCount = gradedResults.filter(r => r.is_correct).length;
     
@@ -333,8 +376,8 @@ async function performRegrade(submissionId: string, authHeader: string) {
     console.log('Max score:', maxScore);
     console.log('Correct count:', correctCount);
 
-    // STEP 8: Update grades table
-    console.log('\n[STEP 8] Updating grades table...');
+    // STEP 9: Update grades table
+    console.log('\n[STEP 9] Updating grades table...');
     const { error: upsertGradeError } = await supabase
       .from('grades')
       .upsert({
@@ -354,15 +397,16 @@ async function performRegrade(submissionId: string, authHeader: string) {
       console.log('✓ Grade updated');
     }
 
-    // STEP 9: Update submission
-    console.log('\n[STEP 9] Updating submission...');
+    // STEP 10: Update submission and clear grading flag
+    console.log('\n[STEP 10] Updating submission...');
     const { error: updateSubError } = await supabase
       .from('submissions')
       .update({
         content: {
           ...submission.content,
           score: totalScore,
-          maxScore: maxScore
+          maxScore: maxScore,
+          grading_in_progress: false
         }
       })
       .eq('id', submissionId);
@@ -381,6 +425,21 @@ async function performRegrade(submissionId: string, authHeader: string) {
     const totalTime = Date.now() - startTime;
     console.error(`\n=== RE-GRADE FAILED (${totalTime}ms) ===`);
     console.error('Error:', error);
+    
+    // Clear grading flag on error
+    try {
+      await supabase
+        .from('submissions')
+        .update({
+          content: {
+            grading_in_progress: false
+          }
+        })
+        .eq('id', submissionId);
+    } catch (e) {
+      console.error('Failed to clear grading flag:', e);
+    }
+    
     throw error;
   }
 }
