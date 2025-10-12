@@ -262,7 +262,10 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       const isCorrect = Math.abs(numAnswer - correctAnswer) <= tolerance;
       return { isCorrect, score: isCorrect ? 1 : 0 };
     } else if (question.type === 'multiple_choice') {
-      const isCorrect = answer === question.correct_answer;
+      // Normalize both strings for comparison (lowercase, trim)
+      const studentAnswer = String(answer || '').toLowerCase().trim();
+      const correctAnswer = String(question.correct_answer || '').toLowerCase().trim();
+      const isCorrect = studentAnswer === correctAnswer;
       return { isCorrect, score: isCorrect ? 1 : 0 };
     } else {
       // For short answer and essay, use AI grading

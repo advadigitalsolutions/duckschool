@@ -108,9 +108,14 @@ async function performRegrade(submissionId: string, authHeader: string) {
         newScore = isCorrect ? 1 : 0;
         console.log(`Numeric grading: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`);
       } else if (question.type === 'multiple_choice') {
-        isCorrect = response.answer.value === question.correct_answer;
+        // Normalize both strings for comparison (lowercase, trim)
+        const studentAnswer = String(response.answer.value || '').toLowerCase().trim();
+        const correctAnswer = String(question.correct_answer || '').toLowerCase().trim();
+        isCorrect = studentAnswer === correctAnswer;
         newScore = isCorrect ? 1 : 0;
         console.log(`Multiple choice grading: ${isCorrect ? 'CORRECT' : 'INCORRECT'}`);
+        console.log(`  Student: "${studentAnswer}"`);
+        console.log(`  Correct: "${correctAnswer}"`);
       } else {
         // First check for exact match (case-insensitive, trimmed)
         const studentAnswer = String(response.answer.value || '').toLowerCase().trim();
