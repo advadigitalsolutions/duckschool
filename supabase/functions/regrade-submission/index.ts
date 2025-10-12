@@ -74,8 +74,21 @@ async function performRegrade(submissionId: string, authHeader: string) {
     if (subError) throw subError;
     console.log('✓ Submission loaded');
 
-    // STEP 2: Delete ALL existing question responses (clean slate)
-    console.log('\n[STEP 2] Deleting all existing question responses...');
+    // STEP 2: Fetch existing question responses to get student answers
+    console.log('\n[STEP 2] Fetching existing question responses...');
+    const { data: existingResponses, error: fetchError } = await supabase
+      .from('question_responses')
+      .select('*')
+      .eq('submission_id', submissionId);
+
+    if (fetchError) {
+      console.error('Error fetching responses:', fetchError);
+      throw fetchError;
+    }
+    console.log(`✓ Found ${existingResponses?.length || 0} existing responses`);
+
+    // STEP 3: Delete ALL existing question responses (clean slate)
+    console.log('\n[STEP 3] Deleting all existing question responses...');
     const { error: deleteError } = await supabase
       .from('question_responses')
       .delete()
@@ -87,19 +100,24 @@ async function performRegrade(submissionId: string, authHeader: string) {
     }
     console.log('✓ Old responses deleted');
 
-    // STEP 3: Get questions and student answers from submission
+    // STEP 4: Get questions and student answers from existing responses
     const questions = submission.assignment.curriculum_items.body.questions || [];
-    const studentAnswers = submission.content?.answers || {};
     const attemptNumber = submission.attempt_no || 1;
     
-    console.log(`\n[STEP 3] Found ${questions.length} questions to grade`);
+    // Build studentAnswers map from existing responses
+    const studentAnswers: Record<string, any> = {};
+    for (const response of existingResponses || []) {
+      studentAnswers[response.question_id] = response.answer;
+    }
+    
+    console.log(`\n[STEP 4] Found ${questions.length} questions to grade`);
     console.log('Student answers:', Object.keys(studentAnswers).length);
 
     const maxScore = questions.reduce((sum: number, q: any) => sum + (q.points || 1), 0);
     console.log('Maximum possible score:', maxScore);
 
-    // STEP 4: Grade questions SEQUENTIALLY (not parallel)
-    console.log('\n[STEP 4] Grading questions sequentially...');
+    // STEP 5: Grade questions SEQUENTIALLY (not parallel)
+    console.log('\n[STEP 5] Grading questions sequentially...');
     const gradedResults: any[] = [];
     
     for (let i = 0; i < questions.length; i++) {
@@ -278,8 +296,8 @@ async function performRegrade(submissionId: string, authHeader: string) {
 
     console.log(`\n✓ Graded ${gradedResults.length} questions`);
 
-    // STEP 5: Insert ALL new question responses atomically
-    console.log('\n[STEP 5] Inserting new question responses...');
+    // STEP 6: Insert ALL new question responses atomically
+    console.log('\n[STEP 6] Inserting new question responses...');
     
     const responsesToInsert = gradedResults.map(r => ({
       question_id: r.question_id,
@@ -304,8 +322,8 @@ async function performRegrade(submissionId: string, authHeader: string) {
     }
     console.log(`✓ Inserted ${responsesToInsert.length} responses`);
 
-    // STEP 6: Calculate totals
-    console.log('\n[STEP 6] Calculating totals...');
+    // STEP 7: Calculate totals
+    console.log('\n[STEP 7] Calculating totals...');
     const totalScore = Math.round(
       gradedResults.reduce((sum, r) => sum + (r.ai_score * r.points), 0) * 100
     ) / 100;
@@ -315,8 +333,8 @@ async function performRegrade(submissionId: string, authHeader: string) {
     console.log('Max score:', maxScore);
     console.log('Correct count:', correctCount);
 
-    // STEP 7: Update grades table
-    console.log('\n[STEP 7] Updating grades table...');
+    // STEP 8: Update grades table
+    console.log('\n[STEP 8] Updating grades table...');
     const { error: upsertGradeError } = await supabase
       .from('grades')
       .upsert({
@@ -336,8 +354,8 @@ async function performRegrade(submissionId: string, authHeader: string) {
       console.log('✓ Grade updated');
     }
 
-    // STEP 8: Update submission
-    console.log('\n[STEP 8] Updating submission...');
+    // STEP 9: Update submission
+    console.log('\n[STEP 9] Updating submission...');
     const { error: updateSubError } = await supabase
       .from('submissions')
       .update({
