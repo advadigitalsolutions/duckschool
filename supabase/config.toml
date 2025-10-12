@@ -54,3 +54,6 @@ verify_jwt = true
 [functions.regenerate-pe-course]
 verify_jwt = false
 
+[functions.seed-ca-ccss-standards]
+verify_jwt = false
+

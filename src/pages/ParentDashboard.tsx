@@ -30,6 +30,7 @@ import { ActivityFeed } from '@/components/ActivityFeed';
 import { WeeklyView } from '@/components/WeeklyView';
 import { ParentPomodoroControls } from '@/components/ParentPomodoroControls';
 import { TriggerPERegeneration } from '@/components/TriggerPERegeneration';
+import { SeedStandardsButton } from '@/components/SeedStandardsButton';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -252,6 +253,7 @@ export default function ParentDashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <SeedStandardsButton />
             <ThemeToggle />
             <Button variant="outline" size="icon" onClick={() => navigate('/parent/profile')}>
               <Settings className="h-4 w-4" />
