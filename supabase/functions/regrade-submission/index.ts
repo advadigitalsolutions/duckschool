@@ -135,10 +135,15 @@ async function performRegrade(submissionId: string, authHeader: string) {
           let aiSuccess = false;
           let lastError = null;
           const maxRetries = 3;
+          const requestTimeout = 25000; // 25 second timeout per attempt
           
           for (let attempt = 1; attempt <= maxRetries && !aiSuccess; attempt++) {
             try {
               console.log(`AI grading attempt ${attempt}/${maxRetries}...`);
+              
+              // Create an abort controller for timeout
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), requestTimeout);
               
               const gradeResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
                 method: 'POST',
@@ -146,6 +151,7 @@ async function performRegrade(submissionId: string, authHeader: string) {
                   'Authorization': `Bearer ${LOVABLE_API_KEY}`,
                   'Content-Type': 'application/json',
                 },
+                signal: controller.signal,
                 body: JSON.stringify({
                   model: 'google/gemini-2.5-flash',
                   messages: [
@@ -208,9 +214,11 @@ Be generous with partial credit. If they show understanding but use different wo
                 }),
               });
 
+              clearTimeout(timeoutId);
+
               if (gradeResponse.ok) {
                 const gradeData = await gradeResponse.json();
-                console.log(`AI response received:`, JSON.stringify(gradeData, null, 2));
+                console.log(`AI response status: ${gradeResponse.status}`);
                 
                 const toolCall = gradeData.choices[0].message.tool_calls?.[0];
                 if (toolCall) {
@@ -219,13 +227,13 @@ Be generous with partial credit. If they show understanding but use different wo
                   isCorrect = result.score >= 0.7;
                   feedback = result.feedback;
                   aiSuccess = true;
-                  console.log(`✓ AI grading successful: score=${newScore}, correct=${isCorrect}`);
+                  console.log(`✓ AI grading successful: score=${newScore}, correct=${isCorrect}, feedback="${feedback.substring(0, 50)}..."`);
                 } else {
                   throw new Error('No tool call in AI response');
                 }
               } else {
                 const errorText = await gradeResponse.text();
-                console.error(`✗ AI API returned error (${gradeResponse.status}):`, errorText);
+                console.error(`✗ AI API returned error (${gradeResponse.status}):`, errorText.substring(0, 200));
                 
                 // Check for specific error types
                 if (gradeResponse.status === 429) {
@@ -239,7 +247,14 @@ Be generous with partial credit. If they show understanding but use different wo
               }
             } catch (error) {
               lastError = error instanceof Error ? error.message : 'Unknown error';
-              console.error(`✗ AI grading attempt ${attempt} failed:`, lastError);
+              
+              // Check if it's a timeout/abort error
+              if (error instanceof Error && error.name === 'AbortError') {
+                lastError = `Request timeout after ${requestTimeout}ms`;
+                console.error(`✗ AI grading attempt ${attempt} timed out after ${requestTimeout}ms`);
+              } else {
+                console.error(`✗ AI grading attempt ${attempt} failed:`, lastError);
+              }
               
               // If not the last attempt, wait before retrying (exponential backoff)
               if (attempt < maxRetries) {
