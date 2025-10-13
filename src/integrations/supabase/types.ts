@@ -763,6 +763,7 @@ export type Database = {
           focus_mode_glow_color: string | null
           focus_mode_glow_intensity: number | null
           focus_mode_overlay_opacity: number | null
+          header_settings: Json | null
           high_contrast_enabled: boolean | null
           hotkey_settings: Json | null
           id: string
@@ -787,6 +788,7 @@ export type Database = {
           focus_mode_glow_color?: string | null
           focus_mode_glow_intensity?: number | null
           focus_mode_overlay_opacity?: number | null
+          header_settings?: Json | null
           high_contrast_enabled?: boolean | null
           hotkey_settings?: Json | null
           id: string
@@ -811,6 +813,7 @@ export type Database = {
           focus_mode_glow_color?: string | null
           focus_mode_glow_intensity?: number | null
           focus_mode_overlay_opacity?: number | null
+          header_settings?: Json | null
           high_contrast_enabled?: boolean | null
           hotkey_settings?: Json | null
           id?: string
@@ -1544,7 +1547,7 @@ export type Database = {
       }
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: string
+        Returns: unknown
       }
       sparsevec_out: {
         Args: { "": unknown }

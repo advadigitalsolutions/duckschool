@@ -30,6 +30,9 @@ import { ActivityFeed } from '@/components/ActivityFeed';
 import { WeeklyView } from '@/components/WeeklyView';
 import { ParentPomodoroControls } from '@/components/ParentPomodoroControls';
 import { TriggerPERegeneration } from '@/components/TriggerPERegeneration';
+import { CustomizableHeader } from '@/components/CustomizableHeader';
+import { ConfettiCelebration } from '@/components/ConfettiCelebration';
+import { PomodoroProvider } from '@/contexts/PomodoroContext';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -46,14 +49,48 @@ export default function ParentDashboard() {
   const [showPlanningDialog, setShowPlanningDialog] = useState(false);
   const [planningSessions, setPlanningSessions] = useState<any[]>([]);
   const [resumingSessionId, setResumingSessionId] = useState<string | undefined>();
+  const [headerSettings, setHeaderSettings] = useState<any>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
+  const getDefaultHeaderSettings = () => ({
+    showName: true,
+    customName: null,
+    showGrade: false,
+    customGrade: null,
+    greetingType: 'time-based' as const,
+    rotatingDisplay: 'quote' as const,
+    rotationFrequency: 'hour' as const,
+    funFactTopic: null,
+    locations: [],
+    showWeather: false,
+    weatherZipCode: null,
+    customReminders: [],
+    countdowns: [],
+    pomodoroEnabled: false,
+    pomodoroSettings: {
+      workMinutes: 25,
+      breakMinutes: 5,
+      longBreakMinutes: 15,
+      sessionsUntilLongBreak: 4,
+      visualTimer: true,
+      showTimeText: true,
+      timerColor: 'hsl(var(--primary))',
+      numberColor: 'hsl(var(--foreground))',
+      showMinutesInside: true,
+      timerStyle: 'doughnut' as const,
+      soundEffect: 'chime' as const,
+      timerForegroundColor: 'hsl(var(--primary))',
+      timerBackgroundColor: 'hsl(var(--muted))'
+    },
+    celebrateWins: true,
+    show8BitStars: false,
+    starColor: '#fbbf24',
+    showClouds: false,
+    cloudColor: 'rgba(255, 255, 255, 0.15)',
+    headerVisibility: 'sticky' as const
+  });
 
   useEffect(() => {
     checkRoleAndFetch();
@@ -117,15 +154,36 @@ export default function ParentDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch user profile for name
+      // Fetch user profile for name and settings
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('name, avatar_url')
+        .select('*')
         .eq('id', user.id)
         .single();
 
       setUserName(profileData?.name || 'Educator');
       setUserAvatar(profileData?.avatar_url || '');
+      setProfile(profileData);
+
+      // Load header settings from profile or use defaults
+      const loadedSettings = profileData?.header_settings && typeof profileData.header_settings === 'object' 
+        ? profileData.header_settings as any 
+        : {};
+      
+      const finalSettings = {
+        ...getDefaultHeaderSettings(),
+        ...loadedSettings,
+        locations: Array.isArray(loadedSettings.locations) ? loadedSettings.locations : [],
+        customReminders: Array.isArray(loadedSettings.customReminders) ? loadedSettings.customReminders : [],
+        countdowns: Array.isArray(loadedSettings.countdowns) 
+          ? loadedSettings.countdowns.map((countdown: any) => ({
+              ...countdown,
+              date: typeof countdown.date === 'string' ? new Date(countdown.date) : countdown.date
+            })) 
+          : []
+      };
+      
+      setHeaderSettings(finalSettings);
 
       // Fetch students
       const { data: studentsData } = await supabase
@@ -216,6 +274,33 @@ export default function ParentDashboard() {
     }
   };
 
+  const saveHeaderSettings = async (newSettings: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Serialize countdowns for database storage
+      const settingsToSave = {
+        ...newSettings,
+        countdowns: newSettings.countdowns?.map((countdown: any) => ({
+          ...countdown,
+          date: countdown.date instanceof Date ? countdown.date.toISOString() : countdown.date
+        })) || []
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ header_settings: settingsToSave })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setHeaderSettings(newSettings);
+      toast.success('Header settings saved!');
+    } catch (error: any) {
+      toast.error('Failed to save header settings');
+    }
+  };
+
   const handleSignOut = async () => {
     // Clear all auth-related storage
     localStorage.removeItem('supabase.auth.token');
@@ -233,35 +318,31 @@ export default function ParentDashboard() {
     );
   }
 
+  // Create a mock student object for the header to use parent profile data
+  const mockStudentForHeader = profile ? {
+    id: profile.id,
+    name: profile.name || 'Educator',
+    display_name: profile.name || 'Educator',
+    avatar_url: profile.avatar_url,
+    grade_level: null,
+    pronouns: profile.pronouns
+  } : null;
+
   return (
-    <div className="min-h-screen bg-background">
-      <TriggerPERegeneration />
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/parent/profile')}>
-              <AvatarImage src={userAvatar} />
-              <AvatarFallback>
-                <User className="h-6 w-6" />
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-2xl font-bold">Parent Dashboard</h1>
-              <p className="text-sm text-muted-foreground">{getGreeting()} {userName}!</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
-            <Button variant="outline" size="icon" onClick={() => navigate('/parent/profile')}>
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
+    <PomodoroProvider>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <TriggerPERegeneration />
+        <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
+        
+        {headerSettings && mockStudentForHeader && (
+          <CustomizableHeader
+            student={mockStudentForHeader}
+            settings={headerSettings}
+            onSaveSettings={saveHeaderSettings}
+            onSignOut={handleSignOut}
+            onDemoCelebration={() => setShowConfetti(true)}
+          />
+        )}
 
       <div className="container mx-auto p-4 md:p-8">
         {/* KPI Cards */}
@@ -757,6 +838,7 @@ export default function ParentDashboard() {
           onComplete={fetchDashboardData}
           existingSessionId={resumingSessionId}
         />
-    </div>
+      </div>
+    </PomodoroProvider>
   );
 }
