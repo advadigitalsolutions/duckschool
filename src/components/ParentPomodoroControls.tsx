@@ -233,7 +233,7 @@ export function ParentPomodoroControls() {
                   ) : (
                     <>
                       <Play className="mr-2 h-4 w-4" />
-                      Start
+                      {session.is_break ? 'Start Break Session' : 'Start Work Session'}
                     </>
                   )}
                 </Button>
