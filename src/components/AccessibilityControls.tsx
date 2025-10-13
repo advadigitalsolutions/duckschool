@@ -75,7 +75,22 @@ export function AccessibilityControls() {
 
       // Check if any hotkey matches
       Object.entries(hotkeys).forEach(([controlId, hotkey]) => {
-        if (matchesHotkey(e, hotkey)) {
+        if (!hotkey.includes('mouse') && matchesHotkey(e, hotkey)) {
+          e.preventDefault();
+          toggleControl(controlId);
+        }
+      });
+    };
+
+    const handleMouseClick = (e: MouseEvent) => {
+      if (recordingKey) {
+        // Mouse recording handled by separate listener
+        return;
+      }
+
+      // Check if any mouse button hotkey matches
+      Object.entries(hotkeys).forEach(([controlId, hotkey]) => {
+        if (hotkey.includes('mouse') && matchesHotkey(e, hotkey)) {
           e.preventDefault();
           toggleControl(controlId);
         }
@@ -83,22 +98,98 @@ export function AccessibilityControls() {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('mousedown', handleMouseClick);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('mousedown', handleMouseClick);
+    };
   }, [recordingKey, hotkeys, bionicEnabled, dyslexiaFontEnabled, readingRulerEnabled, textToSpeechEnabled, focusModeEnabled, highContrastEnabled]);
 
-  const matchesHotkey = (e: KeyboardEvent, hotkey: string): boolean => {
+  // Handle mouse button recording
+  useEffect(() => {
+    if (!recordingKey) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      e.preventDefault();
+      const parts = [];
+      
+      // Capture modifier keys
+      if (e.ctrlKey || e.metaKey) parts.push('ctrl');
+      if (e.shiftKey) parts.push('shift');
+      if (e.altKey) parts.push('alt');
+      
+      // Capture mouse button
+      switch (e.button) {
+        case 0:
+          parts.push('mouse1'); // Left click
+          break;
+        case 1:
+          parts.push('mouse3'); // Middle click
+          break;
+        case 2:
+          parts.push('mouse2'); // Right click
+          break;
+        case 3:
+          parts.push('mouse4'); // Back button
+          break;
+        case 4:
+          parts.push('mouse5'); // Forward button
+          break;
+      }
+      
+      if (parts.length > 0) {
+        setNewHotkey(parts.join('+'));
+      }
+    };
+
+    window.addEventListener('mousedown', handleMouseDown);
+    return () => window.removeEventListener('mousedown', handleMouseDown);
+  }, [recordingKey]);
+
+  // Prevent context menu for right-click hotkeys
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      // Check if any hotkey uses right-click (mouse2)
+      const hasRightClickHotkey = Object.values(hotkeys).some(hotkey => 
+        hotkey.includes('mouse2')
+      );
+      
+      if (hasRightClickHotkey) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('contextmenu', handleContextMenu);
+    return () => window.removeEventListener('contextmenu', handleContextMenu);
+  }, [hotkeys]);
+
+  const matchesHotkey = (e: KeyboardEvent | MouseEvent, hotkey: string): boolean => {
     const parts = hotkey.split('+');
     const hasCtrl = parts.includes('ctrl');
     const hasShift = parts.includes('shift');
     const hasAlt = parts.includes('alt');
     const key = parts[parts.length - 1];
 
-    return (
-      (!hasCtrl || e.ctrlKey || e.metaKey) &&
+    // Check modifier keys match
+    const modifiersMatch = (
+      (!hasCtrl || e.ctrlKey || (e as KeyboardEvent).metaKey) &&
       (!hasShift || e.shiftKey) &&
-      (!hasAlt || e.altKey) &&
-      e.key.toLowerCase() === key
+      (!hasAlt || e.altKey)
     );
+
+    // Check if it's a mouse button hotkey
+    if (key.startsWith('mouse')) {
+      const mouseEvent = e as MouseEvent;
+      const buttonNumber = parseInt(key.replace('mouse', ''));
+      
+      // Map button numbers: mouse1=0, mouse2=2, mouse3=1, mouse4=3, mouse5=4
+      const buttonMap: Record<number, number> = { 1: 0, 2: 2, 3: 1, 4: 3, 5: 4 };
+      return modifiersMatch && mouseEvent.button === buttonMap[buttonNumber];
+    }
+
+    // Keyboard hotkey
+    return modifiersMatch && (e as KeyboardEvent).key.toLowerCase() === key;
   };
 
   const toggleControl = (controlId: string) => {
@@ -341,7 +432,7 @@ export function AccessibilityControls() {
           <DialogHeader>
             <DialogTitle>Set Hotkey</DialogTitle>
             <DialogDescription>
-              Press the key combination you want to use for{' '}
+              Press a key combination or click a mouse button to use for{' '}
               {controls.find(c => c.id === editingHotkey)?.name}
             </DialogDescription>
           </DialogHeader>
