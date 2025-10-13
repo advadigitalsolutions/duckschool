@@ -275,6 +275,16 @@ export function ParentPomodoroControls() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label>Sessions Until Long Break</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={session.settings.sessionsUntilLongBreak}
+                    onChange={(e) => updateSettings(student.id, 'sessionsUntilLongBreak', parseInt(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Sound Effect</Label>
                   <Select
                     value={session.settings.soundEffect}
