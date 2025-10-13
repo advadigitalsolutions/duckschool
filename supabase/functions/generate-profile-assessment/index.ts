@@ -42,7 +42,7 @@ Return a JSON object with this structure:
       "type": "multiple_choice",
       "question": "When learning something new, I prefer to:",
       "category": "learning_style",
-      "options": ["Watch videos or demonstrations", "Read about it", "Try it hands-on", "Discuss it with others"],
+      "options": ["Watch videos or demonstrations", "Read about it", "Try it hands-on", "Discuss it with others", "I don't know"],
       "points": 1
     },
     {
@@ -50,7 +50,7 @@ Return a JSON object with this structure:
       "type": "multiple_choice",
       "question": "My favorite subject in school is:",
       "category": "academic_interests",
-      "options": ["Math", "Science", "English/Language Arts", "Social Studies", "Art/Music", "Physical Education"],
+      "options": ["Math", "Science", "English/Language Arts", "Social Studies", "Art/Music", "Physical Education", "I don't know"],
       "points": 1
     },
     {
@@ -65,11 +65,13 @@ Return a JSON object with this structure:
       "type": "multiple_choice",
       "question": "When working on a project, I prefer to:",
       "category": "work_style",
-      "options": ["Work alone at my own pace", "Work with a partner", "Work in a group", "Mix of both alone and group work"],
+      "options": ["Work alone at my own pace", "Work with a partner", "Work in a group", "Mix of both alone and group work", "I don't know"],
       "points": 1
     }
   ]
 }
+
+CRITICAL: All multiple-choice questions MUST include "I don't know" as the last option.
 
 Include 15-20 questions covering:
 - Learning style preferences (visual, auditory, kinesthetic)

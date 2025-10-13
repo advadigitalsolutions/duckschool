@@ -161,7 +161,7 @@ Return a JSON object with this structure:
       "type": "multiple_choice",
       "question": "Question text",
       "points": 5,
-      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "options": ["Option A", "Option B", "Option C", "Option D", "I don't know"],
       "correct_answer": "Option A",
       "explanation": "Why this answer is correct"
     },
@@ -219,7 +219,9 @@ Return a JSON object with this structure:
 
 Include 8-15 questions of varying difficulty. Mix question types appropriately for the subject.
 
-CRITICAL: The teacher_guide must be 100% specific to this lesson topic and student. No generic suggestions.`;
+CRITICAL: 
+- All multiple-choice questions MUST include "I don't know" as the last option in the options array.
+- The teacher_guide must be 100% specific to this lesson topic and student. No generic suggestions.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

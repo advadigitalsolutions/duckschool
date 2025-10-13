@@ -16,7 +16,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Watch videos or look at diagrams and pictures",
       "Listen to explanations or discuss it with someone",
       "Do hands-on activities or experiments",
-      "Read textbooks or write notes"
+      "Read textbooks or write notes",
+      "I don't know"
     ]
   },
   {
@@ -27,7 +28,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "I can see it (images, charts, videos)",
       "I hear it (lectures, discussions, audio)",
       "I practice it physically or use my hands",
-      "I read and write about it"
+      "I read and write about it",
+      "I don't know"
     ]
   },
   {
@@ -38,7 +40,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Maps, diagrams, or visual demonstrations",
       "Verbal instructions or explanations",
       "Learning by doing it myself",
-      "Written step-by-step instructions"
+      "Written step-by-step instructions",
+      "I don't know"
     ]
   },
   {
@@ -49,7 +52,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Drawing, watching movies, or playing visual games",
       "Listening to music, podcasts, or conversations",
       "Sports, building things, or physical activities",
-      "Reading books, writing stories, or journaling"
+      "Reading books, writing stories, or journaling",
+      "I don't know"
     ]
   },
   {
@@ -60,7 +64,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "A clean, organized visual space",
       "A quiet environment or background music",
       "To move around or fidget",
-      "Good reading materials and note-taking supplies"
+      "Good reading materials and note-taking supplies",
+      "I don't know"
     ]
   },
   {
@@ -71,7 +76,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Visual examples and color-coded notes",
       "Someone explaining it to me out loud",
       "Hands-on practice and real-world application",
-      "Detailed written descriptions"
+      "Detailed written descriptions",
+      "I don't know"
     ]
   },
   {
@@ -82,7 +88,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Visualize the solution or draw it out",
       "Talk through it or think out loud",
       "Try different approaches physically",
-      "Write down my thoughts and analyze them"
+      "Write down my thoughts and analyze them",
+      "I don't know"
     ]
   },
   {
@@ -93,7 +100,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Visual aids, bright colors, and organized displays",
       "Opportunities for discussion and verbal interaction",
       "Hands-on materials and freedom to move",
-      "Books, writing materials, and quiet reading time"
+      "Books, writing materials, and quiet reading time",
+      "I don't know"
     ]
   },
 
@@ -106,7 +114,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "By myself in a quiet space",
       "With one or two close friends or partners",
       "In a group with several people",
-      "With guidance from a teacher or mentor"
+      "With guidance from a teacher or mentor",
+      "I don't know"
     ]
   },
   {
@@ -117,7 +126,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Work on my own part independently",
       "Partner closely with one other person",
       "Collaborate actively with the whole team",
-      "Have clear direction and check-ins with an instructor"
+      "Have clear direction and check-ins with an instructor",
+      "I don't know"
     ]
   },
   {
@@ -128,7 +138,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Figure it out on my own first",
       "Learn alongside a friend or peer",
       "Be part of a class or learning community",
-      "Have one-on-one instruction"
+      "Have one-on-one instruction",
+      "I don't know"
     ]
   },
   {
@@ -139,7 +150,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "I can control my own pace and schedule",
       "I have an accountability partner",
       "I'm part of a collaborative team",
-      "I have regular guidance and feedback"
+      "I have regular guidance and feedback",
+      "I don't know"
     ]
   },
 
@@ -152,7 +164,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Create visual study guides, mind maps, or flashcards",
       "Record myself or listen to study materials",
       "Use movement, gestures, or physical models",
-      "Make detailed written notes and outlines"
+      "Make detailed written notes and outlines",
+      "I don't know"
     ]
   },
   {
@@ -163,7 +176,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Using color coding and visual systems",
       "Setting reminders and verbal cues",
       "Keeping materials where I can access them actively",
-      "Making detailed lists and written schedules"
+      "Making detailed lists and written schedules",
+      "I don't know"
     ]
   },
   {
@@ -174,7 +188,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Review visual materials and create charts",
       "Quiz myself out loud or study with someone",
       "Practice problems or create demonstrations",
-      "Read my notes and write practice answers"
+      "Read my notes and write practice answers",
+      "I don't know"
     ]
   },
   {
@@ -185,7 +200,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Visual planners or calendars",
       "Talking through my plans with others",
       "Doing a little bit each day and staying active",
-      "Maintaining detailed to-do lists"
+      "Maintaining detailed to-do lists",
+      "I don't know"
     ]
   },
 
@@ -198,7 +214,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Topics are presented with interesting visuals",
       "I can discuss and hear different perspectives",
       "I can interact with the material hands-on",
-      "I can read in-depth about the topic"
+      "I can read in-depth about the topic",
+      "I don't know"
     ]
   },
   {
@@ -209,7 +226,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "I see the results of my work",
       "Someone recognizes my effort verbally",
       "I complete a physical task or project",
-      "I receive written feedback or grades"
+      "I receive written feedback or grades",
+      "I don't know"
     ]
   },
   {
@@ -220,7 +238,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "Art, design, or visual thinking",
       "Music, languages, or communication",
       "Science, sports, or hands-on activities",
-      "Literature, writing, or research"
+      "Literature, writing, or research",
+      "I don't know"
     ]
   },
   {
@@ -231,7 +250,8 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "I can see clear progress and visualize goals",
       "I receive encouragement and can discuss my ideas",
       "I can apply learning to real-world situations",
-      "I understand the purpose through reading and reflection"
+      "I understand the purpose through reading and reflection",
+      "I don't know"
     ]
   }
 ];
