@@ -44,6 +44,8 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(null);
   const [loadingDraft, setLoadingDraft] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   
   const { config: xpConfig } = useXPConfig();
 
@@ -173,36 +175,64 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     }
   };
 
-  const saveAnswer = async (questionId: string, answer: any, timeSpent: number) => {
-    if (!draftSubmissionId) return;
+  const saveAnswer = async (questionId: string, answer: any, timeSpent: number, retryCount = 0): Promise<boolean> => {
+    if (!draftSubmissionId) return false;
 
-    // Upsert answer to question_responses
-    const { data: existing } = await supabase
-      .from('question_responses')
-      .select('id')
-      .eq('submission_id', draftSubmissionId)
-      .eq('question_id', questionId)
-      .eq('attempt_number', attemptNumber)
-      .maybeSingle();
+    setIsSaving(true);
+    setSaveError(null);
+    console.log('[AssignmentQuestions] Saving answer for question:', questionId);
 
-    if (existing) {
-      await supabase
+    try {
+      // Upsert answer to question_responses
+      const { data: existing } = await supabase
         .from('question_responses')
-        .update({
-          answer: { value: answer },
-          time_spent_seconds: timeSpent
-        })
-        .eq('id', existing.id);
-    } else {
-      await supabase
-        .from('question_responses')
-        .insert({
-          submission_id: draftSubmissionId,
-          question_id: questionId,
-          answer: { value: answer },
-          time_spent_seconds: timeSpent,
-          attempt_number: attemptNumber
-        });
+        .select('id')
+        .eq('submission_id', draftSubmissionId)
+        .eq('question_id', questionId)
+        .eq('attempt_number', attemptNumber)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('question_responses')
+          .update({
+            answer: { value: answer },
+            time_spent_seconds: timeSpent
+          })
+          .eq('id', existing.id);
+        
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('question_responses')
+          .insert({
+            submission_id: draftSubmissionId,
+            question_id: questionId,
+            answer: { value: answer },
+            time_spent_seconds: timeSpent,
+            attempt_number: attemptNumber
+          });
+        
+        if (error) throw error;
+      }
+
+      console.log('[AssignmentQuestions] ✓ Answer saved successfully');
+      setIsSaving(false);
+      return true;
+    } catch (error) {
+      console.error('[AssignmentQuestions] ✗ Error saving answer:', error);
+      
+      // Retry logic (max 3 attempts)
+      if (retryCount < 2) {
+        console.log(`[AssignmentQuestions] Retrying save (attempt ${retryCount + 2}/3)...`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+        return saveAnswer(questionId, answer, timeSpent, retryCount + 1);
+      }
+      
+      setSaveError('Failed to save answer. Please try again.');
+      setIsSaving(false);
+      toast.error('Failed to save your answer. Please try again.');
+      return false;
     }
   };
 
@@ -452,18 +482,41 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
 
   const handleNext = async () => {
     if (currentQuestionIndex < questions.length - 1) {
+      console.log('[AssignmentQuestions] Next button clicked, current index:', currentQuestionIndex);
+      
       // Save current answer before moving
       const currentQuestionId = questions[currentQuestionIndex].id;
       const currentAnswer = answers[currentQuestionId];
       const timeSpent = questionTimes[currentQuestionId] || 0;
       
       if (currentAnswer !== undefined) {
-        await saveAnswer(currentQuestionId, currentAnswer, timeSpent);
+        const saved = await saveAnswer(currentQuestionId, currentAnswer, timeSpent);
+        if (!saved) {
+          console.error('[AssignmentQuestions] Failed to save answer, blocking navigation');
+          return; // Don't navigate if save failed
+        }
       }
       
       trackQuestionTime(currentQuestionId);
       setCurrentQuestionIndex(prev => prev + 1);
+      console.log('[AssignmentQuestions] Moved to question:', currentQuestionIndex + 1);
     }
+  };
+
+  const handleSkipQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      console.log('[AssignmentQuestions] Skipping question:', currentQuestionIndex);
+      trackQuestionTime(questions[currentQuestionIndex].id);
+      setCurrentQuestionIndex(prev => prev + 1);
+      toast.info('Question skipped. You can come back to it later.');
+    }
+  };
+
+  const handleRefreshAnswers = async () => {
+    console.log('[AssignmentQuestions] Refreshing answers from database...');
+    setLoadingDraft(true);
+    await loadProgress();
+    toast.success('Answers refreshed from saved progress');
   };
 
   const handlePrevious = () => {
@@ -520,6 +573,19 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
 
   const progress = (Object.keys(answers).length / questions.length) * 100;
   const currentQuestion = questions[currentQuestionIndex];
+  const isCurrentQuestionAnswered = answers[currentQuestion?.id] !== undefined && answers[currentQuestion?.id] !== '';
+  
+  // Log button states for debugging
+  useEffect(() => {
+    console.log('[AssignmentQuestions] Button state check:', {
+      currentQuestionIndex,
+      totalQuestions: questions.length,
+      isLastQuestion: currentQuestionIndex === questions.length - 1,
+      isCurrentQuestionAnswered,
+      currentAnswer: answers[currentQuestion?.id],
+      isSaving
+    });
+  }, [currentQuestionIndex, answers, isSaving]);
 
   return (
     <div className="space-y-6">
@@ -705,27 +771,72 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
         </Card>
       )}
 
+      {/* Save Status Indicator */}
+      {!submitted && isSaving && (
+        <Card className="border-primary/50">
+          <CardContent className="py-3 flex items-center justify-center gap-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-sm text-muted-foreground">Saving your answer...</span>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Error Message */}
+      {!submitted && saveError && (
+        <Card className="border-destructive">
+          <CardContent className="py-3 flex items-center justify-between">
+            <span className="text-sm text-destructive">{saveError}</span>
+            <Button variant="outline" size="sm" onClick={handleRefreshAnswers}>
+              Refresh Answers
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Navigation Buttons */}
       {!submitted && (
-        <div className="flex items-center justify-between gap-4">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentQuestionIndex === 0}
-            className="flex-1"
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleNext}
-            disabled={currentQuestionIndex === questions.length - 1}
-            className="flex-1"
-          >
-            Next
-            <ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentQuestionIndex === 0 || isSaving}
+              className="flex-1"
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleNext}
+              disabled={currentQuestionIndex === questions.length - 1 || isSaving}
+              className="flex-1"
+            >
+              {isSaving ? (
+                <>
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {/* Skip Question Option */}
+          {currentQuestionIndex < questions.length - 1 && !isCurrentQuestionAnswered && (
+            <Button
+              variant="ghost"
+              onClick={handleSkipQuestion}
+              className="w-full text-xs"
+              size="sm"
+            >
+              Skip this question (you can return later)
+            </Button>
+          )}
         </div>
       )}
 
