@@ -29,7 +29,6 @@ import { Pencil, Trash2, User, Sparkles } from 'lucide-react';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { WeeklyView } from '@/components/WeeklyView';
 import { ParentPomodoroControls } from '@/components/ParentPomodoroControls';
-import { TriggerPERegeneration } from '@/components/TriggerPERegeneration';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
@@ -331,7 +330,6 @@ export default function ParentDashboard() {
   return (
     <PomodoroProvider>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <TriggerPERegeneration />
         <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
         
         {headerSettings && mockStudentForHeader && (
