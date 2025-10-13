@@ -195,6 +195,7 @@ export default function ParentDashboard() {
       // Fetch attendance data for this parent's students
       const today = new Date().toISOString().split('T')[0];
       const studentIds = studentsData?.map(s => s.id) || [];
+      console.log('[ParentDashboard] Student IDs for attendance queries:', studentIds, 'Date:', today);
       
       if (studentIds.length > 0) {
         // Today's time
