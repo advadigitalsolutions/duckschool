@@ -29,7 +29,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a fun fact generator. Generate interesting, educational, and engaging facts. Keep them concise (under 150 characters) and appropriate for all ages.",
+            content: "You are a fun fact generator. Generate interesting, educational, and engaging facts. Keep them concise (under 120 characters) and appropriate for all ages.",
           },
           {
             role: "user",
