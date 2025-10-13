@@ -198,11 +198,16 @@ export default function ParentDashboard() {
       
       if (studentIds.length > 0) {
         // Today's time
-        const { data: todayAttendance } = await supabase
+        const { data: todayAttendance, error: todayError } = await supabase
           .from('attendance_logs')
           .select('minutes')
           .eq('date', today)
           .in('student_id', studentIds);
+
+        if (todayError) {
+          console.error('[ParentDashboard] Error fetching today attendance:', todayError);
+        }
+        console.log('[ParentDashboard] Today attendance data:', todayAttendance);
 
         const todayTotal = todayAttendance?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
         setTodayMinutes(todayTotal);
@@ -212,20 +217,30 @@ export default function ParentDashboard() {
         weekAgo.setDate(weekAgo.getDate() - 7);
         const weekAgoStr = weekAgo.toISOString().split('T')[0];
 
-        const { data: weekAttendance } = await supabase
+        const { data: weekAttendance, error: weekError } = await supabase
           .from('attendance_logs')
           .select('minutes')
           .gte('date', weekAgoStr)
           .in('student_id', studentIds);
 
+        if (weekError) {
+          console.error('[ParentDashboard] Error fetching week attendance:', weekError);
+        }
+        console.log('[ParentDashboard] Week attendance data:', weekAttendance);
+
         const weekTotal = weekAttendance?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
         setWeekMinutes(weekTotal);
 
         // All time
-        const { data: allTimeAttendance } = await supabase
+        const { data: allTimeAttendance, error: allTimeError } = await supabase
           .from('attendance_logs')
           .select('minutes')
           .in('student_id', studentIds);
+
+        if (allTimeError) {
+          console.error('[ParentDashboard] Error fetching all time attendance:', allTimeError);
+        }
+        console.log('[ParentDashboard] All time attendance data:', allTimeAttendance);
 
         const allTimeTotal = allTimeAttendance?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
         setAllTimeMinutes(allTimeTotal);
@@ -248,14 +263,24 @@ export default function ParentDashboard() {
         setCompletedToday(0);
       }
 
-      // Fetch overdue assignments
-      const { data: overdueData } = await supabase
-        .from('assignments')
-        .select('id')
-        .eq('status', 'assigned')
-        .lt('due_at', new Date().toISOString());
+      // Fetch overdue assignments for this parent's students
+      if (studentIds.length > 0) {
+        const { data: overdueData, error: overdueError } = await supabase
+          .from('assignments')
+          .select('id, curriculum_item_id, curriculum_items!inner(course_id, courses!inner(student_id))')
+          .eq('status', 'assigned')
+          .lt('due_at', new Date().toISOString())
+          .in('curriculum_items.courses.student_id', studentIds);
 
-      setOverdueCount(overdueData?.length || 0);
+        if (overdueError) {
+          console.error('[ParentDashboard] Error fetching overdue assignments:', overdueError);
+        }
+        console.log('[ParentDashboard] Overdue assignments data:', overdueData);
+
+        setOverdueCount(overdueData?.length || 0);
+      } else {
+        setOverdueCount(0);
+      }
 
       // Fetch in-progress curriculum planning sessions
       const { data: sessionsData } = await supabase
