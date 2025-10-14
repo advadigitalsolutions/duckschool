@@ -42,6 +42,29 @@ const attentionSounds = [
   '/sounds/duck-attention-7.mp3',
 ];
 
+// Array of click sounds for when user clicks the duck
+const clickSounds = [
+  '/sounds/duck-click-1.mp3',
+  '/sounds/duck-click-2.mp3',
+  '/sounds/duck-click-3.mp3',
+  '/sounds/duck-click-4.mp3',
+  '/sounds/duck-click-5.mp3',
+  '/sounds/duck-click-6.mp3',
+  '/sounds/duck-click-7.mp3',
+  '/sounds/duck-click-8.mp3',
+  '/sounds/duck-click-9.mp3',
+  '/sounds/duck-click-10.mp3',
+  '/sounds/duck-click-11.mp3',
+  '/sounds/duck-click-12.mp3',
+  '/sounds/duck-click-13.mp3',
+  '/sounds/duck-click-14.mp3',
+  '/sounds/duck-click-15.mp3',
+  '/sounds/duck-click-16.mp3',
+  '/sounds/duck-click-17.mp3',
+  '/sounds/duck-click-18.mp3',
+  '/sounds/duck-click-19.mp3',
+];
+
 type SoundName = keyof typeof sounds;
 
 // Preload sounds for better performance
@@ -129,5 +152,21 @@ export const playRandomAttentionSound = (volume = 0.5) => {
     });
   } catch (error) {
     console.debug('Random attention sound playback failed');
+  }
+};
+
+// Play a random click sound when user clicks the duck
+export const playRandomClickSound = (volume = 0.5) => {
+  try {
+    const randomIndex = Math.floor(Math.random() * clickSounds.length);
+    const soundPath = clickSounds[randomIndex];
+    
+    const audio = new Audio(soundPath);
+    audio.volume = volume;
+    audio.play().catch(() => {
+      // Silently fail if autoplay is blocked
+    });
+  } catch (error) {
+    console.debug('Random click sound playback failed');
   }
 };

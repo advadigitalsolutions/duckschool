@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { playRandomClickSound } from '@/utils/soundEffects';
 
 type AnimationState = 'walking' | 'falling' | 'climbing' | 'celebrating' | 'idle' | 'jumping';
 
@@ -19,6 +20,10 @@ const ATTENTION_MESSAGES = [
 export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJourneyDuckProps) {
   const [currentState, setCurrentState] = useState<AnimationState>(animationState);
   const [messageIndex, setMessageIndex] = useState(0);
+  
+  const handleDuckClick = () => {
+    playRandomClickSound(0.6);
+  };
   
   // Rotate message when jumping starts
   const currentMessage = useMemo(() => {
@@ -346,7 +351,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
         }
       `}</style>
       
-      <div className="duck">
+      <div className="duck" onClick={handleDuckClick} style={{ cursor: 'pointer' }}>
         <div className="duck-head" />
         <div className="duck-beak" />
         <div className="duck-eye" />
