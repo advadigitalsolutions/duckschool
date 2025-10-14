@@ -20,6 +20,7 @@ import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BionicText } from '@/components/BionicText';
 import { Slider } from '@/components/ui/slider';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { StudentLayout } from '@/components/StudentLayout';
 import avatarElephant from '@/assets/avatars/avatar-elephant.png';
 import avatarWolf from '@/assets/avatars/avatar-wolf.png';
@@ -616,24 +617,26 @@ export default function StudentProfile() {
                 </div>
 
                 {specialInterests.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {specialInterests.map((interest, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
-                        className="text-sm py-2 px-3 flex items-center gap-2"
-                      >
-                        {interest}
-                        <button
-                          onClick={() => handleRemoveInterest(interest)}
-                          className="hover:text-destructive transition-colors"
-                          type="button"
+                  <ScrollArea className="max-h-[300px] w-full">
+                    <div className="flex flex-wrap gap-2 pr-4">
+                      {specialInterests.map((interest, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="text-sm py-2 px-3 flex items-center gap-2"
                         >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
+                          {interest}
+                          <button
+                            onClick={() => handleRemoveInterest(interest)}
+                            className="hover:text-destructive transition-colors"
+                            type="button"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 ) : (
                   <p className="text-sm text-muted-foreground">
                     No interests added yet. Add some to personalize your learning experience!
