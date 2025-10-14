@@ -22,41 +22,30 @@ serve(async (req) => {
 
     console.log('Researching standards for:', requirements);
 
-    // Phase 1: Research sources and legal requirements
-    const researchPrompt = `You are researching educational standards and homeschool legal requirements.
+    // Phase 1: Identify official sources to scrape
+    const sourcePrompt = `You are helping identify official government education standards sources to scrape.
 
-Requirements:
-- State: ${requirements.state || 'Not specified'}
-- Grade Level: ${requirements.grade || 'Not specified'}
-- Subjects: ${requirements.subjects?.join(', ') || 'All core subjects'}
+State: ${requirements.state || 'Not specified'}
+Grade Level: ${requirements.grade || 'Not specified'}
+Subjects: ${requirements.subjects?.join(', ') || 'All core subjects'}
 
-Please provide:
-1. Official sources for state standards (URLs and descriptions)
-2. Homeschool legal requirements for this state including:
-   - Required subjects
-   - Required instructional hours/days
-   - Testing/assessment requirements
-   - Record keeping requirements
-   - Notification/registration requirements
-   - Any exemptions or special provisions
-3. Recommended documentation practices
+Provide URLs for:
+1. Official state department of education standards documents (PDFs, HTML pages)
+2. State homeschool legal requirements pages
+3. Common Core or state-specific standards repositories
 
-Format as JSON with this structure:
+Format as JSON:
 {
-  "sources": [{"url": "...", "description": "...", "type": "standards|legal"}],
-  "legalRequirements": {
-    "requiredSubjects": [],
-    "instructionalHours": "",
-    "assessmentRequirements": "",
-    "recordKeeping": "",
-    "notification": "",
-    "exemptions": "",
-    "documentation": []
-  },
-  "notes": ""
+  "standardsSources": [
+    {"url": "https://...", "subject": "Math", "format": "pdf|html", "description": "..."},
+    {"url": "https://...", "subject": "ELA", "format": "pdf|html", "description": "..."}
+  ],
+  "legalSources": [
+    {"url": "https://...", "type": "requirements", "description": "..."}
+  ]
 }`;
 
-    const researchResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const sourceResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
@@ -65,84 +54,164 @@ Format as JSON with this structure:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are an expert on US education standards and homeschool regulations.' },
-          { role: 'user', content: researchPrompt }
+          { role: 'system', content: 'You are an expert on US state education departments and official standards repositories. Provide real, scrapable URLs.' },
+          { role: 'user', content: sourcePrompt }
         ],
       }),
     });
 
-    if (!researchResponse.ok) {
-      throw new Error(`Research API error: ${researchResponse.status}`);
+    if (!sourceResponse.ok) {
+      throw new Error(`Source identification error: ${sourceResponse.status}`);
     }
 
-    const researchData = await researchResponse.json();
-    const researchText = researchData.choices[0].message.content;
+    const sourceData = await sourceResponse.json();
+    const sourceText = sourceData.choices[0].message.content;
     
-    // Try to parse JSON from response
-    let researchResults;
+    let sources;
     try {
-      const jsonMatch = researchText.match(/\{[\s\S]*\}/);
-      researchResults = jsonMatch ? JSON.parse(jsonMatch[0]) : { notes: researchText };
+      const jsonMatch = sourceText.match(/\{[\s\S]*\}/);
+      sources = jsonMatch ? JSON.parse(jsonMatch[0]) : { standardsSources: [], legalSources: [] };
     } catch {
-      researchResults = { notes: researchText };
+      sources = { standardsSources: [], legalSources: [] };
     }
 
-    // Phase 2: Extract/generate standards based on sources
-    const standardsPrompt = `Based on the research for ${requirements.state} grade ${requirements.grade}, you must generate a COMPREHENSIVE and COMPLETE list of educational standards for ${requirements.subjects?.join(', ') || 'core subjects'}.
+    console.log('Identified sources:', sources);
 
-CRITICAL REQUIREMENTS:
-- This is for homeschool compliance and educational planning - it MUST be thorough
-- Generate AT LEAST 100-300 standards PER SUBJECT (not total)
-- Cover ALL domains/strands within each subject
-- Include prerequisite knowledge from earlier grades when relevant
-- Include advanced concepts that build toward next grade level
+    // Phase 2: Scrape each source
+    const scrapedContent: any[] = [];
+    const maxSources = 5; // Limit to prevent timeout
+    const sourcesToScrape = [...sources.standardsSources.slice(0, maxSources), ...sources.legalSources.slice(0, 2)];
 
-For EACH subject requested, ensure you cover:
-Mathematics: Number & Operations, Algebra, Geometry, Measurement, Data Analysis, Mathematical Practices
-English/Language Arts: Reading Literature, Reading Informational, Writing, Speaking & Listening, Language
-Science: Physical Science, Life Science, Earth/Space Science, Engineering & Design
-Social Studies: History, Geography, Civics, Economics
+    for (const source of sourcesToScrape) {
+      try {
+        console.log(`Scraping: ${source.url}`);
+        
+        // Use Firecrawl-style scraping with Lovable AI
+        const scrapeResponse = await fetch(source.url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+        
+        if (scrapeResponse.ok) {
+          const html = await scrapeResponse.text();
+          scrapedContent.push({
+            url: source.url,
+            subject: source.subject || 'legal',
+            content: html.slice(0, 50000), // Limit content size
+            description: source.description
+          });
+          console.log(`Successfully scraped: ${source.url}`);
+        } else {
+          console.log(`Failed to scrape ${source.url}: ${scrapeResponse.status}`);
+        }
+      } catch (error) {
+        console.error(`Error scraping ${source.url}:`, error);
+      }
+    }
 
-For each standard provide:
-- code: Official standard code (e.g., "CCSS.MATH.8.NS.A.1", "CCSS.ELA-LITERACY.RL.8.1")
-- subject: Subject area
-- domain: Domain/strand within subject  
-- text: Full standard text (detailed description of what students should know/do)
-- gradeLevel: Grade level
+    // Phase 3: Extract legal requirements from scraped content
+    const legalContent = scrapedContent.filter(s => s.subject === 'legal').map(s => s.content).join('\n\n').slice(0, 30000);
+    
+    const legalPrompt = `Extract homeschool legal requirements from this scraped content:
 
-Generate a COMPLETE, COMPREHENSIVE framework with hundreds of standards that would satisfy state homeschool requirements and provide a rigorous education.`;
+${legalContent}
 
-    const standardsResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+Format as JSON:
+{
+  "requiredSubjects": ["Math", "Science", ...],
+  "instructionalHours": "180 days or 900 hours",
+  "assessmentRequirements": "...",
+  "recordKeeping": "...",
+  "notification": "...",
+  "exemptions": "...",
+  "documentation": ["attendance records", "grade reports", ...]
+}`;
+
+    const legalResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are an expert on educational standards and homeschool compliance. You must generate COMPREHENSIVE frameworks with hundreds of standards covering all domains. Be thorough - parents need complete coverage for legal compliance and quality education.' },
-          { role: 'user', content: standardsPrompt }
+          { role: 'system', content: 'Extract structured legal requirements from homeschool regulation documents.' },
+          { role: 'user', content: legalPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 16000,
       }),
     });
 
-    if (!standardsResponse.ok) {
-      throw new Error(`Standards API error: ${standardsResponse.status}`);
+    const legalData = await legalResponse.json();
+    const legalText = legalData.choices[0].message.content;
+    
+    let legalRequirements;
+    try {
+      const jsonMatch = legalText.match(/\{[\s\S]*\}/);
+      legalRequirements = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    } catch {
+      legalRequirements = {};
     }
 
-    const standardsData = await standardsResponse.json();
-    const standardsText = standardsData.choices[0].message.content;
-    
-    let compiledStandards = [];
-    try {
-      const jsonMatch = standardsText.match(/\[[\s\S]*\]/);
-      compiledStandards = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch (e) {
-      console.error('Failed to parse standards:', e);
+    // Phase 4: Extract standards from scraped content
+    const standardsContent = scrapedContent.filter(s => s.subject !== 'legal');
+    const compiledStandards: any[] = [];
+
+    for (const source of standardsContent) {
+      const extractPrompt = `Extract ALL educational standards from this scraped content for ${source.subject}:
+
+${source.content.slice(0, 40000)}
+
+CRITICAL: Extract EVERY SINGLE standard you find. Do not summarize. Do not skip any.
+For each standard provide:
+- code: Official code
+- subject: Subject area
+- domain: Domain/strand
+- text: Full standard text
+- gradeLevel: Grade level
+
+Return as JSON array with ALL standards found.`;
+
+      const extractResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${lovableApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-pro',
+          messages: [
+            { role: 'system', content: 'Extract ALL standards from educational documents. Be comprehensive - extract every single standard you find.' },
+            { role: 'user', content: extractPrompt }
+          ],
+          temperature: 0.3,
+          max_tokens: 16000,
+        }),
+      });
+
+      const extractData = await extractResponse.json();
+      const extractText = extractData.choices[0].message.content;
+      
+      try {
+        const jsonMatch = extractText.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const extracted = JSON.parse(jsonMatch[0]);
+          compiledStandards.push(...extracted);
+          console.log(`Extracted ${extracted.length} standards from ${source.url}`);
+        }
+      } catch (e) {
+        console.error('Failed to parse extracted standards:', e);
+      }
     }
+
+    console.log(`Total standards extracted: ${compiledStandards.length}`);
+
+    const researchResults = {
+      sources: scrapedContent.map(s => ({ url: s.url, description: s.description })),
+      standardsCount: compiledStandards.length,
+      scrapedUrls: scrapedContent.map(s => s.url)
+    };
 
     // Update session
     const { error: updateError } = await supabase
@@ -150,7 +219,7 @@ Generate a COMPLETE, COMPREHENSIVE framework with hundreds of standards that wou
       .update({
         status: 'reviewing',
         research_results: researchResults,
-        legal_requirements: researchResults.legalRequirements || {},
+        legal_requirements: legalRequirements,
         compiled_standards: compiledStandards,
         updated_at: new Date().toISOString()
       })
@@ -163,7 +232,7 @@ Generate a COMPLETE, COMPREHENSIVE framework with hundreds of standards that wou
         success: true,
         researchResults,
         compiledStandards,
-        legalRequirements: researchResults.legalRequirements
+        legalRequirements
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
