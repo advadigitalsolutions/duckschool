@@ -160,7 +160,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           left: 50%;
           transform: translateX(-50%);
           background: white;
-          color: #333;
+          color: #1a1a1a;
           padding: 8px 12px;
           border-radius: 12px;
           font-size: 11px;
@@ -169,7 +169,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
           margin-bottom: 8px;
           animation: bubble-bounce 0.5s ease-in-out infinite alternate;
-          z-index: 1000;
+          z-index: 10001;
         }
 
         .speech-bubble::after {
@@ -334,7 +334,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
 
         .duck-container.falling {
           position: fixed !important;
-          z-index: 9999 !important;
+          z-index: 10000 !important;
         }
 
         .duck-container.falling .duck {
@@ -377,7 +377,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
 
         .duck-container.climbing {
           position: fixed !important;
-          z-index: 9999 !important;
+          z-index: 10000 !important;
         }
 
         .duck-container.climbing .duck {
@@ -431,7 +431,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           left: 15% !important;
           transform: scaleY(0.4) scaleX(1.3) !important;
           opacity: 0.7;
-          z-index: 9999 !important;
+          z-index: 10000 !important;
           margin: 0 !important;
           top: auto !important;
         }
@@ -447,7 +447,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           left: 15% !important;
           transform: none !important;
           opacity: 1;
-          z-index: 9999 !important;
+          z-index: 10000 !important;
           pointer-events: auto !important;
         }
 
@@ -465,15 +465,19 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           }
         }
 
-        /* Ghostly speech bubble - SAME as regular, white background */
+        /* Ghostly speech bubble - white background, same as regular */
         .speech-bubble.ghostly {
           background: white;
-          color: #333;
+          color: #1a1a1a;
           animation: bubble-bounce 0.5s ease-in-out infinite alternate;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         /* Celebrating Return - 3 enthusiastic bounces */
+        .duck-container.celebrating-return {
+          z-index: 10000 !important;
+        }
+
         .duck-container.celebrating-return .duck {
           animation: joyful-bounce 3s ease-in-out;
         }
@@ -498,6 +502,10 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
 
         .speech-bubble.celebration {
           animation: bubble-bounce 0.4s ease-in-out infinite alternate;
+          background: white;
+          color: #1a1a1a;
+          box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+        }
           background: linear-gradient(135deg, #FFD700, #FFA500);
           color: #000;
           font-weight: 700;
