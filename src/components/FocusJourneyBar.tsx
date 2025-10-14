@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FocusJourneyDuck } from './FocusJourneyDuck';
 import { Sparkles } from 'lucide-react';
-import { playSound } from '@/utils/soundEffects';
+import { playSound, playRandomFallSound } from '@/utils/soundEffects';
 import { useActivitySession } from '@/hooks/useActivitySession';
 import { useIdleDetection } from '@/hooks/useIdleDetection';
 import { useWindowVisibility } from '@/hooks/useWindowVisibility';
@@ -83,7 +83,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       
       setGapStartTime(currentSeconds);
       setDuckState('falling');
-      playSound('fall', 0.6);
+      playRandomFallSound(0.6);
       
       await supabase.from('activity_events').insert({
         student_id: studentId,
@@ -163,7 +163,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       
       setGapStartTime(currentSeconds);
       setDuckState('falling');
-      playSound('fall', 0.6);
+      playRandomFallSound(0.6);
       
       await supabase.from('activity_events').insert({
         student_id: studentId,

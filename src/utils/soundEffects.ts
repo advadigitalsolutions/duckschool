@@ -1,11 +1,21 @@
 // Sound effects manager for Focus Journey duck
 const sounds = {
   walk: '/sounds/duck-walk.mp3',
-  fall: '/sounds/duck-fall.mp3',
   climb: '/sounds/duck-climb.mp3',
   milestone: '/sounds/milestone-chime.mp3',
   complete: '/sounds/duck-celebrate.mp3'
 };
+
+// Array of fall sounds to randomly cycle through
+const fallSounds = [
+  '/sounds/duck-fall-1.mp3',
+  '/sounds/duck-fall-2.mp3',
+  '/sounds/duck-fall-3.mp3',
+  '/sounds/duck-fall-4.mp3',
+  '/sounds/duck-fall-5.mp3',
+  '/sounds/duck-fall-6.mp3',
+  '/sounds/duck-fall-7.mp3',
+];
 
 type SoundName = keyof typeof sounds;
 
@@ -46,5 +56,21 @@ export const stopSound = (name: SoundName) => {
   if (audio) {
     audio.pause();
     audio.currentTime = 0;
+  }
+};
+
+// Play a random fall sound to keep it unpredictable
+export const playRandomFallSound = (volume = 0.5) => {
+  try {
+    const randomIndex = Math.floor(Math.random() * fallSounds.length);
+    const soundPath = fallSounds[randomIndex];
+    
+    const audio = new Audio(soundPath);
+    audio.volume = volume;
+    audio.play().catch(() => {
+      // Silently fail if autoplay is blocked
+    });
+  } catch (error) {
+    console.debug('Random fall sound playback failed');
   }
 };
