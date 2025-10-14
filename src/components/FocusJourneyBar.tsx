@@ -484,17 +484,13 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   const handleDuckAnimationComplete = () => {
     if (duckState === 'climbing') {
-      // Check if this was a climb from fallen/ghostly state (gap exists)
-      if (gapSegments.length > 0 && gapSegments[gapSegments.length - 1].reason === 'away') {
-        // Celebrate the return!
-        setDuckState('celebrating-return');
-        playSound('milestone', 0.7);
-      } else {
-        setDuckState('walking');
-      }
+      // After climbing, celebrate the return
+      setDuckState('celebrating-return');
+      playSound('milestone', 0.7);
     } else if (duckState === 'celebrating') {
       setDuckState('walking');
     } else if (duckState === 'celebrating-return') {
+      // After celebrating return, resume walking from current position
       setDuckState('walking');
     }
   };
