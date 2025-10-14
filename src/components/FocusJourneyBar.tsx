@@ -266,9 +266,11 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       }
 
       // Store current progress before starting climb animation
+      // Note: The current segment was already completed and added to focusSegments when duck fell
+      // So we only need to use completedFocusTime, not add current segment progress
       const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
-      const totalBarProgress = completedFocusTime + (sessionData.activeSeconds - currentSegmentStart);
-      const currentProgress = Math.min((totalBarProgress / goalSeconds) * 100, 100);
+      const currentProgress = Math.min((completedFocusTime / goalSeconds) * 100, 100);
+      console.log(`🎯 Storing celebration progress: ${completedFocusTime}s = ${currentProgress.toFixed(2)}%`);
       setCelebrationProgress(currentProgress);
 
       const currentSeconds = sessionData.activeSeconds;
@@ -543,9 +545,11 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       }
 
       // Store current progress before starting climb animation
+      // Note: The current segment was already completed and added to focusSegments when duck fell
+      // So we only need to use completedFocusTime, not add current segment progress
       const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
-      const totalBarProgress = completedFocusTime + (sessionData.activeSeconds - currentSegmentStart);
-      const currentProgress = Math.min((totalBarProgress / goalSeconds) * 100, 100);
+      const currentProgress = Math.min((completedFocusTime / goalSeconds) * 100, 100);
+      console.log(`🎯 Storing celebration progress (click): ${completedFocusTime}s = ${currentProgress.toFixed(2)}%`);
       setCelebrationProgress(currentProgress);
 
       const currentSeconds = sessionData.activeSeconds;
