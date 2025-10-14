@@ -48,21 +48,12 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
     return RETURN_MESSAGES[returnMessageIndex % RETURN_MESSAGES.length];
   }, [returnMessageIndex]);
 
-  // Randomize ghost position and play sound
+  // Play attention sound when going ghostly
   useEffect(() => {
     if (currentState === 'ghostly-jumping') {
-      // Play attention sound when first going ghostly
       import('@/utils/soundEffects').then(({ playRandomAttentionSound }) => {
         playRandomAttentionSound(0.6);
       });
-      
-      const interval = setInterval(() => {
-        setGhostPosition({
-          left: Math.random() * 60 + 20, // 20-80%
-          top: Math.random() * 50 + 20 // 20-70%
-        });
-      }, 3000);
-      return () => clearInterval(interval);
     }
   }, [currentState]);
 
@@ -134,11 +125,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
   return (
     <div 
       className={`duck-container ${currentState}`}
-      style={currentState === 'ghostly-jumping' ? {
-        left: `${ghostPosition.left}%`,
-        top: `${ghostPosition.top}%`,
-        pointerEvents: 'auto'
-      } : currentState === 'fallen' ? {
+      style={currentState === 'fallen' || currentState === 'ghostly-jumping' ? {
         pointerEvents: 'auto'
       } : undefined}
     >
@@ -453,13 +440,14 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           animation: none;
         }
 
-        /* Ghostly Jumping - Random positions on screen */
+        /* Ghostly Jumping - Stays at bottom center where it fell */
         .duck-container.ghostly-jumping {
           position: fixed !important;
-          opacity: 0.85;
-          filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));
+          bottom: 20px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          opacity: 1;
           z-index: 9999 !important;
-          transition: left 3s ease-in-out, top 3s ease-in-out;
           pointer-events: auto !important;
         }
 
