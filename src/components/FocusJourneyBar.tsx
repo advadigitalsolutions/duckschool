@@ -251,14 +251,14 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const handleWindowVisible = useCallback(async () => {
     console.log('👁️ handleWindowVisible called', { sessionId: !!sessionId, gapStartTime, duckState });
     
-    // Check if duck is in fallen or ghostly state - trigger joyful return!
+    // Check if duck is in fallen or ghostly state - first climb back up!
     if (duckState === 'fallen' || duckState === 'ghostly-jumping') {
-      console.log('🎉 User returned while duck was fallen/ghostly - CELEBRATION TIME!');
+      console.log('🎉 User returned while duck was fallen/ghostly - CLIMBING BACK UP!');
       
       if (!sessionId || gapStartTime === null) {
-        // Just celebrate and reset
-        setDuckState('celebrating-return');
-        playSound('milestone', 0.7);
+        // Just climb and reset
+        setDuckState('climbing');
+        playRandomReturnSound(0.6);
         lastFocusTime.current = Date.now();
         resetIdleTimer();
         return;
@@ -285,8 +285,8 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setSessionNumber(prev => prev + 1);
       setGapStartTime(null);
       lastFocusTime.current = Date.now();
-      setDuckState('celebrating-return');
-      playSound('milestone', 0.7);
+      setDuckState('climbing');
+      playRandomReturnSound(0.6);
       
       // Reset idle timer when returning
       resetIdleTimer();
@@ -484,7 +484,14 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   const handleDuckAnimationComplete = () => {
     if (duckState === 'climbing') {
-      setDuckState('walking');
+      // Check if this was a climb from fallen/ghostly state (gap exists)
+      if (gapSegments.length > 0 && gapSegments[gapSegments.length - 1].reason === 'away') {
+        // Celebrate the return!
+        setDuckState('celebrating-return');
+        playSound('milestone', 0.7);
+      } else {
+        setDuckState('walking');
+      }
     } else if (duckState === 'celebrating') {
       setDuckState('walking');
     } else if (duckState === 'celebrating-return') {
