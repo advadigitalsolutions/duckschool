@@ -89,6 +89,7 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
       // Warning threshold (30s by default)
       if (timeSinceActivity >= warningThreshold && !isWarning && !isIdle) {
         setIsWarning(true);
+        hasCalledActiveRef.current = false; // Reset flag so onActive can be called when user returns
         onWarning?.();
       }
       
