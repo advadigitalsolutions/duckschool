@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-type AnimationState = 'walking' | 'falling' | 'climbing' | 'celebrating' | 'idle';
+type AnimationState = 'walking' | 'falling' | 'climbing' | 'celebrating' | 'idle' | 'jumping';
 
 interface FocusJourneyDuckProps {
   animationState: AnimationState;
@@ -257,6 +257,15 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
 
         .duck-container.celebrating .duck {
           animation: celebrate 2s ease-in-out;
+        }
+
+        .duck-container.jumping .duck {
+          animation: jump 0.6s ease-in-out infinite;
+        }
+
+        @keyframes jump {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
         }
 
         .duck-container.idle .duck {

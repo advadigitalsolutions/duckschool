@@ -787,59 +787,71 @@ export default function AssignmentDetail() {
           </TabsContent>
 
           <TabsContent value="resources" className="space-y-4">
-            {/* Study Guide Panel - AI-generated question-specific learning resources */}
-            {content.questions?.length > 0 && (
-              <StudyGuidePanel
-                assignmentId={assignment.id}
-                questions={content.questions}
-                studentProfile={{
-                  grade_level: assignment.curriculum_items?.courses?.student_id 
-                    ? 'N/A' // Will be fetched from student data if needed
-                    : 'General',
-                  learning_style: undefined,
-                  interests: []
-                }}
-                readingMaterials={content.reading_materials}
-                studentId={currentStudentId || undefined}
-                onLinkClick={(url: string, title: string) => setOpenResource({ url, title })}
-              />
-            )}
+            <div className={openResource ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : ""}>
+              <div className="space-y-4">
+                {/* Study Guide Panel - AI-generated question-specific learning resources */}
+                {content.questions?.length > 0 && (
+                  <StudyGuidePanel
+                    assignmentId={assignment.id}
+                    questions={content.questions}
+                    studentProfile={{
+                      grade_level: assignment.curriculum_items?.courses?.student_id 
+                        ? 'N/A' // Will be fetched from student data if needed
+                        : 'General',
+                      learning_style: undefined,
+                      interests: []
+                    }}
+                    readingMaterials={content.reading_materials}
+                    studentId={currentStudentId || undefined}
+                    onLinkClick={(url: string, title: string) => setOpenResource({ url, title })}
+                  />
+                )}
 
-            {/* External Materials (if provided by assignment generator) */}
-            {content.materials?.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    External Resources
-                  </CardTitle>
-                  <CardDescription>
-                    Additional materials recommended for this assignment
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {content.materials.map((material: string, idx: number) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <span className="text-primary">•</span>
-                        <BionicText>{material}</BionicText>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
+                {/* External Materials (if provided by assignment generator) */}
+                {content.materials?.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BookOpen className="h-5 w-5" />
+                        External Resources
+                      </CardTitle>
+                      <CardDescription>
+                        Additional materials recommended for this assignment
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {content.materials.map((material: string, idx: number) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="text-primary">•</span>
+                            <BionicText>{material}</BionicText>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
 
-            {!content.questions?.length && !content.materials?.length && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Resources</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">No resources available for this assignment</p>
-                </CardContent>
-              </Card>
-            )}
+                {!content.questions?.length && !content.materials?.length && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Resources</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">No resources available for this assignment</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {openResource && (
+                <ResourceIframeViewer
+                  url={openResource.url}
+                  title={openResource.title}
+                  onClose={() => setOpenResource(null)}
+                />
+              )}
+            </div>
           </TabsContent>
 
           {!isParent && currentStudentId && (

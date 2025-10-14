@@ -1,15 +1,24 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface IdleDetectionOptions {
-  threshold?: number; // milliseconds
-  onIdle?: () => void;
+  warningThreshold?: number; // milliseconds for warning (default 30s)
+  idleThreshold?: number; // milliseconds for full idle (default 60s)
+  onWarning?: () => void; // called at warning threshold
+  onIdle?: () => void; // called at idle threshold
   onActive?: () => void;
 }
 
 export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
-  const { threshold = 60000, onIdle, onActive } = options; // Default 60 seconds
+  const { 
+    warningThreshold = 30000, // 30 seconds
+    idleThreshold = 60000, // 60 seconds 
+    onWarning,
+    onIdle, 
+    onActive 
+  } = options;
   
   const [isIdle, setIsIdle] = useState(false);
+  const [isWarning, setIsWarning] = useState(false);
   const [lastActivityTime, setLastActivityTime] = useState(Date.now());
   const [idleDuration, setIdleDuration] = useState(0);
   
@@ -21,17 +30,18 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
     const now = Date.now();
     setLastActivityTime(now);
     
-    if (isIdle) {
+    if (isIdle || isWarning) {
       const duration = now - lastActivityTime;
       setIdleDuration(duration);
       setIsIdle(false);
+      setIsWarning(false);
       onActive?.();
     }
     
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current);
     }
-  }, [isIdle, lastActivityTime, onActive]);
+  }, [isIdle, isWarning, lastActivityTime, onActive]);
 
   const throttle = (eventType: string, delay: number, callback: () => void) => {
     const now = Date.now();
@@ -71,12 +81,20 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
       const now = Date.now();
       const timeSinceActivity = now - lastActivityTime;
       
-      if (timeSinceActivity >= threshold && !isIdle) {
+      // Warning threshold (30s by default)
+      if (timeSinceActivity >= warningThreshold && !isWarning && !isIdle) {
+        setIsWarning(true);
+        onWarning?.();
+      }
+      
+      // Full idle threshold (60s by default)
+      if (timeSinceActivity >= idleThreshold && !isIdle) {
         setIsIdle(true);
+        setIsWarning(false);
         setIdleDuration(timeSinceActivity);
         onIdle?.();
       }
-    }, 5000); // Check every 5 seconds
+    }, 1000); // Check every second for more responsive warning
 
     return () => {
       activityEvents.forEach(({ type }) => {
@@ -91,10 +109,11 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
         clearTimeout(idleTimerRef.current);
       }
     };
-  }, [threshold, lastActivityTime, isIdle, onIdle, resetIdleTimer]);
+  }, [warningThreshold, idleThreshold, lastActivityTime, isIdle, isWarning, onWarning, onIdle, resetIdleTimer]);
 
   return {
     isIdle,
+    isWarning,
     idleDuration,
     resetIdleTimer,
     lastActivityTime

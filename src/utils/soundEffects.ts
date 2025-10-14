@@ -31,6 +31,17 @@ const climbSounds = [
   '/sounds/duck-climb-10.mp3',
 ];
 
+// Array of attention sounds for when duck needs user to focus
+const attentionSounds = [
+  '/sounds/duck-attention-1.mp3',
+  '/sounds/duck-attention-2.mp3',
+  '/sounds/duck-attention-3.mp3',
+  '/sounds/duck-attention-4.mp3',
+  '/sounds/duck-attention-5.mp3',
+  '/sounds/duck-attention-6.mp3',
+  '/sounds/duck-attention-7.mp3',
+];
+
 type SoundName = keyof typeof sounds;
 
 // Preload sounds for better performance
@@ -102,5 +113,21 @@ export const playRandomClimbSound = (volume = 0.5) => {
     });
   } catch (error) {
     console.debug('Random climb sound playback failed');
+  }
+};
+
+// Play a random attention sound to get user's focus
+export const playRandomAttentionSound = (volume = 0.5) => {
+  try {
+    const randomIndex = Math.floor(Math.random() * attentionSounds.length);
+    const soundPath = attentionSounds[randomIndex];
+    
+    const audio = new Audio(soundPath);
+    audio.volume = volume;
+    audio.play().catch(() => {
+      // Silently fail if autoplay is blocked
+    });
+  } catch (error) {
+    console.debug('Random attention sound playback failed');
   }
 };

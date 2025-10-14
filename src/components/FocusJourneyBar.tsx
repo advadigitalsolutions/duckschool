@@ -1,12 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { FocusJourneyDuck } from './FocusJourneyDuck';
 import { Sparkles } from 'lucide-react';
-import { playSound, playRandomFallSound, playRandomClimbSound } from '@/utils/soundEffects';
+import { playSound, playRandomFallSound, playRandomClimbSound, playRandomAttentionSound } from '@/utils/soundEffects';
 import { useActivitySession } from '@/hooks/useActivitySession';
 import { useIdleDetection } from '@/hooks/useIdleDetection';
 import { useWindowVisibility } from '@/hooks/useWindowVisibility';
 import { usePageContext } from '@/hooks/usePageContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface FocusSegment {
   type: 'completed' | 'active';
@@ -21,7 +23,7 @@ interface FocusSegment {
 interface GapSegment {
   type: 'gap';
   startSeconds: number;
-  endSeconds: number;
+  endSeconds?: number;
   startPercent: number;
   widthPercent: number;
   duration: number; // in seconds
@@ -38,10 +40,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [currentSegmentStart, setCurrentSegmentStart] = useState(0);
   const [sessionNumber, setSessionNumber] = useState(1);
   const [progress, setProgress] = useState(0);
-  const [duckState, setDuckState] = useState<'walking' | 'falling' | 'climbing' | 'celebrating' | 'idle'>('walking');
+  const [duckState, setDuckState] = useState<'walking' | 'falling' | 'climbing' | 'celebrating' | 'idle' | 'jumping'>('walking');
   const [goalSeconds] = useState(1500); // 25 minutes default goal
   const [milestonesReached, setMilestonesReached] = useState<number[]>([]);
   const [gapStartTime, setGapStartTime] = useState<number | null>(null);
+  const [isOnBreak, setIsOnBreak] = useState(false);
+  const [breakStartTime, setBreakStartTime] = useState<number | null>(null);
 
   // Log duck state changes
   useEffect(() => {
@@ -60,7 +64,16 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   const { pageContext, courseId, assignmentId } = usePageContext();
 
+  const handleWarning = useCallback(() => {
+    console.log('⚠️ Duck warning - user idle for 30s');
+    if (!isOnBreak) {
+      setDuckState('jumping');
+      playRandomAttentionSound(0.6);
+    }
+  }, [isOnBreak]);
+
   const handleIdle = useCallback(async () => {
+    if (isOnBreak) return; // Don't mark as idle during intentional break
     if (sessionId) {
       // Complete current focus segment
       const currentSeconds = sessionData.activeSeconds;
@@ -95,9 +108,14 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         metadata: { duration_seconds: 0 }
       });
     }
-  }, [sessionId, studentId, pageContext, courseId, assignmentId, sessionData.activeSeconds, currentSegmentStart, goalSeconds, sessionNumber]);
+  }, [sessionId, studentId, pageContext, courseId, assignmentId, sessionData.activeSeconds, currentSegmentStart, goalSeconds, sessionNumber, isOnBreak]);
 
   const handleActive = useCallback(async () => {
+    // If returning from break, don't treat as gap
+    if (isOnBreak) {
+      setDuckState('walking');
+      return;
+    }
     if (sessionId && gapStartTime !== null) {
       const currentSeconds = sessionData.activeSeconds;
       const gapDuration = currentSeconds - gapStartTime;
@@ -131,10 +149,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         assignment_id: assignmentId
       });
     }
-  }, [sessionId, studentId, pageContext, courseId, assignmentId, gapStartTime, sessionData.activeSeconds, goalSeconds]);
+  }, [sessionId, studentId, pageContext, courseId, assignmentId, gapStartTime, sessionData.activeSeconds, goalSeconds, isOnBreak]);
 
-  const { isIdle } = useIdleDetection({
-    threshold: 60000,
+  const { isIdle, isWarning } = useIdleDetection({
+    warningThreshold: 30000, // 30 seconds
+    idleThreshold: 60000, // 60 seconds
+    onWarning: handleWarning,
     onIdle: handleIdle,
     onActive: handleActive
   });
@@ -297,6 +317,57 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     return `${mins}m ${secs}s`;
   };
 
+  const handleTakeBreak = () => {
+    if (isOnBreak) {
+      // Resuming from break
+      const breakDuration = sessionData.activeSeconds - (breakStartTime || 0);
+      const startPercent = ((breakStartTime || 0) / goalSeconds) * 100;
+      const widthPercent = (breakDuration / goalSeconds) * 100;
+
+      // Add break segment
+      setGapSegments(prev => [...prev, {
+        type: 'gap',
+        startSeconds: breakStartTime || 0,
+        endSeconds: sessionData.activeSeconds,
+        startPercent,
+        widthPercent,
+        duration: breakDuration,
+        reason: 'break'
+      }]);
+
+      setCurrentSegmentStart(sessionData.activeSeconds);
+      setIsOnBreak(false);
+      setBreakStartTime(null);
+      setDuckState('walking');
+      toast.success('Break over! Back to work! 🦆');
+    } else {
+      // Starting break
+      const currentSeconds = sessionData.activeSeconds;
+      
+      // Complete current focus segment
+      if (currentSeconds > currentSegmentStart) {
+        const duration = currentSeconds - currentSegmentStart;
+        const startPercent = (currentSegmentStart / goalSeconds) * 100;
+        const widthPercent = (duration / goalSeconds) * 100;
+        
+        setFocusSegments(prev => [...prev, {
+          type: 'completed',
+          startSeconds: currentSegmentStart,
+          endSeconds: currentSeconds,
+          startPercent,
+          widthPercent,
+          duration,
+          sessionNumber
+        }]);
+      }
+
+      setIsOnBreak(true);
+      setBreakStartTime(currentSeconds);
+      setDuckState('idle');
+      toast.info('Break time! Duck is resting 🦆💤');
+    }
+  };
+
   const handleDuckAnimationComplete = () => {
     if (duckState === 'climbing') {
       setDuckState('walking');
@@ -321,6 +392,17 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       aria-label={`Focus journey progress: ${Math.round(progress)}%`}
     >
       <div className="max-w-7xl mx-auto">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex-1" />
+          <Button
+            variant={isOnBreak ? "default" : "outline"}
+            size="sm"
+            onClick={handleTakeBreak}
+            className="text-xs"
+          >
+            {isOnBreak ? '▶️ Resume Focus' : '☕ Take Break'}
+          </Button>
+        </div>
         <div className="relative h-10 bg-muted/30 rounded-full border border-border/50" style={{ overflow: 'visible' }}>
           {/* Completed focus segments */}
           {focusSegments.map((segment, index) => (
@@ -341,22 +423,32 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           {gapSegments.map((segment, index) => {
             const showTimestamp = segment.duration >= 60;
             const isShortGap = segment.duration < 60;
+            const isBreak = segment.reason === 'break';
             
             return (
               <div
                 key={`gap-${index}`}
                 className={`absolute inset-y-0 flex items-center justify-center ${
-                  isShortGap ? 'bg-transparent' : 'bg-muted/50'
+                  isBreak 
+                    ? 'bg-amber-500/20 border-2 border-amber-500/40 rounded-full' 
+                    : isShortGap 
+                      ? 'bg-transparent' 
+                      : 'bg-muted/50'
                 }`}
                 style={{ 
                   left: `${segment.startPercent}%`, 
                   width: `${segment.widthPercent}%`,
-                  minWidth: isShortGap ? '2px' : '20px',
+                  minWidth: isShortGap ? '2px' : isBreak ? '30px' : '20px',
                   borderLeft: isShortGap ? '2px dashed hsl(var(--border))' : 'none',
                   borderRight: isShortGap ? '2px dashed hsl(var(--border))' : 'none'
                 }}
               >
-                {showTimestamp && segment.widthPercent > 4 && (
+                {isBreak && segment.widthPercent > 2 && (
+                  <span className="text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                    ☕ {formatDuration(segment.duration)}
+                  </span>
+                )}
+                {!isBreak && showTimestamp && segment.widthPercent > 4 && (
                   <span className="text-[9px] text-muted-foreground font-medium">
                     Away: {formatDuration(segment.duration)}
                   </span>
@@ -366,7 +458,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           })}
 
           {/* Current active segment */}
-          {gapStartTime === null && (
+          {gapStartTime === null && !isOnBreak && (
             <div 
               className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getProgressColor()} transition-all duration-500 ease-out opacity-40 rounded-full`}
               style={{ 
