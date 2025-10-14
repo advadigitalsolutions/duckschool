@@ -85,36 +85,36 @@ serve(async (req) => {
       studentInterests = studentProfile.special_interests || [];
     }
 
+    // Import weak area analysis service
+    const { analyzeWeakAreas, planCrossSubjectIntegration } = await import('../_shared/weak-area-analyzer.ts');
+
     // Get student's weak areas for cross-subject integration
-    let weakAreas: Array<{ subject: string; standard: string; description: string }> = [];
+    let weakAreas: any[] = [];
+    let integrationPlan: any[] = [];
+    
     if (enableCrossSubject && isMultiCourse) {
-      // Get progress gaps
-      const { data: gaps } = await supabase
-        .from('progress_gaps')
-        .select('*, courses!inner(subject, title)')
-        .eq('student_id', studentProfile.id)
-        .is('addressed_at', null)
-        .order('confidence_score', { ascending: true })
-        .limit(10);
+      weakAreas = await analyzeWeakAreas(supabase, studentProfile.id, targetCourseIds);
+      
+      integrationPlan = planCrossSubjectIntegration(
+        weakAreas,
+        targetCoursesData.map((c: any) => ({ 
+          id: c.id, 
+          subject: c.subject, 
+          title: c.title 
+        })),
+        topic
+      );
 
-      // Get recent low-scoring assessments
-      const { data: recentGrades } = await supabase
-        .from('grades')
-        .select('*, assignments!inner(curriculum_items!inner(course_id, standards, courses!inner(subject)))')
-        .eq('student_id', studentProfile.id)
-        .lt('score', 70)
-        .order('graded_at', { ascending: false })
-        .limit(10);
-
-      if (gaps) {
-        weakAreas = gaps.map(gap => ({
-          subject: gap.courses?.subject || 'Unknown',
-          standard: gap.standard_code,
-          description: gap.gap_type
-        }));
-      }
-
-      console.log('Weak areas identified for cross-subject integration:', weakAreas);
+      console.log('Weak areas analysis:', {
+        total_weak_areas: weakAreas.length,
+        top_priorities: weakAreas.slice(0, 5).map(w => ({
+          standard: w.standard_code,
+          subject: w.subject,
+          priority: w.priority_score
+        })),
+        integration_opportunities: integrationPlan.length,
+        high_quality_integrations: integrationPlan.filter(i => i.naturalness_rating === 'high').length
+      });
     }
 
     // Get uncovered standards for courses
@@ -245,25 +245,37 @@ Please design this assignment to address one or more of these uncovered standard
 Include the standard codes in the alignment section of your response.
 ` : '';
 
-    // Add cross-subject integration guidance
-    const crossSubjectGuidance = enableCrossSubject && weakAreas.length > 0 ? `
+    // Add cross-subject integration guidance with quality scoring
+    const crossSubjectGuidance = enableCrossSubject && integrationPlan.length > 0 ? `
 CROSS-SUBJECT INTEGRATION - CRITICAL:
-This is a multi-course assignment with cross-subject integration enabled. The student has identified weak areas that should be incorporated:
+This is a multi-course assignment with cross-subject integration enabled. Advanced analysis has identified high-quality opportunities to naturally incorporate weak areas:
 
-WEAK AREAS TO ADDRESS:
-${weakAreas.slice(0, 5).map(area => `- ${area.subject}: ${area.standard} (${area.description})`).join('\n')}
+TOP PRIORITY INTEGRATION OPPORTUNITIES (sorted by quality):
+${integrationPlan.slice(0, 5).map((integration, idx) => `
+${idx + 1}. WEAK AREA: ${integration.weak_area.subject} - ${integration.weak_area.standard_code}
+   Mastery: ${integration.weak_area.mastery_level}% | Priority Score: ${integration.weak_area.priority_score}
+   Quality: ${integration.quality_score}/100 | Naturalness: ${integration.naturalness_rating.toUpperCase()}
+   
+   INTEGRATION SUGGESTIONS:
+   ${integration.integration_suggestions.map((s: string) => `   • ${s}`).join('\n')}
+   
+   TARGET COURSES: ${integration.target_courses.join(', ')}
+`).join('\n')}
 
-INSTRUCTIONS:
-1. Design ONE assignment that addresses the main topic across ALL selected courses
-2. Naturally weave in practice for the weak areas above where relevant
-3. For example, if student is weak in fractions (math) and this is an English + Math assignment about recipes:
-   - English component: Write a recipe with proper formatting
-   - Math component: Calculate ingredient ratios and fractions needed for different serving sizes
-   - This addresses both subjects while reinforcing the weak area (fractions)
-4. Make the integration feel natural and purposeful, not forced
-5. In standards_alignment_by_course, specify which standards from each course are addressed
+INTEGRATION INSTRUCTIONS:
+1. Design ONE cohesive assignment that addresses the main topic "${topic}" across ALL selected courses
+2. Use the integration suggestions above to naturally weave in weak area practice
+3. Focus on HIGH and MEDIUM naturalness integrations - they will feel most authentic to students
+4. Make connections explicit but not forced (e.g., "As we analyze this historical data, we'll also practice the fraction operations we've been working on")
+5. Include standards_alignment_by_course showing which standards from each course are addressed
+6. Explain in teacher_guide how the cross-subject integration strengthens learning
 
-This maximizes learning time by addressing multiple subjects and weak areas simultaneously.
+QUALITY METRICS:
+- ${integrationPlan.filter(i => i.naturalness_rating === 'high').length} high-quality integrations available
+- ${integrationPlan.filter(i => i.naturalness_rating === 'medium').length} medium-quality integrations available
+- Average integration quality: ${Math.round(integrationPlan.reduce((sum, i) => sum + i.quality_score, 0) / integrationPlan.length)}/100
+
+This maximizes learning time by addressing multiple subjects and targeted weak areas simultaneously while maintaining natural flow.
 ` : '';
 
     const systemPrompt = `You are an expert curriculum designer creating interactive digital assignments for homeschool students. 

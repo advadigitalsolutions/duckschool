@@ -41,6 +41,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
   const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
   const [enableCrossSubject, setEnableCrossSubject] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showRecommendations, setShowRecommendations] = useState(false);
 
   const toggleCourse = (courseId: string) => {
     setSelectedCourses(prev => 
@@ -222,19 +223,43 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
 
           {/* Cross-Subject Integration Toggle */}
           {selectedCourses.length > 1 && (
-            <div className="flex items-center justify-between space-x-2 p-3 border rounded-md bg-muted/50">
-              <div className="space-y-0.5">
-                <Label htmlFor="cross-subject">Enable Cross-Subject Integration</Label>
-                <p className="text-xs text-muted-foreground">
-                  Incorporate weak areas from one subject into other subjects to maximize learning time
-                </p>
+            <>
+              <div className="flex items-center justify-between space-x-2 p-3 border rounded-md bg-muted/50">
+                <div className="space-y-0.5">
+                  <Label htmlFor="cross-subject">Enable Cross-Subject Integration</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Incorporate weak areas from one subject into other subjects to maximize learning time
+                  </p>
+                </div>
+                <Switch
+                  id="cross-subject"
+                  checked={enableCrossSubject}
+                  onCheckedChange={setEnableCrossSubject}
+                />
               </div>
-              <Switch
-                id="cross-subject"
-                checked={enableCrossSubject}
-                onCheckedChange={setEnableCrossSubject}
-              />
-            </div>
+
+              {/* Integration Intelligence Panel */}
+              {enableCrossSubject && (
+                <div className="p-4 border rounded-md bg-primary/5 space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span>Smart Integration Enabled</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    The AI will analyze mastery data across all {selectedCourses.length} selected courses to identify:
+                  </p>
+                  <ul className="text-xs text-muted-foreground space-y-1 ml-4">
+                    <li>• Standards with low mastery levels (&lt;70%)</li>
+                    <li>• Recent performance gaps and struggling areas</li>
+                    <li>• Natural opportunities to practice weak skills across subjects</li>
+                    <li>• High-quality integration points (scored for naturalness)</li>
+                  </ul>
+                  <p className="text-xs text-primary/80 italic mt-2">
+                    The AI will create ONE cohesive assignment that addresses all courses while strengthening identified weak areas.
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           <div className="space-y-2">

@@ -19,6 +19,7 @@ import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
 import { RequestCourseDialog } from '@/components/RequestCourseDialog';
+import { MasteryDashboard } from '@/components/MasteryDashboard';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -598,6 +599,21 @@ export default function StudentDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Mastery Tracking */}
+        {studentDbId && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>Learning Mastery 📈</CardTitle>
+              <CardDescription>
+                Track your understanding across all subjects and standards
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MasteryDashboard studentId={studentDbId} />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Micro Goals */}
         <Card className="mt-8">
