@@ -62,26 +62,33 @@ CRITICAL RULES:
 4. Provide just enough guidance to point students in the right direction
 5. NEVER give the answer directly or make it too obvious
 6. Be concise - 2-3 sentences max per hint
-7. Use REAL URLs that exist (verify domains: britannica.com, khanacademy.org, youtube.com/@crashcourse, youtube.com/@khanacademy)
 
-TRUSTED SOURCES ONLY:
-- Britannica (www.britannica.com)
-- Khan Academy (www.khanacademy.org)
-- YouTube: CrashCourse, Khan Academy, TED-Ed
-- .edu websites (universities)
-- National Geographic
-- Smithsonian
-- PBS LearningMedia
+ABSOLUTE URL REQUIREMENTS - NO HALLUCINATIONS:
+- ONLY include URLs if you are 100% certain they exist and are currently accessible
+- Use general domain homepages or topic pages you KNOW exist (e.g., www.khanacademy.org/math/algebra)
+- For Khan Academy: Use subject area URLs (math, science, humanities) - NOT specific video URLs unless absolutely certain
+- For YouTube: Use channel homepages (@khanacademy, @crashcourse) - NOT specific video URLs
+- When in doubt, provide SEARCH TERMS instead of URLs
+- Example: "Search Khan Academy for 'quadratic equations'" instead of inventing a specific URL
 
-DO NOT:
-- Invent URLs or use placeholder links
-- Suggest generic "google this" advice
-- Give away the answer
-- Use unreliable sources (random blogs, Wikipedia for citations)
+TRUSTED SOURCES (Use homepage/topic-level URLs only):
+- Khan Academy: www.khanacademy.org/[subject]
+- Britannica: www.britannica.com/topic/[general-topic]
+- YouTube channels: www.youtube.com/@khanacademy or @crashcourse
+- .edu websites: Use university department pages, not specific articles
+- National Geographic: www.nationalgeographic.com
+- Smithsonian: www.si.edu
+- PBS LearningMedia: www.pbslearningmedia.org
+
+PREFER SEARCH TERMS OVER UNCERTAIN URLS:
+If you're not certain a specific URL exists:
+- Provide the topic and search guidance: "Search 'photosynthesis process' on Khan Academy"
+- Or use general category URLs you know exist: www.khanacademy.org/science/biology
 
 CONFIDENCE LEVELS:
-- Mark "high" confidence only for verified, reputable sources
-- If unsure about a URL or resource, mark "medium" or don't include it`;
+- Mark "high" confidence ONLY for homepage/category URLs you're certain about
+- Mark "medium" for search term recommendations
+- NEVER include a URL you're uncertain about - use search terms instead`;
 
     let userPrompt = '';
 
