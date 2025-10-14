@@ -47,6 +47,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [breakStartTime, setBreakStartTime] = useState<number | null>(null);
   const [hoveredSegmentIndex, setHoveredSegmentIndex] = useState<number | null>(null);
+  const [celebrationProgress, setCelebrationProgress] = useState<number | null>(null);
   const lastBlurTime = useRef<number>(0);
   const lastFocusTime = useRef<number>(Date.now());
 
@@ -264,6 +265,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         return;
       }
 
+      // Store current progress before starting climb animation
+      const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
+      const totalBarProgress = completedFocusTime + (sessionData.activeSeconds - currentSegmentStart);
+      const currentProgress = Math.min((totalBarProgress / goalSeconds) * 100, 100);
+      setCelebrationProgress(currentProgress);
+
       const currentSeconds = sessionData.activeSeconds;
       const gapDuration = currentSeconds - gapStartTime;
       const startPercent = (gapStartTime / goalSeconds) * 100;
@@ -280,9 +287,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         reason: 'away'
       }]);
       
-      // Start new focus segment
-      console.log(`🔄 Resurrection: Setting currentSegmentStart to ${currentSeconds}s (was ${currentSegmentStart}s)`);
-      setCurrentSegmentStart(currentSeconds);
+      // Don't reset currentSegmentStart yet - wait until climb animation completes
       setSessionNumber(prev => prev + 1);
       setGapStartTime(null);
       lastFocusTime.current = Date.now();
@@ -348,7 +353,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       page_context: pageContext,
       metadata: { timestamp: new Date().toISOString(), gap_duration: gapDuration }
     });
-  }, [sessionId, studentId, pageContext, gapStartTime, sessionData.activeSeconds, goalSeconds, resetIdleTimer, duckState]);
+  }, [sessionId, studentId, pageContext, gapStartTime, sessionData.activeSeconds, goalSeconds, resetIdleTimer, duckState, focusSegments, currentSegmentStart]);
 
   const { isVisible } = useWindowVisibility({
     onHidden: handleWindowHidden,
@@ -407,6 +412,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   // Calculate duck's visual progress on the bar
   // The duck's position is the sum of all completed segments + current segment
   useEffect(() => {
+    // During celebration, use the preserved progress to prevent jumping
+    if (celebrationProgress !== null) {
+      setProgress(celebrationProgress);
+      return;
+    }
+    
     // Sum up all completed focus segments
     const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
     
@@ -435,7 +446,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         }
       }
     });
-  }, [focusSegments, sessionData.activeSeconds, currentSegmentStart, gapStartTime, isOnBreak, goalSeconds, milestonesReached]);
+  }, [celebrationProgress, focusSegments, sessionData.activeSeconds, currentSegmentStart, gapStartTime, isOnBreak, goalSeconds, milestonesReached]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -504,7 +515,9 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     } else if (duckState === 'celebrating') {
       setDuckState('walking');
     } else if (duckState === 'celebrating-return') {
-      // After celebrating return, resume walking from current position
+      // After celebrating return, now start the new segment and resume walking
+      setCurrentSegmentStart(sessionData.activeSeconds);
+      setCelebrationProgress(null);
       setDuckState('walking');
     }
   };
@@ -529,6 +542,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         return;
       }
 
+      // Store current progress before starting climb animation
+      const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
+      const totalBarProgress = completedFocusTime + (sessionData.activeSeconds - currentSegmentStart);
+      const currentProgress = Math.min((totalBarProgress / goalSeconds) * 100, 100);
+      setCelebrationProgress(currentProgress);
+
       const currentSeconds = sessionData.activeSeconds;
       const gapDuration = currentSeconds - gapStartTime;
       const startPercent = (gapStartTime / goalSeconds) * 100;
@@ -545,9 +564,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         reason: 'away'
       }]);
       
-      // Start new focus segment
-      console.log(`🔄 Click Resurrection: Setting currentSegmentStart to ${currentSeconds}s (was ${currentSegmentStart}s)`);
-      setCurrentSegmentStart(currentSeconds);
+      // Don't reset currentSegmentStart yet - wait until climb animation completes
       setSessionNumber(prev => prev + 1);
       setGapStartTime(null);
       lastFocusTime.current = Date.now();
@@ -565,7 +582,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         metadata: { timestamp: new Date().toISOString(), gap_duration: gapDuration }
       });
     }
-  }, [duckState, sessionId, gapStartTime, sessionData.activeSeconds, goalSeconds, studentId, pageContext, resetIdleTimer]);
+  }, [duckState, sessionId, gapStartTime, sessionData.activeSeconds, goalSeconds, studentId, pageContext, resetIdleTimer, focusSegments, currentSegmentStart]);
 
   // Add global click listener for fallen/ghostly states
   useEffect(() => {
