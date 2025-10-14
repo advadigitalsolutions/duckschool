@@ -23,6 +23,7 @@ import { TextToSpeech } from '@/components/TextToSpeech';
 import { AssignmentNotes } from '@/components/AssignmentNotes';
 import { StudentLayout } from '@/components/StudentLayout';
 import { RegradeButton } from '@/components/RegradeButton';
+import { ResourceIframeViewer } from '@/components/ResourceIframeViewer';
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -37,6 +38,7 @@ export default function AssignmentDetail() {
   const [offlineActivities, setOfflineActivities] = useState('');
   const [offlineGrade, setOfflineGrade] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
+  const [openResource, setOpenResource] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
     fetchAssignment();
@@ -799,6 +801,7 @@ export default function AssignmentDetail() {
                 }}
                 readingMaterials={content.reading_materials}
                 studentId={currentStudentId || undefined}
+                onLinkClick={(url: string, title: string) => setOpenResource({ url, title })}
               />
             )}
 
@@ -841,11 +844,20 @@ export default function AssignmentDetail() {
 
           {!isParent && currentStudentId && (
             <TabsContent value="notes">
-              <AssignmentNotes
-                assignmentId={assignment.id}
-                studentId={currentStudentId}
-                courseId={assignment.curriculum_items?.courses?.id || assignment.curriculum_items?.course_id}
-              />
+              <div className={openResource ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : ""}>
+                <AssignmentNotes
+                  assignmentId={assignment.id}
+                  studentId={currentStudentId}
+                  courseId={assignment.curriculum_items?.courses?.id || assignment.curriculum_items?.course_id}
+                />
+                {openResource && (
+                  <ResourceIframeViewer
+                    url={openResource.url}
+                    title={openResource.title}
+                    onClose={() => setOpenResource(null)}
+                  />
+                )}
+              </div>
             </TabsContent>
           )}
         </Tabs>

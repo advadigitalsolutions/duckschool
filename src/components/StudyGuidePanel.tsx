@@ -43,6 +43,7 @@ interface StudyGuidePanelProps {
     page_references: Record<string, number[]>;
   };
   studentId?: string;
+  onLinkClick?: (url: string, title: string) => void;
 }
 
 export function StudyGuidePanel({ 
@@ -50,7 +51,8 @@ export function StudyGuidePanel({
   questions, 
   studentProfile, 
   readingMaterials,
-  studentId 
+  studentId,
+  onLinkClick
 }: StudyGuidePanelProps) {
   const [studyGuide, setStudyGuide] = useState<Record<string, QuestionStudyGuide>>({});
   const [loading, setLoading] = useState(true);
@@ -295,12 +297,10 @@ export function StudyGuidePanel({
                           <div className="space-y-2">
                             <p className="text-sm text-muted-foreground">{hint.text}</p>
                             {hint.links?.map((link, linkIndex) => (
-                              <a
+                              <button
                                 key={linkIndex}
-                                href={link.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-primary hover:underline text-sm"
+                                onClick={() => onLinkClick?.(link.url, link.title)}
+                                className="flex items-center gap-2 text-primary hover:underline text-sm w-full text-left"
                               >
                                 <ExternalLink className="h-4 w-4 flex-shrink-0" />
                                 <div>
@@ -309,7 +309,7 @@ export function StudyGuidePanel({
                                     <div className="text-xs text-muted-foreground">{link.description}</div>
                                   )}
                                 </div>
-                              </a>
+                              </button>
                             ))}
                           </div>
                         )}
@@ -336,12 +336,10 @@ export function StudyGuidePanel({
                       <p className="text-sm font-medium mb-3">Additional Resources:</p>
                       <div className="space-y-2">
                         {guide.additional_resources.map((resource, resIndex) => (
-                          <a
+                          <button
                             key={resIndex}
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm text-primary hover:underline p-2 rounded-lg hover:bg-accent transition-colors"
+                            onClick={() => onLinkClick?.(resource.url, resource.title)}
+                            className="flex items-center gap-2 text-sm text-primary hover:underline p-2 rounded-lg hover:bg-accent transition-colors w-full text-left"
                           >
                             {resource.type === 'video' && <Video className="h-4 w-4 flex-shrink-0" />}
                             {resource.type === 'article' && <FileText className="h-4 w-4 flex-shrink-0" />}
@@ -352,7 +350,7 @@ export function StudyGuidePanel({
                               )}
                             </div>
                             <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                          </a>
+                          </button>
                         ))}
                       </div>
                     </div>
