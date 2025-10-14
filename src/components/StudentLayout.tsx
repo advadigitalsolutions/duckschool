@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
+import { FocusJourneyBar } from '@/components/FocusJourneyBar';
+import { BioBreakButton } from '@/components/BioBreakButton';
+import { FocusJourneyProvider } from '@/contexts/FocusJourneyContext';
 import { toast } from 'sonner';
 
 interface StudentLayoutProps {
@@ -100,20 +103,26 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
-      
-      {headerSettings && student && (
-        <CustomizableHeader
-          student={student}
-          settings={headerSettings}
-          onSaveSettings={saveHeaderSettings}
-          onSignOut={handleSignOut}
-          onDemoCelebration={() => setShowConfetti(true)}
-        />
-      )}
+    <FocusJourneyProvider studentId={student?.id}>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
+        
+        {headerSettings && student && (
+          <>
+            <CustomizableHeader
+              student={student}
+              settings={headerSettings}
+              onSaveSettings={saveHeaderSettings}
+              onSignOut={handleSignOut}
+              onDemoCelebration={() => setShowConfetti(true)}
+            />
+            <FocusJourneyBar studentId={student.id} />
+            <BioBreakButton studentId={student.id} />
+          </>
+        )}
 
-      {children}
-    </div>
+        {children}
+      </div>
+    </FocusJourneyProvider>
   );
 }

@@ -52,6 +52,74 @@ export type Database = {
           },
         ]
       }
+      activity_events: {
+        Row: {
+          assignment_id: string | null
+          course_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          page_context: string | null
+          session_id: string | null
+          student_id: string
+          timestamp: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          page_context?: string | null
+          session_id?: string | null
+          student_id: string
+          timestamp?: string
+        }
+        Update: {
+          assignment_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          page_context?: string | null
+          session_id?: string | null
+          student_id?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_events_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "learning_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_events_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_runs: {
         Row: {
           agent: string | null
@@ -703,6 +771,59 @@ export type Database = {
           },
           {
             foreignKeyName: "grades_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      learning_sessions: {
+        Row: {
+          browser: string | null
+          created_at: string
+          device_type: string | null
+          ended_by: string | null
+          id: string
+          session_end: string | null
+          session_start: string
+          student_id: string
+          total_active_seconds: number
+          total_away_seconds: number
+          total_idle_seconds: number
+          updated_at: string
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          device_type?: string | null
+          ended_by?: string | null
+          id?: string
+          session_end?: string | null
+          session_start?: string
+          student_id: string
+          total_active_seconds?: number
+          total_away_seconds?: number
+          total_idle_seconds?: number
+          updated_at?: string
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          device_type?: string | null
+          ended_by?: string | null
+          id?: string
+          session_end?: string | null
+          session_start?: string
+          student_id?: string
+          total_active_seconds?: number
+          total_away_seconds?: number
+          total_idle_seconds?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_sessions_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
