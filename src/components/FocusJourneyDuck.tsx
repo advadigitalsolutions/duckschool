@@ -17,12 +17,12 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
     // Trigger animation complete callbacks without playing sounds (sounds are handled in parent)
     switch (animationState) {
       case 'falling':
-        console.log('🦆 Duck falling animation will complete in 1000ms');
-        setTimeout(() => onAnimationComplete?.(), 1000);
+        console.log('🦆 Duck falling animation will complete in 1200ms');
+        setTimeout(() => onAnimationComplete?.(), 1200);
         break;
       case 'climbing':
-        console.log('🦆 Duck climbing animation will complete in 800ms');
-        setTimeout(() => onAnimationComplete?.(), 800);
+        console.log('🦆 Duck climbing animation will complete in 1000ms');
+        setTimeout(() => onAnimationComplete?.(), 1000);
         break;
       case 'celebrating':
         console.log('🦆 Duck celebrating animation will complete in 2000ms');
@@ -153,42 +153,68 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
           animation: foot-walk-right 0.4s ease-in-out infinite;
         }
 
-        /* Falling Animation */
+        /* Falling Animation - DRAMATIC! */
         @keyframes fall {
           0% {
-            transform: translateY(0) rotate(0deg);
+            transform: translateY(0) translateX(0) rotate(0deg) scale(1);
             opacity: 1;
           }
+          25% {
+            transform: translateY(40px) translateX(-20px) rotate(-90deg) scale(1.1);
+          }
           50% {
-            transform: translateY(20px) rotate(180deg);
+            transform: translateY(80px) translateX(-10px) rotate(-180deg) scale(0.9);
+          }
+          75% {
+            transform: translateY(120px) translateX(-25px) rotate(-270deg) scale(1.05);
           }
           100% {
-            transform: translateY(45px) rotate(360deg);
-            opacity: 0.3;
+            transform: translateY(160px) translateX(-15px) rotate(-360deg) scale(0.8);
+            opacity: 0;
           }
+        }
+
+        .duck-container.falling {
+          z-index: 100;
+          position: relative;
         }
 
         .duck-container.falling .duck {
-          animation: fall 1s ease-in forwards;
+          animation: fall 1.2s cubic-bezier(0.6, -0.28, 0.74, 0.5) forwards;
+          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }
 
-        /* Climbing Animation */
+        /* Climbing Animation - Coming back up! */
         @keyframes climb {
           0% {
-            transform: translateY(45px) scaleX(0.9);
-            opacity: 0.3;
+            transform: translateY(160px) translateX(-40px) scale(0.5) rotate(-20deg);
+            opacity: 0;
           }
-          50% {
-            transform: translateY(20px) scaleX(1.1);
+          30% {
+            transform: translateY(80px) translateX(-20px) scale(0.8) rotate(-10deg);
+            opacity: 0.6;
+          }
+          60% {
+            transform: translateY(20px) translateX(-5px) scale(1.1) rotate(5deg);
+            opacity: 0.9;
+          }
+          80% {
+            transform: translateY(-5px) translateX(0) scale(1.05) rotate(-2deg);
           }
           100% {
-            transform: translateY(0) scaleX(1);
+            transform: translateY(0) translateX(0) scale(1) rotate(0deg);
             opacity: 1;
           }
         }
 
+        .duck-container.climbing {
+          z-index: 100;
+          position: relative;
+        }
+
         .duck-container.climbing .duck {
-          animation: climb 0.8s ease-out forwards;
+          animation: climb 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
 
         /* Celebration Animation */
