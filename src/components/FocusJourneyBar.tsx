@@ -113,6 +113,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   }, [sessionId, studentId, pageContext, courseId, assignmentId, sessionData.activeSeconds, currentSegmentStart, goalSeconds, sessionNumber, isOnBreak]);
 
   const handleActive = useCallback(async () => {
+    console.log('🟢 handleActive called', { isOnBreak, sessionId: !!sessionId, gapStartTime });
     // If returning from break, don't treat as gap
     if (isOnBreak) {
       setDuckState('walking');
@@ -207,6 +208,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   }, [sessionId, studentId, pageContext, sessionData.activeSeconds, currentSegmentStart, goalSeconds, sessionNumber, gapStartTime, isOnBreak]);
 
   const handleWindowVisible = useCallback(async () => {
+    console.log('👁️ handleWindowVisible called', { sessionId: !!sessionId, gapStartTime });
     // Only process if we actually have a gap to recover from
     if (!sessionId || gapStartTime === null) {
       console.log('🦆 Ignoring window focus - no gap to recover from');
