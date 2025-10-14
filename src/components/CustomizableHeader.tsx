@@ -235,11 +235,12 @@ export function CustomizableHeader({
     return () => clearInterval(interval);
   }, [settings.showWeather, settings.weatherZipCode]);
 
-  // Auto-hide header on scroll
+  // Auto-hide header on scroll or wheel gesture
   useEffect(() => {
     if (settings.headerVisibility !== 'auto-hide') return;
 
     let lastScrollY = window.scrollY;
+    let hideTimeout: NodeJS.Timeout | null = null;
     
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -257,8 +258,35 @@ export function CustomizableHeader({
       lastScrollY = currentScrollY;
     };
 
+    // Handle scroll wheel even when page can't scroll
+    const handleWheel = (e: WheelEvent) => {
+      // Clear any existing timeout
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+      }
+
+      // If scrolling down (deltaY > 0), hide header
+      if (e.deltaY > 0) {
+        setIsHeaderVisible(false);
+      } 
+      // If scrolling up (deltaY < 0), show header briefly then hide again
+      else if (e.deltaY < 0) {
+        setIsHeaderVisible(true);
+        // Auto-hide again after 2 seconds of no wheel activity
+        hideTimeout = setTimeout(() => {
+          setIsHeaderVisible(false);
+        }, 2000);
+      }
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', handleWheel);
+      if (hideTimeout) clearTimeout(hideTimeout);
+    };
   }, [settings.headerVisibility]);
 
   // Calculate scroll duration for fun fact based on text overflow
