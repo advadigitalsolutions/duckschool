@@ -86,6 +86,20 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     return () => clearTimeout(timeoutId);
   }, [answers, draftSubmissionId, submitted]);
 
+  // Log button states for debugging
+  useEffect(() => {
+    if (!loadingDraft) {
+      console.log('[AssignmentQuestions] Button state check:', {
+        currentQuestionIndex,
+        totalQuestions: questions.length,
+        isLastQuestion: currentQuestionIndex === questions.length - 1,
+        isCurrentQuestionAnswered: answers[questions[currentQuestionIndex]?.id] !== undefined && answers[questions[currentQuestionIndex]?.id] !== '',
+        currentAnswer: answers[questions[currentQuestionIndex]?.id],
+        isSaving
+      });
+    }
+  }, [currentQuestionIndex, answers, isSaving, loadingDraft, questions]);
+
   const loadProgress = async () => {
     try {
       setLoadingDraft(true);
@@ -575,18 +589,6 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
   const progress = (Object.keys(answers).length / questions.length) * 100;
   const currentQuestion = questions[currentQuestionIndex];
   const isCurrentQuestionAnswered = answers[currentQuestion?.id] !== undefined && answers[currentQuestion?.id] !== '';
-  
-  // Log button states for debugging
-  useEffect(() => {
-    console.log('[AssignmentQuestions] Button state check:', {
-      currentQuestionIndex,
-      totalQuestions: questions.length,
-      isLastQuestion: currentQuestionIndex === questions.length - 1,
-      isCurrentQuestionAnswered,
-      currentAnswer: answers[currentQuestion?.id],
-      isSaving
-    });
-  }, [currentQuestionIndex, answers, isSaving]);
 
   return (
     <div className="space-y-6">
