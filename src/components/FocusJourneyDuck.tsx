@@ -351,7 +351,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
         }
       `}</style>
       
-      <div className="duck" onClick={handleDuckClick} style={{ cursor: 'pointer' }}>
+      <div className="duck pointer-events-auto" onClick={handleDuckClick} style={{ cursor: 'pointer' }}>
         <div className="duck-head" />
         <div className="duck-beak" />
         <div className="duck-eye" />
