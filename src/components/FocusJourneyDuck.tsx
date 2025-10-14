@@ -11,17 +11,21 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
   const [currentState, setCurrentState] = useState<AnimationState>(animationState);
 
   useEffect(() => {
+    console.log('🦆 Duck received animation state:', animationState);
     setCurrentState(animationState);
 
     // Trigger animation complete callbacks without playing sounds (sounds are handled in parent)
     switch (animationState) {
       case 'falling':
+        console.log('🦆 Duck falling animation will complete in 1000ms');
         setTimeout(() => onAnimationComplete?.(), 1000);
         break;
       case 'climbing':
+        console.log('🦆 Duck climbing animation will complete in 800ms');
         setTimeout(() => onAnimationComplete?.(), 800);
         break;
       case 'celebrating':
+        console.log('🦆 Duck celebrating animation will complete in 2000ms');
         setTimeout(() => onAnimationComplete?.(), 2000);
         break;
     }

@@ -25,6 +25,11 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [goalSeconds] = useState(1500); // 25 minutes default goal
   const [milestonesReached, setMilestonesReached] = useState<number[]>([]);
 
+  // Log duck state changes
+  useEffect(() => {
+    console.log('🦆 Duck state changed to:', duckState);
+  }, [duckState]);
+
   const { 
     sessionId, 
     createSession, 
@@ -118,18 +123,18 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   useEffect(() => {
     // Don't count if any of these conditions are true
     if (!sessionId || isIdle || !isVisible) {
-      console.log('Timer paused:', { sessionId: !!sessionId, isIdle, isVisible });
+      console.log('⏸️ Timer paused:', { sessionId: !!sessionId, isIdle, isVisible });
       return;
     }
 
-    console.log('Timer active:', { sessionId: !!sessionId, isIdle, isVisible });
+    console.log('▶️ Timer active:', { sessionId: !!sessionId, isIdle, isVisible });
     const interval = setInterval(() => {
       updateActiveTime(1);
     }, 1000);
 
     // Cleanup interval when component unmounts or dependencies change
     return () => {
-      console.log('Clearing timer interval');
+      console.log('🛑 Clearing timer interval');
       clearInterval(interval);
     };
   }, [sessionId, isIdle, isVisible, updateActiveTime]);
