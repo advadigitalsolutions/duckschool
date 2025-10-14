@@ -60,9 +60,9 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
   useEffect(() => {
     console.log('🦆 Duck received animation state:', animationState, 'Current internal state:', currentState);
     
-    // Don't accept external state changes when in internal transition states
-    if (currentState === 'fallen' || currentState === 'ghostly-jumping' || currentState === 'celebrating-return') {
-      console.log('🦆 Ignoring external state change - duck is in special state:', currentState);
+    // Only block state changes during celebrating-return (let fallen/ghostly accept climbing)
+    if (currentState === 'celebrating-return' && animationState !== 'climbing') {
+      console.log('🦆 Ignoring external state change - duck is celebrating return');
       return;
     }
     
