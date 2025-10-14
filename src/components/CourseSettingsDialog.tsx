@@ -60,6 +60,7 @@ export function CourseSettingsDialog({
   const [weeklyMinutes, setWeeklyMinutes] = useState('');
   const [goals, setGoals] = useState('');
   const [customFrameworkName, setCustomFrameworkName] = useState('');
+  const [approachOverride, setApproachOverride] = useState('');
   const [showFrameworkWarning, setShowFrameworkWarning] = useState(false);
   const [existingCurriculumCount, setExistingCurriculumCount] = useState(0);
   const [remapping, setRemapping] = useState(false);
@@ -76,7 +77,7 @@ export function CourseSettingsDialog({
     try {
       const { data: course, error } = await supabase
         .from('courses')
-        .select('grade_level, standards_scope, pacing_config, goals')
+        .select('grade_level, standards_scope, pacing_config, goals, description')
         .eq('id', courseId)
         .single();
 
@@ -85,6 +86,13 @@ export function CourseSettingsDialog({
       if (course) {
         setGradeLevel(course.grade_level || currentGradeLevel || '');
         setGoals(course.goals || '');
+        
+        // Extract approach override from description field
+        const description = course.description || '';
+        if (description.startsWith('APPROACH_OVERRIDE:')) {
+          const override = description.replace('APPROACH_OVERRIDE:', '').trim();
+          setApproachOverride(override);
+        }
         
         // Extract framework from standards_scope or pacing_config
         const pacingConfig = course.pacing_config as any;
@@ -198,6 +206,7 @@ export function CourseSettingsDialog({
       const updates: any = {
         grade_level: gradeLevel,
         goals: goals || null,
+        description: approachOverride ? `APPROACH_OVERRIDE:${approachOverride}` : null,
       };
 
       // Only set standards_scope if NOT custom (custom was handled by edge function)
@@ -413,6 +422,20 @@ export function CourseSettingsDialog({
               {framework === 'CUSTOM' 
                 ? '🤖 AI will automatically generate trackable learning milestones from your goals'
                 : 'Used for AI curriculum generation when regional standards aren\'t available'}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="approach-override">Assignment Style Preference (Optional)</Label>
+            <textarea
+              id="approach-override"
+              className="w-full min-h-[60px] px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="e.g., Use Khan Academy as the main resource, keep assignments computer-based with no physical materials"
+              value={approachOverride}
+              onChange={(e) => setApproachOverride(e.target.value)}
+            />
+            <p className="text-sm text-muted-foreground">
+              🎯 Override AI's learning style suggestions. Specify your preferred resources and approach (e.g., "use Khan Academy", "computer-based only", "no props or costumes"). This will take priority over all other learning style directives for this course.
             </p>
           </div>
 

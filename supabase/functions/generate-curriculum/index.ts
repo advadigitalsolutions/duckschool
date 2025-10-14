@@ -64,6 +64,12 @@ serve(async (req) => {
     const gradeLevel = course.grade_level || '10';
     const courseGoals = course.goals;
     const isCustomFramework = framework === 'CUSTOM';
+    
+    // Extract approach override from description field
+    let approachOverride = '';
+    if (course.description && course.description.startsWith('APPROACH_OVERRIDE:')) {
+      approachOverride = course.description.replace('APPROACH_OVERRIDE:', '').trim();
+    }
 
     // Get standards - either custom or from database
     let allStandards = null;
@@ -217,6 +223,14 @@ serve(async (req) => {
     // Build AI prompt - different based on whether we have standards or goals
     const pedagogyGuidance = PEDAGOGY_PROMPTS[pedagogy] || PEDAGOGY_PROMPTS.eclectic;
     
+    // Add approach override context if present
+    const approachOverrideContext = approachOverride
+      ? `\n🎯 CRITICAL REQUIREMENT - STUDENT'S PREFERRED APPROACH (HIGHEST PRIORITY):
+"${approachOverride}"
+
+THIS IS A DIRECT REQUEST FROM THE STUDENT. You MUST respect this approach and resource preference above all other learning style recommendations. If the student wants Khan Academy, use Khan Academy. If they want computer-based only, keep it computer-based. Do not force kinesthetic activities, props, costumes, or physical materials if they've specified otherwise.\n`
+      : '';
+    
     let systemPrompt: string;
     let userPrompt: string;
 
@@ -226,7 +240,7 @@ serve(async (req) => {
 
 PEDAGOGY GUIDANCE:
 ${pedagogyGuidance}
-
+${approachOverrideContext}
 STUDENT PROFILE:
 ${JSON.stringify(studentContext, null, 2)}
 
@@ -275,7 +289,7 @@ Consider what foundational knowledge and skills the student needs to achieve the
 
 PEDAGOGY GUIDANCE:
 ${pedagogyGuidance}
-
+${approachOverrideContext}
 STUDENT PROFILE:
 ${JSON.stringify(studentContext, null, 2)}
 

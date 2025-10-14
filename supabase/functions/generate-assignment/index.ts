@@ -43,6 +43,22 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // If no approach override provided at assignment level, check course level
+    let effectiveApproachOverride = approachOverride;
+    if (!effectiveApproachOverride && targetCourseIds.length > 0) {
+      // Check first course for course-level override
+      const { data: courseData } = await supabase
+        .from('courses')
+        .select('description')
+        .eq('id', targetCourseIds[0])
+        .single();
+      
+      if (courseData?.description && courseData.description.startsWith('APPROACH_OVERRIDE:')) {
+        effectiveApproachOverride = courseData.description.replace('APPROACH_OVERRIDE:', '').trim();
+        console.log('Using course-level approach override:', effectiveApproachOverride);
+      }
+    }
 
     // Get comprehensive context for assignment generation
     let parentProfile = null;
@@ -311,9 +327,9 @@ TEACHER GUIDE REQUIREMENTS:
       `${c.title} (${c.subject})`
     ).join(' + ');
 
-    const approachOverrideContext = approachOverride 
+    const approachOverrideContext = effectiveApproachOverride 
       ? `\n🎯 CRITICAL REQUIREMENT - STUDENT'S PREFERRED APPROACH (HIGHEST PRIORITY):
-"${approachOverride}"
+"${effectiveApproachOverride}"
 
 THIS IS A DIRECT REQUEST FROM THE STUDENT. You MUST respect this approach and resource preference above all other learning style recommendations. If the student wants Khan Academy, use Khan Academy. If they want computer-based only, keep it computer-based. Do not force kinesthetic activities, props, costumes, or physical materials if they've specified otherwise.\n`
       : '';
