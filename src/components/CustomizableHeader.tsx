@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -88,6 +88,10 @@ export function CustomizableHeader({
   const [cloudPositions, setCloudPositions] = useState<Array<{x: number, y: number, width: number, height: number, duration: number, delay: number, imageSet: number}>>([]);
   const [fallingBadges, setFallingBadges] = useState<Array<{id: string, x: number, y: number, text: string}>>([]);
   const [hoveredReminder, setHoveredReminder] = useState<number | null>(null);
+  const [isHoveringFact, setIsHoveringFact] = useState(false);
+  const [scrollDuration, setScrollDuration] = useState(0);
+  const factTextRef = useRef<HTMLParagraphElement>(null);
+  const factContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { updateSettings: updatePomodoroSettings } = usePomodoro();
 
@@ -256,6 +260,23 @@ export function CustomizableHeader({
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [settings.headerVisibility]);
+
+  // Calculate scroll duration for fun fact based on text overflow
+  useEffect(() => {
+    if (!factTextRef.current || !factContainerRef.current) return;
+    
+    const textWidth = factTextRef.current.scrollWidth;
+    const containerWidth = factContainerRef.current.clientWidth;
+    
+    if (textWidth > containerWidth) {
+      // Calculate duration based on overflow (roughly 50px per second)
+      const overflowDistance = textWidth - containerWidth;
+      const duration = (overflowDistance / 50) + 1; // Add 1 second for pause at end
+      setScrollDuration(duration);
+    } else {
+      setScrollDuration(0);
+    }
+  }, [rotatingText]);
 
   const getGreeting = () => {
     if (settings.greetingType === 'none') {
@@ -468,6 +489,23 @@ export function CustomizableHeader({
               83% { border-color: hsl(300, 100%, 50%); }
               100% { border-color: hsl(360, 100%, 50%); }
             }
+            @keyframes scroll-fact {
+              0% { 
+                transform: translateX(0); 
+              }
+              45% { 
+                transform: translateX(var(--scroll-distance, 0)); 
+              }
+              50% { 
+                transform: translateX(var(--scroll-distance, 0)); 
+              }
+              95% { 
+                transform: translateX(0); 
+              }
+              100% { 
+                transform: translateX(0); 
+              }
+            }
             .flash-rainbow {
               animation: flash-rainbow 0.3s linear infinite;
               border-width: 3px;
@@ -508,9 +546,27 @@ export function CustomizableHeader({
                     </div>
                     
                     {settings.rotatingDisplay !== 'none' && (
-                      <p className="text-sm text-muted-foreground mt-1 max-w-2xl truncate">
-                        {rotatingText}
-                      </p>
+                      <div 
+                        ref={factContainerRef}
+                        className="relative overflow-hidden max-w-2xl"
+                        onMouseEnter={() => setIsHoveringFact(true)}
+                        onMouseLeave={() => setIsHoveringFact(false)}
+                      >
+                        <p 
+                          ref={factTextRef}
+                          className="text-sm text-muted-foreground mt-1 whitespace-nowrap inline-block"
+                          style={{
+                            animation: isHoveringFact && scrollDuration > 0 
+                              ? `scroll-fact ${scrollDuration * 2}s ease-in-out infinite` 
+                              : 'none',
+                            '--scroll-distance': factTextRef.current && factContainerRef.current
+                              ? `${factContainerRef.current.clientWidth - factTextRef.current.scrollWidth}px`
+                              : '0px',
+                          } as React.CSSProperties}
+                        >
+                          {rotatingText}
+                        </p>
+                      </div>
                     )}
                   </div>
                 ) : (
