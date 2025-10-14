@@ -492,6 +492,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     }
   };
 
+  // Handle duck's internal state changes (fallen, ghostly)
+  const handleDuckStateChange = useCallback((newState: typeof duckState) => {
+    console.log('🦆 Duck internal state changed to:', newState);
+    setDuckState(newState);
+  }, []);
+
   // Handle clicks anywhere on the page when duck is fallen/ghostly
   const handlePageClick = useCallback(async () => {
     if (duckState === 'fallen' || duckState === 'ghostly-jumping') {
@@ -659,6 +665,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
             <FocusJourneyDuck 
               animationState={duckState}
               onAnimationComplete={handleDuckAnimationComplete}
+              onStateChange={handleDuckStateChange}
             />
           </div>
 

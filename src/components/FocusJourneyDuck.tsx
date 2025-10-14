@@ -6,6 +6,7 @@ type AnimationState = 'walking' | 'falling' | 'fallen' | 'ghostly-jumping' | 'cl
 interface FocusJourneyDuckProps {
   animationState: AnimationState;
   onAnimationComplete?: () => void;
+  onStateChange?: (state: AnimationState) => void; // Notify parent of internal state changes
 }
 
 const ATTENTION_MESSAGES = [
@@ -27,7 +28,7 @@ const RETURN_MESSAGES = [
   "i love you!"
 ];
 
-export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJourneyDuckProps) {
+export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateChange }: FocusJourneyDuckProps) {
   const [currentState, setCurrentState] = useState<AnimationState>(animationState);
   const [messageIndex, setMessageIndex] = useState(0);
   const [returnMessageIndex, setReturnMessageIndex] = useState(0);
@@ -66,16 +67,11 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
   }, [currentState]);
 
   useEffect(() => {
-    console.log('🦆 Duck received animation state:', animationState);
+    console.log('🦆 Duck received animation state:', animationState, 'Current internal state:', currentState);
     
-    // Don't override internal state transitions (fallen -> ghostly)
-    if (currentState === 'fallen' && animationState === 'falling') {
-      console.log('🦆 Ignoring falling state - already fallen');
-      return;
-    }
-    
-    if (currentState === 'ghostly-jumping' && animationState === 'falling') {
-      console.log('🦆 Ignoring falling state - already ghostly');
+    // Don't accept external state changes when in internal transition states
+    if (currentState === 'fallen' || currentState === 'ghostly-jumping' || currentState === 'celebrating-return') {
+      console.log('🦆 Ignoring external state change - duck is in special state:', currentState);
       return;
     }
     
@@ -89,11 +85,6 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
     if (animationState === 'jumping' && currentState !== 'jumping') {
       setMessageIndex(prev => prev + 1);
     }
-
-    // Rotate return message when celebrating return
-    if (animationState === 'celebrating-return' && currentState !== 'celebrating-return') {
-      setReturnMessageIndex(prev => prev + 1);
-    }
     
     setCurrentState(animationState);
 
@@ -101,14 +92,16 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
     switch (animationState) {
       case 'falling':
         console.log('🦆 Duck falling animation will complete in 1500ms, then transition to fallen');
-        const timeout = setTimeout(() => {
-          setCurrentState('fallen');
+        setTimeout(() => {
           console.log('🦆 Duck is now fallen (squished). Will go ghostly in 10s');
+          setCurrentState('fallen');
+          onStateChange?.('fallen'); // Notify parent
           
           // After 10 seconds of being fallen, transition to ghostly-jumping
           const ghostTimeout = setTimeout(() => {
             console.log('🦆 Duck going ghostly - been fallen for 10s!');
             setCurrentState('ghostly-jumping');
+            onStateChange?.('ghostly-jumping'); // Notify parent
           }, 10000);
           setFallenTimeout(ghostTimeout);
         }, 1500);
@@ -123,10 +116,11 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
         break;
       case 'celebrating-return':
         console.log('🦆 Duck celebrating return - 3 bounces over 3s');
+        setReturnMessageIndex(prev => prev + 1); // Rotate message for celebration
         setTimeout(() => onAnimationComplete?.(), 3000);
         break;
     }
-  }, [animationState, onAnimationComplete]);
+  }, [animationState, onAnimationComplete, onStateChange]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
