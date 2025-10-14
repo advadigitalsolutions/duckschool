@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { playSound } from '@/utils/soundEffects';
 
 type AnimationState = 'walking' | 'falling' | 'climbing' | 'celebrating' | 'idle';
 
@@ -14,18 +13,15 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
   useEffect(() => {
     setCurrentState(animationState);
 
-    // Play sounds for state changes
+    // Trigger animation complete callbacks without playing sounds (sounds are handled in parent)
     switch (animationState) {
       case 'falling':
-        playSound('fall', 0.6);
         setTimeout(() => onAnimationComplete?.(), 1000);
         break;
       case 'climbing':
-        playSound('climb', 0.5);
         setTimeout(() => onAnimationComplete?.(), 800);
         break;
       case 'celebrating':
-        playSound('complete', 0.7);
         setTimeout(() => onAnimationComplete?.(), 2000);
         break;
     }

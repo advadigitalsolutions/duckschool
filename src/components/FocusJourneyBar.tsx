@@ -104,15 +104,24 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     }
   }, [sessionId, createSession]);
 
-  // Update active time counter
+  // Update active time counter - only when session is active, user is present, and not idle
   useEffect(() => {
-    if (!sessionId || isIdle || !isVisible) return;
+    // Don't count if any of these conditions are true
+    if (!sessionId || isIdle || !isVisible) {
+      console.log('Timer paused:', { sessionId: !!sessionId, isIdle, isVisible });
+      return;
+    }
 
+    console.log('Timer active:', { sessionId: !!sessionId, isIdle, isVisible });
     const interval = setInterval(() => {
       updateActiveTime(1);
     }, 1000);
 
-    return () => clearInterval(interval);
+    // Cleanup interval when component unmounts or dependencies change
+    return () => {
+      console.log('Clearing timer interval');
+      clearInterval(interval);
+    };
   }, [sessionId, isIdle, isVisible, updateActiveTime]);
 
   // Update idle time counter
