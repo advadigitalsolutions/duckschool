@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { StandardsPlanningChat } from "./StandardsPlanningChat";
 import { StandardsReviewPanel } from "./StandardsReviewPanel";
 import { LegalRequirementsPanel } from "./LegalRequirementsPanel";
+import { ResearchLoadingState } from "./ResearchLoadingState";
 
 interface StandardsPlanningDialogProps {
   studentId?: string;
@@ -187,15 +188,10 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
             </TabsContent>
 
             <TabsContent value="researching" className="space-y-4">
-              <div className="flex items-center justify-center p-8">
-                <div className="text-center space-y-4">
-                  <BookOpen className="h-12 w-12 animate-pulse mx-auto text-primary" />
-                  <h3 className="text-lg font-semibold">Researching Standards & Legal Requirements</h3>
-                  <p className="text-sm text-muted-foreground">
-                    AI is analyzing official sources for {requirements.state} grade {requirements.grade}...
-                  </p>
-                </div>
-              </div>
+              <ResearchLoadingState 
+                state={requirements.state} 
+                grade={requirements.grade} 
+              />
             </TabsContent>
 
             <TabsContent value="reviewing" className="space-y-4">

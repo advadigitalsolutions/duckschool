@@ -31,23 +31,30 @@ export const LegalRequirementsPanel = ({ requirements, sources }: LegalRequireme
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-6">
             {requirements.requiredSubjects && (
-              <div>
-                <h4 className="font-semibold mb-2 flex items-center gap-2">
+              <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
                   Required Subjects
                 </h4>
+                <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+                  {requirements.requiredSubjects.description || 
+                   "Generally, subjects taught in public schools, though the specific list for homeschoolers is not set by statute. California Education Code section 48222 outlines that children 6-18 are exempt from public school attendance if they are being taught by a tutor with a valid state teaching credential or attending a private full-time day school. Homeschoolers typically operate as private schools."}
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {requirements.requiredSubjects.map((subject: string, idx: number) => (
-                    <Badge key={idx} variant="secondary">{subject}</Badge>
+                  {(Array.isArray(requirements.requiredSubjects) 
+                    ? requirements.requiredSubjects 
+                    : ['English', 'Mathematics', 'Social Sciences', 'Science', 'Visual and Performing Arts', 'Health', 'Physical Education']
+                  ).map((subject: string, idx: number) => (
+                    <Badge key={idx} variant="outline" className="bg-background">{subject}</Badge>
                   ))}
                 </div>
               </div>
             )}
 
             {requirements.instructionalHours && (
-              <div>
+              <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
                 <h4 className="font-semibold mb-2">Instructional Hours/Days</h4>
-                <p className="text-sm text-muted-foreground">{requirements.instructionalHours}</p>
+                <p className="text-sm text-foreground/80 leading-relaxed">{requirements.instructionalHours}</p>
               </div>
             )}
 
@@ -62,16 +69,16 @@ export const LegalRequirementsPanel = ({ requirements, sources }: LegalRequireme
             )}
 
             {requirements.recordKeeping && (
-              <div>
+              <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
                 <h4 className="font-semibold mb-2">Record Keeping</h4>
-                <p className="text-sm text-muted-foreground">{requirements.recordKeeping}</p>
+                <p className="text-sm text-foreground/80 leading-relaxed">{requirements.recordKeeping}</p>
               </div>
             )}
 
             {requirements.notification && (
-              <div>
+              <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
                 <h4 className="font-semibold mb-2">Notification/Registration</h4>
-                <p className="text-sm text-muted-foreground">{requirements.notification}</p>
+                <p className="text-sm text-foreground/80 leading-relaxed">{requirements.notification}</p>
               </div>
             )}
 
