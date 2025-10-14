@@ -40,7 +40,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [currentSegmentStart, setCurrentSegmentStart] = useState(0);
   const [sessionNumber, setSessionNumber] = useState(1);
   const [progress, setProgress] = useState(0);
-  const [duckState, setDuckState] = useState<'walking' | 'falling' | 'climbing' | 'celebrating' | 'idle' | 'jumping'>('walking');
+  const [duckState, setDuckState] = useState<'walking' | 'falling' | 'fallen' | 'ghostly-jumping' | 'climbing' | 'celebrating' | 'celebrating-return' | 'idle' | 'jumping'>('walking');
   const [goalSeconds] = useState(1500); // 25 minutes default goal
   const [milestonesReached, setMilestonesReached] = useState<number[]>([]);
   const [gapStartTime, setGapStartTime] = useState<number | null>(null);
@@ -98,11 +98,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   const handleWarning = useCallback(() => {
     console.log('⚠️ Duck warning - user idle for 30s');
-    if (!isOnBreak) {
+    // Don't show warning if duck is fallen or ghostly (already punished)
+    if (!isOnBreak && duckState !== 'fallen' && duckState !== 'ghostly-jumping' && duckState !== 'falling') {
       setDuckState('jumping');
       playRandomAttentionSound(0.6);
     }
-  }, [isOnBreak]);
+  }, [isOnBreak, duckState]);
 
   const handleIdle = useCallback(async () => {
     if (isOnBreak) return; // Don't mark as idle during intentional break
@@ -248,7 +249,59 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   }, [sessionId, studentId, pageContext, sessionData.activeSeconds, currentSegmentStart, goalSeconds, sessionNumber, gapStartTime, isOnBreak]);
 
   const handleWindowVisible = useCallback(async () => {
-    console.log('👁️ handleWindowVisible called', { sessionId: !!sessionId, gapStartTime });
+    console.log('👁️ handleWindowVisible called', { sessionId: !!sessionId, gapStartTime, duckState });
+    
+    // Check if duck is in fallen or ghostly state - trigger joyful return!
+    if (duckState === 'fallen' || duckState === 'ghostly-jumping') {
+      console.log('🎉 User returned while duck was fallen/ghostly - CELEBRATION TIME!');
+      
+      if (!sessionId || gapStartTime === null) {
+        // Just celebrate and reset
+        setDuckState('celebrating-return');
+        playSound('milestone', 0.7);
+        lastFocusTime.current = Date.now();
+        resetIdleTimer();
+        return;
+      }
+
+      const currentSeconds = sessionData.activeSeconds;
+      const gapDuration = currentSeconds - gapStartTime;
+      const startPercent = (gapStartTime / goalSeconds) * 100;
+      const widthPercent = (gapDuration / goalSeconds) * 100;
+      
+      // Create gap segment
+      setGapSegments(prev => [...prev, {
+        type: 'gap',
+        startSeconds: gapStartTime,
+        endSeconds: currentSeconds,
+        startPercent,
+        widthPercent,
+        duration: gapDuration,
+        reason: 'away'
+      }]);
+      
+      // Start new focus segment
+      setCurrentSegmentStart(currentSeconds);
+      setSessionNumber(prev => prev + 1);
+      setGapStartTime(null);
+      lastFocusTime.current = Date.now();
+      setDuckState('celebrating-return');
+      playSound('milestone', 0.7);
+      
+      // Reset idle timer when returning
+      resetIdleTimer();
+      
+      await supabase.from('activity_events').insert({
+        student_id: studentId,
+        session_id: sessionId,
+        event_type: 'joyful_return',
+        page_context: pageContext,
+        metadata: { timestamp: new Date().toISOString(), gap_duration: gapDuration }
+      });
+      
+      return;
+    }
+    
     // Only process if we actually have a gap to recover from
     if (!sessionId || gapStartTime === null) {
       console.log('🦆 Ignoring window focus - no gap to recover from');
@@ -294,7 +347,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       page_context: pageContext,
       metadata: { timestamp: new Date().toISOString(), gap_duration: gapDuration }
     });
-  }, [sessionId, studentId, pageContext, gapStartTime, sessionData.activeSeconds, goalSeconds, resetIdleTimer]);
+  }, [sessionId, studentId, pageContext, gapStartTime, sessionData.activeSeconds, goalSeconds, resetIdleTimer, duckState]);
 
   const { isVisible } = useWindowVisibility({
     onHidden: handleWindowHidden,

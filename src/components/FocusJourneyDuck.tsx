@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { playRandomClickSound } from '@/utils/soundEffects';
 
-type AnimationState = 'walking' | 'falling' | 'climbing' | 'celebrating' | 'idle' | 'jumping';
+type AnimationState = 'walking' | 'falling' | 'fallen' | 'ghostly-jumping' | 'climbing' | 'celebrating' | 'celebrating-return' | 'idle' | 'jumping';
 
 interface FocusJourneyDuckProps {
   animationState: AnimationState;
@@ -17,9 +17,22 @@ const ATTENTION_MESSAGES = [
   "GET BACK TO WORK OR I WILL SURELY PERISH"
 ];
 
+const RETURN_MESSAGES = [
+  "yaaay! you're back!!!!",
+  "I thought you died!?",
+  "did you bring me a snack?",
+  "friend!!!",
+  "QUACK!!!",
+  "I MISSSED YOU SO MUCH",
+  "i love you!"
+];
+
 export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJourneyDuckProps) {
   const [currentState, setCurrentState] = useState<AnimationState>(animationState);
   const [messageIndex, setMessageIndex] = useState(0);
+  const [returnMessageIndex, setReturnMessageIndex] = useState(0);
+  const [ghostPosition, setGhostPosition] = useState({ left: 20, top: 30 });
+  const [fallenTimeout, setFallenTimeout] = useState<NodeJS.Timeout | null>(null);
   
   const handleDuckClick = () => {
     playRandomClickSound(0.6);
@@ -30,12 +43,40 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
     return ATTENTION_MESSAGES[messageIndex % ATTENTION_MESSAGES.length];
   }, [messageIndex]);
 
+  const returnMessage = useMemo(() => {
+    return RETURN_MESSAGES[returnMessageIndex % RETURN_MESSAGES.length];
+  }, [returnMessageIndex]);
+
+  // Randomize ghost position
+  useEffect(() => {
+    if (currentState === 'ghostly-jumping') {
+      const interval = setInterval(() => {
+        setGhostPosition({
+          left: Math.random() * 60 + 20, // 20-80%
+          top: Math.random() * 50 + 20 // 20-70%
+        });
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [currentState]);
+
   useEffect(() => {
     console.log('🦆 Duck received animation state:', animationState);
+    
+    // Clear any existing fallen timeout
+    if (fallenTimeout) {
+      clearTimeout(fallenTimeout);
+      setFallenTimeout(null);
+    }
     
     // Only rotate message when transitioning INTO jumping state (not already jumping)
     if (animationState === 'jumping' && currentState !== 'jumping') {
       setMessageIndex(prev => prev + 1);
+    }
+
+    // Rotate return message when celebrating return
+    if (animationState === 'celebrating-return' && currentState !== 'celebrating-return') {
+      setReturnMessageIndex(prev => prev + 1);
     }
     
     setCurrentState(animationState);
@@ -43,8 +84,18 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
     // Trigger animation complete callbacks without playing sounds (sounds are handled in parent)
     switch (animationState) {
       case 'falling':
-        console.log('🦆 Duck falling animation will complete in 1500ms');
-        setTimeout(() => onAnimationComplete?.(), 1500);
+        console.log('🦆 Duck falling animation will complete in 1500ms, then transition to fallen');
+        const timeout = setTimeout(() => {
+          setCurrentState('fallen');
+          console.log('🦆 Duck is now fallen (squished). Will go ghostly in 30s');
+          
+          // After 30 seconds of being fallen, transition to ghostly-jumping
+          const ghostTimeout = setTimeout(() => {
+            console.log('🦆 Duck going ghostly - been fallen for 30s!');
+            setCurrentState('ghostly-jumping');
+          }, 30000);
+          setFallenTimeout(ghostTimeout);
+        }, 1500);
         break;
       case 'climbing':
         console.log('🦆 Duck climbing animation will complete in 1800ms');
@@ -54,15 +105,46 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
         console.log('🦆 Duck celebrating animation will complete in 2000ms');
         setTimeout(() => onAnimationComplete?.(), 2000);
         break;
+      case 'celebrating-return':
+        console.log('🦆 Duck celebrating return - 3 bounces over 3s');
+        setTimeout(() => onAnimationComplete?.(), 3000);
+        break;
     }
   }, [animationState, onAnimationComplete]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (fallenTimeout) {
+        clearTimeout(fallenTimeout);
+      }
+    };
+  }, [fallenTimeout]);
+
   return (
-    <div className={`duck-container ${currentState}`}>
+    <div 
+      className={`duck-container ${currentState}`}
+      style={currentState === 'ghostly-jumping' ? {
+        left: `${ghostPosition.left}%`,
+        top: `${ghostPosition.top}%`
+      } : undefined}
+    >
       {/* Speech bubble for jumping/attention state */}
       {currentState === 'jumping' && (
         <div className="speech-bubble">
           {currentMessage}
+        </div>
+      )}
+      {/* Speech bubble for ghostly jumping */}
+      {currentState === 'ghostly-jumping' && (
+        <div className="speech-bubble ghostly">
+          {currentMessage}
+        </div>
+      )}
+      {/* Speech bubble for celebrating return */}
+      {currentState === 'celebrating-return' && (
+        <div className="speech-bubble celebration">
+          {returnMessage}
         </div>
       )}
       <style>{`
@@ -340,6 +422,84 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
 
         .duck-container.idle .duck {
           animation: none;
+        }
+
+        /* Fallen State - Squished at bottom */
+        .duck-container.fallen {
+          position: fixed !important;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%) scaleY(0.4) scaleX(1.3);
+          opacity: 0.7;
+          z-index: 9999;
+        }
+
+        .duck-container.fallen .duck {
+          animation: none;
+        }
+
+        /* Ghostly Jumping - Random positions on screen */
+        .duck-container.ghostly-jumping {
+          position: fixed !important;
+          opacity: 0.85;
+          filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));
+          z-index: 9999;
+          transition: left 3s ease-in-out, top 3s ease-in-out;
+        }
+
+        .duck-container.ghostly-jumping .duck {
+          animation: ghostly-jump 0.5s ease-in-out infinite;
+        }
+
+        @keyframes ghostly-jump {
+          0%, 100% { 
+            transform: translateY(0) rotate(-5deg); 
+          }
+          50% { 
+            transform: translateY(-25px) rotate(5deg); 
+          }
+        }
+
+        .speech-bubble.ghostly {
+          animation: bubble-bounce 0.3s ease-in-out infinite alternate, bubble-shake 0.15s ease-in-out infinite;
+          background: rgba(255, 215, 0, 0.95);
+          color: #000;
+        }
+
+        @keyframes bubble-shake {
+          0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+          50% { transform: translateX(-50%) rotate(2deg); }
+        }
+
+        /* Celebrating Return - 3 enthusiastic bounces */
+        .duck-container.celebrating-return .duck {
+          animation: joyful-bounce 3s ease-in-out;
+        }
+
+        @keyframes joyful-bounce {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          5% { transform: translateY(-30px) rotate(-10deg); }
+          10% { transform: translateY(0) rotate(0deg); }
+          15% { transform: translateY(-5px) rotate(5deg); }
+          20% { transform: translateY(0) rotate(0deg); }
+          
+          30% { transform: translateY(-35px) rotate(10deg); }
+          40% { transform: translateY(0) rotate(0deg); }
+          45% { transform: translateY(-5px) rotate(-5deg); }
+          50% { transform: translateY(0) rotate(0deg); }
+          
+          60% { transform: translateY(-30px) rotate(-8deg); }
+          70% { transform: translateY(0) rotate(0deg); }
+          75% { transform: translateY(-3px) rotate(3deg); }
+          80% { transform: translateY(0) rotate(0deg); }
+        }
+
+        .speech-bubble.celebration {
+          animation: bubble-bounce 0.4s ease-in-out infinite alternate;
+          background: linear-gradient(135deg, #FFD700, #FFA500);
+          color: #000;
+          font-weight: 700;
+          box-shadow: 0 4px 12px rgba(255, 165, 0, 0.4);
         }
 
         @media (prefers-reduced-motion: reduce) {
