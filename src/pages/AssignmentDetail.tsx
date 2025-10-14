@@ -847,12 +847,63 @@ export default function AssignmentDetail() {
                     </CardHeader>
                     <CardContent>
                       <ul className="space-y-2">
-                        {content.materials.map((material: string, idx: number) => (
-                          <li key={idx} className="flex items-start gap-2">
-                            <span className="text-primary">•</span>
-                            <BionicText>{material}</BionicText>
-                          </li>
-                        ))}
+                        {content.materials.map((material: string, idx: number) => {
+                          // Check if material contains a URL pattern
+                          const urlMatch = material.match(/(https?:\/\/[^\s]+)/);
+                          const hasUrl = urlMatch !== null;
+                          
+                          if (hasUrl) {
+                            const url = urlMatch[0];
+                            const textBefore = material.substring(0, urlMatch.index);
+                            const textAfter = material.substring(urlMatch.index! + url.length);
+                            
+                            return (
+                              <li key={idx} className="flex items-start gap-2">
+                                <span className="text-primary">•</span>
+                                <div>
+                                  {textBefore && <BionicText>{textBefore}</BionicText>}
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      window.open(url, '_blank', 'noopener,noreferrer');
+                                      
+                                      // Send learning activity signals
+                                      const channel = new BroadcastChannel('learning-window');
+                                      channel.postMessage({
+                                        type: 'learning-window-opened',
+                                        sessionId: currentStudentId,
+                                        url,
+                                        title: url,
+                                        timestamp: Date.now()
+                                      });
+                                      
+                                      setTimeout(() => {
+                                        channel.postMessage({
+                                          type: 'learning-window-closed',
+                                          sessionId: currentStudentId,
+                                          url,
+                                          timestamp: Date.now()
+                                        });
+                                        channel.close();
+                                      }, 5 * 60 * 1000);
+                                    }}
+                                    className="text-primary hover:underline inline"
+                                  >
+                                    {url}
+                                  </button>
+                                  {textAfter && <BionicText>{textAfter}</BionicText>}
+                                </div>
+                              </li>
+                            );
+                          }
+                          
+                          return (
+                            <li key={idx} className="flex items-start gap-2">
+                              <span className="text-primary">•</span>
+                              <BionicText>{material}</BionicText>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </CardContent>
                   </Card>
