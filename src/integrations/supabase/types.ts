@@ -433,6 +433,9 @@ export type Database = {
           goals: string | null
           grade_level: string | null
           id: string
+          initiated_at: string | null
+          initiated_by: string | null
+          initiated_by_role: Database["public"]["Enums"]["app_role"] | null
           next_generation_date: string | null
           pacing_config: Json | null
           skeleton: Json | null
@@ -452,6 +455,9 @@ export type Database = {
           goals?: string | null
           grade_level?: string | null
           id?: string
+          initiated_at?: string | null
+          initiated_by?: string | null
+          initiated_by_role?: Database["public"]["Enums"]["app_role"] | null
           next_generation_date?: string | null
           pacing_config?: Json | null
           skeleton?: Json | null
@@ -471,6 +477,9 @@ export type Database = {
           goals?: string | null
           grade_level?: string | null
           id?: string
+          initiated_at?: string | null
+          initiated_by?: string | null
+          initiated_by_role?: Database["public"]["Enums"]["app_role"] | null
           next_generation_date?: string | null
           pacing_config?: Json | null
           skeleton?: Json | null

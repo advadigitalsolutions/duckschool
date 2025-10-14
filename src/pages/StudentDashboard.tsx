@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PlayCircle, Clock, Target, TrendingUp, Award, LogOut, Pause, RotateCcw, Plus, Trash2, User } from 'lucide-react';
+import { PlayCircle, Clock, Target, TrendingUp, Award, LogOut, Pause, RotateCcw, Plus, Trash2, User, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -18,6 +18,8 @@ import { OverdueWorkTab } from '@/components/OverdueWorkTab';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
+import { RequestCourseDialog } from '@/components/RequestCourseDialog';
+
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<any>(null);
@@ -555,12 +557,31 @@ export default function StudentDashboard() {
         </Card>
 
         {/* My Courses */}
-        {courses.length > 0 && <Card className="mt-8">
-            <CardHeader>
-              <CardTitle>My Courses 📚</CardTitle>
-              <CardDescription>Track your progress in each subject</CardDescription>
-            </CardHeader>
-            <CardContent>
+        <Card className="mt-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>My Courses 📚</CardTitle>
+                <CardDescription>Track your progress in each subject</CardDescription>
+              </div>
+              {studentDbId && (
+                <RequestCourseDialog 
+                  studentId={studentDbId} 
+                  onCourseCreated={fetchStudentData}
+                />
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {courses.length === 0 ? (
+              <div className="text-center py-12">
+                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-4">No courses yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Create your first course to start learning!
+                </p>
+              </div>
+            ) : (
               <div className="grid gap-4 md:grid-cols-2">
                 {courses.map(course => <Card key={course.id} className="border-2 hover:border-primary/50 transition-colors">
                     <CardHeader>
@@ -574,8 +595,9 @@ export default function StudentDashboard() {
                     </CardContent>
                   </Card>)}
               </div>
-            </CardContent>
-          </Card>}
+            )}
+          </CardContent>
+        </Card>
 
         {/* Micro Goals */}
         <Card className="mt-8">

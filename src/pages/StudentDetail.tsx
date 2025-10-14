@@ -349,6 +349,12 @@ export default function StudentDetail() {
                               <div className="flex items-center gap-2">
                                 <CardTitle className="text-lg">{course.title}</CardTitle>
                                 {course.archived && <Badge variant="secondary">Archived</Badge>}
+                                {course.initiated_by_role === 'student' && (
+                                  <Badge variant="outline" className="border-primary/50 text-primary">
+                                    <User className="h-3 w-3 mr-1" />
+                                    Student-Initiated
+                                  </Badge>
+                                )}
                               </div>
                               <CardDescription>{course.subject}</CardDescription>
                             </div>
@@ -546,7 +552,15 @@ export default function StudentDetail() {
                         onClick={() => navigate(`/course/${course.id}`)}
                       >
                         <CardHeader>
-                          <CardTitle className="text-lg">{course.title}</CardTitle>
+                          <div className="flex items-center gap-2 mb-1">
+                            <CardTitle className="text-lg">{course.title}</CardTitle>
+                            {course.initiated_by_role === 'student' && (
+                              <Badge variant="outline" className="border-primary/50 text-primary" title="This course was created by the student">
+                                <User className="h-3 w-3 mr-1" />
+                                Student-Initiated
+                              </Badge>
+                            )}
+                          </div>
                           <CardDescription>{course.subject}</CardDescription>
                         </CardHeader>
                         <CardContent>
