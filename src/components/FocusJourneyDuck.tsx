@@ -136,7 +136,10 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
       className={`duck-container ${currentState}`}
       style={currentState === 'ghostly-jumping' ? {
         left: `${ghostPosition.left}%`,
-        top: `${ghostPosition.top}%`
+        top: `${ghostPosition.top}%`,
+        pointerEvents: 'auto'
+      } : currentState === 'fallen' ? {
+        pointerEvents: 'auto'
       } : undefined}
     >
       {/* Speech bubble for jumping/attention state */}
@@ -434,14 +437,16 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           animation: none;
         }
 
-        /* Fallen State - Squished at bottom */
+        /* Fallen State - Squished at bottom of viewport */
         .duck-container.fallen {
           position: fixed !important;
-          bottom: 20px;
-          left: 50%;
-          transform: translateX(-50%) scaleY(0.4) scaleX(1.3);
+          bottom: 20px !important;
+          left: 50% !important;
+          transform: translateX(-50%) scaleY(0.4) scaleX(1.3) !important;
           opacity: 0.7;
-          z-index: 9999;
+          z-index: 9999 !important;
+          margin: 0 !important;
+          top: auto !important;
         }
 
         .duck-container.fallen .duck {
@@ -453,12 +458,14 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           position: fixed !important;
           opacity: 0.85;
           filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));
-          z-index: 9999;
+          z-index: 9999 !important;
           transition: left 3s ease-in-out, top 3s ease-in-out;
+          pointer-events: auto !important;
         }
 
         .duck-container.ghostly-jumping .duck {
           animation: ghostly-jump 0.5s ease-in-out infinite;
+          cursor: pointer;
         }
 
         @keyframes ghostly-jump {
@@ -470,15 +477,12 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           }
         }
 
+        /* Ghostly speech bubble - SAME as regular, white background */
         .speech-bubble.ghostly {
-          animation: bubble-bounce 0.3s ease-in-out infinite alternate, bubble-shake 0.15s ease-in-out infinite;
-          background: rgba(255, 215, 0, 0.95);
-          color: #000;
-        }
-
-        @keyframes bubble-shake {
-          0%, 100% { transform: translateX(-50%) rotate(-2deg); }
-          50% { transform: translateX(-50%) rotate(2deg); }
+          background: white;
+          color: #333;
+          animation: bubble-bounce 0.5s ease-in-out infinite alternate;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         /* Celebrating Return - 3 enthusiastic bounces */
@@ -521,7 +525,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
         }
       `}</style>
       
-      <div className="duck pointer-events-auto" onClick={handleDuckClick} style={{ cursor: 'pointer' }}>
+      <div className="duck pointer-events-auto" onClick={handleDuckClick} style={{ cursor: currentState === 'fallen' || currentState === 'ghostly-jumping' ? 'pointer' : 'pointer' }}>
         <div className="duck-head" />
         <div className="duck-beak" />
         <div className="duck-eye" />

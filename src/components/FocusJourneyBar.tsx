@@ -654,20 +654,31 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           </div>
 
           {/* Duck character - positioned to break out of container */}
-          <div 
-            className="absolute top-0 bottom-0 flex items-center transition-all duration-500 ease-out pointer-events-none"
-            style={{ 
-              left: `calc(${progress}% - 15px)`,
-              transform: 'translateY(-8px)',
-              zIndex: duckState === 'falling' || duckState === 'climbing' ? 9999 : 10
-            }}
-          >
+          {(duckState !== 'fallen' && duckState !== 'ghostly-jumping' && duckState !== 'celebrating-return') && (
+            <div 
+              className="absolute top-0 bottom-0 flex items-center transition-all duration-500 ease-out pointer-events-none"
+              style={{ 
+                left: `calc(${progress}% - 15px)`,
+                transform: 'translateY(-8px)',
+                zIndex: duckState === 'falling' || duckState === 'climbing' ? 9999 : 10
+              }}
+            >
+              <FocusJourneyDuck 
+                animationState={duckState}
+                onAnimationComplete={handleDuckAnimationComplete}
+                onStateChange={handleDuckStateChange}
+              />
+            </div>
+          )}
+
+          {/* Duck in special states (fallen, ghostly, celebrating-return) - render outside progress bar */}
+          {(duckState === 'fallen' || duckState === 'ghostly-jumping' || duckState === 'celebrating-return') && (
             <FocusJourneyDuck 
               animationState={duckState}
               onAnimationComplete={handleDuckAnimationComplete}
               onStateChange={handleDuckStateChange}
             />
-          </div>
+          )}
 
           {/* Break button - positioned at the end of progress bar */}
           <TooltipProvider>
