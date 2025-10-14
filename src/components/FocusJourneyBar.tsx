@@ -432,22 +432,25 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           {/* Gap segments */}
           {gapSegments.map((segment, index) => {
             const isBreak = segment.reason === 'break';
+            const isShortBreak = isBreak && segment.duration < 30;
             
             return (
               <div
                 key={`gap-${index}`}
                 className={`absolute inset-y-0 flex items-center justify-center ${
                   isBreak 
-                    ? 'bg-amber-500/20 border-2 border-amber-500/40 rounded-full' 
+                    ? isShortBreak
+                      ? 'bg-amber-500/10 border border-amber-500/20 rounded-full'
+                      : 'bg-amber-500/20 border-2 border-amber-500/40 rounded-full' 
                     : 'bg-transparent'
                 }`}
                 style={{ 
                   left: `${segment.startPercent}%`, 
                   width: `${segment.widthPercent}%`,
-                  minWidth: isBreak ? '30px' : '8px'
+                  minWidth: isBreak ? (isShortBreak ? '12px' : '30px') : '8px'
                 }}
               >
-                {isBreak && segment.widthPercent > 2 && (
+                {isBreak && !isShortBreak && segment.widthPercent > 2 && (
                   <span className="text-[10px] font-medium text-amber-700 dark:text-amber-300">
                     ☕ {formatDuration(segment.duration)}
                   </span>
