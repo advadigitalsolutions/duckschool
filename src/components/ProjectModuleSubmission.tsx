@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Upload, X, FileText, Image as ImageIcon, FileCheck, Lightbulb } from 'lucide-react';
+import { Upload, X, FileText, Image as ImageIcon, FileCheck, Lightbulb, Brain, TrendingUp, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -57,6 +57,9 @@ export function ProjectModuleSubmission({ assignment, studentId }: ProjectModule
   const [uploading, setUploading] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [draftSubmissionId, setDraftSubmissionId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<any>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [reviewingWithAI, setReviewingWithAI] = useState(false);
 
   // Rich text editor for each prompt
   const createEditor = (promptIndex: number) => {
@@ -310,16 +313,73 @@ export function ProjectModuleSubmission({ assignment, studentId }: ProjectModule
       // Clear localStorage draft
       localStorage.removeItem(`project_draft_${assignment.id}_${studentId}`);
 
-      toast.success('Module submitted! Your AI teacher will review your work.');
+      toast.success('Module submitted! Getting AI teacher feedback...');
       
-      // TODO: Trigger AI review edge function
-      // supabase.functions.invoke('review-project-module', { body: { ... } })
+      // Trigger AI review
+      setReviewingWithAI(true);
+      await getAIReview(submissionContent);
       
     } catch (error) {
       console.error('Error submitting module:', error);
       toast.error('Failed to submit module');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const getAIReview = async (submissionContent: any) => {
+    try {
+      // Get student full profile
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('name, dob, personality_type, special_interests, learning_profile')
+        .eq('id', studentId)
+        .single();
+
+      const studentAge = studentData?.dob 
+        ? new Date().getFullYear() - new Date(studentData.dob).getFullYear() 
+        : null;
+
+      const learningProfile = studentData?.learning_profile as any;
+
+      const { data: feedbackData, error: reviewError } = await supabase.functions.invoke('review-project-module', {
+        body: {
+          student_profile: {
+            name: studentData?.name || 'Student',
+            age: studentAge,
+            mbti: studentData?.personality_type,
+            interests: studentData?.special_interests || [],
+            prior_knowledge: learningProfile?.prior_knowledge || 'Beginner level'
+          },
+          module: {
+            id: currentModule.id,
+            title: currentModule.title,
+            description: currentModule.description,
+            guidance: currentModule.guidance,
+            prompts: currentModule.prompts
+          },
+          submission: {
+            ...submissionContent,
+            assignment_id: assignment.id,
+            student_id: studentId
+          },
+          course_context: {
+            title: assignment.curriculum_items?.courses?.title,
+            subject: assignment.curriculum_items?.courses?.subject
+          }
+        }
+      });
+
+      if (reviewError) throw reviewError;
+
+      setFeedback(feedbackData.feedback);
+      setShowFeedback(true);
+      toast.success('AI teacher feedback received!');
+    } catch (error) {
+      console.error('Error getting AI review:', error);
+      toast.error('Failed to get AI feedback, but your work is saved');
+    } finally {
+      setReviewingWithAI(false);
     }
   };
 
@@ -330,6 +390,170 @@ export function ProjectModuleSubmission({ assignment, studentId }: ProjectModule
           <p className="text-muted-foreground">No project modules found for this assignment.</p>
         </CardContent>
       </Card>
+    );
+  }
+
+  // If feedback is showing, display that instead
+  if (showFeedback && feedback) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-primary">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-6 w-6 text-primary" />
+                AI Teacher Feedback
+              </CardTitle>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-primary">
+                  {Math.round(feedback.overall_assessment.score * 100)}%
+                </div>
+                <p className="text-sm text-muted-foreground capitalize">
+                  {feedback.overall_assessment.level}
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Overall Assessment */}
+            <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="flex items-start gap-3">
+                {feedback.overall_assessment.ready_for_next_module ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-2">
+                    {feedback.overall_assessment.ready_for_next_module 
+                      ? 'Ready for Next Module!' 
+                      : 'Keep Going - Almost There!'}
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Estimated time to next module: {feedback.overall_assessment.estimated_time_to_next}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Strengths */}
+            <div>
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-green-500" />
+                What You Did Well
+              </h4>
+              <ul className="space-y-2">
+                {feedback.detailed_feedback.strengths.map((strength: string, idx: number) => (
+                  <li key={idx} className="text-sm pl-4 border-l-2 border-green-500 text-muted-foreground">
+                    {strength}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Areas for Growth */}
+            {feedback.detailed_feedback.areas_for_growth.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-3">Areas to Develop</h4>
+                <ul className="space-y-2">
+                  {feedback.detailed_feedback.areas_for_growth.map((area: string, idx: number) => (
+                    <li key={idx} className="text-sm pl-4 border-l-2 border-amber-500 text-muted-foreground">
+                      {area}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Specific Suggestions */}
+            {feedback.detailed_feedback.specific_suggestions.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="font-semibold">Specific Feedback on Your Responses</h4>
+                {feedback.detailed_feedback.specific_suggestions.map((suggestion: any, idx: number) => (
+                  <Card key={idx}>
+                    <CardContent className="pt-4">
+                      <p className="text-sm font-medium mb-2">{suggestion.prompt}</p>
+                      <p className="text-sm text-muted-foreground mb-2">{suggestion.feedback}</p>
+                      {suggestion.example && (
+                        <div className="mt-2 p-3 bg-muted rounded text-sm">
+                          <p className="text-xs font-medium mb-1">Example:</p>
+                          {suggestion.example}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Answers to Questions */}
+            {feedback.answers_to_questions.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="font-semibold">Answers to Your Questions</h4>
+                {feedback.answers_to_questions.map((qa: any, idx: number) => (
+                  <Card key={idx} className="border-primary/20">
+                    <CardContent className="pt-4">
+                      <p className="text-sm font-medium mb-2">Q: {qa.question}</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{qa.answer}</p>
+                      {qa.follow_up_resources && qa.follow_up_resources.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="text-xs font-medium mb-1">Resources:</p>
+                          <ul className="text-xs text-muted-foreground space-y-1">
+                            {qa.follow_up_resources.map((resource: string, ridx: number) => (
+                              <li key={ridx}>• {resource}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Coaching for Next Module */}
+            <Card className="border-primary bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-base">Getting Ready for Next Module</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium mb-1">Focus On:</p>
+                  <p className="text-sm text-muted-foreground">{feedback.coaching_for_next_module.what_to_focus_on}</p>
+                </div>
+                
+                {feedback.coaching_for_next_module.preparation_tips.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium mb-2">Preparation Tips:</p>
+                    <ul className="space-y-1">
+                      {feedback.coaching_for_next_module.preparation_tips.map((tip: string, idx: number) => (
+                        <li key={idx} className="text-sm text-muted-foreground pl-4">• {tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="pt-3 border-t">
+                  <p className="text-sm font-medium text-primary">{feedback.coaching_for_next_module.encouragement}</p>
+                </div>
+
+                {feedback.coaching_for_next_module.challenge && (
+                  <div className="p-3 bg-background rounded">
+                    <p className="text-xs font-medium mb-1">Challenge:</p>
+                    <p className="text-sm">{feedback.coaching_for_next_module.challenge}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end">
+              <Button onClick={() => setShowFeedback(false)}>
+                Return to Module
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -579,10 +803,10 @@ export function ProjectModuleSubmission({ assignment, studentId }: ProjectModule
         </p>
         <Button
           onClick={handleSubmit}
-          disabled={submitting}
+          disabled={submitting || reviewingWithAI}
           size="lg"
         >
-          {submitting ? 'Submitting...' : 'Submit Module for Review'}
+          {submitting ? 'Submitting...' : reviewingWithAI ? 'Getting AI Feedback...' : 'Submit Module for Review'}
         </Button>
       </div>
     </div>
