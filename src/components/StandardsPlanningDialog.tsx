@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BookOpen, Search, FileCheck, Save } from "lucide-react";
+import { BookOpen, Search, FileCheck, Save, MessageSquare, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { StandardsPlanningChat } from "./StandardsPlanningChat";
 import { StandardsReviewPanel } from "./StandardsReviewPanel";
 import { LegalRequirementsPanel } from "./LegalRequirementsPanel";
 import { ResearchLoadingState } from "./ResearchLoadingState";
+import { StandardsWizardForm } from "./StandardsWizardForm";
 
 interface StandardsPlanningDialogProps {
   studentId?: string;
@@ -20,12 +21,35 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
   const [open, setOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [phase, setPhase] = useState<'gathering' | 'researching' | 'reviewing' | 'finalizing'>('gathering');
+  const [mode, setMode] = useState<'wizard' | 'chat'>('wizard');
   const [requirements, setRequirements] = useState<any>({});
   const [researchResults, setResearchResults] = useState<any>(null);
   const [compiledStandards, setCompiledStandards] = useState<any[]>([]);
   const [legalRequirements, setLegalRequirements] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [studentData, setStudentData] = useState<any>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (studentId && open) {
+      loadStudentData();
+    }
+  }, [studentId, open]);
+
+  const loadStudentData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('grade_level, name')
+        .eq('id', studentId)
+        .single();
+
+      if (error) throw error;
+      setStudentData(data);
+    } catch (error) {
+      console.error('Error loading student data:', error);
+    }
+  };
 
   const startSession = async () => {
     try {
@@ -162,7 +186,11 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
 
         <Tabs value={phase} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="gathering" disabled={phase !== 'gathering'}>
+            <TabsTrigger 
+              value="gathering" 
+              disabled={phase !== 'gathering'}
+              onClick={() => phase === 'gathering' && setPhase('gathering')}
+            >
               <Search className="h-4 w-4 mr-2" />
               Gather Info
             </TabsTrigger>
@@ -178,12 +206,41 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
 
           <ScrollArea className="h-[500px] mt-4">
             <TabsContent value="gathering" className="space-y-4">
-              {sessionId && (
-                <StandardsPlanningChat
-                  sessionId={sessionId}
-                  phase="gathering_requirements"
+              <div className="flex gap-2 mb-4 justify-center">
+                <Button
+                  variant={mode === 'wizard' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setMode('wizard')}
+                  className="gap-2"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  Quick Setup
+                </Button>
+                <Button
+                  variant={mode === 'chat' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setMode('chat')}
+                  className="gap-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Guided Chat
+                </Button>
+              </div>
+
+              {mode === 'wizard' ? (
+                <StandardsWizardForm
+                  studentId={studentId}
+                  studentData={studentData}
                   onComplete={handleRequirementsComplete}
                 />
+              ) : (
+                sessionId && (
+                  <StandardsPlanningChat
+                    sessionId={sessionId}
+                    phase="gathering_requirements"
+                    onComplete={handleRequirementsComplete}
+                  />
+                )
               )}
             </TabsContent>
 
