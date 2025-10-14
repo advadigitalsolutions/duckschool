@@ -260,7 +260,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
         {/* Progress text */}
         <div className="flex justify-between text-xs text-muted-foreground mt-1 px-1">
-          <span>0%</span>
+          <span>{Math.round(progress)}%</span>
           <span className="font-medium text-foreground">
             {Math.floor(sessionData.activeSeconds / 60)} / {Math.floor(goalSeconds / 60)} minutes
           </span>
