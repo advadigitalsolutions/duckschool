@@ -547,16 +547,8 @@ export default function ParentDashboard() {
           <TabsContent value="weekly-plans" className="space-y-4">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>AI Weekly Curriculum</CardTitle>
-                    <CardDescription>Automated personalized learning plans for your students</CardDescription>
-                  </div>
-                  <Button onClick={() => navigate('/weekly-curriculum')}>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Manage Weekly Curriculum
-                  </Button>
-                </div>
+                <CardTitle>AI Weekly Curriculum</CardTitle>
+                <CardDescription>Automated personalized learning plans for your students</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {students.length === 0 ? (
