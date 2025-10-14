@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FocusJourneyDuck } from './FocusJourneyDuck';
 import { Sparkles } from 'lucide-react';
@@ -42,74 +42,82 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   const { pageContext, courseId, assignmentId } = usePageContext();
 
-  const { isIdle } = useIdleDetection({
-    threshold: 60000, // 60 seconds
-    onIdle: async () => {
-      if (sessionId) {
-        await supabase.from('activity_events').insert({
-          student_id: studentId,
-          session_id: sessionId,
-          event_type: 'went_idle',
-          page_context: pageContext,
-          course_id: courseId,
-          assignment_id: assignmentId,
-          metadata: { duration_seconds: 0 }
-        });
-        setDuckState('falling');
-        playSound('fall', 0.6); // Duck falling sound
-      }
-    },
-    onActive: async () => {
-      if (sessionId) {
-        await supabase.from('activity_events').insert({
-          student_id: studentId,
-          session_id: sessionId,
-          event_type: 'resumed_activity',
-          page_context: pageContext,
-          course_id: courseId,
-          assignment_id: assignmentId
-        });
-        setDuckState('climbing');
-        playSound('climb', 0.5); // Duck climbing sound
-      }
+  const handleIdle = useCallback(async () => {
+    if (sessionId) {
+      await supabase.from('activity_events').insert({
+        student_id: studentId,
+        session_id: sessionId,
+        event_type: 'went_idle',
+        page_context: pageContext,
+        course_id: courseId,
+        assignment_id: assignmentId,
+        metadata: { duration_seconds: 0 }
+      });
+      setDuckState('falling');
+      playSound('fall', 0.6);
     }
+  }, [sessionId, studentId, pageContext, courseId, assignmentId]);
+
+  const handleActive = useCallback(async () => {
+    if (sessionId) {
+      await supabase.from('activity_events').insert({
+        student_id: studentId,
+        session_id: sessionId,
+        event_type: 'resumed_activity',
+        page_context: pageContext,
+        course_id: courseId,
+        assignment_id: assignmentId
+      });
+      setDuckState('climbing');
+      playSound('climb', 0.5);
+    }
+  }, [sessionId, studentId, pageContext, courseId, assignmentId]);
+
+  const { isIdle } = useIdleDetection({
+    threshold: 60000,
+    onIdle: handleIdle,
+    onActive: handleActive
   });
 
-  const { isVisible } = useWindowVisibility({
-    onHidden: async () => {
-      console.log('🦆 Duck falling - user left tab! sessionId:', sessionId);
-      if (sessionId) {
-        setDuckState('falling');
-        playSound('fall', 0.6);
-        
-        await supabase.from('activity_events').insert({
-          student_id: studentId,
-          session_id: sessionId,
-          event_type: 'window_blur',
-          page_context: pageContext,
-          metadata: { timestamp: new Date().toISOString() }
-        });
-      } else {
-        console.warn('⚠️ No session ID when trying to log window_blur');
-      }
-    },
-    onVisible: async () => {
-      console.log('🦆 Duck climbing - user returned! sessionId:', sessionId);
-      if (sessionId) {
-        setDuckState('climbing');
-        playSound('climb', 0.5);
-        
-        await supabase.from('activity_events').insert({
-          student_id: studentId,
-          session_id: sessionId,
-          event_type: 'window_focus',
-          page_context: pageContext,
-          metadata: { timestamp: new Date().toISOString() }
-        });
-      } else {
-        console.warn('⚠️ No session ID when trying to log window_focus');
-      }
+  const handleWindowHidden = useCallback(async () => {
+    console.log('🦆 Duck falling - user left tab! sessionId:', sessionId);
+    if (sessionId) {
+      setDuckState('falling');
+      playSound('fall', 0.6);
+      
+      await supabase.from('activity_events').insert({
+        student_id: studentId,
+        session_id: sessionId,
+        event_type: 'window_blur',
+        page_context: pageContext,
+        metadata: { timestamp: new Date().toISOString() }
+      });
+    } else {
+      console.warn('⚠️ No session ID when trying to log window_blur');
     }
+  }, [sessionId, studentId, pageContext]);
+
+  const handleWindowVisible = useCallback(async () => {
+    console.log('🦆 Duck climbing - user returned! sessionId:', sessionId);
+    if (sessionId) {
+      setDuckState('climbing');
+      playSound('climb', 0.5);
+      
+      await supabase.from('activity_events').insert({
+        student_id: studentId,
+        session_id: sessionId,
+        event_type: 'window_focus',
+        page_context: pageContext,
+        metadata: { timestamp: new Date().toISOString() }
+      });
+    } else {
+      console.warn('⚠️ No session ID when trying to log window_focus');
+    }
+  }, [sessionId, studentId, pageContext]);
+
+  const { isVisible } = useWindowVisibility({
+    onHidden: handleWindowHidden,
+    onVisible: handleWindowVisible
   });
 
   // Create session on mount
