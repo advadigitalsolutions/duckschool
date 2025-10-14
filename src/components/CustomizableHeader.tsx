@@ -557,10 +557,11 @@ export function CustomizableHeader({
           `}
         </style>
         
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-start justify-between flex-wrap gap-4">
+        <div className="container mx-auto px-4 py-4 min-h-[80px]">
+          {/* Main header grid - prevents collapse */}
+          <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-start">
             {/* Left section - Avatar and greeting with reminders below */}
-            <div className="flex gap-4 flex-1 min-w-0">
+            <div className="flex gap-4 min-w-0">
               <Avatar 
                 className="h-12 w-12 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
                 onClick={() => navigate('/student/profile')}
@@ -578,15 +579,15 @@ export function CustomizableHeader({
                       className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity group"
                       onClick={() => handleOpenSettingsAtTab('display')}
                     >
-                      <h1 className="text-xl md:text-2xl font-bold group-hover:underline">
+                      <h1 className="text-xl md:text-2xl font-bold group-hover:underline truncate">
                         {getGreeting()}
                       </h1>
                       {settings.showGrade && (
-                        <Badge variant="secondary">
+                        <Badge variant="secondary" className="flex-shrink-0">
                           {settings.customGrade || student?.grade_level || 'Grade N/A'}
                         </Badge>
                       )}
-                      <Settings className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <Settings className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                     </div>
                     
                     {settings.rotatingDisplay !== 'none' && (
@@ -629,13 +630,13 @@ export function CustomizableHeader({
                       <Badge 
                         key={`reminder-${index}`} 
                         variant="outline" 
-                        className="reminder-badge gap-2 bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20 transition-all cursor-pointer relative"
+                        className="reminder-badge gap-2 bg-amber-500/10 border-amber-500/50 hover:bg-amber-500/20 transition-all cursor-pointer relative max-w-[200px]"
                         onMouseEnter={() => reminder.completed && setHoveredReminder(index)}
                         onMouseLeave={() => setHoveredReminder(null)}
                       >
                         {reminder.completed && hoveredReminder === index ? (
                           <Trash2 
-                            className="h-4 w-4 text-destructive cursor-pointer hover:scale-110 transition-transform"
+                            className="h-4 w-4 text-destructive cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRemoveReminder(index, e);
@@ -680,10 +681,10 @@ export function CustomizableHeader({
                                 }
                               }
                             }}
-                            className="cursor-pointer"
+                            className="cursor-pointer flex-shrink-0"
                           />
                         )}
-                        <span className={reminder.completed ? 'line-through opacity-60' : ''}>
+                        <span className={cn("truncate", reminder.completed && 'line-through opacity-60')}>
                           {reminder.text}
                         </span>
                       </Badge>
@@ -695,20 +696,20 @@ export function CustomizableHeader({
 
             {/* Center section - Pomodoro */}
             {settings.pomodoroEnabled && (
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 hidden lg:block">
                 <PomodoroTimer compact onTimeClick={() => handleOpenSettingsAtTab('tools')} />
               </div>
             )}
 
             {/* Right section */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {weather && (
-                <Badge variant="outline" className="hidden md:inline-flex">
+                <Badge variant="outline" className="hidden xl:inline-flex">
                   🌤️ {weather}
                 </Badge>
               )}
               
-              {settings.locations.map((loc, index) => {
+              {settings.locations.slice(0, 2).map((loc, index) => {
                 try {
                   const timeString = currentTime.toLocaleTimeString('en-US', { 
                     timeZone: loc.timezone,
@@ -716,14 +717,14 @@ export function CustomizableHeader({
                     minute: '2-digit'
                   });
                   return (
-                    <Badge key={index} variant="outline">
+                    <Badge key={index} variant="outline" className="hidden lg:inline-flex">
                       {loc.name}: {timeString}
                     </Badge>
                   );
                 } catch (error) {
                   console.error(`Invalid timezone: ${loc.timezone}`, error);
                   return (
-                    <Badge key={index} variant="outline" className="text-destructive">
+                    <Badge key={index} variant="outline" className="text-destructive hidden lg:inline-flex">
                       {loc.name}: Invalid timezone
                     </Badge>
                   );
@@ -737,26 +738,28 @@ export function CustomizableHeader({
             </div>
           </div>
 
-          {/* Countdowns row */}
+          {/* Countdowns row - horizontal scrolling */}
           {settings.countdowns.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {settings.countdowns.map((countdown, index) => {
-                const isComplete = countdown.isComplete || formatCountdown(countdown) === 'Complete!';
-                return (
-                  <Badge 
-                    key={`countdown-${index}`} 
-                    variant="outline"
-                    className={cn(
-                      "transition-all duration-300",
-                      isComplete 
-                        ? "bg-gradient-to-r from-green-500/20 to-blue-500/20 border-green-500/50 animate-pulse" 
-                        : "bg-blue-500/10 border-blue-500/50 hover:bg-blue-500/20"
-                    )}
-                  >
-                    ⏰ {countdown.name}: {formatCountdown(countdown)}
-                  </Badge>
-                );
-              })}
+            <div className="mt-4 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+              <div className="flex gap-2 flex-nowrap pb-2 min-w-min">
+                {settings.countdowns.map((countdown, index) => {
+                  const isComplete = countdown.isComplete || formatCountdown(countdown) === 'Complete!';
+                  return (
+                    <Badge 
+                      key={`countdown-${index}`} 
+                      variant="outline"
+                      className={cn(
+                        "transition-all duration-300 text-xs whitespace-nowrap max-w-[250px] flex-shrink-0",
+                        isComplete 
+                          ? "bg-gradient-to-r from-green-500/20 to-blue-500/20 border-green-500/50 animate-pulse" 
+                          : "bg-blue-500/10 border-blue-500/50 hover:bg-blue-500/20"
+                      )}
+                    >
+                      <span className="truncate">⏰ {countdown.name}: {formatCountdown(countdown)}</span>
+                    </Badge>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
