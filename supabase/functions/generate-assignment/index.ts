@@ -12,7 +12,32 @@ serve(async (req) => {
   }
 
   try {
-    const { courseId, courseTitle, courseSubject, topic, gradeLevel, standards, studentProfile, isInitialAssessment } = await req.json();
+    const { 
+      courseIds, 
+      coursesData, 
+      topic, 
+      gradeLevel, 
+      studentProfile, 
+      enableCrossSubject, 
+      manualStandards,
+      isInitialAssessment,
+      // Legacy single-course support
+      courseId,
+      courseTitle,
+      courseSubject,
+      standards
+    } = await req.json();
+    
+    // Support both multi-course and legacy single-course mode
+    const isMultiCourse = courseIds && courseIds.length > 0;
+    const targetCourseIds = isMultiCourse ? courseIds : [courseId];
+    const targetCoursesData = isMultiCourse ? coursesData : [{
+      id: courseId,
+      title: courseTitle,
+      subject: courseSubject,
+      grade_level: gradeLevel,
+      standards_scope: standards
+    }];
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -59,47 +84,84 @@ serve(async (req) => {
       studentInterests = studentProfile.special_interests || [];
     }
 
-    // Get uncovered standards for this course
-    let uncoveredStandards: Array<{ code: string; text: string }> = [];
-    if (courseId && !isInitialAssessment) {
-      // Get all standards for this framework and grade level
-      const { data: courseData } = await supabase
-        .from('courses')
-        .select('standards_scope, subject, grade_level')
-        .eq('id', courseId)
-        .single();
+    // Get student's weak areas for cross-subject integration
+    let weakAreas: Array<{ subject: string; standard: string; description: string }> = [];
+    if (enableCrossSubject && isMultiCourse) {
+      // Get progress gaps
+      const { data: gaps } = await supabase
+        .from('progress_gaps')
+        .select('*, courses!inner(subject, title)')
+        .eq('student_id', studentProfile.id)
+        .is('addressed_at', null)
+        .order('confidence_score', { ascending: true })
+        .limit(10);
 
-      if (courseData?.standards_scope?.[0]?.framework) {
-        const framework = courseData.standards_scope[0].framework;
-        
-        // Get all applicable standards
-        const { data: allStandards } = await supabase
-          .from('standards')
-          .select('code, text')
-          .eq('framework', framework)
-          .eq('subject', courseData.subject)
-          .or(`grade_band.eq.${courseData.grade_level},grade_band.like.%${courseData.grade_level}%`);
+      // Get recent low-scoring assessments
+      const { data: recentGrades } = await supabase
+        .from('grades')
+        .select('*, assignments!inner(curriculum_items!inner(course_id, standards, courses!inner(subject)))')
+        .eq('student_id', studentProfile.id)
+        .lt('score', 70)
+        .order('graded_at', { ascending: false })
+        .limit(10);
 
-        // Get covered standards from existing assignments
-        const { data: curriculumItems } = await supabase
-          .from('curriculum_items')
-          .select('standards')
-          .eq('course_id', courseId);
+      if (gaps) {
+        weakAreas = gaps.map(gap => ({
+          subject: gap.courses?.subject || 'Unknown',
+          standard: gap.standard_code,
+          description: gap.gap_type
+        }));
+      }
 
-        const coveredStandardCodes = new Set(
-          curriculumItems?.flatMap(item => item.standards || []) || []
-        );
+      console.log('Weak areas identified for cross-subject integration:', weakAreas);
+    }
 
-        // Identify uncovered standards
-        uncoveredStandards = (allStandards || []).filter(
-          std => !coveredStandardCodes.has(std.code)
-        );
+    // Get uncovered standards for courses
+    let uncoveredStandards: Array<{ code: string; text: string; subject?: string }> = [];
+    if (!isInitialAssessment && targetCourseIds.length > 0) {
+      // Get all standards for all selected courses
+      for (const cId of targetCourseIds) {
+        const { data: courseData } = await supabase
+          .from('courses')
+          .select('standards_scope, subject, grade_level')
+          .eq('id', cId)
+          .single();
 
-        console.log('Standards analysis:', {
-          total: allStandards?.length,
-          covered: coveredStandardCodes.size,
-          uncovered: uncoveredStandards.length
-        });
+        if (courseData?.standards_scope?.[0]?.framework) {
+          const framework = courseData.standards_scope[0].framework;
+          
+          // Get all applicable standards
+          const { data: allStandards } = await supabase
+            .from('standards')
+            .select('code, text, subject')
+            .eq('framework', framework)
+            .eq('subject', courseData.subject)
+            .or(`grade_band.eq.${courseData.grade_level},grade_band.like.%${courseData.grade_level}%`);
+
+          // Get covered standards from existing assignments
+          const { data: curriculumItems } = await supabase
+            .from('curriculum_items')
+            .select('standards')
+            .eq('course_id', cId);
+
+          const coveredStandardCodes = new Set(
+            curriculumItems?.flatMap(item => item.standards || []) || []
+          );
+
+          // Identify uncovered standards for this course
+          const courseUncovered = (allStandards || []).filter(
+            std => !coveredStandardCodes.has(std.code)
+          );
+
+          uncoveredStandards = [...uncoveredStandards, ...courseUncovered];
+
+          console.log(`Standards analysis for course ${cId}:`, {
+            subject: courseData.subject,
+            total: allStandards?.length,
+            covered: coveredStandardCodes.size,
+            uncovered: courseUncovered.length
+          });
+        }
       }
     }
     
@@ -108,7 +170,14 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('Generating assignment for:', { courseTitle, courseSubject, topic, gradeLevel, isInitialAssessment });
+    console.log('Generating assignment for:', { 
+      courses: targetCoursesData.map((c: any) => `${c.title} (${c.subject})`).join(', '),
+      topic, 
+      gradeLevel, 
+      isMultiCourse,
+      enableCrossSubject,
+      isInitialAssessment 
+    });
 
     const studentContext = studentProfile ? `
 
@@ -168,11 +237,32 @@ Include questions that assess prerequisite knowledge as well as course content.
     // Add uncovered standards guidance
     const standardsGuidance = uncoveredStandards.length > 0 ? `
 PRIORITY STANDARDS TO ADDRESS:
-The following educational standards have NOT been covered yet in this course:
-${uncoveredStandards.slice(0, 5).map(s => `- ${s.code}: ${s.text}`).join('\n')}
+The following educational standards have NOT been covered yet in the selected course(s):
+${uncoveredStandards.slice(0, 10).map(s => `- ${s.code}: ${s.text}${s.subject ? ` (${s.subject})` : ''}`).join('\n')}
 
 Please design this assignment to address one or more of these uncovered standards where relevant to the topic.
 Include the standard codes in the alignment section of your response.
+` : '';
+
+    // Add cross-subject integration guidance
+    const crossSubjectGuidance = enableCrossSubject && weakAreas.length > 0 ? `
+CROSS-SUBJECT INTEGRATION - CRITICAL:
+This is a multi-course assignment with cross-subject integration enabled. The student has identified weak areas that should be incorporated:
+
+WEAK AREAS TO ADDRESS:
+${weakAreas.slice(0, 5).map(area => `- ${area.subject}: ${area.standard} (${area.description})`).join('\n')}
+
+INSTRUCTIONS:
+1. Design ONE assignment that addresses the main topic across ALL selected courses
+2. Naturally weave in practice for the weak areas above where relevant
+3. For example, if student is weak in fractions (math) and this is an English + Math assignment about recipes:
+   - English component: Write a recipe with proper formatting
+   - Math component: Calculate ingredient ratios and fractions needed for different serving sizes
+   - This addresses both subjects while reinforcing the weak area (fractions)
+4. Make the integration feel natural and purposeful, not forced
+5. In standards_alignment_by_course, specify which standards from each course are addressed
+
+This maximizes learning time by addressing multiple subjects and weak areas simultaneously.
 ` : '';
 
     const systemPrompt = `You are an expert curriculum designer creating interactive digital assignments for homeschool students. 
@@ -191,6 +281,7 @@ Generate a complete assignment that includes:
 ${studentContext}
 ${assessmentContext}
 ${standardsGuidance}
+${crossSubjectGuidance}
 ${pedagogyContext}
 
 CRITICAL: Every assignment MUST include actual questions that students can answer digitally. Questions should test understanding and allow for mastery-based learning through multiple attempts.
@@ -203,11 +294,15 @@ TEACHER GUIDE REQUIREMENTS:
 - Provide topic-specific introduction strategies that connect to prior knowledge
 - Give specific real-world examples and hands-on activities for THIS topic only`;
 
+    const coursesDescription = targetCoursesData.map((c: any) => 
+      `${c.title} (${c.subject})`
+    ).join(' + ');
+
     const userPrompt = `Create a detailed interactive assignment for:
-Course: ${courseTitle} (${courseSubject})
+${isMultiCourse ? 'Courses' : 'Course'}: ${coursesDescription}
 Topic: ${topic}
 Grade Level: ${gradeLevel}
-${standards ? `Standards to address: ${standards}` : ''}
+${isMultiCourse && enableCrossSubject ? 'MULTI-COURSE MODE: Design ONE integrated assignment that naturally addresses all selected subjects while reinforcing identified weak areas.' : ''}
 
 Return a JSON object with this structure:
 {
@@ -277,7 +372,15 @@ Return a JSON object with this structure:
   },
   "standards_alignment": [
     {"code": "STANDARD.CODE.1", "description": "Brief description of how this assignment addresses this standard"}
-  ]
+  ]${isMultiCourse ? `,
+  "standards_alignment_by_course": {
+    "course_id_1": [
+      {"code": "STANDARD.CODE.1", "description": "How this addresses this course's standards"}
+    ],
+    "course_id_2": [
+      {"code": "STANDARD.CODE.2", "description": "How this addresses this course's standards"}
+    ]
+  }` : ''}
 }
 
 Include 8-15 questions of varying difficulty. Mix question types appropriately for the subject.

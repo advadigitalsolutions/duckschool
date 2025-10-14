@@ -18,6 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -31,12 +33,21 @@ interface AddAssignmentDialogProps {
 
 export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: AddAssignmentDialogProps) {
   const [open, setOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState('');
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [topic, setTopic] = useState('');
   const [assignedDate, setAssignedDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
+  const [enableCrossSubject, setEnableCrossSubject] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const toggleCourse = (courseId: string) => {
+    setSelectedCourses(prev => 
+      prev.includes(courseId) 
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,11 +57,16 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
       return;
     }
 
+    if (selectedCourses.length === 0) {
+      toast.error('Please select at least one course');
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
-      const selectedCourseData = courses.find(c => c.id === selectedCourse);
-      if (!selectedCourseData) throw new Error('Course not found');
+      const selectedCoursesData = courses.filter(c => selectedCourses.includes(c.id));
+      if (selectedCoursesData.length === 0) throw new Error('Courses not found');
 
       // Get student data for profile context
       const { data: studentData } = await supabase
@@ -59,18 +75,24 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
         .eq('id', studentId)
         .single();
 
-      // Generate assignment content with AI
+      // Generate assignment content with AI (multi-course support)
       const { data: generatedContent, error: generateError } = await supabase.functions.invoke(
         'generate-assignment',
         {
           body: {
-            courseId: selectedCourse,
-            courseTitle: selectedCourseData.title,
-            courseSubject: selectedCourseData.subject,
+            courseIds: selectedCourses,
+            coursesData: selectedCoursesData.map(c => ({
+              id: c.id,
+              title: c.title,
+              subject: c.subject,
+              grade_level: c.grade_level,
+              standards_scope: c.standards_scope
+            })),
             topic: topic,
-            gradeLevel: selectedCourseData.grade_level,
-            standards: selectedCourseData.standards_scope,
+            gradeLevel: selectedCoursesData[0].grade_level,
             studentProfile: studentData,
+            enableCrossSubject: enableCrossSubject && selectedCourses.length > 1,
+            manualStandards: selectedStandards,
             isInitialAssessment: false
           }
         }
@@ -78,71 +100,71 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
 
       if (generateError) throw generateError;
 
-      // Auto-detect standards if none were manually selected
-      let finalStandards = selectedStandards;
-      if (selectedStandards.length === 0 && generatedContent) {
-        console.log('Auto-detecting standards for generated content');
-        const { data: detectionResult, error: detectionError } = await supabase.functions.invoke(
-          'detect-standards',
-          {
-            body: {
-              content: generatedContent,
-              subject: selectedCourseData.subject,
-              gradeLevel: selectedCourseData.grade_level,
-              framework: selectedCourseData.standards_scope?.[0]?.framework || 'CA-CCSS'
-            }
+      // Create curriculum items for each course
+      const createdAssignments = [];
+      for (const courseData of selectedCoursesData) {
+        // Determine standards for this course
+        let finalStandards = selectedStandards;
+        
+        // Use AI-detected standards from content if available for this course
+        if (generatedContent.standards_alignment_by_course) {
+          const courseAlignment = generatedContent.standards_alignment_by_course[courseData.id];
+          if (courseAlignment && Array.isArray(courseAlignment)) {
+            const alignedCodes = courseAlignment.map((s: any) => s.code);
+            finalStandards = [...new Set([...finalStandards, ...alignedCodes])];
           }
-        );
-
-        if (!detectionError && detectionResult?.standardCodes) {
-          finalStandards = detectionResult.standardCodes;
-          console.log('Auto-detected standards:', finalStandards);
-          toast.success(`Auto-detected ${finalStandards.length} relevant standards`);
+        } else if (generatedContent.standards_alignment && Array.isArray(generatedContent.standards_alignment)) {
+          // Fallback to general alignment if no course-specific alignment
+          const alignedCodes = generatedContent.standards_alignment.map((s: any) => s.code);
+          finalStandards = [...new Set([...finalStandards, ...alignedCodes])];
         }
+
+        // Create curriculum item with generated content
+        const { data: curriculumItem, error: curriculumError } = await supabase
+          .from('curriculum_items')
+          .insert({
+            course_id: courseData.id,
+            title: selectedCourses.length > 1 
+              ? `${generatedContent.title} (${courseData.subject})`
+              : generatedContent.title,
+            type: 'assignment',
+            body: generatedContent,
+            est_minutes: generatedContent.estimated_minutes || 60,
+            standards: finalStandards
+          } as any)
+          .select()
+          .single();
+
+        if (curriculumError) throw curriculumError;
+
+        // Create the assignment
+        const { error: assignmentError } = await supabase
+          .from('assignments')
+          .insert({
+            curriculum_item_id: curriculumItem.id,
+            status: 'draft',
+            assigned_date: assignedDate || null,
+            due_at: dueDate || null,
+            rubric: generatedContent.rubric || null
+          } as any);
+
+        if (assignmentError) throw assignmentError;
+        
+        createdAssignments.push({ course: courseData.title, id: curriculumItem.id });
       }
 
-      // Use AI-detected standards from content if available
-      if (generatedContent.standards_alignment && Array.isArray(generatedContent.standards_alignment)) {
-        const alignedCodes = generatedContent.standards_alignment.map((s: any) => s.code);
-        finalStandards = [...new Set([...finalStandards, ...alignedCodes])];
-      }
-
-      // Create curriculum item with generated content
-      const { data: curriculumItem, error: curriculumError } = await supabase
-        .from('curriculum_items')
-        .insert({
-          course_id: selectedCourse,
-          title: generatedContent.title,
-          type: 'assignment',
-          body: generatedContent,
-          est_minutes: generatedContent.estimated_minutes || 60,
-          standards: finalStandards
-        } as any)
-        .select()
-        .single();
-
-      if (curriculumError) throw curriculumError;
-
-      // Create the assignment
-      const { error: assignmentError } = await supabase
-        .from('assignments')
-        .insert({
-          curriculum_item_id: curriculumItem.id,
-          status: 'draft',
-          assigned_date: assignedDate || null,
-          due_at: dueDate || null,
-          rubric: generatedContent.rubric || null
-        } as any);
-
-      if (assignmentError) throw assignmentError;
-
-      toast.success('AI-generated assignment created successfully!');
+      toast.success(
+        selectedCourses.length > 1 
+          ? `Created ${createdAssignments.length} cross-subject assignments!`
+          : 'AI-generated assignment created successfully!'
+      );
       setOpen(false);
       setTopic('');
-      setSelectedCourse('');
+      setSelectedCourses([]);
       setAssignedDate('');
       setDueDate('');
       setSelectedStandards([]);
+      setEnableCrossSubject(false);
       onAssignmentAdded();
     } catch (error: any) {
       toast.error(error.message || 'Failed to create assignment');
@@ -172,20 +194,45 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="course">Course</Label>
-            <Select value={selectedCourse} onValueChange={setSelectedCourse} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a course" />
-              </SelectTrigger>
-              <SelectContent>
-                {courses.map((course) => (
-                  <SelectItem key={course.id} value={course.id}>
+            <Label>Select Course(s)</Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Select one or multiple courses for this assignment
+            </p>
+            <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
+              {courses.map((course) => (
+                <div key={course.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={course.id}
+                    checked={selectedCourses.includes(course.id)}
+                    onCheckedChange={() => toggleCourse(course.id)}
+                  />
+                  <label
+                    htmlFor={course.id}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
                     {course.title} - {course.subject}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* Cross-Subject Integration Toggle */}
+          {selectedCourses.length > 1 && (
+            <div className="flex items-center justify-between space-x-2 p-3 border rounded-md bg-muted/50">
+              <div className="space-y-0.5">
+                <Label htmlFor="cross-subject">Enable Cross-Subject Integration</Label>
+                <p className="text-xs text-muted-foreground">
+                  Incorporate weak areas from one subject into other subjects to maximize learning time
+                </p>
+              </div>
+              <Switch
+                id="cross-subject"
+                checked={enableCrossSubject}
+                onCheckedChange={setEnableCrossSubject}
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="topic">Assignment Topic</Label>
@@ -204,22 +251,27 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
           </div>
 
           {/* Standards Selector */}
-          {selectedCourse && (() => {
-            const course = courses.find(c => c.id === selectedCourse);
-            const framework = course?.standards_scope?.[0]?.framework;
+          {selectedCourses.length > 0 && (() => {
+            const selectedCoursesData = courses.filter(c => selectedCourses.includes(c.id));
+            const frameworks = [...new Set(selectedCoursesData.map(c => c.standards_scope?.[0]?.framework).filter(Boolean))];
             
             // Only show standards selector for standard frameworks (not custom)
-            if (!framework || framework === 'CUSTOM') return null;
+            if (frameworks.length === 0 || frameworks.includes('CUSTOM')) return null;
             
             return (
               <div className="space-y-2">
                 <Label>Tagged Standards (Optional)</Label>
+                {frameworks.length > 1 && (
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Multiple frameworks selected. Standards from all frameworks can be tagged.
+                  </p>
+                )}
                 <StandardsSelector
                   selectedStandards={selectedStandards}
                   onChange={setSelectedStandards}
-                  framework={framework}
-                  gradeLevel={course?.grade_level}
-                  subject={course?.subject}
+                  framework={frameworks[0]}
+                  gradeLevel={selectedCoursesData[0]?.grade_level}
+                  subject={selectedCoursesData[0]?.subject}
                 />
                 <p className="text-xs text-muted-foreground">
                   Select which educational standards this assignment addresses
