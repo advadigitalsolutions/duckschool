@@ -8,24 +8,58 @@ import { useToast } from "@/hooks/use-toast";
 
 // Format markdown to HTML for clean display
 const formatMessage = (text: string): string => {
-  return text
+  // Split into lines for processing
+  const lines = text.split('\n');
+  const processed: string[] = [];
+  let inList = false;
+  
+  lines.forEach((line) => {
+    // Headings
+    if (line.startsWith('#### ')) {
+      processed.push(`<h4 class="text-base font-semibold mt-3 mb-2">${line.slice(5)}</h4>`);
+    } else if (line.startsWith('### ')) {
+      processed.push(`<h3 class="text-lg font-semibold mt-3 mb-2">${line.slice(4)}</h3>`);
+    } else if (line.startsWith('## ')) {
+      processed.push(`<h2 class="text-xl font-semibold mt-4 mb-2">${line.slice(3)}</h2>`);
+    } else if (line.startsWith('# ')) {
+      processed.push(`<h1 class="text-2xl font-bold mt-4 mb-3">${line.slice(2)}</h1>`);
+    }
+    // Bullet points
+    else if (line.match(/^\s*[\*\-]\s+/)) {
+      if (!inList) {
+        processed.push('<ul class="list-disc list-inside ml-4 space-y-1">');
+        inList = true;
+      }
+      const content = line.replace(/^\s*[\*\-]\s+/, '');
+      processed.push(`<li>${content}</li>`);
+    }
+    // Close list if needed
+    else {
+      if (inList) {
+        processed.push('</ul>');
+        inList = false;
+      }
+      if (line.trim()) {
+        processed.push(line);
+      } else {
+        processed.push('<br>');
+      }
+    }
+  });
+  
+  // Close list if still open
+  if (inList) {
+    processed.push('</ul>');
+  }
+  
+  // Join and apply inline formatting
+  return processed.join('')
     // Bold text: **text** or __text__
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/__(.+?)__/g, '<strong>$1</strong>')
-    // Italic text: *text* or _text_
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/_(.+?)_/g, '<em>$1</em>')
-    // Line breaks
-    .replace(/\n/g, '<br>')
-    // Escape any remaining HTML
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    // Re-enable our formatted tags
-    .replace(/&lt;strong&gt;/g, '<strong>')
-    .replace(/&lt;\/strong&gt;/g, '</strong>')
-    .replace(/&lt;em&gt;/g, '<em>')
-    .replace(/&lt;\/em&gt;/g, '</em>')
-    .replace(/&lt;br&gt;/g, '<br>');
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+    .replace(/__(.+?)__/g, '<strong class="font-semibold">$1</strong>')
+    // Italic text: *text* or _text_ (but not in HTML tags)
+    .replace(/(?<!<[^>]*)\*([^\*]+?)\*(?![^<]*>)/g, '<em>$1</em>')
+    .replace(/(?<!<[^>]*)_([^_]+?)_(?![^<]*>)/g, '<em>$1</em>');
 };
 
 interface Message {
