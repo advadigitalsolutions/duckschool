@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { FocusJourneyBar } from '@/components/FocusJourneyBar';
-import { BioBreakButton } from '@/components/BioBreakButton';
 import { FocusJourneyProvider } from '@/contexts/FocusJourneyContext';
 import { toast } from 'sonner';
 
@@ -117,7 +116,6 @@ export function StudentLayout({ children }: StudentLayoutProps) {
               onDemoCelebration={() => setShowConfetti(true)}
             />
             <FocusJourneyBar studentId={student.id} />
-            <BioBreakButton studentId={student.id} />
           </>
         )}
 
