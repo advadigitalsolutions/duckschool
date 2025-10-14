@@ -804,8 +804,52 @@ export default function AssignmentDetail() {
                     readingMaterials={content.reading_materials}
                     studentId={currentStudentId || undefined}
                     onLinkClick={(url: string, title: string) => {
-                      const learningUrl = `/learning-window?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&sessionId=${currentStudentId}`;
-                      window.open(learningUrl, '_blank', 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
+                      // Open directly and notify via BroadcastChannel
+                      const channel = new BroadcastChannel('learning-window');
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                      
+                      // Send learning activity signals
+                      channel.postMessage({
+                        type: 'learning-window-opened',
+                        sessionId: currentStudentId,
+                        url,
+                        title,
+                        timestamp: Date.now()
+                      });
+                      
+                      // Keep sending heartbeats every 3 seconds while the page is visible
+                      const heartbeatInterval = setInterval(() => {
+                        if (document.visibilityState === 'visible') {
+                          channel.postMessage({
+                            type: 'learning-activity',
+                            sessionId: currentStudentId,
+                            url,
+                            title,
+                            timestamp: Date.now()
+                          });
+                        }
+                      }, 3000);
+                      
+                      // Clean up when this window closes or user navigates away
+                      const cleanup = () => {
+                        clearInterval(heartbeatInterval);
+                        channel.postMessage({
+                          type: 'learning-window-closed',
+                          sessionId: currentStudentId,
+                          url,
+                          title,
+                          timestamp: Date.now()
+                        });
+                        channel.close();
+                      };
+                      
+                      window.addEventListener('beforeunload', cleanup);
+                      
+                      // Also clean up after 30 minutes
+                      setTimeout(() => {
+                        cleanup();
+                        window.removeEventListener('beforeunload', cleanup);
+                      }, 30 * 60 * 1000);
                     }}
                   />
                 )}
