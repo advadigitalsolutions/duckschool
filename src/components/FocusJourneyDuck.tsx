@@ -27,12 +27,13 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
 
   useEffect(() => {
     console.log('🦆 Duck received animation state:', animationState);
-    setCurrentState(animationState);
-
-    // Rotate message when jumping
-    if (animationState === 'jumping') {
+    
+    // Only rotate message when transitioning INTO jumping state (not already jumping)
+    if (animationState === 'jumping' && currentState !== 'jumping') {
       setMessageIndex(prev => prev + 1);
     }
+    
+    setCurrentState(animationState);
 
     // Trigger animation complete callbacks without playing sounds (sounds are handled in parent)
     switch (animationState) {
