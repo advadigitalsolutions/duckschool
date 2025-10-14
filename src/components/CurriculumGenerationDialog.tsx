@@ -3,9 +3,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Sparkles, Clock, Target, BookOpen, Loader2 } from 'lucide-react';
+import { Sparkles, Clock, Target, BookOpen, Loader2, Info } from 'lucide-react';
 
 interface AssignmentSuggestion {
   title: string;
@@ -40,6 +42,7 @@ export function CurriculumGenerationDialog({
   const [uncoveredCount, setUncoveredCount] = useState(0);
   const [pedagogy, setPedagogy] = useState('');
   const [framework, setFramework] = useState('');
+  const [approachOverride, setApproachOverride] = useState('');
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -47,7 +50,10 @@ export function CurriculumGenerationDialog({
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-curriculum', {
-        body: { courseId }
+        body: { 
+          courseId,
+          approachOverride: approachOverride || undefined
+        }
       });
 
       if (error) throw error;
@@ -191,27 +197,51 @@ export function CurriculumGenerationDialog({
 
         <div className="space-y-4 py-4">
           {suggestions.length === 0 ? (
-            <div className="text-center py-12">
-              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Generate AI-Powered Curriculum</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                {framework === 'CUSTOM' 
-                  ? 'Our AI will analyze your course goals and learning milestones to create personalized assignment recommendations.'
-                  : 'Our AI will analyze uncovered standards and create personalized assignment recommendations based on your student\'s learning profile and selected pedagogy.'}
-              </p>
-              <Button onClick={handleGenerate} disabled={generating}>
-                {generating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Analyzing Standards...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Suggestions
-                  </>
-                )}
-              </Button>
+            <div className="space-y-6">
+              <div className="text-center py-8">
+                <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="font-semibold mb-2">Generate AI-Powered Curriculum</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {framework === 'CUSTOM' 
+                    ? 'Our AI will analyze your course goals and learning milestones to create personalized assignment recommendations.'
+                    : 'Our AI will analyze uncovered standards and create personalized assignment recommendations based on your student\'s learning profile and selected pedagogy.'}
+                </p>
+              </div>
+
+              <div className="space-y-3 px-2">
+                <div className="space-y-2">
+                  <Label htmlFor="approach-override" className="flex items-center gap-2">
+                    Assignment Style Preference (Optional)
+                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Label>
+                  <Textarea
+                    id="approach-override"
+                    placeholder="e.g., 'I prefer Khan Academy videos and computer-based practice' or 'Keep activities screen-based, no physical props or costumes' or 'Use hands-on activities with everyday materials'"
+                    value={approachOverride}
+                    onChange={(e) => setApproachOverride(e.target.value)}
+                    className="min-h-[80px] resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Tell the AI exactly how you want to learn. This overrides all other learning style suggestions.
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <Button onClick={handleGenerate} disabled={generating}>
+                  {generating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Analyzing Standards...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate Suggestions
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           ) : (
             <>

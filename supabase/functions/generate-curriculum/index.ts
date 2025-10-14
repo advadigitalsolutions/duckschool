@@ -24,7 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    const { courseId } = await req.json();
+    const { courseId, approachOverride: requestApproachOverride } = await req.json();
 
     if (!courseId) {
       return new Response(JSON.stringify({ error: 'Course ID is required' }), {
@@ -65,9 +65,9 @@ serve(async (req) => {
     const courseGoals = course.goals;
     const isCustomFramework = framework === 'CUSTOM';
     
-    // Extract approach override from description field
-    let approachOverride = '';
-    if (course.description && course.description.startsWith('APPROACH_OVERRIDE:')) {
+    // Determine effective approach override: request-level takes priority over course-level
+    let approachOverride = requestApproachOverride || '';
+    if (!approachOverride && course.description && course.description.startsWith('APPROACH_OVERRIDE:')) {
       approachOverride = course.description.replace('APPROACH_OVERRIDE:', '').trim();
     }
 
