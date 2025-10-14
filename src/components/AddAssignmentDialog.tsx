@@ -204,21 +204,29 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
           </div>
 
           {/* Standards Selector */}
-          {selectedCourse && (
-            <div className="space-y-2">
-              <Label>Tagged Standards (Optional)</Label>
-              <StandardsSelector
-                selectedStandards={selectedStandards}
-                onChange={setSelectedStandards}
-                framework={courses.find(c => c.id === selectedCourse)?.standards_scope?.[0]?.framework}
-                gradeLevel={courses.find(c => c.id === selectedCourse)?.grade_level}
-                subject={courses.find(c => c.id === selectedCourse)?.subject}
-              />
-              <p className="text-xs text-muted-foreground">
-                Select which educational standards this assignment addresses
-              </p>
-            </div>
-          )}
+          {selectedCourse && (() => {
+            const course = courses.find(c => c.id === selectedCourse);
+            const framework = course?.standards_scope?.[0]?.framework;
+            
+            // Only show standards selector for standard frameworks (not custom)
+            if (!framework || framework === 'CUSTOM') return null;
+            
+            return (
+              <div className="space-y-2">
+                <Label>Tagged Standards (Optional)</Label>
+                <StandardsSelector
+                  selectedStandards={selectedStandards}
+                  onChange={setSelectedStandards}
+                  framework={framework}
+                  gradeLevel={course?.grade_level}
+                  subject={course?.subject}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Select which educational standards this assignment addresses
+                </p>
+              </div>
+            );
+          })()}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
