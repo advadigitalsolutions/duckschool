@@ -418,6 +418,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   useEffect(() => {
     // During celebration, use the preserved progress to prevent jumping
     if (celebrationProgress !== null) {
+      console.log(`🎭 CELEBRATION MODE: Using fixed progress ${celebrationProgress.toFixed(2)}%`);
       setProgress(celebrationProgress);
       return;
     }
@@ -434,7 +435,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     const totalBarProgress = completedFocusTime + currentSegmentProgress;
     const newProgress = Math.min((totalBarProgress / goalSeconds) * 100, 100);
     
-    console.log(`📊 Duck position: completed=${completedFocusTime}s + current=${currentSegmentProgress}s = ${totalBarProgress}s (${newProgress.toFixed(2)}%)`);
+    console.log(`📊 PROGRESS CALC: focusSegments=${JSON.stringify(focusSegments.map(s => s.duration))} total=${completedFocusTime}s | currentSegment: activeSeconds=${sessionData.activeSeconds}s - start=${currentSegmentStart}s = ${currentSegmentProgress}s | TOTAL=${totalBarProgress}s (${newProgress.toFixed(2)}%)`);
     setProgress(newProgress);
 
     // Check for milestone achievements
@@ -522,7 +523,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       // After celebrating return, use the stored activeSeconds from when celebration started
       // This prevents the duck from jumping back due to time passing during animation
       const startSeconds = celebrationStartSeconds ?? sessionData.activeSeconds;
-      console.log(`🎬 Celebration complete! Setting currentSegmentStart to ${startSeconds}s (current activeSeconds: ${sessionData.activeSeconds}s)`);
+      console.log(`🎬 CELEBRATION END: Setting currentSegmentStart=${startSeconds}s (celebrationStartSeconds=${celebrationStartSeconds}, current activeSeconds=${sessionData.activeSeconds}s, focusSegments total=${focusSegments.reduce((sum, seg) => sum + seg.duration, 0)}s)`);
       setCurrentSegmentStart(startSeconds);
       setCelebrationProgress(null);
       setCelebrationStartSeconds(null);
