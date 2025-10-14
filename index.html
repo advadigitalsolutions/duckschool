@@ -23,6 +23,31 @@
   <meta property="og:description" content="Standards-aligned homeschool platform with AI lesson planning, ADHD support, and California-compliant documentation">
   <meta name="twitter:description" content="Standards-aligned homeschool platform with AI lesson planning, ADHD support, and California-compliant documentation">
   <link rel="icon" type="image/x-icon" href="https://storage.googleapis.com/gpt-engineer-file-uploads/dtr83I1A8VN0CK9s8Wn5YAR28Wj2/uploads/1760118051218-coin.gif">
+  
+  <!-- Apply dark mode immediately to prevent flash -->
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || 
+        (localStorage.getItem('vite-ui-theme') === 'dark' ? 'dark' : null) ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+  
+  <style>
+    /* Prevent white flash on load */
+    html {
+      background-color: white;
+    }
+    html.dark {
+      background-color: hsl(222.2, 84%, 4.9%);
+    }
+    body {
+      background-color: inherit;
+    }
+  </style>
 </head>
 
   <body>
