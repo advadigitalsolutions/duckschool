@@ -40,6 +40,9 @@ const attentionSounds = [
   '/sounds/duck-attention-5.mp3',
   '/sounds/duck-attention-6.mp3',
   '/sounds/duck-attention-7.mp3',
+  '/sounds/duck-attention-8.mp3',
+  '/sounds/duck-attention-9.mp3',
+  '/sounds/duck-attention-10.mp3',
 ];
 
 // Array of click sounds for when user clicks the duck

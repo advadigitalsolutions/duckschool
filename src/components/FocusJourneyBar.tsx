@@ -487,8 +487,63 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setDuckState('walking');
     } else if (duckState === 'celebrating') {
       setDuckState('walking');
+    } else if (duckState === 'celebrating-return') {
+      setDuckState('walking');
     }
   };
+
+  // Handle clicks anywhere on the page when duck is fallen/ghostly
+  const handlePageClick = useCallback(async () => {
+    if (duckState === 'fallen' || duckState === 'ghostly-jumping') {
+      console.log('🎉 User clicked while duck was fallen/ghostly - CELEBRATION TIME!');
+      
+      if (!sessionId || gapStartTime === null) {
+        // Just celebrate and reset
+        setDuckState('celebrating-return');
+        playSound('milestone', 0.7);
+        return;
+      }
+
+      const currentSeconds = sessionData.activeSeconds;
+      const gapDuration = currentSeconds - gapStartTime;
+      const startPercent = (gapStartTime / goalSeconds) * 100;
+      const widthPercent = (gapDuration / goalSeconds) * 100;
+      
+      // Create gap segment
+      setGapSegments(prev => [...prev, {
+        type: 'gap',
+        startSeconds: gapStartTime,
+        endSeconds: currentSeconds,
+        startPercent,
+        widthPercent,
+        duration: gapDuration,
+        reason: 'away'
+      }]);
+      
+      // Start new focus segment
+      setCurrentSegmentStart(currentSeconds);
+      setSessionNumber(prev => prev + 1);
+      setGapStartTime(null);
+      setDuckState('celebrating-return');
+      playSound('milestone', 0.7);
+      
+      await supabase.from('activity_events').insert({
+        student_id: studentId,
+        session_id: sessionId,
+        event_type: 'joyful_return',
+        page_context: pageContext,
+        metadata: { timestamp: new Date().toISOString(), gap_duration: gapDuration }
+      });
+    }
+  }, [duckState, sessionId, gapStartTime, sessionData.activeSeconds, goalSeconds, studentId, pageContext]);
+
+  // Add global click listener for fallen/ghostly states
+  useEffect(() => {
+    if (duckState === 'fallen' || duckState === 'ghostly-jumping') {
+      document.addEventListener('click', handlePageClick);
+      return () => document.removeEventListener('click', handlePageClick);
+    }
+  }, [duckState, handlePageClick]);
 
   const getProgressColor = () => {
     if (progress >= 75) return 'from-amber-500 to-yellow-500';

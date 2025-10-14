@@ -47,9 +47,14 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
     return RETURN_MESSAGES[returnMessageIndex % RETURN_MESSAGES.length];
   }, [returnMessageIndex]);
 
-  // Randomize ghost position
+  // Randomize ghost position and play sound
   useEffect(() => {
     if (currentState === 'ghostly-jumping') {
+      // Play attention sound when first going ghostly
+      import('@/utils/soundEffects').then(({ playRandomAttentionSound }) => {
+        playRandomAttentionSound(0.6);
+      });
+      
       const interval = setInterval(() => {
         setGhostPosition({
           left: Math.random() * 60 + 20, // 20-80%
@@ -63,8 +68,19 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
   useEffect(() => {
     console.log('🦆 Duck received animation state:', animationState);
     
-    // Clear any existing fallen timeout
-    if (fallenTimeout) {
+    // Don't override internal state transitions (fallen -> ghostly)
+    if (currentState === 'fallen' && animationState === 'falling') {
+      console.log('🦆 Ignoring falling state - already fallen');
+      return;
+    }
+    
+    if (currentState === 'ghostly-jumping' && animationState === 'falling') {
+      console.log('🦆 Ignoring falling state - already ghostly');
+      return;
+    }
+    
+    // Clear any existing fallen timeout when changing states
+    if (fallenTimeout && animationState !== 'falling') {
       clearTimeout(fallenTimeout);
       setFallenTimeout(null);
     }
@@ -87,13 +103,13 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
         console.log('🦆 Duck falling animation will complete in 1500ms, then transition to fallen');
         const timeout = setTimeout(() => {
           setCurrentState('fallen');
-          console.log('🦆 Duck is now fallen (squished). Will go ghostly in 30s');
+          console.log('🦆 Duck is now fallen (squished). Will go ghostly in 10s');
           
-          // After 30 seconds of being fallen, transition to ghostly-jumping
+          // After 10 seconds of being fallen, transition to ghostly-jumping
           const ghostTimeout = setTimeout(() => {
-            console.log('🦆 Duck going ghostly - been fallen for 30s!');
+            console.log('🦆 Duck going ghostly - been fallen for 10s!');
             setCurrentState('ghostly-jumping');
-          }, 30000);
+          }, 10000);
           setFallenTimeout(ghostTimeout);
         }, 1500);
         break;
