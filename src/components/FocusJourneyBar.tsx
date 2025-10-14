@@ -160,6 +160,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   });
 
   const handleWindowHidden = useCallback(async () => {
+    // Prevent duplicate calls - only process if we're not already in a gap
+    if (gapStartTime !== null || isOnBreak) {
+      console.log('🦆 Ignoring window blur - already in gap or on break');
+      return;
+    }
+    
     console.log('🦆 Duck falling - user left tab! sessionId:', sessionId);
     if (sessionId) {
       // Complete current focus segment
@@ -195,44 +201,54 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     } else {
       console.warn('⚠️ No session ID when trying to log window_blur');
     }
-  }, [sessionId, studentId, pageContext, sessionData.activeSeconds, currentSegmentStart, goalSeconds, sessionNumber]);
+  }, [sessionId, studentId, pageContext, sessionData.activeSeconds, currentSegmentStart, goalSeconds, sessionNumber, gapStartTime, isOnBreak]);
 
   const handleWindowVisible = useCallback(async () => {
-    console.log('🦆 Duck climbing - user returned! sessionId:', sessionId);
-    if (sessionId && gapStartTime !== null) {
-      const currentSeconds = sessionData.activeSeconds;
-      const gapDuration = currentSeconds - gapStartTime;
-      const startPercent = (gapStartTime / goalSeconds) * 100;
-      const widthPercent = (gapDuration / goalSeconds) * 100;
-      
-      // Create gap segment
-      setGapSegments(prev => [...prev, {
-        type: 'gap',
-        startSeconds: gapStartTime,
-        endSeconds: currentSeconds,
-        startPercent,
-        widthPercent,
-        duration: gapDuration,
-        reason: 'away'
-      }]);
-      
-      // Start new focus segment
-      setCurrentSegmentStart(currentSeconds);
-      setSessionNumber(prev => prev + 1);
-      setGapStartTime(null);
-      setDuckState('climbing');
-      playRandomClimbSound(0.5);
-      
-      await supabase.from('activity_events').insert({
-        student_id: studentId,
-        session_id: sessionId,
-        event_type: 'window_focus',
-        page_context: pageContext,
-        metadata: { timestamp: new Date().toISOString() }
-      });
-    } else {
-      console.warn('⚠️ No session ID when trying to log window_focus');
+    // Only process if we actually have a gap to recover from
+    if (!sessionId || gapStartTime === null) {
+      console.log('🦆 Ignoring window focus - no gap to recover from');
+      return;
     }
+    
+    // Minimum gap duration to avoid false positives (100ms)
+    const currentSeconds = sessionData.activeSeconds;
+    const gapDuration = currentSeconds - gapStartTime;
+    if (gapDuration < 0.1) {
+      console.log('🦆 Ignoring window focus - gap too short:', gapDuration);
+      setGapStartTime(null); // Reset the gap start time
+      return;
+    }
+    
+    console.log('🦆 Duck climbing - user returned! sessionId:', sessionId, 'gap duration:', gapDuration);
+    
+    const startPercent = (gapStartTime / goalSeconds) * 100;
+    const widthPercent = (gapDuration / goalSeconds) * 100;
+    
+    // Create gap segment
+    setGapSegments(prev => [...prev, {
+      type: 'gap',
+      startSeconds: gapStartTime,
+      endSeconds: currentSeconds,
+      startPercent,
+      widthPercent,
+      duration: gapDuration,
+      reason: 'away'
+    }]);
+    
+    // Start new focus segment
+    setCurrentSegmentStart(currentSeconds);
+    setSessionNumber(prev => prev + 1);
+    setGapStartTime(null);
+    setDuckState('climbing');
+    playRandomClimbSound(0.5);
+    
+    await supabase.from('activity_events').insert({
+      student_id: studentId,
+      session_id: sessionId,
+      event_type: 'window_focus',
+      page_context: pageContext,
+      metadata: { timestamp: new Date().toISOString(), gap_duration: gapDuration }
+    });
   }, [sessionId, studentId, pageContext, gapStartTime, sessionData.activeSeconds, goalSeconds]);
 
   const { isVisible } = useWindowVisibility({
