@@ -8,10 +8,24 @@ import { useIdleDetection } from '@/hooks/useIdleDetection';
 import { useWindowVisibility } from '@/hooks/useWindowVisibility';
 import { usePageContext } from '@/hooks/usePageContext';
 
-interface ActivitySegment {
-  type: 'active' | 'idle' | 'away' | 'break';
-  start: number; // percentage
-  width: number; // percentage
+interface FocusSegment {
+  type: 'completed' | 'active';
+  startSeconds: number;
+  endSeconds?: number;
+  startPercent: number;
+  widthPercent: number;
+  duration: number; // in seconds
+  sessionNumber: number;
+}
+
+interface GapSegment {
+  type: 'gap';
+  startSeconds: number;
+  endSeconds: number;
+  startPercent: number;
+  widthPercent: number;
+  duration: number; // in seconds
+  reason: 'idle' | 'away' | 'break';
 }
 
 interface FocusJourneyBarProps {
@@ -19,11 +33,15 @@ interface FocusJourneyBarProps {
 }
 
 export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
-  const [segments, setSegments] = useState<ActivitySegment[]>([]);
+  const [focusSegments, setFocusSegments] = useState<FocusSegment[]>([]);
+  const [gapSegments, setGapSegments] = useState<GapSegment[]>([]);
+  const [currentSegmentStart, setCurrentSegmentStart] = useState(0);
+  const [sessionNumber, setSessionNumber] = useState(1);
   const [progress, setProgress] = useState(0);
   const [duckState, setDuckState] = useState<'walking' | 'falling' | 'climbing' | 'celebrating' | 'idle'>('walking');
   const [goalSeconds] = useState(1500); // 25 minutes default goal
   const [milestonesReached, setMilestonesReached] = useState<number[]>([]);
+  const [gapStartTime, setGapStartTime] = useState<number | null>(null);
 
   // Log duck state changes
   useEffect(() => {
@@ -44,6 +62,29 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   const handleIdle = useCallback(async () => {
     if (sessionId) {
+      // Complete current focus segment
+      const currentSeconds = sessionData.activeSeconds;
+      const duration = currentSeconds - currentSegmentStart;
+      
+      if (duration > 0) {
+        const startPercent = (currentSegmentStart / goalSeconds) * 100;
+        const widthPercent = (duration / goalSeconds) * 100;
+        
+        setFocusSegments(prev => [...prev, {
+          type: 'completed',
+          startSeconds: currentSegmentStart,
+          endSeconds: currentSeconds,
+          startPercent,
+          widthPercent,
+          duration,
+          sessionNumber
+        }]);
+      }
+      
+      setGapStartTime(currentSeconds);
+      setDuckState('falling');
+      playSound('fall', 0.6);
+      
       await supabase.from('activity_events').insert({
         student_id: studentId,
         session_id: sessionId,
@@ -53,13 +94,34 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         assignment_id: assignmentId,
         metadata: { duration_seconds: 0 }
       });
-      setDuckState('falling');
-      playSound('fall', 0.6);
     }
-  }, [sessionId, studentId, pageContext, courseId, assignmentId]);
+  }, [sessionId, studentId, pageContext, courseId, assignmentId, sessionData.activeSeconds, currentSegmentStart, goalSeconds, sessionNumber]);
 
   const handleActive = useCallback(async () => {
-    if (sessionId) {
+    if (sessionId && gapStartTime !== null) {
+      const currentSeconds = sessionData.activeSeconds;
+      const gapDuration = currentSeconds - gapStartTime;
+      const startPercent = (gapStartTime / goalSeconds) * 100;
+      const widthPercent = (gapDuration / goalSeconds) * 100;
+      
+      // Create gap segment
+      setGapSegments(prev => [...prev, {
+        type: 'gap',
+        startSeconds: gapStartTime,
+        endSeconds: currentSeconds,
+        startPercent,
+        widthPercent,
+        duration: gapDuration,
+        reason: 'idle'
+      }]);
+      
+      // Start new focus segment
+      setCurrentSegmentStart(currentSeconds);
+      setSessionNumber(prev => prev + 1);
+      setGapStartTime(null);
+      setDuckState('climbing');
+      playSound('climb', 0.5);
+      
       await supabase.from('activity_events').insert({
         student_id: studentId,
         session_id: sessionId,
@@ -68,10 +130,8 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         course_id: courseId,
         assignment_id: assignmentId
       });
-      setDuckState('climbing');
-      playSound('climb', 0.5);
     }
-  }, [sessionId, studentId, pageContext, courseId, assignmentId]);
+  }, [sessionId, studentId, pageContext, courseId, assignmentId, gapStartTime, sessionData.activeSeconds, goalSeconds]);
 
   const { isIdle } = useIdleDetection({
     threshold: 60000,
@@ -82,6 +142,26 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const handleWindowHidden = useCallback(async () => {
     console.log('🦆 Duck falling - user left tab! sessionId:', sessionId);
     if (sessionId) {
+      // Complete current focus segment
+      const currentSeconds = sessionData.activeSeconds;
+      const duration = currentSeconds - currentSegmentStart;
+      
+      if (duration > 0) {
+        const startPercent = (currentSegmentStart / goalSeconds) * 100;
+        const widthPercent = (duration / goalSeconds) * 100;
+        
+        setFocusSegments(prev => [...prev, {
+          type: 'completed',
+          startSeconds: currentSegmentStart,
+          endSeconds: currentSeconds,
+          startPercent,
+          widthPercent,
+          duration,
+          sessionNumber
+        }]);
+      }
+      
+      setGapStartTime(currentSeconds);
       setDuckState('falling');
       playSound('fall', 0.6);
       
@@ -95,11 +175,31 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     } else {
       console.warn('⚠️ No session ID when trying to log window_blur');
     }
-  }, [sessionId, studentId, pageContext]);
+  }, [sessionId, studentId, pageContext, sessionData.activeSeconds, currentSegmentStart, goalSeconds, sessionNumber]);
 
   const handleWindowVisible = useCallback(async () => {
     console.log('🦆 Duck climbing - user returned! sessionId:', sessionId);
-    if (sessionId) {
+    if (sessionId && gapStartTime !== null) {
+      const currentSeconds = sessionData.activeSeconds;
+      const gapDuration = currentSeconds - gapStartTime;
+      const startPercent = (gapStartTime / goalSeconds) * 100;
+      const widthPercent = (gapDuration / goalSeconds) * 100;
+      
+      // Create gap segment
+      setGapSegments(prev => [...prev, {
+        type: 'gap',
+        startSeconds: gapStartTime,
+        endSeconds: currentSeconds,
+        startPercent,
+        widthPercent,
+        duration: gapDuration,
+        reason: 'away'
+      }]);
+      
+      // Start new focus segment
+      setCurrentSegmentStart(currentSeconds);
+      setSessionNumber(prev => prev + 1);
+      setGapStartTime(null);
       setDuckState('climbing');
       playSound('climb', 0.5);
       
@@ -113,7 +213,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     } else {
       console.warn('⚠️ No session ID when trying to log window_focus');
     }
-  }, [sessionId, studentId, pageContext]);
+  }, [sessionId, studentId, pageContext, gapStartTime, sessionData.activeSeconds, goalSeconds]);
 
   const { isVisible } = useWindowVisibility({
     onHidden: handleWindowHidden,
@@ -189,38 +289,13 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     });
   }, [sessionData.activeSeconds, goalSeconds, milestonesReached]);
 
-  // Subscribe to activity events for real-time updates
-  useEffect(() => {
-    if (!studentId) return;
-
-    const channel = supabase
-      .channel('focus_journey_updates')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'activity_events',
-        filter: `student_id=eq.${studentId}`
-      }, (payload) => {
-        const event = payload.new;
-        
-        // Update segments based on event type
-        if (event.event_type === 'went_idle' || 
-            event.event_type === 'window_blur' ||
-            event.event_type === 'bio_break_start') {
-          // Add gap segment
-          setSegments(prev => [...prev, {
-            type: event.event_type === 'bio_break_start' ? 'break' : 'idle',
-            start: progress,
-            width: 2 // Will update with actual duration
-          }]);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [studentId, progress]);
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins === 0) return `${secs}s`;
+    if (secs === 0) return `${mins}m`;
+    return `${mins}m ${secs}s`;
+  };
 
   const handleDuckAnimationComplete = () => {
     if (duckState === 'climbing') {
@@ -247,25 +322,59 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     >
       <div className="max-w-7xl mx-auto">
         <div className="relative h-10 bg-muted/30 rounded-full border border-border/50" style={{ overflow: 'visible' }}>
-          {/* Progress fill */}
-          <div 
-            className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getProgressColor()} transition-all duration-500 ease-out`}
-            style={{ width: `${progress}%` }}
-          />
-
-          {/* Idle/gap segments */}
-          {segments.map((segment, index) => (
+          {/* Completed focus segments */}
+          {focusSegments.map((segment, index) => (
             <div
-              key={index}
-              className={`absolute inset-y-0 border-2 border-dashed ${
-                segment.type === 'break' ? 'border-blue-400' : 'border-yellow-400'
-              } bg-transparent`}
+              key={`focus-${index}`}
+              className="absolute inset-y-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-[10px] font-semibold text-white shadow-md"
               style={{ 
-                left: `${segment.start}%`, 
-                width: `${segment.width}%` 
+                left: `${segment.startPercent}%`, 
+                width: `${segment.widthPercent}%`,
+                minWidth: '40px'
+              }}
+            >
+              {segment.widthPercent > 3 && formatDuration(segment.duration)}
+            </div>
+          ))}
+
+          {/* Gap segments */}
+          {gapSegments.map((segment, index) => {
+            const showTimestamp = segment.duration >= 60;
+            const isShortGap = segment.duration < 60;
+            
+            return (
+              <div
+                key={`gap-${index}`}
+                className={`absolute inset-y-0 flex items-center justify-center ${
+                  isShortGap ? 'bg-transparent' : 'bg-muted/50'
+                }`}
+                style={{ 
+                  left: `${segment.startPercent}%`, 
+                  width: `${segment.widthPercent}%`,
+                  minWidth: isShortGap ? '2px' : '20px',
+                  borderLeft: isShortGap ? '2px dashed hsl(var(--border))' : 'none',
+                  borderRight: isShortGap ? '2px dashed hsl(var(--border))' : 'none'
+                }}
+              >
+                {showTimestamp && segment.widthPercent > 4 && (
+                  <span className="text-[9px] text-muted-foreground font-medium">
+                    Away: {formatDuration(segment.duration)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Current active segment */}
+          {gapStartTime === null && (
+            <div 
+              className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getProgressColor()} transition-all duration-500 ease-out opacity-40 rounded-full`}
+              style={{ 
+                left: `${(currentSegmentStart / goalSeconds) * 100}%`,
+                width: `${((sessionData.activeSeconds - currentSegmentStart) / goalSeconds) * 100}%` 
               }}
             />
-          ))}
+          )}
 
           {/* Milestone markers */}
           <div className="absolute inset-0 flex justify-between px-2 pointer-events-none">
