@@ -429,21 +429,19 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           {focusSegments.map((segment, index) => (
             <div
               key={`focus-${index}`}
-              className="absolute inset-y-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-[10px] font-semibold text-white shadow-md"
+              className="absolute inset-y-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-[10px] font-semibold text-white shadow-md mx-1"
               style={{ 
                 left: `${segment.startPercent}%`, 
                 width: `${segment.widthPercent}%`,
                 minWidth: '40px'
               }}
             >
-              {segment.widthPercent > 3 && formatDuration(segment.duration)}
+              {formatDuration(segment.duration)}
             </div>
           ))}
 
           {/* Gap segments */}
           {gapSegments.map((segment, index) => {
-            const showTimestamp = segment.duration >= 60;
-            const isShortGap = segment.duration < 60;
             const isBreak = segment.reason === 'break';
             
             return (
@@ -452,26 +450,17 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
                 className={`absolute inset-y-0 flex items-center justify-center ${
                   isBreak 
                     ? 'bg-amber-500/20 border-2 border-amber-500/40 rounded-full' 
-                    : isShortGap 
-                      ? 'bg-transparent' 
-                      : 'bg-muted/50'
+                    : 'bg-transparent'
                 }`}
                 style={{ 
                   left: `${segment.startPercent}%`, 
                   width: `${segment.widthPercent}%`,
-                  minWidth: isShortGap ? '2px' : isBreak ? '30px' : '20px',
-                  borderLeft: isShortGap ? '2px dashed hsl(var(--border))' : 'none',
-                  borderRight: isShortGap ? '2px dashed hsl(var(--border))' : 'none'
+                  minWidth: isBreak ? '30px' : '8px'
                 }}
               >
                 {isBreak && segment.widthPercent > 2 && (
                   <span className="text-[10px] font-medium text-amber-700 dark:text-amber-300">
                     ☕ {formatDuration(segment.duration)}
-                  </span>
-                )}
-                {!isBreak && showTimestamp && segment.widthPercent > 4 && (
-                  <span className="text-[9px] text-muted-foreground font-medium">
-                    Away: {formatDuration(segment.duration)}
                   </span>
                 )}
               </div>
@@ -481,7 +470,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           {/* Current active segment */}
           {gapStartTime === null && !isOnBreak && (
             <div 
-              className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getProgressColor()} transition-all duration-500 ease-out opacity-40 rounded-full`}
+              className={`absolute inset-y-1 left-0 bg-gradient-to-r ${getProgressColor()} transition-all duration-500 ease-out opacity-40 rounded-full mx-1`}
               style={{ 
                 left: `${(currentSegmentStart / goalSeconds) * 100}%`,
                 width: `${((sessionData.activeSeconds - currentSegmentStart) / goalSeconds) * 100}%` 
