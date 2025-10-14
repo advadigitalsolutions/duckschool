@@ -88,16 +88,29 @@ Format as JSON with this structure:
     }
 
     // Phase 2: Extract/generate standards based on sources
-    const standardsPrompt = `Based on the research for ${requirements.state} grade ${requirements.grade}, generate a comprehensive list of standards for ${requirements.subjects?.join(', ') || 'core subjects'}.
+    const standardsPrompt = `Based on the research for ${requirements.state} grade ${requirements.grade}, you must generate a COMPREHENSIVE and COMPLETE list of educational standards for ${requirements.subjects?.join(', ') || 'core subjects'}.
 
-For each standard, provide:
-- code: Official standard code (e.g., "RL.8.1", "8.NS.1")
+CRITICAL REQUIREMENTS:
+- This is for homeschool compliance and educational planning - it MUST be thorough
+- Generate AT LEAST 100-300 standards PER SUBJECT (not total)
+- Cover ALL domains/strands within each subject
+- Include prerequisite knowledge from earlier grades when relevant
+- Include advanced concepts that build toward next grade level
+
+For EACH subject requested, ensure you cover:
+Mathematics: Number & Operations, Algebra, Geometry, Measurement, Data Analysis, Mathematical Practices
+English/Language Arts: Reading Literature, Reading Informational, Writing, Speaking & Listening, Language
+Science: Physical Science, Life Science, Earth/Space Science, Engineering & Design
+Social Studies: History, Geography, Civics, Economics
+
+For each standard provide:
+- code: Official standard code (e.g., "CCSS.MATH.8.NS.A.1", "CCSS.ELA-LITERACY.RL.8.1")
 - subject: Subject area
-- domain: Domain/strand within subject
-- text: Full standard text
-- gradeLevel: Grade level(s)
+- domain: Domain/strand within subject  
+- text: Full standard text (detailed description of what students should know/do)
+- gradeLevel: Grade level
 
-Format as JSON array of standards. Generate 20-50 standards covering the key domains for each subject.`;
+Generate a COMPLETE, COMPREHENSIVE framework with hundreds of standards that would satisfy state homeschool requirements and provide a rigorous education.`;
 
     const standardsResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -106,11 +119,13 @@ Format as JSON array of standards. Generate 20-50 standards covering the key dom
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-pro',
         messages: [
-          { role: 'system', content: 'You are an expert on educational standards. Generate comprehensive, accurate standards based on official state frameworks.' },
+          { role: 'system', content: 'You are an expert on educational standards and homeschool compliance. You must generate COMPREHENSIVE frameworks with hundreds of standards covering all domains. Be thorough - parents need complete coverage for legal compliance and quality education.' },
           { role: 'user', content: standardsPrompt }
         ],
+        temperature: 0.7,
+        max_tokens: 16000,
       }),
     });
 
