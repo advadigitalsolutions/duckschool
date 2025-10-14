@@ -28,20 +28,22 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
 
   const resetIdleTimer = useCallback(() => {
     const now = Date.now();
-    setLastActivityTime(now);
+    const wasIdle = isIdle;
+    const wasWarning = isWarning;
     
-    if (isIdle || isWarning) {
-      const duration = now - lastActivityTime;
-      setIdleDuration(duration);
-      setIsIdle(false);
-      setIsWarning(false);
+    setLastActivityTime(now);
+    setIsIdle(false);
+    setIsWarning(false);
+    
+    if (wasIdle || wasWarning) {
+      console.log('🎯 Activity detected - resetting idle state');
       onActive?.();
     }
     
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current);
     }
-  }, [isIdle, isWarning, lastActivityTime, onActive]);
+  }, [isIdle, isWarning, onActive]);
 
   const throttle = (eventType: string, delay: number, callback: () => void) => {
     const now = Date.now();

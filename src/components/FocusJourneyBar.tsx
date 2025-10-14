@@ -153,7 +153,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     }
   }, [sessionId, studentId, pageContext, courseId, assignmentId, gapStartTime, sessionData.activeSeconds, goalSeconds, isOnBreak]);
 
-  const { isIdle, isWarning } = useIdleDetection({
+  const { isIdle, isWarning, resetIdleTimer } = useIdleDetection({
     warningThreshold: 30000, // 30 seconds
     idleThreshold: 60000, // 60 seconds
     onWarning: handleWarning,
@@ -165,13 +165,6 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     // Prevent duplicate calls - only process if we're not already in a gap
     if (gapStartTime !== null || isOnBreak) {
       console.log('🦆 Ignoring window blur - already in gap or on break');
-      return;
-    }
-    
-    // Add minimum time check - must be focused for at least 2 seconds before blur counts
-    const timeSinceFocused = Date.now() - (lastFocusTime.current || 0);
-    if (timeSinceFocused < 2000) {
-      console.log('🦆 Ignoring window blur - too soon after focus:', timeSinceFocused, 'ms');
       return;
     }
     
@@ -218,30 +211,15 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     if (!sessionId || gapStartTime === null) {
       console.log('🦆 Ignoring window focus - no gap to recover from');
       lastFocusTime.current = Date.now();
+      // Reset idle timer when window becomes visible
+      resetIdleTimer();
       return;
     }
     
-    // Minimum blur duration to avoid false positives (2 seconds)
-    const timeSinceBlur = Date.now() - (lastBlurTime.current || 0);
-    if (timeSinceBlur < 2000) {
-      console.log('🦆 Ignoring window focus - blur was too brief:', timeSinceBlur, 'ms');
-      setGapStartTime(null); // Reset gap state
-      lastFocusTime.current = Date.now();
-      return;
-    }
+    console.log('🦆 Duck climbing - user returned! sessionId:', sessionId);
     
-    // Minimum gap duration to avoid false positives (1 second)
     const currentSeconds = sessionData.activeSeconds;
     const gapDuration = currentSeconds - gapStartTime;
-    if (gapDuration < 1) {
-      console.log('🦆 Ignoring window focus - gap too short:', gapDuration, 's');
-      setGapStartTime(null); // Reset the gap start time
-      lastFocusTime.current = Date.now();
-      return;
-    }
-    
-    console.log('🦆 Duck climbing - user returned! sessionId:', sessionId, 'gap duration:', gapDuration, 's');
-    
     const startPercent = (gapStartTime / goalSeconds) * 100;
     const widthPercent = (gapDuration / goalSeconds) * 100;
     
@@ -264,6 +242,9 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     setDuckState('climbing');
     playRandomClimbSound(0.5);
     
+    // Reset idle timer when returning
+    resetIdleTimer();
+    
     await supabase.from('activity_events').insert({
       student_id: studentId,
       session_id: sessionId,
@@ -271,7 +252,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       page_context: pageContext,
       metadata: { timestamp: new Date().toISOString(), gap_duration: gapDuration }
     });
-  }, [sessionId, studentId, pageContext, gapStartTime, sessionData.activeSeconds, goalSeconds]);
+  }, [sessionId, studentId, pageContext, gapStartTime, sessionData.activeSeconds, goalSeconds, resetIdleTimer]);
 
   const { isVisible } = useWindowVisibility({
     onHidden: handleWindowHidden,
