@@ -39,6 +39,9 @@ verify_jwt = false
 [functions.analyze-student-progress]
 verify_jwt = true
 
+[functions.analyze-student-mastery]
+verify_jwt = false
+
 [functions.generate-weekly-curriculum]
 verify_jwt = true
 

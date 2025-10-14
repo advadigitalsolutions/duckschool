@@ -20,6 +20,7 @@ serve(async (req) => {
       studentProfile, 
       enableCrossSubject, 
       manualStandards,
+      approachOverride,
       isInitialAssessment,
       // Legacy single-course support
       courseId,
@@ -298,7 +299,14 @@ TEACHER GUIDE REQUIREMENTS:
       `${c.title} (${c.subject})`
     ).join(' + ');
 
-    const userPrompt = `Create a detailed interactive assignment for:
+    const approachOverrideContext = approachOverride 
+      ? `\n🎯 CRITICAL REQUIREMENT - STUDENT'S PREFERRED APPROACH (HIGHEST PRIORITY):
+"${approachOverride}"
+
+THIS IS A DIRECT REQUEST FROM THE STUDENT. You MUST respect this approach and resource preference above all other learning style recommendations. If the student wants Khan Academy, use Khan Academy. If they want computer-based only, keep it computer-based. Do not force kinesthetic activities, props, costumes, or physical materials if they've specified otherwise.\n`
+      : '';
+
+    const userPrompt = `${approachOverrideContext}Create a detailed interactive assignment for:
 ${isMultiCourse ? 'Courses' : 'Course'}: ${coursesDescription}
 Topic: ${topic}
 Grade Level: ${gradeLevel}

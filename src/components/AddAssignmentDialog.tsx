@@ -35,6 +35,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
   const [open, setOpen] = useState(false);
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [topic, setTopic] = useState('');
+  const [approachOverride, setApproachOverride] = useState('');
   const [assignedDate, setAssignedDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
@@ -93,6 +94,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
             studentProfile: studentData,
             enableCrossSubject: enableCrossSubject && selectedCourses.length > 1,
             manualStandards: selectedStandards,
+            approachOverride,
             isInitialAssessment: false
           }
         }
@@ -160,6 +162,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
       );
       setOpen(false);
       setTopic('');
+      setApproachOverride('');
       setSelectedCourses([]);
       setAssignedDate('');
       setDueDate('');
@@ -247,6 +250,21 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
             />
             <p className="text-xs text-muted-foreground">
               Be specific about what you want students to learn and demonstrate
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="approach-override">Assignment Approach & Resources (Optional)</Label>
+            <Textarea
+              id="approach-override"
+              value={approachOverride}
+              onChange={(e) => setApproachOverride(e.target.value)}
+              placeholder="e.g., Use Khan Academy as the main resource, keep it computer-based with no physical materials needed"
+              rows={3}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground">
+              Override learning style suggestions - specify your preferred resources and approach here
             </p>
           </div>
 

@@ -390,6 +390,63 @@ export type Database = {
           },
         ]
       }
+      course_mastery_summary: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          id: string
+          last_calculated_at: string | null
+          overall_mastery_percentage: number | null
+          standards_in_progress: number | null
+          standards_mastered: number | null
+          standards_not_started: number | null
+          student_id: string
+          total_standards: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          id?: string
+          last_calculated_at?: string | null
+          overall_mastery_percentage?: number | null
+          standards_in_progress?: number | null
+          standards_mastered?: number | null
+          standards_not_started?: number | null
+          student_id: string
+          total_standards?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          last_calculated_at?: string | null
+          overall_mastery_percentage?: number | null
+          standards_in_progress?: number | null
+          standards_mastered?: number | null
+          standards_not_started?: number | null
+          student_id?: string
+          total_standards?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_mastery_summary_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_mastery_summary_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_reference_notes: {
         Row: {
           content: Json
@@ -1231,6 +1288,63 @@ export type Database = {
         }
         Relationships: []
       }
+      standard_mastery: {
+        Row: {
+          confidence_score: number | null
+          course_id: string
+          created_at: string | null
+          id: string
+          last_assessed_at: string | null
+          mastery_level: number
+          standard_code: string
+          student_id: string
+          successful_attempts: number | null
+          total_attempts: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          course_id: string
+          created_at?: string | null
+          id?: string
+          last_assessed_at?: string | null
+          mastery_level?: number
+          standard_code: string
+          student_id: string
+          successful_attempts?: number | null
+          total_attempts?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          last_assessed_at?: string | null
+          mastery_level?: number
+          standard_code?: string
+          student_id?: string
+          successful_attempts?: number | null
+          total_attempts?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standard_mastery_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "standard_mastery_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       standards: {
         Row: {
           code: string
@@ -1319,6 +1433,60 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "standards_planning_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      standards_priority_queue: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          id: string
+          last_addressed_at: string | null
+          priority_score: number | null
+          reason: string | null
+          standard_code: string
+          student_id: string
+          times_neglected: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          id?: string
+          last_addressed_at?: string | null
+          priority_score?: number | null
+          reason?: string | null
+          standard_code: string
+          student_id: string
+          times_neglected?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          last_addressed_at?: string | null
+          priority_score?: number | null
+          reason?: string | null
+          standard_code?: string
+          student_id?: string
+          times_neglected?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standards_priority_queue_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "standards_priority_queue_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
