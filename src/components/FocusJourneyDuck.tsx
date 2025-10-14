@@ -34,6 +34,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
   const [returnMessageIndex, setReturnMessageIndex] = useState(0);
   const [ghostPosition, setGhostPosition] = useState({ left: 20, top: 30 });
   const [fallenTimeout, setFallenTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [showReturnMessage, setShowReturnMessage] = useState(true);
   
   const handleDuckClick = () => {
     playRandomClickSound(0.6);
@@ -106,8 +107,14 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
         setTimeout(() => onAnimationComplete?.(), 2000);
         break;
       case 'celebrating-return':
-        console.log('🦆 Duck celebrating return - 3 bounces over 3s');
+        console.log('🦆 Duck celebrating return - 3 bounces over 3s, message disappears after 1s');
         setReturnMessageIndex(prev => prev + 1); // Rotate message for celebration
+        setShowReturnMessage(true); // Show message
+        // Hide message after 1 second
+        setTimeout(() => {
+          setShowReturnMessage(false);
+        }, 1000);
+        // Complete animation after 3 seconds
         setTimeout(() => onAnimationComplete?.(), 3000);
         break;
     }
@@ -141,8 +148,8 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           {currentMessage}
         </div>
       )}
-      {/* Speech bubble for celebrating return */}
-      {currentState === 'celebrating-return' && (
+      {/* Speech bubble for celebrating return - auto-dismisses after 1s */}
+      {currentState === 'celebrating-return' && showReturnMessage && (
         <div className="speech-bubble celebration">
           {returnMessage}
         </div>

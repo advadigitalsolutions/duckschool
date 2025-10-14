@@ -520,11 +520,10 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     } else if (duckState === 'celebrating') {
       setDuckState('walking');
     } else if (duckState === 'celebrating-return') {
-      // After celebrating return, use the stored activeSeconds from when celebration started
-      // This prevents the duck from jumping back due to time passing during animation
-      const startSeconds = celebrationStartSeconds ?? sessionData.activeSeconds;
-      console.log(`🎬 CELEBRATION END: Setting currentSegmentStart=${startSeconds}s (celebrationStartSeconds=${celebrationStartSeconds}, current activeSeconds=${sessionData.activeSeconds}s, focusSegments total=${focusSegments.reduce((sum, seg) => sum + seg.duration, 0)}s)`);
-      setCurrentSegmentStart(startSeconds);
+      // After celebrating return, set currentSegmentStart to the CURRENT activeSeconds
+      // (not the stored one, since time has passed during the celebration animation)
+      console.log(`🎬 CELEBRATION END: Setting currentSegmentStart to CURRENT activeSeconds=${sessionData.activeSeconds}s (celebration started at ${celebrationStartSeconds}s, focusSegments total=${focusSegments.reduce((sum, seg) => sum + seg.duration, 0)}s)`);
+      setCurrentSegmentStart(sessionData.activeSeconds);
       setCelebrationProgress(null);
       setCelebrationStartSeconds(null);
       setDuckState('walking');
