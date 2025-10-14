@@ -508,12 +508,14 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   // Handle clicks anywhere on the page when duck is fallen/ghostly
   const handlePageClick = useCallback(async () => {
     if (duckState === 'fallen' || duckState === 'ghostly-jumping') {
-      console.log('🎉 User clicked while duck was fallen/ghostly - CELEBRATION TIME!');
+      console.log('🎉 User clicked while duck was fallen/ghostly - CLIMBING BACK UP!');
       
       if (!sessionId || gapStartTime === null) {
-        // Just celebrate and reset
-        setDuckState('celebrating-return');
-        playSound('milestone', 0.7);
+        // Just climb and reset
+        setDuckState('climbing');
+        playRandomReturnSound(0.6);
+        lastFocusTime.current = Date.now();
+        resetIdleTimer();
         return;
       }
 
@@ -537,8 +539,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setCurrentSegmentStart(currentSeconds);
       setSessionNumber(prev => prev + 1);
       setGapStartTime(null);
-      setDuckState('celebrating-return');
-      playSound('milestone', 0.7);
+      lastFocusTime.current = Date.now();
+      setDuckState('climbing');
+      playRandomReturnSound(0.6);
+      
+      // Reset idle timer when returning
+      resetIdleTimer();
       
       await supabase.from('activity_events').insert({
         student_id: studentId,
@@ -548,7 +554,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         metadata: { timestamp: new Date().toISOString(), gap_duration: gapDuration }
       });
     }
-  }, [duckState, sessionId, gapStartTime, sessionData.activeSeconds, goalSeconds, studentId, pageContext]);
+  }, [duckState, sessionId, gapStartTime, sessionData.activeSeconds, goalSeconds, studentId, pageContext, resetIdleTimer]);
 
   // Add global click listener for fallen/ghostly states
   useEffect(() => {
