@@ -33,6 +33,7 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
   useEffect(() => {
     if (studentId && open) {
       loadStudentData();
+      checkExistingSession();
     }
   }, [studentId, open]);
 
@@ -48,6 +49,50 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
       setStudentData(data);
     } catch (error) {
       console.error('Error loading student data:', error);
+    }
+  };
+
+  const checkExistingSession = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Look for existing incomplete session
+      const { data: existingSession } = await supabase
+        .from('standards_planning_sessions')
+        .select('*')
+        .eq('parent_id', user.id)
+        .eq('student_id', studentId)
+        .in('status', ['gathering_requirements', 'researching'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingSession) {
+        setSessionId(existingSession.id);
+        setRequirements(existingSession.requirements || {});
+        const standards = existingSession.compiled_standards;
+        setCompiledStandards(Array.isArray(standards) ? standards : []);
+        setLegalRequirements(existingSession.legal_requirements || {});
+        setResearchResults(existingSession.research_results || null);
+
+        // Restore phase based on session state
+        const compiledStds = Array.isArray(standards) ? standards : [];
+        if (compiledStds.length > 0) {
+          setPhase('reviewing');
+        } else if (existingSession.research_results) {
+          setPhase('researching');
+        } else {
+          setPhase('gathering');
+        }
+
+        toast({
+          title: "Session Restored",
+          description: "Continuing from where you left off.",
+        });
+      }
+    } catch (error) {
+      console.error('Error checking existing session:', error);
     }
   };
 

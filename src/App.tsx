@@ -10,6 +10,7 @@ import ParentDashboard from "./pages/ParentDashboard";
 import ParentProfile from "./pages/ParentProfile";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentDetail from "./pages/StudentDetail";
+import StandardsFrameworks from "./pages/StandardsFrameworks";
 import AssignmentDetail from "./pages/AssignmentDetail";
 import StudentProfile from "./pages/StudentProfile";
 import CourseDashboard from "./pages/CourseDashboard";
@@ -97,6 +98,14 @@ const App = () => (
               <Route 
                 path="/pomodoro-fullscreen" 
                 element={<PomodoroFullscreen />} 
+              />
+              <Route 
+                path="/standards-frameworks" 
+                element={
+                  <AuthGuard>
+                    <StandardsFrameworks />
+                  </AuthGuard>
+                } 
               />
               <Route 
                 path="/learning-window" 

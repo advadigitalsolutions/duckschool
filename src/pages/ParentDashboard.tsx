@@ -707,6 +707,31 @@ export default function ParentDashboard() {
                   <AddStudentDialog onStudentAdded={fetchDashboardData} />
                 </CardContent>
               </Card>
+
+              <Card className="border-secondary/50">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-secondary" />
+                    <CardTitle>Standards & Frameworks</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Manage your custom educational standards frameworks
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    View and edit the standards frameworks you've scraped from government sources. These form the backbone of curriculum planning.
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/standards-frameworks')}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Manage Frameworks
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
 
             <Card>

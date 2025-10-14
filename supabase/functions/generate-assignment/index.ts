@@ -18,6 +18,47 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Get comprehensive context for assignment generation
+    let parentProfile = null;
+    let studentGoals = null;
+    let studentInterests = null;
+    let customFramework = null;
+
+    if (studentProfile?.parent_id) {
+      // Get parent/teacher profile
+      const { data: parent } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', studentProfile.parent_id)
+        .single();
+      parentProfile = parent;
+    }
+
+    if (courseId) {
+      // Get custom framework if course uses one
+      const { data: course } = await supabase
+        .from('courses')
+        .select('standards_scope')
+        .eq('id', courseId)
+        .single();
+
+      if (course?.standards_scope?.[0]?.framework === 'CUSTOM') {
+        const frameworkId = course.standards_scope[0].framework_id;
+        const { data: framework } = await supabase
+          .from('custom_frameworks')
+          .select('*')
+          .eq('id', frameworkId)
+          .single();
+        customFramework = framework;
+      }
+    }
+
+    // Extract student goals and interests from profile
+    if (studentProfile) {
+      studentGoals = studentProfile.goals || {};
+      studentInterests = studentProfile.special_interests || [];
+    }
+
     // Get uncovered standards for this course
     let uncoveredStandards: Array<{ code: string; text: string }> = [];
     if (courseId && !isInitialAssessment) {
@@ -73,17 +114,39 @@ serve(async (req) => {
 
 STUDENT PROFILE:
 - Display Name: ${studentProfile.display_name || 'Student'}
+- Grade Level: ${studentProfile.grade_level || gradeLevel}
 - Personality Type: ${studentProfile.personality_type || 'Not assessed'}
 - Learning Profile: ${JSON.stringify(studentProfile.learning_profile || {})}
 - ADHD Accommodations: ${JSON.stringify(studentProfile.accommodations || {})}
-- Goals: ${JSON.stringify(studentProfile.goals || {})}
+- Student Goals: ${JSON.stringify(studentGoals || {})}
+- Student Interests: ${JSON.stringify(studentInterests || [])}
 
-Use this profile to personalize the assignment. Consider:
-- Their learning style and preferences
-- Their interests and hobbies (incorporate them into examples/scenarios)
-- Their strengths and weaknesses
+PARENT/TEACHER PROFILE:
+${parentProfile ? `
+- Teaching Style: ${parentProfile.teaching_style || 'Not specified'}
+- Learning Preferences: ${parentProfile.learning_preferences || 'Not specified'}
+- Educational Philosophy: ${parentProfile.educational_philosophy || 'Not specified'}
+
+CROSS-PROFILE ALIGNMENT:
+When both student and teacher share similar learning preferences (e.g., both prefer hands-on learning), 
+emphasize those approaches. When preferences differ, balance both styles to create a better experience 
+for teaching and learning.
+` : 'No parent profile available'}
+
+CUSTOM FRAMEWORK:
+${customFramework ? `
+This course uses a custom standards framework: "${customFramework.name}"
+Framework includes ${customFramework.standards?.length || 0} standards from ${customFramework.region}
+Legal requirements: ${JSON.stringify(customFramework.legal_requirements || {})}
+` : 'Using standard framework'}
+
+Use this comprehensive profile to personalize the assignment. Consider:
+- Student's learning style, personality, interests, and goals
+- Parent's teaching style and educational approach
+- How to align both learning and teaching preferences
 - Any ADHD accommodations needed
-- Their personality type and how they engage best
+- Prior knowledge from completed assessments
+- Progress toward framework standards
 ` : '';
 
     const assessmentContext = isInitialAssessment ? `
