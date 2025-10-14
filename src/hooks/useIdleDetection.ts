@@ -25,6 +25,7 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
   const idleTimerRef = useRef<NodeJS.Timeout>();
   const checkIntervalRef = useRef<NodeJS.Timeout>();
   const throttleTimerRef = useRef<{ [key: string]: number }>({});
+  const hasCalledActiveRef = useRef(false); // Track if we've called onActive for this idle session
 
   const resetIdleTimer = useCallback(() => {
     const now = Date.now();
@@ -35,8 +36,10 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
     setIsIdle(false);
     setIsWarning(false);
     
-    if (wasIdle || wasWarning) {
+    // Only call onActive once per idle session
+    if ((wasIdle || wasWarning) && !hasCalledActiveRef.current) {
       console.log('🎯 Activity detected - resetting idle state');
+      hasCalledActiveRef.current = true;
       onActive?.();
     }
     
@@ -94,6 +97,7 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
         setIsIdle(true);
         setIsWarning(false);
         setIdleDuration(timeSinceActivity);
+        hasCalledActiveRef.current = false; // Reset flag when going idle
         onIdle?.();
       }
     }, 1000); // Check every second for more responsive warning
