@@ -804,11 +804,12 @@ export default function AssignmentDetail() {
                     readingMaterials={content.reading_materials}
                     studentId={currentStudentId || undefined}
                     onLinkClick={(url: string, title: string) => {
-                      // Open directly and notify via BroadcastChannel
-                      const channel = new BroadcastChannel('learning-window');
+                      // Open directly in new tab
                       window.open(url, '_blank', 'noopener,noreferrer');
                       
-                      // Send learning activity signals
+                      // Send learning activity signals via BroadcastChannel
+                      const channel = new BroadcastChannel('learning-window');
+                      
                       channel.postMessage({
                         type: 'learning-window-opened',
                         sessionId: currentStudentId,
@@ -817,22 +818,8 @@ export default function AssignmentDetail() {
                         timestamp: Date.now()
                       });
                       
-                      // Keep sending heartbeats every 3 seconds while the page is visible
-                      const heartbeatInterval = setInterval(() => {
-                        if (document.visibilityState === 'visible') {
-                          channel.postMessage({
-                            type: 'learning-activity',
-                            sessionId: currentStudentId,
-                            url,
-                            title,
-                            timestamp: Date.now()
-                          });
-                        }
-                      }, 3000);
-                      
-                      // Clean up when this window closes or user navigates away
-                      const cleanup = () => {
-                        clearInterval(heartbeatInterval);
+                      // Auto-close the learning window after 5 minutes
+                      setTimeout(() => {
                         channel.postMessage({
                           type: 'learning-window-closed',
                           sessionId: currentStudentId,
@@ -841,14 +828,6 @@ export default function AssignmentDetail() {
                           timestamp: Date.now()
                         });
                         channel.close();
-                      };
-                      
-                      window.addEventListener('beforeunload', cleanup);
-                      
-                      // Also clean up after 5 minutes
-                      setTimeout(() => {
-                        cleanup();
-                        window.removeEventListener('beforeunload', cleanup);
                       }, 5 * 60 * 1000);
                     }}
                   />
