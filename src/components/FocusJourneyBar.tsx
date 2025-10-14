@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { FocusJourneyDuck } from './FocusJourneyDuck';
 import { Sparkles } from 'lucide-react';
 import { playSound, playRandomFallSound, playRandomClimbSound, playRandomAttentionSound } from '@/utils/soundEffects';
@@ -46,6 +46,8 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [gapStartTime, setGapStartTime] = useState<number | null>(null);
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [breakStartTime, setBreakStartTime] = useState<number | null>(null);
+  const lastBlurTime = useRef<number>(0);
+  const lastFocusTime = useRef<number>(Date.now());
 
   // Log duck state changes
   useEffect(() => {
@@ -166,6 +168,13 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       return;
     }
     
+    // Add minimum time check - must be focused for at least 2 seconds before blur counts
+    const timeSinceFocused = Date.now() - (lastFocusTime.current || 0);
+    if (timeSinceFocused < 2000) {
+      console.log('🦆 Ignoring window blur - too soon after focus:', timeSinceFocused, 'ms');
+      return;
+    }
+    
     console.log('🦆 Duck falling - user left tab! sessionId:', sessionId);
     if (sessionId) {
       // Complete current focus segment
@@ -188,6 +197,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       }
       
       setGapStartTime(currentSeconds);
+      lastBlurTime.current = Date.now();
       setDuckState('falling');
       playRandomFallSound(0.6);
       
@@ -207,19 +217,30 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     // Only process if we actually have a gap to recover from
     if (!sessionId || gapStartTime === null) {
       console.log('🦆 Ignoring window focus - no gap to recover from');
+      lastFocusTime.current = Date.now();
       return;
     }
     
-    // Minimum gap duration to avoid false positives (100ms)
+    // Minimum blur duration to avoid false positives (2 seconds)
+    const timeSinceBlur = Date.now() - (lastBlurTime.current || 0);
+    if (timeSinceBlur < 2000) {
+      console.log('🦆 Ignoring window focus - blur was too brief:', timeSinceBlur, 'ms');
+      setGapStartTime(null); // Reset gap state
+      lastFocusTime.current = Date.now();
+      return;
+    }
+    
+    // Minimum gap duration to avoid false positives (1 second)
     const currentSeconds = sessionData.activeSeconds;
     const gapDuration = currentSeconds - gapStartTime;
-    if (gapDuration < 0.1) {
-      console.log('🦆 Ignoring window focus - gap too short:', gapDuration);
+    if (gapDuration < 1) {
+      console.log('🦆 Ignoring window focus - gap too short:', gapDuration, 's');
       setGapStartTime(null); // Reset the gap start time
+      lastFocusTime.current = Date.now();
       return;
     }
     
-    console.log('🦆 Duck climbing - user returned! sessionId:', sessionId, 'gap duration:', gapDuration);
+    console.log('🦆 Duck climbing - user returned! sessionId:', sessionId, 'gap duration:', gapDuration, 's');
     
     const startPercent = (gapStartTime / goalSeconds) * 100;
     const widthPercent = (gapDuration / goalSeconds) * 100;
@@ -239,6 +260,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     setCurrentSegmentStart(currentSeconds);
     setSessionNumber(prev => prev + 1);
     setGapStartTime(null);
+    lastFocusTime.current = Date.now();
     setDuckState('climbing');
     playRandomClimbSound(0.5);
     
