@@ -404,10 +404,22 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     return () => clearInterval(interval);
   }, [sessionId, isVisible, updateAwayTime]);
 
-  // Calculate progress based on active time
+  // Calculate duck's visual progress on the bar
+  // The duck's position is the sum of all completed segments + current segment
   useEffect(() => {
-    const newProgress = Math.min((sessionData.activeSeconds / goalSeconds) * 100, 100);
-    console.log(`📊 Progress update: ${sessionData.activeSeconds}s / ${goalSeconds}s = ${newProgress.toFixed(2)}%`);
+    // Sum up all completed focus segments
+    const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
+    
+    // Add current segment progress (from currentSegmentStart to now)
+    const currentSegmentProgress = gapStartTime === null && !isOnBreak 
+      ? (sessionData.activeSeconds - currentSegmentStart)
+      : 0;
+    
+    // Total visual progress on the bar
+    const totalBarProgress = completedFocusTime + currentSegmentProgress;
+    const newProgress = Math.min((totalBarProgress / goalSeconds) * 100, 100);
+    
+    console.log(`📊 Duck position: completed=${completedFocusTime}s + current=${currentSegmentProgress}s = ${totalBarProgress}s (${newProgress.toFixed(2)}%)`);
     setProgress(newProgress);
 
     // Check for milestone achievements
@@ -423,7 +435,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         }
       }
     });
-  }, [sessionData.activeSeconds, goalSeconds, milestonesReached]);
+  }, [focusSegments, sessionData.activeSeconds, currentSegmentStart, gapStartTime, isOnBreak, goalSeconds, milestonesReached]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
