@@ -428,8 +428,8 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
         .duck-container.fallen {
           position: fixed !important;
           bottom: 20px !important;
-          left: 50% !important;
-          transform: translateX(-50%) scaleY(0.4) scaleX(1.3) !important;
+          left: 15% !important;
+          transform: scaleY(0.4) scaleX(1.3) !important;
           opacity: 0.7;
           z-index: 9999 !important;
           margin: 0 !important;
@@ -440,12 +440,12 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
           animation: none;
         }
 
-        /* Ghostly Jumping - Stays at bottom center where it fell */
+        /* Ghostly Jumping - Stays at bottom left where it fell */
         .duck-container.ghostly-jumping {
           position: fixed !important;
           bottom: 20px !important;
-          left: 50% !important;
-          transform: translateX(-50%) !important;
+          left: 15% !important;
+          transform: none !important;
           opacity: 1;
           z-index: 9999 !important;
           pointer-events: auto !important;
