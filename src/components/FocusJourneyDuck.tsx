@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 type AnimationState = 'walking' | 'falling' | 'climbing' | 'celebrating' | 'idle' | 'jumping';
 
@@ -7,12 +7,32 @@ interface FocusJourneyDuckProps {
   onAnimationComplete?: () => void;
 }
 
+const ATTENTION_MESSAGES = [
+  "I feel so alone!",
+  "where did you go??",
+  "help! I've been abandoned!",
+  "come baaaaaaaack!!!!!",
+  "aaaa!!?!?!?!?!",
+  "GET BACK TO WORK OR I WILL SURELY PERISH"
+];
+
 export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJourneyDuckProps) {
   const [currentState, setCurrentState] = useState<AnimationState>(animationState);
+  const [messageIndex, setMessageIndex] = useState(0);
+  
+  // Rotate message when jumping starts
+  const currentMessage = useMemo(() => {
+    return ATTENTION_MESSAGES[messageIndex % ATTENTION_MESSAGES.length];
+  }, [messageIndex]);
 
   useEffect(() => {
     console.log('🦆 Duck received animation state:', animationState);
     setCurrentState(animationState);
+
+    // Rotate message when jumping
+    if (animationState === 'jumping') {
+      setMessageIndex(prev => prev + 1);
+    }
 
     // Trigger animation complete callbacks without playing sounds (sounds are handled in parent)
     switch (animationState) {
@@ -33,11 +53,57 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
 
   return (
     <div className={`duck-container ${currentState}`}>
+      {/* Speech bubble for jumping/attention state */}
+      {currentState === 'jumping' && (
+        <div className="speech-bubble">
+          {currentMessage}
+        </div>
+      )}
       <style>{`
         .duck-container {
           position: relative;
           width: 30px;
           height: 30px;
+        }
+
+        .speech-bubble {
+          position: absolute;
+          bottom: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: white;
+          color: #333;
+          padding: 8px 12px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 600;
+          white-space: nowrap;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          margin-bottom: 8px;
+          animation: bubble-bounce 0.5s ease-in-out infinite alternate;
+          z-index: 1000;
+        }
+
+        .speech-bubble::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 0;
+          height: 0;
+          border-left: 6px solid transparent;
+          border-right: 6px solid transparent;
+          border-top: 6px solid white;
+        }
+
+        @keyframes bubble-bounce {
+          from {
+            transform: translateX(-50%) translateY(0);
+          }
+          to {
+            transform: translateX(-50%) translateY(-4px);
+          }
         }
 
         .duck {
