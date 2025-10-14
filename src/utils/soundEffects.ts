@@ -68,6 +68,15 @@ const clickSounds = [
   '/sounds/duck-click-19.mp3',
 ];
 
+// Array of return sounds for when duck climbs back after being away
+const returnSounds = [
+  '/sounds/duck-return-1.mp3',
+  '/sounds/duck-return-2.mp3',
+  '/sounds/duck-return-3.mp3',
+  '/sounds/duck-return-4.mp3',
+  '/sounds/duck-return-5.mp3',
+];
+
 type SoundName = keyof typeof sounds;
 
 // Preload sounds for better performance
@@ -171,5 +180,21 @@ export const playRandomClickSound = (volume = 0.5) => {
     });
   } catch (error) {
     console.debug('Random click sound playback failed');
+  }
+};
+
+// Play a random return sound when duck climbs back after being away
+export const playRandomReturnSound = (volume = 0.5) => {
+  try {
+    const randomIndex = Math.floor(Math.random() * returnSounds.length);
+    const soundPath = returnSounds[randomIndex];
+    
+    const audio = new Audio(soundPath);
+    audio.volume = volume;
+    audio.play().catch(() => {
+      // Silently fail if autoplay is blocked
+    });
+  } catch (error) {
+    console.debug('Random return sound playback failed');
   }
 };
