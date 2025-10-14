@@ -123,7 +123,7 @@ export const TriviaQuizDialog = ({ studentId, specialInterests }: TriviaQuizDial
             Trivia Quiz
           </DialogTitle>
           <DialogDescription>
-            Test your knowledge on topics you love!
+            Test your knowledge on topics you love! Choose Insane mode for the ultimate challenge with the most obscure facts and hidden lore.
           </DialogDescription>
         </DialogHeader>
 
@@ -154,6 +154,7 @@ export const TriviaQuizDialog = ({ studentId, specialInterests }: TriviaQuizDial
                   <SelectItem value="easy">🟢 Easy</SelectItem>
                   <SelectItem value="medium">🟡 Medium</SelectItem>
                   <SelectItem value="hard">🔴 Hard</SelectItem>
+                  <SelectItem value="insane">💀 Insane</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -263,7 +264,7 @@ export const TriviaQuizDialog = ({ studentId, specialInterests }: TriviaQuizDial
                 Question {currentQuestion + 1} of {quiz.length}
               </span>
               <Badge variant="outline">
-                {difficulty === "easy" ? "🟢" : difficulty === "medium" ? "🟡" : "🔴"} {difficulty}
+                {difficulty === "easy" ? "🟢" : difficulty === "medium" ? "🟡" : difficulty === "hard" ? "🔴" : "💀"} {difficulty}
               </Badge>
             </div>
 

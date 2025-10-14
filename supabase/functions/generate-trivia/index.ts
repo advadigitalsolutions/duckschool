@@ -22,7 +22,8 @@ serve(async (req) => {
     const difficultyDescriptions = {
       easy: 'simple questions suitable for beginners, with straightforward answers',
       medium: 'moderately challenging questions that require some knowledge',
-      hard: 'difficult questions that require deep knowledge and critical thinking'
+      hard: 'difficult questions that require deep knowledge and critical thinking',
+      insane: 'EXTREMELY difficult questions about the most obscure lore, hidden details, and expert-level knowledge. Only true superfans would know these answers. Focus on the most esoteric facts, rare trivia, and deep cuts that even enthusiasts often miss'
     };
 
     const systemPrompt = `You are a fun and engaging trivia quiz master. Generate interesting, educational, and age-appropriate trivia questions about the given topic.
