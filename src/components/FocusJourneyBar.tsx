@@ -48,6 +48,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [breakStartTime, setBreakStartTime] = useState<number | null>(null);
   const [hoveredSegmentIndex, setHoveredSegmentIndex] = useState<number | null>(null);
   const [celebrationProgress, setCelebrationProgress] = useState<number | null>(null);
+  const [celebrationStartSeconds, setCelebrationStartSeconds] = useState<number | null>(null);
   const lastBlurTime = useRef<number>(0);
   const lastFocusTime = useRef<number>(Date.now());
 
@@ -265,15 +266,16 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         return;
       }
 
-      // Store current progress before starting climb animation
+      // Store current progress AND activeSeconds before starting climb animation
       // Note: The current segment was already completed and added to focusSegments when duck fell
       // So we only need to use completedFocusTime, not add current segment progress
+      const currentSeconds = sessionData.activeSeconds;
       const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
       const currentProgress = Math.min((completedFocusTime / goalSeconds) * 100, 100);
-      console.log(`🎯 Storing celebration progress: ${completedFocusTime}s = ${currentProgress.toFixed(2)}%`);
+      console.log(`🎯 Storing celebration progress: ${completedFocusTime}s = ${currentProgress.toFixed(2)}% at activeSeconds=${currentSeconds}`);
       setCelebrationProgress(currentProgress);
+      setCelebrationStartSeconds(currentSeconds);
 
-      const currentSeconds = sessionData.activeSeconds;
       const gapDuration = currentSeconds - gapStartTime;
       const startPercent = (gapStartTime / goalSeconds) * 100;
       const widthPercent = (gapDuration / goalSeconds) * 100;
@@ -517,9 +519,13 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     } else if (duckState === 'celebrating') {
       setDuckState('walking');
     } else if (duckState === 'celebrating-return') {
-      // After celebrating return, now start the new segment and resume walking
-      setCurrentSegmentStart(sessionData.activeSeconds);
+      // After celebrating return, use the stored activeSeconds from when celebration started
+      // This prevents the duck from jumping back due to time passing during animation
+      const startSeconds = celebrationStartSeconds ?? sessionData.activeSeconds;
+      console.log(`🎬 Celebration complete! Setting currentSegmentStart to ${startSeconds}s (current activeSeconds: ${sessionData.activeSeconds}s)`);
+      setCurrentSegmentStart(startSeconds);
       setCelebrationProgress(null);
+      setCelebrationStartSeconds(null);
       setDuckState('walking');
     }
   };
@@ -544,15 +550,17 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         return;
       }
 
-      // Store current progress before starting climb animation
+      const currentSeconds = sessionData.activeSeconds;
+      
+      // Store current progress AND activeSeconds before starting climb animation
       // Note: The current segment was already completed and added to focusSegments when duck fell
       // So we only need to use completedFocusTime, not add current segment progress
       const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
       const currentProgress = Math.min((completedFocusTime / goalSeconds) * 100, 100);
-      console.log(`🎯 Storing celebration progress (click): ${completedFocusTime}s = ${currentProgress.toFixed(2)}%`);
+      console.log(`🎯 Storing celebration progress (click): ${completedFocusTime}s = ${currentProgress.toFixed(2)}% at activeSeconds=${currentSeconds}`);
       setCelebrationProgress(currentProgress);
+      setCelebrationStartSeconds(currentSeconds);
 
-      const currentSeconds = sessionData.activeSeconds;
       const gapDuration = currentSeconds - gapStartTime;
       const startPercent = (gapStartTime / goalSeconds) * 100;
       const widthPercent = (gapDuration / goalSeconds) * 100;
