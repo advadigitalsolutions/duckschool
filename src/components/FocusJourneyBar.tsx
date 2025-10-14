@@ -281,6 +281,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       }]);
       
       // Start new focus segment
+      console.log(`🔄 Resurrection: Setting currentSegmentStart to ${currentSeconds}s (was ${currentSegmentStart}s)`);
       setCurrentSegmentStart(currentSeconds);
       setSessionNumber(prev => prev + 1);
       setGapStartTime(null);
@@ -406,6 +407,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   // Calculate progress based on active time
   useEffect(() => {
     const newProgress = Math.min((sessionData.activeSeconds / goalSeconds) * 100, 100);
+    console.log(`📊 Progress update: ${sessionData.activeSeconds}s / ${goalSeconds}s = ${newProgress.toFixed(2)}%`);
     setProgress(newProgress);
 
     // Check for milestone achievements
@@ -532,6 +534,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       }]);
       
       // Start new focus segment
+      console.log(`🔄 Click Resurrection: Setting currentSegmentStart to ${currentSeconds}s (was ${currentSegmentStart}s)`);
       setCurrentSegmentStart(currentSeconds);
       setSessionNumber(prev => prev + 1);
       setGapStartTime(null);
