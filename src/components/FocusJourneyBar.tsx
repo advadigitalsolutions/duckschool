@@ -238,7 +238,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       aria-label={`Focus journey progress: ${Math.round(progress)}%`}
     >
       <div className="max-w-7xl mx-auto">
-        <div className="relative h-10 bg-muted/30 rounded-full overflow-hidden border border-border/50">
+        <div className="relative h-10 bg-muted/30 rounded-full border border-border/50" style={{ overflow: 'visible' }}>
           {/* Progress fill */}
           <div 
             className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getProgressColor()} transition-all duration-500 ease-out`}
@@ -274,12 +274,13 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
             ))}
           </div>
 
-          {/* Duck character */}
+          {/* Duck character - positioned to break out of container */}
           <div 
-            className="absolute top-0 bottom-0 flex items-center transition-all duration-500 ease-out"
+            className="absolute top-0 bottom-0 flex items-center transition-all duration-500 ease-out pointer-events-none"
             style={{ 
               left: `calc(${progress}% - 15px)`,
-              transform: 'translateY(-5px)'
+              transform: 'translateY(-5px)',
+              zIndex: duckState === 'falling' || duckState === 'climbing' ? 9999 : 10
             }}
           >
             <FocusJourneyDuck 
