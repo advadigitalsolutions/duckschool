@@ -57,3 +57,9 @@ verify_jwt = false
 [functions.seed-ca-ccss-standards]
 verify_jwt = false
 
+[functions.standards-planning-chat]
+verify_jwt = false
+
+[functions.research-standards]
+verify_jwt = false
+

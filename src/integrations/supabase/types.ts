@@ -698,6 +698,57 @@ export type Database = {
           },
         ]
       }
+      custom_frameworks: {
+        Row: {
+          approved_at: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          grade_levels: string[]
+          id: string
+          is_approved: boolean | null
+          legal_requirements: Json | null
+          metadata: Json | null
+          name: string
+          region: string
+          standards: Json
+          subjects: string[]
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          grade_levels: string[]
+          id?: string
+          is_approved?: boolean | null
+          legal_requirements?: Json | null
+          metadata?: Json | null
+          name: string
+          region: string
+          standards?: Json
+          subjects: string[]
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          grade_levels?: string[]
+          id?: string
+          is_approved?: boolean | null
+          legal_requirements?: Json | null
+          metadata?: Json | null
+          name?: string
+          region?: string
+          standards?: Json
+          subjects?: string[]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       daily_goals: {
         Row: {
           completed: boolean
@@ -1221,6 +1272,59 @@ export type Database = {
           text?: string
         }
         Relationships: []
+      }
+      standards_planning_sessions: {
+        Row: {
+          compiled_standards: Json | null
+          conversation_history: Json | null
+          created_at: string | null
+          id: string
+          legal_requirements: Json | null
+          parent_id: string
+          parent_notes: string | null
+          requirements: Json | null
+          research_results: Json | null
+          status: string
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          compiled_standards?: Json | null
+          conversation_history?: Json | null
+          created_at?: string | null
+          id?: string
+          legal_requirements?: Json | null
+          parent_id: string
+          parent_notes?: string | null
+          requirements?: Json | null
+          research_results?: Json | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          compiled_standards?: Json | null
+          conversation_history?: Json | null
+          created_at?: string | null
+          id?: string
+          legal_requirements?: Json | null
+          parent_id?: string
+          parent_notes?: string | null
+          requirements?: Json | null
+          research_results?: Json | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standards_planning_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {

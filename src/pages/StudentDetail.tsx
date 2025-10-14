@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AddCourseDialog } from '@/components/AddCourseDialog';
 import { AddAssignmentDialog } from '@/components/AddAssignmentDialog';
+import { StandardsPlanningDialog } from '@/components/StandardsPlanningDialog';
 import { AssignmentAnalytics } from '@/components/AssignmentAnalytics';
 import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
 import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
@@ -328,6 +329,10 @@ export default function StudentDetail() {
                     >
                       {showArchived ? 'Hide Archived' : 'Show Archived'}
                     </Button>
+                    <StandardsPlanningDialog 
+                      studentId={student.id} 
+                      onFrameworkCreated={fetchStudentData} 
+                    />
                     <AddCourseDialog studentId={student.id} onCourseAdded={fetchStudentData} />
                   </div>
                 </div>
@@ -337,7 +342,13 @@ export default function StudentDetail() {
                   <div className="text-center py-12">
                     <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground mb-4">No courses yet</p>
-                    <AddCourseDialog studentId={student.id} onCourseAdded={fetchStudentData} />
+                    <div className="flex gap-2 justify-center">
+                      <StandardsPlanningDialog 
+                        studentId={student.id} 
+                        onFrameworkCreated={fetchStudentData} 
+                      />
+                      <AddCourseDialog studentId={student.id} onCourseAdded={fetchStudentData} />
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
