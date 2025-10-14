@@ -445,7 +445,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   return (
     <div 
-      className="w-full bg-card border-b border-border sticky top-0 z-40 py-2 px-4"
+      className="w-full bg-card border-b border-border sticky top-0 z-40 pt-12 pb-2 px-4"
       role="progressbar"
       aria-valuenow={Math.round(progress)}
       aria-valuemin={0}
@@ -544,7 +544,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
             className="absolute top-0 bottom-0 flex items-center transition-all duration-500 ease-out pointer-events-none"
             style={{ 
               left: `calc(${progress}% - 15px)`,
-              transform: 'translateY(-5px)',
+              transform: 'translateY(-8px)',
               zIndex: duckState === 'falling' || duckState === 'climbing' ? 9999 : 10
             }}
           >
