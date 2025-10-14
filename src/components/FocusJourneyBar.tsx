@@ -72,27 +72,37 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   const { isVisible } = useWindowVisibility({
     onHidden: async () => {
+      console.log('🦆 Duck falling - user left tab! sessionId:', sessionId);
       if (sessionId) {
+        setDuckState('falling');
+        playSound('fall', 0.6);
+        
         await supabase.from('activity_events').insert({
           student_id: studentId,
           session_id: sessionId,
           event_type: 'window_blur',
-          page_context: pageContext
+          page_context: pageContext,
+          metadata: { timestamp: new Date().toISOString() }
         });
-        setDuckState('falling');
-        playSound('fall', 0.6); // Duck falls when user leaves
+      } else {
+        console.warn('⚠️ No session ID when trying to log window_blur');
       }
     },
     onVisible: async () => {
+      console.log('🦆 Duck climbing - user returned! sessionId:', sessionId);
       if (sessionId) {
+        setDuckState('climbing');
+        playSound('climb', 0.5);
+        
         await supabase.from('activity_events').insert({
           student_id: studentId,
           session_id: sessionId,
           event_type: 'window_focus',
-          page_context: pageContext
+          page_context: pageContext,
+          metadata: { timestamp: new Date().toISOString() }
         });
-        setDuckState('climbing');
-        playSound('climb', 0.5); // Duck climbs back up when user returns
+      } else {
+        console.warn('⚠️ No session ID when trying to log window_focus');
       }
     }
   });

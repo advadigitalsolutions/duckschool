@@ -14,14 +14,17 @@ export const useWindowVisibility = (options: WindowVisibilityOptions = {}) => {
 
   const handleVisibilityChange = useCallback(() => {
     const hidden = document.hidden;
+    console.log('👁️ Window visibility changed:', { hidden, wasVisible: isVisible });
     setIsVisible(!hidden);
     
     if (hidden) {
       // Window became hidden
+      console.log('🚪 User navigated away from tab/window');
       setAwayStartTime(Date.now());
       onHidden?.();
     } else {
       // Window became visible
+      console.log('👋 User returned to tab/window');
       if (awayStartTime) {
         const awayDuration = Math.floor((Date.now() - awayStartTime) / 1000);
         setTotalAwaySeconds(prev => prev + awayDuration);
@@ -29,7 +32,7 @@ export const useWindowVisibility = (options: WindowVisibilityOptions = {}) => {
       }
       onVisible?.();
     }
-  }, [awayStartTime, onHidden, onVisible]);
+  }, [awayStartTime, isVisible, onHidden, onVisible]);
 
   useEffect(() => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
