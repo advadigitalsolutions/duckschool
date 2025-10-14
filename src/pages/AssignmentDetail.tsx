@@ -17,6 +17,7 @@ import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
 import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
 import { cleanMarkdown } from '@/utils/textFormatting';
 import { BionicText } from '@/components/BionicText';
+import { MathText } from '@/components/MathText';
 import { StudyGuidePanel } from '@/components/StudyGuidePanel';
 import { TextToSpeech } from '@/components/TextToSpeech';
 import { AssignmentNotes } from '@/components/AssignmentNotes';
@@ -581,7 +582,7 @@ export default function AssignmentDetail() {
                             <div key={response.id} className="border rounded-lg p-4">
                               <div className="flex items-start justify-between mb-2">
                                 <h4 className="font-medium flex-1">
-                                  Question {idx + 1}: <BionicText>{question.question}</BionicText>
+                                  Question {idx + 1}: <MathText><BionicText>{question.question}</BionicText></MathText>
                                 </h4>
                                 <Badge variant={response.is_correct ? 'default' : 'destructive'}>
                                   {response.is_correct ? 'Correct' : 'Incorrect'}

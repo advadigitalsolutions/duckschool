@@ -13,6 +13,7 @@ import { cleanMarkdown } from '@/utils/textFormatting';
 import { useXPConfig } from '@/hooks/useXP';
 import { BionicText } from './BionicText';
 import { TextToSpeech } from './TextToSpeech';
+import { MathText } from './MathText';
 
 interface Question {
   id: string;
@@ -654,7 +655,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
               </CardHeader>
               <CardContent className="space-y-4">
                 <TextToSpeech text={question.question}>
-                  <p className="text-lg"><BionicText>{question.question}</BionicText></p>
+                  <p className="text-lg"><MathText><BionicText>{question.question}</BionicText></MathText></p>
                 </TextToSpeech>
 
                 {/* Display Answer Based on Type */}
@@ -730,7 +731,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
           </CardHeader>
           <CardContent className="space-y-4">
             <TextToSpeech text={cleanMarkdown(currentQuestion.question)}>
-              <p className="text-lg"><BionicText>{cleanMarkdown(currentQuestion.question)}</BionicText></p>
+              <p className="text-lg"><MathText><BionicText>{cleanMarkdown(currentQuestion.question)}</BionicText></MathText></p>
             </TextToSpeech>
 
             {/* Multiple Choice */}
@@ -742,7 +743,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
                 {currentQuestion.options?.map((option, i) => (
                   <div key={i} className="flex items-center space-x-2">
                     <RadioGroupItem value={option} id={`${currentQuestion.id}-${i}`} />
-                    <Label htmlFor={`${currentQuestion.id}-${i}`}><BionicText>{cleanMarkdown(option)}</BionicText></Label>
+                    <Label htmlFor={`${currentQuestion.id}-${i}`}><MathText><BionicText>{cleanMarkdown(option)}</BionicText></MathText></Label>
                   </div>
                 ))}
               </RadioGroup>

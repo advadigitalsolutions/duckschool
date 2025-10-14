@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2 } from 'lucide-react';
 import { BionicText } from './BionicText';
+import { MathText } from './MathText';
 import { cleanMarkdown } from '@/utils/textFormatting';
 
 interface Question {
@@ -47,7 +48,7 @@ export function TeacherQuestionView({ questions }: TeacherQuestionViewProps) {
                 <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center flex-shrink-0 text-sm">
                   {index + 1}
                 </span>
-                <BionicText>{cleanMarkdown(question.question)}</BionicText>
+                <MathText><BionicText>{cleanMarkdown(question.question)}</BionicText></MathText>
               </CardTitle>
               <Badge variant="outline">{question.points} pts</Badge>
             </div>
@@ -72,7 +73,7 @@ export function TeacherQuestionView({ questions }: TeacherQuestionViewProps) {
                         {isCorrect && <CheckCircle2 className="h-4 w-4 text-success-foreground" />}
                       </div>
                       <span className={isCorrect ? 'font-medium' : ''}>
-                        <BionicText>{option}</BionicText>
+                        <MathText><BionicText>{option}</BionicText></MathText>
                       </span>
                     </div>
                   );
