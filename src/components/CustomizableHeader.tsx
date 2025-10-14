@@ -263,19 +263,35 @@ export function CustomizableHeader({
 
   // Calculate scroll duration for fun fact based on text overflow
   useEffect(() => {
-    if (!factTextRef.current || !factContainerRef.current) return;
+    const calculateScrollDuration = () => {
+      if (!factTextRef.current || !factContainerRef.current) return;
+      
+      const textWidth = factTextRef.current.scrollWidth;
+      const containerWidth = factContainerRef.current.clientWidth;
+      
+      if (textWidth > containerWidth) {
+        // Calculate duration based on overflow (roughly 50px per second)
+        const overflowDistance = textWidth - containerWidth;
+        const duration = (overflowDistance / 50) + 1; // Add 1 second for pause at end
+        setScrollDuration(duration);
+      } else {
+        setScrollDuration(0);
+      }
+    };
+
+    // Calculate immediately
+    calculateScrollDuration();
+
+    // Recalculate on window resize
+    window.addEventListener('resize', calculateScrollDuration);
     
-    const textWidth = factTextRef.current.scrollWidth;
-    const containerWidth = factContainerRef.current.clientWidth;
-    
-    if (textWidth > containerWidth) {
-      // Calculate duration based on overflow (roughly 50px per second)
-      const overflowDistance = textWidth - containerWidth;
-      const duration = (overflowDistance / 50) + 1; // Add 1 second for pause at end
-      setScrollDuration(duration);
-    } else {
-      setScrollDuration(0);
-    }
+    // Use a small timeout to ensure refs are ready
+    const timeout = setTimeout(calculateScrollDuration, 100);
+
+    return () => {
+      window.removeEventListener('resize', calculateScrollDuration);
+      clearTimeout(timeout);
+    };
   }, [rotatingText]);
 
   const getGreeting = () => {
