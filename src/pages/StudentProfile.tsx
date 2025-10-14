@@ -12,6 +12,7 @@ import { AccessibilityControls } from '@/components/AccessibilityControls';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { TriviaQuizDialog } from '@/components/TriviaQuizDialog';
 import { ProfileAssessment } from '@/components/ProfileAssessment';
 import { Switch } from '@/components/ui/switch';
 import { useBionicReading } from '@/contexts/BionicReadingContext';
@@ -639,9 +640,17 @@ export default function StudentProfile() {
                   </p>
                 )}
 
-                <Button onClick={handleSaveProfile} className="w-full">
-                  Save Interests
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={handleSaveProfile} className="flex-1">
+                    Save Interests
+                  </Button>
+                  {student && (
+                    <TriviaQuizDialog 
+                      studentId={student.id} 
+                      specialInterests={specialInterests}
+                    />
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

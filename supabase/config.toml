@@ -63,3 +63,6 @@ verify_jwt = false
 [functions.research-standards]
 verify_jwt = false
 
+[functions.generate-trivia]
+verify_jwt = false
+
