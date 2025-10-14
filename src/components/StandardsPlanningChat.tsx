@@ -6,6 +6,28 @@ import { Send, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+// Format markdown to HTML for clean display
+const formatMessage = (text: string): string => {
+  return text
+    // Bold text: **text** or __text__
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.+?)__/g, '<strong>$1</strong>')
+    // Italic text: *text* or _text_
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/_(.+?)_/g, '<em>$1</em>')
+    // Line breaks
+    .replace(/\n/g, '<br>')
+    // Escape any remaining HTML
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Re-enable our formatted tags
+    .replace(/&lt;strong&gt;/g, '<strong>')
+    .replace(/&lt;\/strong&gt;/g, '</strong>')
+    .replace(/&lt;em&gt;/g, '<em>')
+    .replace(/&lt;\/em&gt;/g, '</em>')
+    .replace(/&lt;br&gt;/g, '<br>');
+};
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -106,7 +128,12 @@ export const StandardsPlanningChat = ({ sessionId, phase, onComplete }: Standard
                 {msg.role === 'assistant' && (
                   <Sparkles className="h-4 w-4 inline mr-2" />
                 )}
-                <span className="text-sm">{msg.content}</span>
+                <span 
+                  className="text-sm whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{ 
+                    __html: formatMessage(msg.content)
+                  }}
+                />
               </div>
             </div>
           ))}
