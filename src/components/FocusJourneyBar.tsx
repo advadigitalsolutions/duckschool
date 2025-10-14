@@ -51,6 +51,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           metadata: { duration_seconds: 0 }
         });
         setDuckState('falling');
+        playSound('fall', 0.6); // Duck falling sound
       }
     },
     onActive: async () => {
@@ -64,6 +65,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           assignment_id: assignmentId
         });
         setDuckState('climbing');
+        playSound('climb', 0.5); // Duck climbing sound
       }
     }
   });
@@ -77,6 +79,8 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           event_type: 'window_blur',
           page_context: pageContext
         });
+        setDuckState('falling');
+        playSound('fall', 0.6); // Duck falls when user leaves
       }
     },
     onVisible: async () => {
@@ -87,6 +91,8 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           event_type: 'window_focus',
           page_context: pageContext
         });
+        setDuckState('climbing');
+        playSound('climb', 0.5); // Duck climbs back up when user returns
       }
     }
   });
@@ -145,6 +151,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         
         if (milestone === 100) {
           setDuckState('celebrating');
+          playSound('complete', 0.7); // Celebration sound!
         }
       }
     });
