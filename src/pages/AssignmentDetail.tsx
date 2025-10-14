@@ -845,11 +845,11 @@ export default function AssignmentDetail() {
                       
                       window.addEventListener('beforeunload', cleanup);
                       
-                      // Also clean up after 30 minutes
+                      // Also clean up after 5 minutes
                       setTimeout(() => {
                         cleanup();
                         window.removeEventListener('beforeunload', cleanup);
-                      }, 30 * 60 * 1000);
+                      }, 5 * 60 * 1000);
                     }}
                   />
                 )}
