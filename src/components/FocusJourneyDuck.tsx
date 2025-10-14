@@ -223,7 +223,6 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
         @keyframes fall {
           0% {
             transform: translateY(0) translateX(0) rotate(0deg) scale(1);
-            opacity: 1;
           }
           15% {
             transform: translateY(100px) translateX(-30px) rotate(-120deg) scale(1.15);
@@ -242,7 +241,6 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete }: FocusJ
           }
           100% {
             transform: translateY(calc(100vh + 100px)) translateX(-30px) rotate(-720deg) scale(0.7);
-            opacity: 0.2;
           }
         }
 
