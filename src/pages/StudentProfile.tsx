@@ -318,7 +318,7 @@ export default function StudentProfile() {
 
                 <div>
                   <Label className="mb-3 block">Or choose a fun avatar:</Label>
-                  <div className="grid grid-cols-5 gap-3">
+                  <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
                     {defaultAvatars.map((avatar, index) => (
                       <button
                         key={index}
