@@ -17,6 +17,20 @@ const fallSounds = [
   '/sounds/duck-fall-7.mp3',
 ];
 
+// Array of climb sounds to randomly cycle through
+const climbSounds = [
+  '/sounds/duck-climb-1.mp3',
+  '/sounds/duck-climb-2.mp3',
+  '/sounds/duck-climb-3.mp3',
+  '/sounds/duck-climb-4.mp3',
+  '/sounds/duck-climb-5.mp3',
+  '/sounds/duck-climb-6.mp3',
+  '/sounds/duck-climb-7.mp3',
+  '/sounds/duck-climb-8.mp3',
+  '/sounds/duck-climb-9.mp3',
+  '/sounds/duck-climb-10.mp3',
+];
+
 type SoundName = keyof typeof sounds;
 
 // Preload sounds for better performance
@@ -72,5 +86,21 @@ export const playRandomFallSound = (volume = 0.5) => {
     });
   } catch (error) {
     console.debug('Random fall sound playback failed');
+  }
+};
+
+// Play a random climb sound to keep it unpredictable
+export const playRandomClimbSound = (volume = 0.5) => {
+  try {
+    const randomIndex = Math.floor(Math.random() * climbSounds.length);
+    const soundPath = climbSounds[randomIndex];
+    
+    const audio = new Audio(soundPath);
+    audio.volume = volume;
+    audio.play().catch(() => {
+      // Silently fail if autoplay is blocked
+    });
+  } catch (error) {
+    console.debug('Random climb sound playback failed');
   }
 };

@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FocusJourneyDuck } from './FocusJourneyDuck';
 import { Sparkles } from 'lucide-react';
-import { playSound, playRandomFallSound } from '@/utils/soundEffects';
+import { playSound, playRandomFallSound, playRandomClimbSound } from '@/utils/soundEffects';
 import { useActivitySession } from '@/hooks/useActivitySession';
 import { useIdleDetection } from '@/hooks/useIdleDetection';
 import { useWindowVisibility } from '@/hooks/useWindowVisibility';
@@ -120,7 +120,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setSessionNumber(prev => prev + 1);
       setGapStartTime(null);
       setDuckState('climbing');
-      playSound('climb', 0.5);
+      playRandomClimbSound(0.5);
       
       await supabase.from('activity_events').insert({
         student_id: studentId,
@@ -201,7 +201,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setSessionNumber(prev => prev + 1);
       setGapStartTime(null);
       setDuckState('climbing');
-      playSound('climb', 0.5);
+      playRandomClimbSound(0.5);
       
       await supabase.from('activity_events').insert({
         student_id: studentId,
