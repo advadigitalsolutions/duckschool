@@ -84,12 +84,12 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     }
   }, [editor]);
 
-  // Sync content prop with editor
+  // Sync content prop with editor only on initial load
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+    if (editor && content && !editor.getText()) {
+      editor.commands.setContent(content, { emitUpdate: false });
     }
-  }, [editor, content]);
+  }, [editor]);
 
   // Add paste listener
   useEffect(() => {
