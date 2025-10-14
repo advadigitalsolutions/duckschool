@@ -46,6 +46,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [gapStartTime, setGapStartTime] = useState<number | null>(null);
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [breakStartTime, setBreakStartTime] = useState<number | null>(null);
+  const [hoveredSegmentIndex, setHoveredSegmentIndex] = useState<number | null>(null);
   const lastBlurTime = useRef<number>(0);
   const lastFocusTime = useRef<number>(Date.now());
 
@@ -415,19 +416,33 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       <div className="max-w-7xl mx-auto">
         <div className="relative h-10 bg-muted/30 rounded-full border border-border/50" style={{ overflow: 'visible' }}>
           {/* Completed focus segments */}
-          {focusSegments.map((segment, index) => (
-            <div
-              key={`focus-${index}`}
-              className="absolute inset-y-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-[10px] font-semibold text-white shadow-md mx-1"
-              style={{ 
-                left: `${segment.startPercent}%`, 
-                width: `${segment.widthPercent}%`,
-                minWidth: '40px'
-              }}
-            >
-              {formatDuration(segment.duration)}
-            </div>
-          ))}
+          {focusSegments.map((segment, index) => {
+            const isHovered = hoveredSegmentIndex === index;
+            return (
+              <div
+                key={`focus-${index}`}
+                className="absolute inset-y-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-[10px] font-semibold text-white shadow-md mx-1 transition-all duration-200 cursor-pointer"
+                style={{ 
+                  left: `${segment.startPercent}%`, 
+                  width: `${segment.widthPercent}%`,
+                  minWidth: '40px',
+                  zIndex: isHovered ? 50 : 10,
+                  transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                  boxShadow: isHovered 
+                    ? '0 0 0 2px rgba(59, 130, 246, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3)'
+                    : undefined
+                }}
+                onMouseEnter={() => setHoveredSegmentIndex(index)}
+                onMouseLeave={() => setHoveredSegmentIndex(null)}
+              >
+                {isHovered && (
+                  <span className="whitespace-nowrap">
+                    {formatDuration(segment.duration)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
 
           {/* Gap segments */}
           {gapSegments.map((segment, index) => {
