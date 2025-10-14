@@ -23,7 +23,7 @@ import { TextToSpeech } from '@/components/TextToSpeech';
 import { AssignmentNotes } from '@/components/AssignmentNotes';
 import { StudentLayout } from '@/components/StudentLayout';
 import { RegradeButton } from '@/components/RegradeButton';
-import { ResourceIframeViewer } from '@/components/ResourceIframeViewer';
+
 
 export default function AssignmentDetail() {
   const { id } = useParams();
@@ -803,7 +803,10 @@ export default function AssignmentDetail() {
                     }}
                     readingMaterials={content.reading_materials}
                     studentId={currentStudentId || undefined}
-                    onLinkClick={(url: string, title: string) => setOpenResource({ url, title })}
+                    onLinkClick={(url: string, title: string) => {
+                      const learningUrl = `/learning-window?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&sessionId=${currentStudentId}`;
+                      window.open(learningUrl, '_blank', 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
+                    }}
                   />
                 )}
 
@@ -844,32 +847,16 @@ export default function AssignmentDetail() {
                 )}
               </div>
 
-              {openResource && (
-                <ResourceIframeViewer
-                  url={openResource.url}
-                  title={openResource.title}
-                  onClose={() => setOpenResource(null)}
-                />
-              )}
             </div>
           </TabsContent>
 
           {!isParent && currentStudentId && (
             <TabsContent value="notes">
-              <div className={openResource ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : ""}>
-                <AssignmentNotes
+              <AssignmentNotes
                   assignmentId={assignment.id}
                   studentId={currentStudentId}
                   courseId={assignment.curriculum_items?.courses?.id || assignment.curriculum_items?.course_id}
                 />
-                {openResource && (
-                  <ResourceIframeViewer
-                    url={openResource.url}
-                    title={openResource.title}
-                    onClose={() => setOpenResource(null)}
-                  />
-                )}
-              </div>
             </TabsContent>
           )}
         </Tabs>

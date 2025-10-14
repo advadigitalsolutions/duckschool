@@ -50,6 +50,35 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const lastBlurTime = useRef<number>(0);
   const lastFocusTime = useRef<number>(Date.now());
 
+  // Track learning windows to prevent penalization
+  const [activeLearningWindows, setActiveLearningWindows] = useState<Set<string>>(new Set());
+  const [lastLearningActivity, setLastLearningActivity] = useState<number>(Date.now());
+
+  useEffect(() => {
+    const channel = new BroadcastChannel('learning-window');
+    
+    channel.onmessage = (event) => {
+      const { type, sessionId: msgSessionId, url } = event.data;
+      
+      if (msgSessionId !== studentId) return;
+      
+      if (type === 'learning-window-opened') {
+        setActiveLearningWindows(prev => new Set(prev).add(url));
+        setLastLearningActivity(Date.now());
+      } else if (type === 'learning-window-closed') {
+        setActiveLearningWindows(prev => {
+          const next = new Set(prev);
+          next.delete(url);
+          return next;
+        });
+      } else if (type === 'learning-activity') {
+        setLastLearningActivity(Date.now());
+      }
+    };
+
+    return () => channel.close();
+  }, [studentId]);
+
   // Log duck state changes
   useEffect(() => {
     console.log('🦆 Duck state changed to:', duckState);
@@ -155,15 +184,25 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     }
   }, [sessionId, studentId, pageContext, courseId, assignmentId, gapStartTime, sessionData.activeSeconds, goalSeconds, isOnBreak]);
 
+  // Check if user is actively learning (even in another window)
+  const hasRecentLearningActivity = activeLearningWindows.size > 0 && 
+    (Date.now() - lastLearningActivity < 5000); // 5 second grace period
+
   const { isIdle, isWarning, resetIdleTimer } = useIdleDetection({
     warningThreshold: 30000, // 30 seconds
     idleThreshold: 60000, // 60 seconds
-    onWarning: handleWarning,
-    onIdle: handleIdle,
+    onWarning: hasRecentLearningActivity ? () => {} : handleWarning, // Don't warn if learning
+    onIdle: hasRecentLearningActivity ? () => {} : handleIdle, // Don't mark as idle if learning
     onActive: handleActive
   });
 
   const handleWindowHidden = useCallback(async () => {
+    // Don't penalize if learning in another window
+    if (activeLearningWindows.size > 0) {
+      console.log('🦆 Learning window active, not penalizing for hidden window');
+      return;
+    }
+    
     // Prevent duplicate calls - only process if we're not already in a gap
     if (gapStartTime !== null || isOnBreak) {
       console.log('🦆 Ignoring window blur - already in gap or on break');
