@@ -7,7 +7,7 @@ import { useIdleDetection } from '@/hooks/useIdleDetection';
 import { useWindowVisibility } from '@/hooks/useWindowVisibility';
 import { usePageContext } from '@/hooks/usePageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 
 interface FocusSegment {
@@ -413,17 +413,6 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       aria-label={`Focus journey progress: ${Math.round(progress)}%`}
     >
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex-1" />
-          <Button
-            variant={isOnBreak ? "default" : "outline"}
-            size="sm"
-            onClick={handleTakeBreak}
-            className="text-xs"
-          >
-            {isOnBreak ? '▶️ Resume Focus' : '☕ Take Break'}
-          </Button>
-        </div>
         <div className="relative h-10 bg-muted/30 rounded-full border border-border/50" style={{ overflow: 'visible' }}>
           {/* Completed focus segments */}
           {focusSegments.map((segment, index) => (
@@ -507,6 +496,30 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
               onAnimationComplete={handleDuckAnimationComplete}
             />
           </div>
+
+          {/* Break button - positioned at the end of progress bar */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleTakeBreak}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-sm pointer-events-auto"
+                  aria-label={isOnBreak ? 'Resume focus' : 'Take a break'}
+                >
+                  {isOnBreak ? (
+                    <span className="text-xs font-mono">
+                      {formatDuration(sessionData.activeSeconds - (breakStartTime || 0))}
+                    </span>
+                  ) : (
+                    '⏸'
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isOnBreak ? 'Resume focus' : 'Take a quick break!'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Progress text */}
