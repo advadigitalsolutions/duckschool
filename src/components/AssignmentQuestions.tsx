@@ -139,9 +139,15 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
           setAnswers(restoredAnswers);
           setQuestionTimes(restoredTimes);
           
-          // Find first unanswered question
-          const firstUnanswered = questions.findIndex(q => !restoredAnswers[q.id]);
-          setCurrentQuestionIndex(firstUnanswered >= 0 ? firstUnanswered : 0);
+          // Restore the exact question index the user was on
+          const savedIndex = (draftData.content as any)?.currentQuestionIndex;
+          if (savedIndex !== undefined && savedIndex >= 0 && savedIndex < questions.length) {
+            setCurrentQuestionIndex(savedIndex);
+          } else {
+            // Fallback: find first unanswered question
+            const firstUnanswered = questions.findIndex(q => !restoredAnswers[q.id]);
+            setCurrentQuestionIndex(firstUnanswered >= 0 ? firstUnanswered : 0);
+          }
           
           toast.success('Progress restored!');
         }
@@ -230,6 +236,14 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
         
         if (error) throw error;
       }
+
+      // Also update the draft submission to save current question index
+      await supabase
+        .from('submissions')
+        .update({
+          content: { currentQuestionIndex }
+        })
+        .eq('id', draftSubmissionId);
 
       console.log('[AssignmentQuestions] ✓ Answer saved successfully');
       setIsSaving(false);
@@ -513,16 +527,36 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       }
       
       trackQuestionTime(currentQuestionId);
-      setCurrentQuestionIndex(prev => prev + 1);
-      console.log('[AssignmentQuestions] Moved to question:', currentQuestionIndex + 1);
+      const newIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(newIndex);
+      
+      // Save the new question position
+      if (draftSubmissionId) {
+        await supabase
+          .from('submissions')
+          .update({ content: { currentQuestionIndex: newIndex } })
+          .eq('id', draftSubmissionId);
+      }
+      
+      console.log('[AssignmentQuestions] Moved to question:', newIndex);
     }
   };
 
-  const handleSkipQuestion = () => {
+  const handleSkipQuestion = async () => {
     if (currentQuestionIndex < questions.length - 1) {
       console.log('[AssignmentQuestions] Skipping question:', currentQuestionIndex);
       trackQuestionTime(questions[currentQuestionIndex].id);
-      setCurrentQuestionIndex(prev => prev + 1);
+      const newIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(newIndex);
+      
+      // Save the new question position
+      if (draftSubmissionId) {
+        await supabase
+          .from('submissions')
+          .update({ content: { currentQuestionIndex: newIndex } })
+          .eq('id', draftSubmissionId);
+      }
+      
       toast.info('Question skipped. You can come back to it later.');
     }
   };
@@ -534,12 +568,21 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     toast.success('Answers refreshed from saved progress');
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = async () => {
     if (currentQuestionIndex > 0) {
       // Track time before moving to previous question
       const currentQuestionId = questions[currentQuestionIndex].id;
       trackQuestionTime(currentQuestionId);
-      setCurrentQuestionIndex(prev => prev - 1);
+      const newIndex = currentQuestionIndex - 1;
+      setCurrentQuestionIndex(newIndex);
+      
+      // Save the new question position
+      if (draftSubmissionId) {
+        await supabase
+          .from('submissions')
+          .update({ content: { currentQuestionIndex: newIndex } })
+          .eq('id', draftSubmissionId);
+      }
     }
   };
 
