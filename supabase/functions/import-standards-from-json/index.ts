@@ -122,7 +122,8 @@ serve(async (req) => {
       // Skip if no code (these are organizational nodes)
       if (!code) continue;
 
-      const text = extractValue(resource['http://purl.org/dc/terms/description']);
+      const text = extractValue(resource['http://purl.org/dc/terms/description']) ||
+                   extractValue(resource['http://purl.org/ASN/schema/core/comment']);
       if (!text) continue;
 
       const educationLevels = resource['http://purl.org/ASN/schema/core/educationLevel'];
