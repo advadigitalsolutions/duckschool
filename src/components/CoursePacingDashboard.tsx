@@ -450,6 +450,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
         onOpenChange={setGenerationOpen}
         courseId={courseId}
         courseTitle={courseTitle}
+        studentId={studentId}
         onGenerated={refreshMetrics}
       />
     </div>

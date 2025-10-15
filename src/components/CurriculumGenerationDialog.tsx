@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Sparkles, Clock, Target, BookOpen, Loader2, Info } from 'lucide-react';
+import { Sparkles, Clock, Target, BookOpen, Loader2, Info, CheckCircle2 } from 'lucide-react';
 
 interface AssignmentSuggestion {
   title: string;
@@ -25,6 +26,7 @@ interface CurriculumGenerationDialogProps {
   onOpenChange: (open: boolean) => void;
   courseId: string;
   courseTitle: string;
+  studentId: string;
   onGenerated?: () => void;
 }
 
@@ -33,8 +35,10 @@ export function CurriculumGenerationDialog({
   onOpenChange,
   courseId,
   courseTitle,
+  studentId,
   onGenerated
 }: CurriculumGenerationDialogProps) {
+  const navigate = useNavigate();
   const [generating, setGenerating] = useState(false);
   const [creatingAll, setCreatingAll] = useState(false);
   const [creatingIndex, setCreatingIndex] = useState<number | null>(null);
@@ -43,6 +47,8 @@ export function CurriculumGenerationDialog({
   const [pedagogy, setPedagogy] = useState('');
   const [framework, setFramework] = useState('');
   const [approachOverride, setApproachOverride] = useState('');
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [createdCount, setCreatedCount] = useState(0);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -175,11 +181,24 @@ export function CurriculumGenerationDialog({
       toast.success(`Created ${successCount} of ${uncreatedSuggestions.length} assignments`);
       
       if (successCount > 0) {
+        setCreatedCount(successCount);
+        setShowCompletion(true);
         onGenerated?.();
       }
     } finally {
       setCreatingAll(false);
     }
+  };
+
+  const handleGenerateMore = () => {
+    setShowCompletion(false);
+    setSuggestions([]);
+    setCreatedCount(0);
+  };
+
+  const handleGoToCurriculum = () => {
+    onOpenChange(false);
+    navigate(`/student/${studentId}?tab=assignments`);
   };
 
   return (
@@ -196,7 +215,40 @@ export function CurriculumGenerationDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {suggestions.length === 0 ? (
+          {showCompletion ? (
+            <div className="text-center py-8 space-y-6">
+              <div className="flex justify-center">
+                <div className="rounded-full bg-primary/10 p-4">
+                  <CheckCircle2 className="h-12 w-12 text-primary" />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Curriculum Created Successfully!</h3>
+                <p className="text-muted-foreground">
+                  {createdCount} assignment{createdCount !== 1 ? 's' : ''} created and ready to assign.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button 
+                  onClick={handleGoToCurriculum}
+                  size="lg"
+                  className="min-w-[200px]"
+                >
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Take Me to Curriculum
+                </Button>
+                <Button 
+                  onClick={handleGenerateMore}
+                  variant="outline"
+                  size="lg"
+                  className="min-w-[200px]"
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate More Curriculum
+                </Button>
+              </div>
+            </div>
+          ) : suggestions.length === 0 ? (
             <div className="space-y-6">
               <div className="text-center py-8">
                 <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
