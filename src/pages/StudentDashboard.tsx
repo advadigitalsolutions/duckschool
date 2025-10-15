@@ -24,6 +24,10 @@ import { SessionStatsCard } from '@/components/SessionStatsCard';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Activity } from 'lucide-react';
 import { ProfileSettingsModal } from '@/components/ProfileSettingsModal';
+import { AddCourseDialog } from '@/components/AddCourseDialog';
+import { EditCourseDialog } from '@/components/EditCourseDialog';
+import { ArchiveCourseDialog } from '@/components/ArchiveCourseDialog';
+import { DeleteCourseDialog } from '@/components/DeleteCourseDialog';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -43,6 +47,7 @@ export default function StudentDashboard() {
   const [headerSettings, setHeaderSettings] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileModalTab, setProfileModalTab] = useState<'profile' | 'accessibility' | 'assessment'>('profile');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const getDefaultHeaderSettings = () => ({
     showName: true,
@@ -139,6 +144,7 @@ export default function StudentDashboard() {
         return;
       }
       console.log('[StudentDashboard] User ID:', user.id);
+      setCurrentUserId(user.id);
 
       // Check user role
       const {
@@ -614,12 +620,20 @@ export default function StudentDashboard() {
                 <CardTitle>My Courses 📚</CardTitle>
                 <CardDescription>Track your progress in each subject</CardDescription>
               </div>
-              {studentDbId && (
-                <RequestCourseDialog 
-                  studentId={studentDbId} 
-                  onCourseCreated={fetchStudentData}
-                />
-              )}
+              <div className="flex gap-2">
+                {studentDbId && (
+                  <>
+                    <AddCourseDialog 
+                      studentId={studentDbId} 
+                      onCourseAdded={fetchStudentData}
+                    />
+                    <RequestCourseDialog 
+                      studentId={studentDbId} 
+                      onCourseCreated={fetchStudentData}
+                    />
+                  </>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -633,17 +647,53 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
-                {courses.map(course => <Card key={course.id} className="border-2 hover:border-primary/50 transition-colors">
-                    <CardHeader>
-                      <CardTitle className="text-base">{course.title}</CardTitle>
-                      <CardDescription>{course.subject}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button className="w-full" onClick={() => navigate(`/course/${course.id}`)}>
-                        View Progress Dashboard
-                      </Button>
-                    </CardContent>
-                  </Card>)}
+                {courses.map(course => {
+                  const isOwnCourse = course.initiated_by === currentUserId;
+                  return (
+                    <Card key={course.id} className="border-2 hover:border-primary/50 transition-colors">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-base">{course.title}</CardTitle>
+                            <CardDescription>{course.subject}</CardDescription>
+                            {!isOwnCourse && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Teacher-assigned
+                              </p>
+                            )}
+                          </div>
+                          {isOwnCourse && (
+                            <div className="flex gap-1">
+                              <EditCourseDialog 
+                                course={course}
+                                onCourseUpdated={fetchStudentData}
+                                trigger={
+                                  <Button variant="ghost" size="icon">
+                                    <Plus className="h-4 w-4" />
+                                  </Button>
+                                }
+                              />
+                              <ArchiveCourseDialog 
+                                course={course}
+                                onCourseUpdated={fetchStudentData}
+                                trigger={
+                                  <Button variant="ghost" size="icon">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                }
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <Button className="w-full" onClick={() => navigate(`/course/${course.id}`)}>
+                          View Progress Dashboard
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </CardContent>

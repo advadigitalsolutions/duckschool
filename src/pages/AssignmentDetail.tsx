@@ -24,6 +24,7 @@ import { AssignmentNotes } from '@/components/AssignmentNotes';
 import { StudentLayout } from '@/components/StudentLayout';
 import { RegradeButton } from '@/components/RegradeButton';
 import { LearningWizard } from '@/components/LearningWizard';
+import { EditAssignmentDatesDialog } from '@/components/EditAssignmentDatesDialog';
 
 
 export default function AssignmentDetail() {
@@ -34,6 +35,7 @@ export default function AssignmentDetail() {
   const [currentStudentId, setCurrentStudentId] = useState<string | null>(null);
   const [isParent, setIsParent] = useState(false);
   const [submissions, setSubmissions] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [generatingRemedial, setGeneratingRemedial] = useState(false);
   const [teacherNotes, setTeacherNotes] = useState<any>(null);
   const [offlineActivities, setOfflineActivities] = useState('');
@@ -87,6 +89,8 @@ export default function AssignmentDetail() {
       // Get current user to determine student ID
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      
+      setCurrentUserId(user.id);
 
       // Check if user is a student or parent
       const { data: studentData } = await supabase
@@ -116,7 +120,8 @@ export default function AssignmentDetail() {
             courses (
               title,
               subject,
-              student_id
+              student_id,
+              initiated_by
             )
           )
         `)
@@ -333,6 +338,12 @@ export default function AssignmentDetail() {
                   onAssignmentDeleted={() => navigate(`/student/${studentId}`)}
                 />
               </>
+            )}
+            {!isParent && assignment.curriculum_items?.courses?.initiated_by === currentUserId && (
+              <EditAssignmentDatesDialog
+                assignment={assignment}
+                onAssignmentUpdated={fetchAssignment}
+              />
             )}
           </div>
         </div>

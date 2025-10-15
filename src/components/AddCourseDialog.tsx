@@ -56,6 +56,9 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
     const gradeLevel = formData.get('gradeLevel') as string;
 
     try {
+      // Get current user to set as course creator
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { data, error } = await supabase
         .from('courses')
         .insert({
@@ -65,6 +68,8 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
           description: description || null,
           credits,
           grade_level: gradeLevel,
+          initiated_by: user?.id,
+          initiated_by_role: 'student',
         })
         .select();
 
