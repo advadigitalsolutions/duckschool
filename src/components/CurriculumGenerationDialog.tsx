@@ -121,14 +121,11 @@ export function CurriculumGenerationDialog({
         i === index ? { ...s, created: true } : s
       ));
       
-      // Increment created count
-      setCreatedCount(prev => prev + 1);
-      
       // Check if all suggestions are created
       const allCreated = suggestions.every((s, i) => i === index || s.created);
       if (allCreated) {
-        setShowCompletion(true);
         onGenerated?.();
+        onOpenChange(false);
       }
     } catch (error: any) {
       console.error('Error creating assignment:', error);
@@ -189,9 +186,8 @@ export function CurriculumGenerationDialog({
       toast.success(`Created ${successCount} of ${uncreatedSuggestions.length} assignments`);
       
       if (successCount > 0) {
-        setCreatedCount(successCount);
-        setShowCompletion(true);
         onGenerated?.();
+        onOpenChange(false);
       }
     } finally {
       setCreatingAll(false);
