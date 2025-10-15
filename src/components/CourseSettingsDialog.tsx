@@ -31,7 +31,14 @@ const PEDAGOGIES = [
 ];
 
 const GRADE_LEVELS = [
-  'Pre-K', 'Kindergarten', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'
+  'Preschool',
+  'Pre-K',
+  'Kindergarten',
+  '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',
+  'Graduate School',
+  'Post Graduate',
+  'Rogue Brainiac',
+  'Educator'
 ];
 
 export function CourseSettingsDialog({
