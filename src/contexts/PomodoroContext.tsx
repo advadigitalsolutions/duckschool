@@ -64,13 +64,17 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [broadcastChannel, setBroadcastChannel] = useState<BroadcastChannel | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isLeader, setIsLeader] = useState(false);
   
-  // Refs to prevent circular updates
+  // Refs to prevent circular updates and track state freshness
   const isUpdatingFromRealtime = useRef(false);
   const lastSavedTimeLeft = useRef(timeLeft);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastUpdateTimestamp = useRef<number>(Date.now());
+  const localSequenceNumber = useRef(0);
+  const leaderHeartbeatRef = useRef<NodeJS.Timeout | null>(null);
+  const leaderCheckRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize: Load from Supabase if studentId provided, otherwise from localStorage
+  // Leader election and initialization
   useEffect(() => {
     const initialize = async () => {
       if (studentId) {
@@ -81,26 +85,72 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
       setIsInitializing(false);
     };
 
-    // Set up BroadcastChannel for cross-window sync
+    // Set up BroadcastChannel for leader election and cross-window sync
     const channel = new BroadcastChannel('pomodoro_sync');
     setBroadcastChannel(channel);
 
-    channel.onmessage = (event) => {
-      const { type, data } = event.data;
-      if (type === 'state_update' && !studentId) { // Only sync locally if not using Supabase
-        setTimeLeft(data.timeLeft);
-        setIsRunning(data.isRunning);
-        setIsBreak(data.isBreak);
-        setSessionsCompleted(data.sessionsCompleted);
-        setTotalDuration(data.totalDuration);
-        setSettings(data.settings);
+    // Attempt to become leader
+    const becomeLeader = () => {
+      console.log('🎯 Becoming leader window');
+      setIsLeader(true);
+      
+      // Send heartbeat every 2 seconds
+      leaderHeartbeatRef.current = setInterval(() => {
+        channel.postMessage({ type: 'leader_heartbeat', timestamp: Date.now() });
+      }, 2000);
+    };
+
+    // Check for leader heartbeat
+    let lastLeaderHeartbeat = Date.now();
+    const checkForLeader = () => {
+      const timeSinceLastHeartbeat = Date.now() - lastLeaderHeartbeat;
+      if (timeSinceLastHeartbeat > 5000) {
+        // No leader detected, become leader
+        becomeLeader();
       }
     };
+
+    channel.onmessage = (event) => {
+      const { type, data, timestamp, sequence } = event.data;
+      
+      if (type === 'leader_heartbeat') {
+        lastLeaderHeartbeat = timestamp;
+        // If we're leader but someone else claims to be, defer to them if they have higher sequence
+        if (isLeader && sequence > localSequenceNumber.current) {
+          console.log('🎯 Deferring to other leader');
+          setIsLeader(false);
+          if (leaderHeartbeatRef.current) {
+            clearInterval(leaderHeartbeatRef.current);
+            leaderHeartbeatRef.current = null;
+          }
+        }
+      } else if (type === 'state_update' && !studentId) { // Only sync locally if not using Supabase
+        // Followers update from leader broadcasts
+        if (!isLeader && timestamp > lastUpdateTimestamp.current) {
+          console.log('📥 Follower receiving state update');
+          setTimeLeft(data.timeLeft);
+          setIsRunning(data.isRunning);
+          setIsBreak(data.isBreak);
+          setSessionsCompleted(data.sessionsCompleted);
+          setTotalDuration(data.totalDuration);
+          setSettings(data.settings);
+          lastUpdateTimestamp.current = timestamp;
+        }
+      }
+    };
+
+    // Start checking for leader after a short delay
+    setTimeout(() => {
+      leaderCheckRef.current = setInterval(checkForLeader, 3000);
+      checkForLeader(); // Check immediately
+    }, 1000);
 
     initialize();
 
     return () => {
       channel.close();
+      if (leaderHeartbeatRef.current) clearInterval(leaderHeartbeatRef.current);
+      if (leaderCheckRef.current) clearInterval(leaderCheckRef.current);
     };
   }, [studentId]);
 
@@ -177,7 +227,7 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
     }
   };
 
-  // Set up Realtime subscription for Supabase sync
+  // Set up Realtime subscription for Supabase sync (followers only listen)
   useEffect(() => {
     if (!studentId) return;
 
@@ -193,16 +243,34 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
         },
         (payload) => {
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            // Prevent circular updates - ignore updates we just triggered
+            // Leaders ignore realtime updates since they're the source of truth
+            if (isLeader) {
+              console.log('👑 Leader ignoring realtime update (I am the source)');
+              return;
+            }
+            
+            // Prevent circular updates
             if (isUpdatingFromRealtime.current) return;
             
+            console.log('📥 Follower receiving realtime update');
             isUpdatingFromRealtime.current = true;
             const session = payload.new as any;
+            const remoteTimestamp = new Date(session.updated_at).getTime();
             
-            // Only update timeLeft if the timer is NOT running locally
-            // This prevents remote updates from interfering with the local countdown
-            if (!isRunning) {
+            // Stale state detection - only apply updates that are newer than local state
+            if (remoteTimestamp < lastUpdateTimestamp.current) {
+              console.log('⏰ Ignoring stale realtime update');
+              isUpdatingFromRealtime.current = false;
+              return;
+            }
+            
+            // NEVER update timeLeft if the leader's timer is running
+            // This prevents remote updates from causing glitches
+            const shouldUpdateTimeLeft = !session.is_running;
+            
+            if (shouldUpdateTimeLeft) {
               setTimeLeft(session.time_left);
+              lastSavedTimeLeft.current = session.time_left;
             }
             
             setIsRunning(session.is_running);
@@ -217,14 +285,13 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
               : sessionSettings.workMinutes * 60
             );
             
-            if (!isRunning) {
-              lastSavedTimeLeft.current = session.time_left;
-            }
+            lastUpdateTimestamp.current = remoteTimestamp;
+            localSequenceNumber.current++;
             
-            // Reset flag after a short delay
+            // Extended guard period - 2 seconds instead of 100ms
             setTimeout(() => {
               isUpdatingFromRealtime.current = false;
-            }, 100);
+            }, 2000);
           }
         }
       )
@@ -233,14 +300,17 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [studentId, isRunning]);
+  }, [studentId, isLeader]);
 
-  // Save important state changes to Supabase immediately (not timer ticks)
+  // Save important state changes to Supabase immediately (only for leaders)
   useEffect(() => {
-    if (isInitializing || isUpdatingFromRealtime.current) return;
+    if (isInitializing || isUpdatingFromRealtime.current || !isLeader) return;
 
     const saveImportantChanges = async () => {
       if (studentId && sessionId) {
+        console.log('💾 Leader saving important state change');
+        const updateTimestamp = new Date().toISOString();
+        
         await supabase
           .from('pomodoro_sessions')
           .update({
@@ -249,55 +319,22 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
             is_break: isBreak,
             sessions_completed: sessionsCompleted,
             settings: settings as any,
-            updated_at: new Date().toISOString(),
+            updated_at: updateTimestamp,
           })
           .eq('id', sessionId);
         
         lastSavedTimeLeft.current = timeLeft;
+        lastUpdateTimestamp.current = new Date(updateTimestamp).getTime();
+        localSequenceNumber.current++;
       }
     };
 
     saveImportantChanges();
-  }, [isRunning, isBreak, sessionsCompleted, settings, studentId, sessionId, isInitializing]);
+  }, [isRunning, isBreak, sessionsCompleted, settings, studentId, sessionId, isInitializing, isLeader]);
 
-  // Save timeLeft periodically (every 10 seconds) to reduce database writes
+  // Save to localStorage for non-authenticated users (only leaders broadcast)
   useEffect(() => {
-    if (isInitializing || isUpdatingFromRealtime.current || !isRunning) return;
-
-    // Clear any existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    // Only save if timeLeft changed significantly (more than 1 second difference)
-    const timeDiff = Math.abs(timeLeft - lastSavedTimeLeft.current);
-    if (timeDiff < 2) return;
-
-    // Debounce: Save every 10 seconds during active timer
-    saveTimeoutRef.current = setTimeout(async () => {
-      if (studentId && sessionId && !isUpdatingFromRealtime.current) {
-        await supabase
-          .from('pomodoro_sessions')
-          .update({
-            time_left: timeLeft,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', sessionId);
-        
-        lastSavedTimeLeft.current = timeLeft;
-      }
-    }, 10000);
-
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [timeLeft, isRunning, studentId, sessionId, isInitializing]);
-
-  // Save to localStorage for non-authenticated users
-  useEffect(() => {
-    if (isInitializing || studentId) return;
+    if (isInitializing || studentId || !isLeader) return;
 
     const state = {
       timeLeft,
@@ -308,10 +345,13 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
     };
     localStorage.setItem('pomodoroState', JSON.stringify(state));
 
-    // Broadcast to other windows
+    // Broadcast to other windows (leader only)
     if (broadcastChannel) {
+      const updateTimestamp = Date.now();
       broadcastChannel.postMessage({
         type: 'state_update',
+        timestamp: updateTimestamp,
+        sequence: localSequenceNumber.current++,
         data: {
           timeLeft,
           isRunning,
@@ -321,14 +361,17 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
           settings,
         }
       });
+      lastUpdateTimestamp.current = updateTimestamp;
     }
-  }, [timeLeft, isRunning, isBreak, sessionsCompleted, totalDuration, settings, studentId, isInitializing, broadcastChannel]);
+  }, [timeLeft, isRunning, isBreak, sessionsCompleted, totalDuration, settings, studentId, isInitializing, broadcastChannel, isLeader]);
 
-  // Timer countdown
+  // Timer countdown (only leaders run the countdown)
   useEffect(() => {
     let interval: NodeJS.Timeout;
+    let saveInterval: NodeJS.Timeout;
 
-    if (isRunning && timeLeft > 0) {
+    if (isRunning && timeLeft > 0 && isLeader) {
+      console.log('⏱️ Leader starting countdown');
       interval = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -338,10 +381,34 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
           return prev - 1;
         });
       }, 1000);
+
+      // Save timeLeft every 15 seconds while running (leader only)
+      if (studentId && sessionId) {
+        saveInterval = setInterval(async () => {
+          if (!isUpdatingFromRealtime.current) {
+            const timeDiff = Math.abs(timeLeft - lastSavedTimeLeft.current);
+            if (timeDiff >= 2) {
+              console.log('💾 Leader periodic save (15s)');
+              await supabase
+                .from('pomodoro_sessions')
+                .update({
+                  time_left: timeLeft,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', sessionId);
+              
+              lastSavedTimeLeft.current = timeLeft;
+            }
+          }
+        }, 15000);
+      }
     }
 
-    return () => clearInterval(interval);
-  }, [isRunning, timeLeft]);
+    return () => {
+      clearInterval(interval);
+      clearInterval(saveInterval);
+    };
+  }, [isRunning, timeLeft, isLeader, studentId, sessionId]);
 
   const playBeepSound = (audioContext: AudioContext) => {
     const oscillator = audioContext.createOscillator();
