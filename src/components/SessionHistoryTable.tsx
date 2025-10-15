@@ -69,7 +69,13 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
         }
       });
       
-      setSessions(deduped.slice(0, 20)); // Return top 20 after dedup
+      // Filter out zero-time and very short sessions
+      const filtered = deduped.filter(session => {
+        const totalTime = session.total_active_seconds + session.total_idle_seconds + session.total_away_seconds;
+        return totalTime >= 30; // Only show sessions with at least 30 seconds
+      });
+      
+      setSessions(filtered.slice(0, 20)); // Return top 20 after dedup and filter
     } catch (error) {
       console.error('Error fetching sessions:', error);
     } finally {

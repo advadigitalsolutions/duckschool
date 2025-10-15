@@ -40,16 +40,18 @@ export const useActivitySession = (studentId?: string) => {
       return;
     }
     
-    // Close any orphaned "In Progress" sessions for this student before creating a new one
+    // Close any orphaned sessions for this student before creating a new one
     try {
       const { data: openSessions } = await supabase
         .from('learning_sessions')
-        .select('id')
+        .select('id, total_active_seconds, total_idle_seconds, total_away_seconds')
         .eq('student_id', studentId)
         .is('session_end', null);
       
       if (openSessions && openSessions.length > 0) {
         console.log(`🧹 Closing ${openSessions.length} orphaned session(s)`);
+        
+        // Close all orphaned sessions, including zero-time ones
         await supabase
           .from('learning_sessions')
           .update({
@@ -61,6 +63,24 @@ export const useActivitySession = (studentId?: string) => {
       }
     } catch (e) {
       console.error('Error closing orphaned sessions:', e);
+    }
+    
+    // Check if a session was created very recently (last 5 seconds) to prevent rapid duplicates
+    try {
+      const fiveSecondsAgo = new Date(Date.now() - 5000).toISOString();
+      const { data: recentSessions } = await supabase
+        .from('learning_sessions')
+        .select('id')
+        .eq('student_id', studentId)
+        .gte('session_start', fiveSecondsAgo)
+        .limit(1);
+      
+      if (recentSessions && recentSessions.length > 0) {
+        console.log('⏸️ Session created recently, skipping duplicate creation');
+        return;
+      }
+    } catch (e) {
+      console.error('Error checking recent sessions:', e);
     }
     
     // Check localStorage for existing session
