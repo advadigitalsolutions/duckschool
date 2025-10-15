@@ -204,6 +204,66 @@ export type Database = {
           },
         ]
       }
+      assignment_learning_progress: {
+        Row: {
+          ai_coaching_history: Json | null
+          assignment_id: string
+          current_step: string | null
+          discussion_completed: boolean | null
+          id: string
+          notes_completed: boolean | null
+          practice_completed: boolean | null
+          research_completed: boolean | null
+          started_at: string | null
+          steps_completed: Json | null
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_coaching_history?: Json | null
+          assignment_id: string
+          current_step?: string | null
+          discussion_completed?: boolean | null
+          id?: string
+          notes_completed?: boolean | null
+          practice_completed?: boolean | null
+          research_completed?: boolean | null
+          started_at?: string | null
+          steps_completed?: Json | null
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_coaching_history?: Json | null
+          assignment_id?: string
+          current_step?: string | null
+          discussion_completed?: boolean | null
+          id?: string
+          notes_completed?: boolean | null
+          practice_completed?: boolean | null
+          research_completed?: boolean | null
+          started_at?: string | null
+          steps_completed?: Json | null
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_learning_progress_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_learning_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignment_notes: {
         Row: {
           assignment_id: string
@@ -230,6 +290,63 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      assignment_research: {
+        Row: {
+          assignment_id: string
+          created_at: string | null
+          id: string
+          notes: string | null
+          resource_title: string | null
+          resource_type: string | null
+          resource_url: string
+          student_id: string
+          updated_at: string | null
+          validated_at: string | null
+          validation_status: string | null
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          resource_title?: string | null
+          resource_type?: string | null
+          resource_url: string
+          student_id: string
+          updated_at?: string | null
+          validated_at?: string | null
+          validation_status?: string | null
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          resource_title?: string | null
+          resource_type?: string | null
+          resource_url?: string
+          student_id?: string
+          updated_at?: string | null
+          validated_at?: string | null
+          validation_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_research_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_research_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       assignment_study_guides: {
         Row: {
