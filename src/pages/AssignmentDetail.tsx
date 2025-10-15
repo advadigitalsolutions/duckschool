@@ -23,6 +23,7 @@ import { TextToSpeech } from '@/components/TextToSpeech';
 import { AssignmentNotes } from '@/components/AssignmentNotes';
 import { StudentLayout } from '@/components/StudentLayout';
 import { RegradeButton } from '@/components/RegradeButton';
+import { LearningWizard } from '@/components/LearningWizard';
 
 
 export default function AssignmentDetail() {
@@ -352,6 +353,8 @@ export default function AssignmentDetail() {
                 <ActivitySubmission assignment={assignment} studentId={currentStudentId} />
               ) : assignment?.curriculum_items?.type === 'project' ? (
                 <ProjectModuleSubmission assignment={assignment} studentId={currentStudentId} />
+              ) : content.research_guidance ? (
+                <LearningWizard assignment={assignment} studentId={currentStudentId} />
               ) : (
                 <AssignmentQuestions assignment={assignment} studentId={currentStudentId} />
               )

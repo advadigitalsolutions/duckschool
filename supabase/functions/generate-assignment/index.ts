@@ -315,6 +315,14 @@ ${pedagogyContext}
 
 CRITICAL: Every assignment MUST include actual questions that students can answer digitally. Questions should test understanding and allow for mastery-based learning through multiple attempts.
 
+RESOURCE GUIDANCE - IMPORTANT:
+DO NOT include specific external resource URLs or titles (like "Khan Academy video on X" or "YouTube: channel name").
+Instead, provide GENERAL guidance on where students should search:
+- Suggest reputable educational platforms (general names only like "Khan Academy", "YouTube educational channels")
+- Include relevant SEARCH KEYWORDS students should use
+- Specify TYPES of resources to look for (videos, articles, interactive tutorials)
+- Let students discover and validate their own resources through guided research
+
 TEACHER GUIDE REQUIREMENTS:
 - All teacher guide content MUST be specific to this lesson topic and student profile
 - NO GENERIC FILLER like "create a visual representation with art supplies"
@@ -346,6 +354,37 @@ Return a JSON object with this structure:
   "objectives": ["objective 1", "objective 2"],
   "instructions": "Detailed instructions for students",
   "materials": ["material 1", "material 2"],
+  "research_guidance": {
+    "suggested_sites": [
+      "Khan Academy (search for: 'specific topic keywords')",
+      "YouTube educational channels (search: 'topic name')",
+      "Educational website name (search for: 'keywords')"
+    ],
+    "search_keywords": ["keyword1", "keyword2", "keyword3"],
+    "minimum_resources": 2,
+    "resource_types_needed": ["video", "article"]
+  },
+  "key_concepts": [
+    {
+      "concept": "Concept Name",
+      "what_to_understand": "Concrete description of what understanding this concept looks like"
+    }
+  ],
+  "discussion_prompts": [
+    "Open-ended question using 'why' or 'how' that checks understanding",
+    "Another Socratic question that requires synthesis"
+  ],
+  "guided_practice": [
+    {
+      "task": "Concrete hands-on task that applies the key concepts",
+      "scaffolding": [
+        "Hint 1 - a nudge in the right direction",
+        "Hint 2 - another helpful pointer",
+        "Hint 3 - scaffold without giving away the answer"
+      ],
+      "success_criteria": "What a successful completion looks like"
+    }
+  ],
   "activities": [
     {"step": 1, "description": "Activity description", "duration_minutes": 30}
   ],
