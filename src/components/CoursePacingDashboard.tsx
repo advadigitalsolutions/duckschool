@@ -121,12 +121,18 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
       'behind': 'destructive',
       'unknown': 'outline'
     };
+    
+    // Show "Getting Started" for new students with no work completed
+    const isNewStudent = metrics.completedMinutes === 0;
+    const label = isNewStudent ? 'Getting Started' : 
+                  metrics.onTrackStatus === 'ahead' ? 'Ahead of Schedule' :
+                  metrics.onTrackStatus === 'on-track' ? 'On Track' :
+                  metrics.onTrackStatus === 'behind' ? 'Behind Schedule' :
+                  'Unknown';
+    
     return (
       <Badge variant={variants[metrics.onTrackStatus]}>
-        {metrics.onTrackStatus === 'ahead' && 'Ahead of Schedule'}
-        {metrics.onTrackStatus === 'on-track' && 'On Track'}
-        {metrics.onTrackStatus === 'behind' && 'Behind Schedule'}
-        {metrics.onTrackStatus === 'unknown' && 'Unknown'}
+        {label}
       </Badge>
     );
   };

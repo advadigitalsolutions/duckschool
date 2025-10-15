@@ -333,7 +333,11 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
 
       // Determine on-track status
       let onTrackStatus: 'ahead' | 'on-track' | 'behind' | 'unknown' = 'unknown';
-      if (targetDate && projectedCompletionDate) {
+      
+      // If student hasn't completed any work yet, show "Getting Started" status
+      if (completedMinutes === 0) {
+        onTrackStatus = 'on-track'; // Show encouraging "Getting Started" for new students
+      } else if (targetDate && projectedCompletionDate) {
         if (projectedCompletionDate < targetDate) {
           onTrackStatus = 'ahead';
         } else if (projectedCompletionDate.getTime() - targetDate.getTime() < 7 * 24 * 60 * 60 * 1000) {
