@@ -95,58 +95,208 @@ export default function AdminSeedStandards() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="w-5 h-5" />
-              Common Standards Project
+              Achievement Standards Network (ASN)
             </CardTitle>
             <CardDescription>
-              Import official California CCSS standards from the open-source Common Standards Project
+              Import verified California standards from the trusted Achievement Standards Network by D2L
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              onClick={async () => {
-                setIsSeeding(true);
-                setResults(null);
-                try {
-                  toast({
-                    title: "Import Started",
-                    description: "Fetching standards from Common Standards Project...",
-                  });
+            <div className="space-y-4">
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  onClick={async () => {
+                    setIsSeeding(true);
+                    setResults(null);
+                    try {
+                      toast({
+                        title: "Import Started",
+                        description: "Fetching all California standards from ASN...",
+                      });
 
-                  const { data, error } = await supabase.functions.invoke('import-common-standards');
+                      const { data, error } = await supabase.functions.invoke('import-asn-standards', {
+                        body: { subjects: null } // null = all subjects
+                      });
 
-                  if (error) throw error;
+                      if (error) throw error;
 
-                  setResults({
-                    summary: {
-                      successful: data.imported || 0,
-                      failed: data.failed || 0,
-                      skipped: data.skipped || 0
-                    },
-                    results: data.details
-                  });
-                  
-                  toast({
-                    title: "Import Complete",
-                    description: `Successfully imported ${data.imported} standards`,
-                  });
-                } catch (error: any) {
-                  console.error('Import error:', error);
-                  toast({
-                    title: "Import Failed",
-                    description: error.message,
-                    variant: "destructive",
-                  });
-                } finally {
-                  setIsSeeding(false);
-                }
-              }}
-              disabled={isSeeding}
-              className="w-full"
-              variant="default"
-            >
-              {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Import CA Standards
-            </Button>
+                      setResults({
+                        summary: {
+                          successful: data.imported || 0,
+                          failed: data.failed || 0,
+                          skipped: data.skipped || 0
+                        },
+                        results: data.details
+                      });
+                      
+                      toast({
+                        title: "Import Complete",
+                        description: `Successfully imported ${data.imported} standards`,
+                      });
+                    } catch (error: any) {
+                      console.error('Import error:', error);
+                      toast({
+                        title: "Import Failed",
+                        description: error.message,
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsSeeding(false);
+                    }
+                  }}
+                  disabled={isSeeding}
+                  variant="default"
+                >
+                  {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Import All CA Standards
+                </Button>
+                
+                <Button
+                  onClick={async () => {
+                    setIsSeeding(true);
+                    setResults(null);
+                    try {
+                      toast({
+                        title: "Import Started",
+                        description: "Fetching California Math standards from ASN...",
+                      });
+
+                      const { data, error } = await supabase.functions.invoke('import-asn-standards', {
+                        body: { subjects: ['Mathematics'] }
+                      });
+
+                      if (error) throw error;
+
+                      setResults({
+                        summary: {
+                          successful: data.imported || 0,
+                          failed: data.failed || 0,
+                          skipped: data.skipped || 0
+                        },
+                        results: data.details
+                      });
+                      
+                      toast({
+                        title: "Import Complete",
+                        description: `Successfully imported ${data.imported} Math standards`,
+                      });
+                    } catch (error: any) {
+                      console.error('Import error:', error);
+                      toast({
+                        title: "Import Failed",
+                        description: error.message,
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsSeeding(false);
+                    }
+                  }}
+                  disabled={isSeeding}
+                  variant="outline"
+                >
+                  {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Math Only
+                </Button>
+
+                <Button
+                  onClick={async () => {
+                    setIsSeeding(true);
+                    setResults(null);
+                    try {
+                      toast({
+                        title: "Import Started",
+                        description: "Fetching California ELA standards from ASN...",
+                      });
+
+                      const { data, error } = await supabase.functions.invoke('import-asn-standards', {
+                        body: { subjects: ['English Language Arts'] }
+                      });
+
+                      if (error) throw error;
+
+                      setResults({
+                        summary: {
+                          successful: data.imported || 0,
+                          failed: data.failed || 0,
+                          skipped: data.skipped || 0
+                        },
+                        results: data.details
+                      });
+                      
+                      toast({
+                        title: "Import Complete",
+                        description: `Successfully imported ${data.imported} ELA standards`,
+                      });
+                    } catch (error: any) {
+                      console.error('Import error:', error);
+                      toast({
+                        title: "Import Failed",
+                        description: error.message,
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsSeeding(false);
+                    }
+                  }}
+                  disabled={isSeeding}
+                  variant="outline"
+                >
+                  {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  ELA Only
+                </Button>
+
+                <Button
+                  onClick={async () => {
+                    setIsSeeding(true);
+                    setResults(null);
+                    try {
+                      toast({
+                        title: "Import Started",
+                        description: "Fetching California Science standards from ASN...",
+                      });
+
+                      const { data, error } = await supabase.functions.invoke('import-asn-standards', {
+                        body: { subjects: ['Science'] }
+                      });
+
+                      if (error) throw error;
+
+                      setResults({
+                        summary: {
+                          successful: data.imported || 0,
+                          failed: data.failed || 0,
+                          skipped: data.skipped || 0
+                        },
+                        results: data.details
+                      });
+                      
+                      toast({
+                        title: "Import Complete",
+                        description: `Successfully imported ${data.imported} Science standards`,
+                      });
+                    } catch (error: any) {
+                      console.error('Import error:', error);
+                      toast({
+                        title: "Import Failed",
+                        description: error.message,
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsSeeding(false);
+                    }
+                  }}
+                  disabled={isSeeding}
+                  variant="outline"
+                >
+                  {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Science Only
+                </Button>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Imports from Achievement Standards Network (ASN) - the trusted, D2L-maintained repository of official educational standards
+              </p>
+            </div>
           </CardContent>
         </Card>
 

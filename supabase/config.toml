@@ -3,6 +3,9 @@ project_id = "tzqxdsxjmpscotdcevdh"
 [functions.hello-world]
 verify_jwt = false
 
+[functions.import-asn-standards]
+verify_jwt = true
+
 [functions.remap-curriculum-standards]
 verify_jwt = false
 
