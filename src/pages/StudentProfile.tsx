@@ -220,7 +220,7 @@ export default function StudentProfile() {
           <Button variant="ghost" size="icon" onClick={() => navigate('/student')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <Button variant="outline" onClick={() => navigate('/admin-seed-standards')}>
+          <Button variant="outline" onClick={() => navigate('/admin/seed-standards')}>
             Admin Dashboard
           </Button>
         </div>
