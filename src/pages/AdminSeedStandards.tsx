@@ -170,6 +170,10 @@ export default function AdminSeedStandards() {
                 <option value="English Language Arts">English Language Arts</option>
                 <option value="Science">Science</option>
                 <option value="History-Social Science">History-Social Science</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Marketing & Sales">Marketing & Sales</option>
+                <option value="Business">Business</option>
+                <option value="Information Technology">Information Technology</option>
               </select>
             </div>
 
