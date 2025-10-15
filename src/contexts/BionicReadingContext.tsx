@@ -21,7 +21,15 @@ export function BionicReadingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchBionicReadingSetting();
-  }, []);
+
+    // Listen for toggle events from hotkeys
+    const handleToggle = () => {
+      setEnabled(!enabled);
+    };
+
+    window.addEventListener('toggleBionic', handleToggle as EventListener);
+    return () => window.removeEventListener('toggleBionic', handleToggle as EventListener);
+  }, [enabled]);
 
   const fetchBionicReadingSetting = async () => {
     try {

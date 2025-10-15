@@ -30,6 +30,8 @@ interface AccessibilityContextType extends AccessibilitySettings {
   setTextToSpeech: (enabled: boolean) => Promise<void>;
   setTextToSpeechVoice: (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => Promise<void>;
   setHighContrast: (enabled: boolean) => Promise<void>;
+  hotkeys: Record<string, string>;
+  loadHotkeys: () => Promise<void>;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -49,11 +51,13 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     textToSpeechVoice: 'alloy',
     highContrastEnabled: false,
   });
+  const [hotkeys, setHotkeys] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   useEffect(() => {
     // Load settings on mount
     loadSettings();
+    loadHotkeys();
 
     // Listen for auth changes to reload settings
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -73,9 +77,11 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
           textToSpeechVoice: 'alloy',
           highContrastEnabled: false,
         });
+        setHotkeys({});
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         // Reload settings when user signs in or token refreshes
         loadSettings();
+        loadHotkeys();
       }
     });
 
@@ -286,6 +292,114 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     await updateSetting('high_contrast_enabled', enabled);
   };
 
+  const loadHotkeys = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: student } = await supabase
+      .from('students')
+      .select('hotkey_settings')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (student?.hotkey_settings) {
+      setHotkeys(student.hotkey_settings as Record<string, string>);
+    }
+  };
+
+  const matchesHotkey = (e: KeyboardEvent | MouseEvent, hotkey: string): boolean => {
+    const parts = hotkey.split('+');
+    const hasCtrl = parts.includes('ctrl');
+    const hasShift = parts.includes('shift');
+    const hasAlt = parts.includes('alt');
+    const key = parts[parts.length - 1];
+
+    const modifiersMatch = (
+      (!hasCtrl || e.ctrlKey || (e as KeyboardEvent).metaKey) &&
+      (!hasShift || e.shiftKey) &&
+      (!hasAlt || e.altKey)
+    );
+
+    if (key.startsWith('mouse')) {
+      const mouseEvent = e as MouseEvent;
+      const buttonNumber = parseInt(key.replace('mouse', ''));
+      const buttonMap: Record<number, number> = { 1: 0, 2: 2, 3: 1, 4: 3, 5: 4 };
+      return modifiersMatch && mouseEvent.button === buttonMap[buttonNumber];
+    }
+
+    return modifiersMatch && (e as KeyboardEvent).key.toLowerCase() === key;
+  };
+
+  const toggleControl = (controlId: string) => {
+    switch (controlId) {
+      case 'bionic':
+        // This will be handled by BionicReadingContext
+        const bionicEvent = new CustomEvent('toggleBionic');
+        window.dispatchEvent(bionicEvent);
+        break;
+      case 'dyslexia':
+        setDyslexiaFont(!settings.dyslexiaFontEnabled);
+        break;
+      case 'ruler':
+        setReadingRuler(!settings.readingRulerEnabled);
+        break;
+      case 'tts':
+        setTextToSpeech(!settings.textToSpeechEnabled);
+        break;
+      case 'focus':
+        setFocusMode(!settings.focusModeEnabled);
+        break;
+      case 'contrast':
+        setHighContrast(!settings.highContrastEnabled);
+        break;
+    }
+  };
+
+  // Global hotkey listeners
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      Object.entries(hotkeys).forEach(([controlId, hotkey]) => {
+        if (!hotkey.includes('mouse') && matchesHotkey(e, hotkey)) {
+          e.preventDefault();
+          toggleControl(controlId);
+        }
+      });
+    };
+
+    const handleMouseClick = (e: MouseEvent) => {
+      Object.entries(hotkeys).forEach(([controlId, hotkey]) => {
+        if (hotkey.includes('mouse') && matchesHotkey(e, hotkey)) {
+          e.preventDefault();
+          toggleControl(controlId);
+        }
+      });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('mousedown', handleMouseClick);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('mousedown', handleMouseClick);
+    };
+  }, [hotkeys, settings]);
+
+  // Prevent context menu for right-click hotkeys
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      const hasRightClickHotkey = Object.values(hotkeys).some(hotkey => 
+        hotkey.includes('mouse2')
+      );
+      
+      if (hasRightClickHotkey) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('contextmenu', handleContextMenu);
+    return () => window.removeEventListener('contextmenu', handleContextMenu);
+  }, [hotkeys]);
+
   return (
     <AccessibilityContext.Provider
       value={{
@@ -302,6 +416,8 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         setTextToSpeech,
         setTextToSpeechVoice,
         setHighContrast,
+        hotkeys,
+        loadHotkeys,
       }}
     >
       {children}
