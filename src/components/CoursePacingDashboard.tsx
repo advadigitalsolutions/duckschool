@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, TrendingUp, TrendingDown, Minus, AlertTriangle, Settings, Sparkles, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCoursePacing } from '@/hooks/useCoursePacing';
-import { CourseMasteryChart } from './CourseMasteryChart';
+import { UnifiedMasteryDashboard } from './UnifiedMasteryDashboard';
 import { CourseProgressCharts } from './CourseProgressCharts';
 import { CourseSettingsDialog } from './CourseSettingsDialog';
 import { CurriculumGenerationDialog } from './CurriculumGenerationDialog';
@@ -426,8 +426,13 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
         </CardContent>
       </Card>
 
-      {/* Mastery Chart */}
-      <CourseMasteryChart masteryData={metrics.masteryData} />
+      {/* Unified Mastery Dashboard */}
+      <UnifiedMasteryDashboard 
+        studentId={studentId}
+        courseId={courseId}
+        curriculumMasteryData={metrics.masteryData}
+        showCurriculumView={true}
+      />
 
       {/* Progress Charts */}
       <CourseProgressCharts 

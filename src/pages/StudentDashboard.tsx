@@ -19,7 +19,7 @@ import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
 import { RequestCourseDialog } from '@/components/RequestCourseDialog';
-import { MasteryDashboard } from '@/components/MasteryDashboard';
+import { UnifiedMasteryDashboard } from '@/components/UnifiedMasteryDashboard';
 import { SessionStatsCard } from '@/components/SessionStatsCard';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Activity } from 'lucide-react';
@@ -644,7 +644,10 @@ export default function StudentDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <MasteryDashboard studentId={studentDbId} />
+              <UnifiedMasteryDashboard 
+                studentId={studentDbId} 
+                showCurriculumView={false}
+              />
             </CardContent>
           </Card>
         )}
