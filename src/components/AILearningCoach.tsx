@@ -6,8 +6,9 @@ import { Card } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, Send, Loader2, ChevronRight, ChevronLeft, Maximize2, Minimize2, PanelRightOpen } from 'lucide-react';
+import { MessageSquare, Send, Loader2, ChevronRight, Maximize2, PanelRightOpen, Mic, MicOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RealtimeChat } from '@/utils/RealtimeAudio';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -42,11 +43,14 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSidebarMode, setIsSidebarMode] = useState(false);
+  const [isAudioMode, setIsAudioMode] = useState(false);
+  const [audioStatus, setAudioStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentStreamedMessage, setCurrentStreamedMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const realtimeChatRef = useRef<RealtimeChat | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -178,6 +182,67 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
     }
   };
 
+  const startAudioMode = async () => {
+    try {
+      const chat = new RealtimeChat(
+        (message) => {
+          if (message.type === 'transcript') {
+            setMessages(prev => {
+              const lastMsg = prev[prev.length - 1];
+              if (lastMsg?.role === 'assistant') {
+                return prev.map((m, i) => 
+                  i === prev.length - 1 
+                    ? { ...m, content: (m.content || '') + message.content }
+                    : m
+                );
+              }
+              return [...prev, { role: 'assistant', content: message.content, timestamp: new Date() }];
+            });
+          } else if (message.type === 'user_transcript') {
+            setMessages(prev => [...prev, { role: 'user', content: message.content, timestamp: new Date() }]);
+          }
+        },
+        (status) => {
+          setAudioStatus(status);
+          if (status === 'disconnected') {
+            setIsAudioMode(false);
+          }
+        }
+      );
+
+      await chat.init(currentStep, studentContext, assignmentBody);
+      realtimeChatRef.current = chat;
+      setIsAudioMode(true);
+      
+      toast({
+        title: "Audio mode active",
+        description: "Start speaking to chat with your AI coach",
+      });
+    } catch (error) {
+      console.error('Error starting audio mode:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start audio mode. Please check microphone permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopAudioMode = () => {
+    realtimeChatRef.current?.disconnect();
+    realtimeChatRef.current = null;
+    setIsAudioMode(false);
+    setAudioStatus('disconnected');
+  };
+
+  useEffect(() => {
+    return () => {
+      if (realtimeChatRef.current) {
+        realtimeChatRef.current.disconnect();
+      }
+    };
+  }, []);
+
   if (!isOpen) {
     return (
       <Button
@@ -196,8 +261,34 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
         <div className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-primary" />
           <h3 className="font-semibold">AI Learning Coach</h3>
+          {isAudioMode && (
+            <span className="text-xs px-2 py-1 rounded-full bg-orange-500 text-white">
+              {audioStatus === 'connecting' ? 'Connecting...' : 
+               audioStatus === 'connected' ? '🎤 Listening' : 'Disconnected'}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1">
+          {isAudioMode ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={stopAudioMode}
+              className="text-orange-500"
+              title="Stop audio mode"
+            >
+              <MicOff className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={startAudioMode}
+              title="Start audio mode"
+            >
+              <Mic className="h-4 w-4" />
+            </Button>
+          )}
           {!isSidebarMode && (
             <Button
               variant="ghost"
@@ -223,6 +314,7 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
             size="icon"
             onClick={() => {
               setIsOpen(false);
+              stopAudioMode();
               if (isSidebarMode && onSidebarModeChange) {
                 setIsSidebarMode(false);
                 onSidebarModeChange(false);
@@ -283,29 +375,41 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
       </ScrollArea>
 
       <div className="p-4 border-t">
-        <div className="flex gap-2">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Ask your coach..."
-            disabled={isStreaming}
-            rows={2}
-            className="resize-none"
-          />
-          <Button
-            onClick={handleSendMessage}
-            disabled={!input.trim() || isStreaming}
-            size="icon"
-            className="h-full"
-          >
-            {isStreaming ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+        {isAudioMode ? (
+          <div className="text-center py-4">
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <Mic className="h-5 w-5 text-orange-500 animate-pulse" />
+              <p className="text-sm">Speaking with your coach...</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Click the mic icon to return to text mode
+            </p>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder="Ask your coach..."
+              disabled={isStreaming}
+              rows={2}
+              className="resize-none"
+            />
+            <Button
+              onClick={handleSendMessage}
+              disabled={!input.trim() || isStreaming}
+              size="icon"
+              className="h-full"
+            >
+              {isStreaming ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </>
   );

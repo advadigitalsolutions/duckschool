@@ -78,3 +78,6 @@ verify_jwt = true
 [functions.import-common-standards]
 verify_jwt = true
 
+[functions.realtime-session]
+verify_jwt = false
+
