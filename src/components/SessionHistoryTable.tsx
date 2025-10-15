@@ -25,7 +25,7 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
         .select('*')
         .eq('student_id', studentId)
         .order('session_start', { ascending: false })
-        .limit(50); // Fetch more to detect duplicates
+        .limit(100);
 
       if (dateRange) {
         query = query
@@ -34,48 +34,51 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
-      
-      // Deduplicate sessions - sessions within 5 seconds of each other are considered duplicates
-      const deduped: any[] = [];
-      const seen = new Set<string>();
+
+      // Group sessions into 25-minute Pomodoro blocks
+      // Sessions within 5 minutes of each other are considered part of the same block
+      const pomodoroBlocks: any[] = [];
       
       (data || []).forEach(session => {
-        const startTime = new Date(session.session_start).getTime();
-        const key = Math.floor(startTime / 5000); // Group by 5-second windows
+        const totalTime = session.total_active_seconds + session.total_idle_seconds + session.total_away_seconds;
+        if (totalTime < 30) return; // Skip very short sessions
+
+        const sessionStart = new Date(session.session_start).getTime();
         
-        if (!seen.has(key.toString())) {
-          seen.add(key.toString());
-          deduped.push(session);
-        } else {
-          // Found a duplicate - merge times into the first one
-          const existing = deduped.find(s => {
-            const existingTime = new Date(s.session_start).getTime();
-            return Math.floor(existingTime / 5000) === key;
-          });
+        // Try to find an existing block within 5 minutes
+        const existingBlock = pomodoroBlocks.find(block => {
+          const blockEnd = new Date(block.session_start).getTime() + (block.total_duration_seconds * 1000);
+          const timeSinceBlockEnd = (sessionStart - blockEnd) / 1000; // seconds
           
-          if (existing) {
-            existing.total_active_seconds += session.total_active_seconds;
-            existing.total_idle_seconds += session.total_idle_seconds;
-            existing.total_away_seconds += session.total_away_seconds;
-            
-            // Use the latest session_end if available
-            if (session.session_end && (!existing.session_end || 
-                new Date(session.session_end) > new Date(existing.session_end))) {
-              existing.session_end = session.session_end;
-            }
-          }
+          // Merge if this session starts within 5 minutes of the previous block ending
+          return timeSinceBlockEnd >= 0 && timeSinceBlockEnd <= 300; // 5 minutes
+        });
+
+        if (existingBlock && existingBlock.total_duration_seconds < 1500) { // Don't exceed 25 minutes per block
+          // Merge into existing block
+          existingBlock.total_active_seconds += session.total_active_seconds;
+          existingBlock.total_idle_seconds += session.total_idle_seconds;
+          existingBlock.total_away_seconds += session.total_away_seconds;
+          existingBlock.total_duration_seconds = existingBlock.total_active_seconds + 
+                                                 existingBlock.total_idle_seconds + 
+                                                 existingBlock.total_away_seconds;
+          existingBlock.session_count = (existingBlock.session_count || 1) + 1;
+        } else {
+          // Create new block
+          pomodoroBlocks.push({
+            id: session.id,
+            session_start: session.session_start,
+            total_active_seconds: session.total_active_seconds,
+            total_idle_seconds: session.total_idle_seconds,
+            total_away_seconds: session.total_away_seconds,
+            total_duration_seconds: totalTime,
+            session_count: 1
+          });
         }
       });
       
-      // Filter out zero-time and very short sessions
-      const filtered = deduped.filter(session => {
-        const totalTime = session.total_active_seconds + session.total_idle_seconds + session.total_away_seconds;
-        return totalTime >= 30; // Only show sessions with at least 30 seconds
-      });
-      
-      setSessions(filtered.slice(0, 20)); // Return top 20 after dedup and filter
+      setSessions(pomodoroBlocks.slice(0, 20));
     } catch (error) {
       console.error('Error fetching sessions:', error);
     } finally {
@@ -102,47 +105,58 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
     return acc;
   }, {} as Record<string, any[]>);
 
-  interface SegmentedBarProps {
+  interface PomodoroBarProps {
     activeSeconds: number;
     idleSeconds: number;
     awaySeconds: number;
+    totalSeconds: number;
   }
 
-  const SegmentedBar = ({ activeSeconds, idleSeconds, awaySeconds }: SegmentedBarProps) => {
-    const total = activeSeconds + idleSeconds + awaySeconds;
-    if (total === 0) return null;
+  const PomodoroBar = ({ activeSeconds, idleSeconds, awaySeconds, totalSeconds }: PomodoroBarProps) => {
+    const POMODORO_DURATION = 25 * 60; // 25 minutes in seconds
+    
+    if (totalSeconds === 0) return null;
 
-    const activePercent = (activeSeconds / total) * 100;
-    const idlePercent = (idleSeconds / total) * 100;
-    const awayPercent = (awaySeconds / total) * 100;
+    // Calculate percentages out of 25 minutes (not out of total time)
+    const activePercent = (activeSeconds / POMODORO_DURATION) * 100;
+    const idlePercent = (idleSeconds / POMODORO_DURATION) * 100;
+    const awayPercent = (awaySeconds / POMODORO_DURATION) * 100;
+    const usedPercent = (totalSeconds / POMODORO_DURATION) * 100;
 
     return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex h-6 w-full rounded-md overflow-hidden border border-border cursor-help">
+            <div className="relative flex h-6 w-full rounded-md overflow-hidden border border-border cursor-help bg-muted/30">
+              {/* Active time */}
               {activePercent > 0 && (
                 <div 
                   className="bg-success transition-all" 
                   style={{ width: `${activePercent}%` }}
                 />
               )}
+              {/* Idle time */}
               {idlePercent > 0 && (
                 <div 
                   className="bg-warning transition-all" 
                   style={{ width: `${idlePercent}%` }}
                 />
               )}
+              {/* Away time */}
               {awayPercent > 0 && (
                 <div 
                   className="bg-destructive transition-all" 
                   style={{ width: `${awayPercent}%` }}
                 />
               )}
+              {/* Remaining time (unfilled) is shown by the bg-muted/30 background */}
             </div>
           </TooltipTrigger>
           <TooltipContent>
             <div className="text-sm space-y-1">
+              <div className="font-semibold mb-2">
+                {formatTime(totalSeconds)} of 25-minute block
+              </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-success" />
                 <span>Active: {formatTime(activeSeconds)}</span>
@@ -154,6 +168,10 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-destructive" />
                 <span>Away: {formatTime(awaySeconds)}</span>
+              </div>
+              <div className="flex items-center gap-2 mt-2 pt-2 border-t">
+                <div className="w-3 h-3 rounded bg-muted" />
+                <span>Unused: {formatTime(POMODORO_DURATION - totalSeconds)}</span>
               </div>
             </div>
           </TooltipContent>
@@ -178,7 +196,7 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
     <Card>
       <CardHeader>
         <CardTitle>Session History</CardTitle>
-        <CardDescription>Recent learning sessions</CardDescription>
+        <CardDescription>25-minute learning blocks with activity breakdown</CardDescription>
       </CardHeader>
       <CardContent>
         {sessions.length === 0 ? (
@@ -202,21 +220,21 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
                   </TableHeader>
                   <TableBody>
                     {dateSessions.map((session) => {
-                      const duration = session.total_active_seconds + session.total_idle_seconds + session.total_away_seconds;
                       return (
                         <TableRow key={session.id}>
                           <TableCell className="font-mono text-sm">
                             {format(new Date(session.session_start), 'h:mm a')}
                           </TableCell>
                           <TableCell>
-                            <SegmentedBar 
+                            <PomodoroBar 
                               activeSeconds={session.total_active_seconds}
                               idleSeconds={session.total_idle_seconds}
                               awaySeconds={session.total_away_seconds}
+                              totalSeconds={session.total_duration_seconds}
                             />
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {formatTime(duration)}
+                            {formatTime(session.total_duration_seconds)}
                           </TableCell>
                         </TableRow>
                       );
