@@ -271,13 +271,23 @@ export default function AssignmentDetail() {
   const content = assignment.curriculum_items?.body || {};
   const studentId = assignment.curriculum_items?.courses?.student_id;
 
+  const handleBackNavigation = () => {
+    // If student viewing their own work, go to student dashboard
+    // If parent viewing student's work, go to student detail page
+    if (currentStudentId) {
+      navigate('/student');
+    } else {
+      navigate(`/student/${studentId}`);
+    }
+  };
+
   return (
     <StudentLayout>
       <div className="container mx-auto px-4 py-6">
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => navigate(`/student/${studentId}`)}
+          onClick={handleBackNavigation}
           className="mb-4"
         >
           <ArrowLeft className="h-5 w-5" />

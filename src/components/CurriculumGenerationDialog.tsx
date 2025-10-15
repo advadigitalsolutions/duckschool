@@ -84,18 +84,30 @@ export function CurriculumGenerationDialog({
   const handleCreateAssignment = async (suggestion: AssignmentSuggestion, index: number) => {
     setCreatingIndex(index);
     try {
-      // First, create a curriculum item
+      // Generate actual lesson questions
+      toast.info('Generating lesson content...');
+      const { data: generatedAssignment, error: generateError } = await supabase.functions.invoke('generate-assignment', {
+        body: {
+          courseId: courseId,
+          title: suggestion.title,
+          description: suggestion.description,
+          standardCode: suggestion.standardCode,
+          objectives: suggestion.objectives,
+          materials: suggestion.materials,
+          estimatedMinutes: suggestion.estimatedMinutes
+        }
+      });
+
+      if (generateError) throw generateError;
+
+      // Create curriculum item with generated content
       const { data: curriculumItem, error: curriculumError } = await supabase
         .from('curriculum_items')
         .insert({
           course_id: courseId,
           title: suggestion.title,
           type: 'lesson',
-          body: {
-            description: suggestion.description,
-            objectives: suggestion.objectives,
-            materials: suggestion.materials || []
-          },
+          body: generatedAssignment.body,
           standards: [suggestion.standardCode],
           est_minutes: suggestion.estimatedMinutes
         })
@@ -140,23 +152,36 @@ export function CurriculumGenerationDialog({
     const uncreatedSuggestions = suggestions.filter(s => !s.created);
     let successCount = 0;
     
+    toast.info(`Generating ${uncreatedSuggestions.length} lessons with full content...`);
+    
     try {
       for (let i = 0; i < suggestions.length; i++) {
         const suggestion = suggestions[i];
         if (suggestion.created) continue;
 
         try {
+          // Generate actual lesson questions
+          const { data: generatedAssignment, error: generateError } = await supabase.functions.invoke('generate-assignment', {
+            body: {
+              courseId: courseId,
+              title: suggestion.title,
+              description: suggestion.description,
+              standardCode: suggestion.standardCode,
+              objectives: suggestion.objectives,
+              materials: suggestion.materials,
+              estimatedMinutes: suggestion.estimatedMinutes
+            }
+          });
+
+          if (generateError) throw generateError;
+
           const { data: curriculumItem, error: curriculumError } = await supabase
             .from('curriculum_items')
             .insert({
               course_id: courseId,
               title: suggestion.title,
               type: 'lesson',
-              body: {
-                description: suggestion.description,
-                objectives: suggestion.objectives,
-                materials: suggestion.materials || []
-              },
+              body: generatedAssignment.body,
               standards: [suggestion.standardCode],
               est_minutes: suggestion.estimatedMinutes
             })
