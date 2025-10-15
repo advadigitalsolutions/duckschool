@@ -109,7 +109,7 @@ export function CurriculumGenerationDialog({
         .from('assignments')
         .insert({
           curriculum_item_id: curriculumItem.id,
-          status: 'draft'
+          status: 'assigned'
         });
 
       if (assignmentError) throw assignmentError;
@@ -172,7 +172,7 @@ export function CurriculumGenerationDialog({
             .from('assignments')
             .insert({
               curriculum_item_id: curriculumItem.id,
-              status: 'draft'
+              status: 'assigned'
             });
 
           if (assignmentError) throw assignmentError;
