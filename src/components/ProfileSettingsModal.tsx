@@ -338,7 +338,11 @@ export function ProfileSettingsModal({
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <Button onClick={handleSaveProfile} className="w-full">
+                    Save Profile
+                  </Button>
+
+                  <div className="space-y-2 pt-4">
                     <Label>Special Interests</Label>
                     <div className="flex flex-wrap gap-2 mb-2">
                       {specialInterests.map((interest, index) => (
@@ -366,10 +370,6 @@ export function ProfileSettingsModal({
                       <BionicText>Your AI coach will personalize lessons based on your interests!</BionicText>
                     </p>
                   </div>
-
-                  <Button onClick={handleSaveProfile} className="w-full">
-                    Save Profile
-                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
