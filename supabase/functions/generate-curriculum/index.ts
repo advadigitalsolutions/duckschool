@@ -78,8 +78,8 @@ serve(async (req) => {
       // Use AI-generated custom standards
       allStandards = course.standards_scope?.[0]?.custom_standards || null;
     } else {
-      // Get standards from database
-      const { data, error: standardsError } = await supabaseClient
+      // Get standards from database - try exact grade first
+      let { data, error: standardsError } = await supabaseClient
         .from('standards')
         .select('*')
         .eq('framework', framework)
@@ -89,6 +89,32 @@ serve(async (req) => {
       if (standardsError) {
         console.error('Standards error:', standardsError);
       }
+
+      // If no exact match, try grade ranges (e.g., "K-12" that includes this grade)
+      if (!data || data.length === 0) {
+        const gradeNum = parseInt(gradeLevel) || 12;
+        const { data: allGradeData } = await supabaseClient
+          .from('standards')
+          .select('*')
+          .eq('framework', framework)
+          .eq('subject', course.subject);
+        
+        if (allGradeData && allGradeData.length > 0) {
+          // Filter for grade ranges that include our grade
+          data = allGradeData.filter((s: any) => {
+            const gradeBand = s.grade_band;
+            if (gradeBand.includes('-')) {
+              const [startStr, endStr] = gradeBand.split('-');
+              // Handle 'K' as kindergarten (grade 0)
+              const start = startStr.toUpperCase() === 'K' ? 0 : parseInt(startStr);
+              const end = parseInt(endStr);
+              return gradeNum >= start && gradeNum <= end;
+            }
+            return parseInt(gradeBand) === gradeNum;
+          });
+        }
+      }
+      
       allStandards = data;
     }
 
