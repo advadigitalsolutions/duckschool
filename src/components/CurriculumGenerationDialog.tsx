@@ -121,7 +121,15 @@ export function CurriculumGenerationDialog({
         i === index ? { ...s, created: true } : s
       ));
       
-      // Don't close the modal - let user continue creating
+      // Increment created count
+      setCreatedCount(prev => prev + 1);
+      
+      // Check if all suggestions are created
+      const allCreated = suggestions.every((s, i) => i === index || s.created);
+      if (allCreated) {
+        setShowCompletion(true);
+        onGenerated?.();
+      }
     } catch (error: any) {
       console.error('Error creating assignment:', error);
       toast.error('Failed to create assignment');
@@ -198,7 +206,7 @@ export function CurriculumGenerationDialog({
 
   const handleGoToCurriculum = () => {
     onOpenChange(false);
-    navigate(`/student/${studentId}?tab=assignments`);
+    navigate(`/course/${courseId}`);
   };
 
   return (
@@ -235,7 +243,7 @@ export function CurriculumGenerationDialog({
                   className="min-w-[200px]"
                 >
                   <BookOpen className="mr-2 h-4 w-4" />
-                  Take Me to Curriculum
+                  View Curriculum
                 </Button>
                 <Button 
                   onClick={handleGenerateMore}
@@ -244,7 +252,15 @@ export function CurriculumGenerationDialog({
                   className="min-w-[200px]"
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Generate More Curriculum
+                  Generate More
+                </Button>
+                <Button 
+                  onClick={() => onOpenChange(false)}
+                  variant="ghost"
+                  size="lg"
+                  className="min-w-[200px]"
+                >
+                  Close
                 </Button>
               </div>
             </div>
