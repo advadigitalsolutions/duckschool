@@ -12,6 +12,63 @@ export default function AdminSeedStandards() {
   const { toast } = useToast();
   const [isSeeding, setIsSeeding] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadSubject, setUploadSubject] = useState<string>('Mathematics');
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileUpload = async () => {
+    if (!uploadedFile) return;
+
+    setIsUploading(true);
+    setResults(null);
+    try {
+      const fileContent = await uploadedFile.text();
+      
+      toast({
+        title: "Import Started",
+        description: `Importing ${uploadSubject} standards from ${uploadedFile.name}...`,
+      });
+
+      const { data, error } = await supabase.functions.invoke('import-standards-from-json', {
+        body: {
+          jsonContent: fileContent,
+          subject: uploadSubject,
+          framework: 'CA CCSS'
+        }
+      });
+
+      if (error) throw error;
+
+      setResults({
+        summary: {
+          successful: data.imported || 0,
+          failed: data.failed || 0,
+          skipped: data.skipped || 0
+        },
+        results: [{
+          subject: data.subject,
+          status: 'success',
+          count: data.imported
+        }]
+      });
+
+      toast({
+        title: "Import Successful",
+        description: `Imported ${data.imported} ${uploadSubject} standards`,
+      });
+
+      setUploadedFile(null);
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Import Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const startSeeding = async (mode: 'test' | 'california' | 'all' | 'local-pdfs') => {
     setIsSeeding(true);
@@ -90,6 +147,68 @@ export default function AdminSeedStandards() {
             This is a one-time setup process that makes standards instantly available to all parents.
           </p>
         </div>
+
+        <Card className="border-2 border-primary">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              📁 Direct JSON File Import
+            </CardTitle>
+            <CardDescription>
+              Upload JSON files from ASN to import standards directly - no API calls, instant results
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Subject</label>
+              <select
+                value={uploadSubject}
+                onChange={(e) => setUploadSubject(e.target.value)}
+                className="w-full p-2 border rounded-md bg-background"
+              >
+                <option value="Mathematics">Mathematics</option>
+                <option value="English Language Arts">English Language Arts</option>
+                <option value="Science">Science</option>
+                <option value="History-Social Science">History-Social Science</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Upload JSON File</label>
+              <input
+                type="file"
+                accept=".json"
+                onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
+                className="w-full p-2 border rounded-md bg-background"
+              />
+              {uploadedFile && (
+                <p className="text-xs text-muted-foreground">
+                  Selected: {uploadedFile.name} ({(uploadedFile.size / 1024).toFixed(1)} KB)
+                </p>
+              )}
+            </div>
+
+            <Button
+              onClick={handleFileUpload}
+              disabled={!uploadedFile || isUploading}
+              className="w-full"
+              size="lg"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                'Import Standards from File'
+              )}
+            </Button>
+
+            <p className="text-xs text-muted-foreground">
+              Download JSON files from <a href="http://asn.desire2learn.com/resources/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">ASN (D2513639 for CA Math, D2513640 for CA ELA)</a>
+            </p>
+          </CardContent>
+        </Card>
 
         <Card className="border-primary">
           <CardHeader>
