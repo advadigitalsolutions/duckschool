@@ -40,6 +40,29 @@ export const useActivitySession = (studentId?: string) => {
       return;
     }
     
+    // Close any orphaned "In Progress" sessions for this student before creating a new one
+    try {
+      const { data: openSessions } = await supabase
+        .from('learning_sessions')
+        .select('id')
+        .eq('student_id', studentId)
+        .is('session_end', null);
+      
+      if (openSessions && openSessions.length > 0) {
+        console.log(`🧹 Closing ${openSessions.length} orphaned session(s)`);
+        await supabase
+          .from('learning_sessions')
+          .update({
+            session_end: new Date().toISOString(),
+            ended_by: 'cleanup'
+          })
+          .eq('student_id', studentId)
+          .is('session_end', null);
+      }
+    } catch (e) {
+      console.error('Error closing orphaned sessions:', e);
+    }
+    
     // Check localStorage for existing session
     const storedSession = localStorage.getItem('focus_journey_session');
     if (storedSession) {
@@ -51,9 +74,13 @@ export const useActivitySession = (studentId?: string) => {
           console.log('♻️ Reusing existing session from localStorage:', parsed.sessionId);
           setSessionData(prev => ({ ...prev, sessionId: parsed.sessionId }));
           return;
+        } else {
+          // Session too old, remove it
+          localStorage.removeItem('focus_journey_session');
         }
       } catch (e) {
         console.error('Error parsing stored session:', e);
+        localStorage.removeItem('focus_journey_session');
       }
     }
     
@@ -182,35 +209,60 @@ export const useActivitySession = (studentId?: string) => {
     }));
   }, []);
 
-  // Periodic sync to DB
+  // Periodic sync to DB - every 10 seconds for more frequent updates
   useEffect(() => {
     if (!sessionData.sessionId) return;
     
-    const interval = setInterval(syncSession, 30000); // Sync every 30 seconds
+    const interval = setInterval(syncSession, 10000); // Sync every 10 seconds
     return () => clearInterval(interval);
   }, [sessionData.sessionId, syncSession]);
+  
+  // Debounced sync after time updates
+  useEffect(() => {
+    if (!sessionData.sessionId) return;
+    
+    const timeout = setTimeout(() => {
+      syncSession();
+    }, 2000); // Sync 2 seconds after last time update
+    
+    return () => clearTimeout(timeout);
+  }, [sessionData.activeSeconds, sessionData.idleSeconds, sessionData.awaySeconds, syncSession]);
 
   // Handle browser close/refresh
   useEffect(() => {
-    const handleBeforeUnload = async () => {
+    const handleBeforeUnload = () => {
       if (sessionData.sessionId) {
-        // Use simple update instead of sendBeacon since we can't access protected URL
-        await supabase
+        // Use navigator.sendBeacon for reliable sync on page unload
+        const updateData = {
+          session_end: new Date().toISOString(),
+          ended_by: 'browser_close',
+          total_active_seconds: sessionData.activeSeconds,
+          total_idle_seconds: sessionData.idleSeconds,
+          total_away_seconds: sessionData.awaySeconds
+        };
+        
+        // Fallback to synchronous update
+        supabase
           .from('learning_sessions')
-          .update({
-            session_end: new Date().toISOString(),
-            ended_by: 'browser_close',
-            total_active_seconds: sessionData.activeSeconds,
-            total_idle_seconds: sessionData.idleSeconds,
-            total_away_seconds: sessionData.awaySeconds
-          })
+          .update(updateData)
           .eq('id', sessionData.sessionId);
+          
+        localStorage.removeItem('focus_journey_session');
       }
     };
     
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [sessionData]);
+  
+  // End session on component unmount
+  useEffect(() => {
+    return () => {
+      if (sessionData.sessionId) {
+        endSession('manual');
+      }
+    };
+  }, []);
 
   return {
     sessionId: sessionData.sessionId,

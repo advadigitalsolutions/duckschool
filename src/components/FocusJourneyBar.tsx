@@ -366,20 +366,32 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   // Create session on mount
   useEffect(() => {
+    console.log('🎬 FocusJourneyBar mounted for student:', studentId);
     if (!sessionId) {
+      console.log('📝 No session found, creating new session');
       createSession();
+    } else {
+      console.log('✅ Session already exists:', sessionId);
     }
-  }, [sessionId, createSession]);
+  }, [sessionId, createSession, studentId]);
 
   // Update active time counter - only when session is active, user is present, and not idle
   useEffect(() => {
+    // Log state changes
+    console.log('⏱️ Timer state:', { 
+      sessionId: !!sessionId, 
+      isIdle, 
+      isVisible,
+      shouldRun: !!(sessionId && !isIdle && isVisible)
+    });
+    
     // Don't count if any of these conditions are true
     if (!sessionId || isIdle || !isVisible) {
       console.log('⏸️ Timer paused:', { sessionId: !!sessionId, isIdle, isVisible });
       return;
     }
 
-    console.log('▶️ Timer active:', { sessionId: !!sessionId, isIdle, isVisible });
+    console.log('▶️ Timer STARTING - incrementing every second');
     const interval = setInterval(() => {
       updateActiveTime(1);
     }, 1000);

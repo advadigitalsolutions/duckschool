@@ -25,7 +25,7 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
         .select('*')
         .eq('student_id', studentId)
         .order('session_start', { ascending: false })
-        .limit(20);
+        .limit(50); // Fetch more to detect duplicates
 
       if (dateRange) {
         query = query
@@ -36,7 +36,40 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
       const { data, error } = await query;
 
       if (error) throw error;
-      setSessions(data || []);
+      
+      // Deduplicate sessions - sessions within 5 seconds of each other are considered duplicates
+      const deduped: any[] = [];
+      const seen = new Set<string>();
+      
+      (data || []).forEach(session => {
+        const startTime = new Date(session.session_start).getTime();
+        const key = Math.floor(startTime / 5000); // Group by 5-second windows
+        
+        if (!seen.has(key.toString())) {
+          seen.add(key.toString());
+          deduped.push(session);
+        } else {
+          // Found a duplicate - merge times into the first one
+          const existing = deduped.find(s => {
+            const existingTime = new Date(s.session_start).getTime();
+            return Math.floor(existingTime / 5000) === key;
+          });
+          
+          if (existing) {
+            existing.total_active_seconds += session.total_active_seconds;
+            existing.total_idle_seconds += session.total_idle_seconds;
+            existing.total_away_seconds += session.total_away_seconds;
+            
+            // Use the latest session_end if available
+            if (session.session_end && (!existing.session_end || 
+                new Date(session.session_end) > new Date(existing.session_end))) {
+              existing.session_end = session.session_end;
+            }
+          }
+        }
+      });
+      
+      setSessions(deduped.slice(0, 20)); // Return top 20 after dedup
     } catch (error) {
       console.error('Error fetching sessions:', error);
     } finally {
@@ -55,6 +88,14 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
 
   const getStatusBadge = (session: any) => {
     if (!session.session_end) {
+      // Check if session is stale (started more than 2 hours ago with no end)
+      const startTime = new Date(session.session_start).getTime();
+      const now = Date.now();
+      const hoursAgo = (now - startTime) / (1000 * 60 * 60);
+      
+      if (hoursAgo > 2) {
+        return <Badge variant="outline">Abandoned</Badge>;
+      }
       return <Badge>In Progress</Badge>;
     }
     return <Badge variant="secondary">Completed</Badge>;
