@@ -416,7 +416,7 @@ export function CustomizableHeader({
   };
 
   const headerClasses = cn(
-    "top-0 z-40 border-b bg-background/70 backdrop-blur-xl backdrop-saturate-150 shadow-lg transition-transform duration-300",
+    "top-0 z-50 border-b bg-background/70 backdrop-blur-xl backdrop-saturate-150 shadow-lg transition-transform duration-300",
     settings.headerVisibility === 'sticky' && "sticky",
     settings.headerVisibility === 'auto-hide' && "sticky",
     settings.headerVisibility === 'auto-hide' && !isHeaderVisible && "-translate-y-full"
