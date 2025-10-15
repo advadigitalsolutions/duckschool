@@ -570,11 +570,22 @@ export function CustomizableHeader({
                 size="icon"
                 className="h-12 w-12 flex-shrink-0"
                 onClick={() => {
-                  // Navigate based on current route
+                  // Smart navigation based on current route
                   if (location.pathname === '/student/profile' || location.pathname === '/parent/profile') {
+                    // From profile, go to respective dashboard
                     navigate(location.pathname.startsWith('/parent') ? '/parent' : '/student');
+                  } else if (location.pathname.startsWith('/assignment/')) {
+                    // From assignment, go to student dashboard
+                    navigate('/student');
+                  } else if (location.pathname.startsWith('/course/')) {
+                    // From course, go to student dashboard
+                    navigate('/student');
+                  } else if (location.pathname.startsWith('/student/')) {
+                    // From student detail, go to parent dashboard
+                    navigate('/parent');
                   } else {
-                    navigate(-1);
+                    // Default: go to student dashboard
+                    navigate('/student');
                   }
                 }}
               >
