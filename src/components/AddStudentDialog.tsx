@@ -142,7 +142,6 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
             <Input
               id="name"
               name="name"
-              placeholder="Isaiah"
               required
             />
           </div>

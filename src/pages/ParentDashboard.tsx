@@ -654,7 +654,7 @@ export default function ParentDashboard() {
                     <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
                     <div>
                       <p className="font-medium">Add Student Profile</p>
-                      <p className="text-sm text-muted-foreground">Create Isaiah's student profile with grade level and accommodations</p>
+                      <p className="text-sm text-muted-foreground">Create student profile with grade level and accommodations</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3 rounded-lg border p-3">
