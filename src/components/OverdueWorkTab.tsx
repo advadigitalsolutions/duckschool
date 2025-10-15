@@ -106,8 +106,8 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
           <X className="h-4 w-4" />
         </Button>
 
-        <div className="relative flex items-center gap-6">
-          <div className="flex-shrink-0 scale-[2.5]">
+        <div className="relative flex items-center gap-4">
+          <div className="flex-shrink-0 scale-[1.8] ml-2">
             <FocusJourneyDuck 
               animationState="celebrating"
               onAnimationComplete={() => {}}
@@ -116,10 +116,10 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
           </div>
           
           <div className="flex-1 text-white">
-            <h3 className="font-bold text-2xl mb-2 drop-shadow-sm">
+            <h3 className="font-bold text-xl mb-1 drop-shadow-sm">
               🎉 All Caught Up!
             </h3>
-            <p className="text-white/90 text-lg">
+            <p className="text-white/90 text-base leading-relaxed">
               No overdue assignments. You're doing amazing — keep up the great work!
             </p>
           </div>
