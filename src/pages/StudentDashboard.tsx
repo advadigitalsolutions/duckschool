@@ -20,6 +20,9 @@ import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
 import { RequestCourseDialog } from '@/components/RequestCourseDialog';
 import { MasteryDashboard } from '@/components/MasteryDashboard';
+import { SessionStatsCard } from '@/components/SessionStatsCard';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, Activity } from 'lucide-react';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -411,6 +414,37 @@ export default function StudentDashboard() {
       {headerSettings && <CustomizableHeader student={student} settings={headerSettings} onSaveSettings={saveHeaderSettings} onSignOut={handleSignOut} onDemoCelebration={() => setShowConfetti(true)} />}
 
       <div className="container mx-auto p-4 md:p-8 max-w-4xl">
+        {/* Focus Time Stats - Collapsible */}
+        {student?.id && (
+          <Collapsible className="mb-6">
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">My Focus Stats</CardTitle>
+                    </div>
+                    <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                  </div>
+                  <CardDescription>View your time tracking and engagement</CardDescription>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <SessionStatsCard 
+                    studentId={student.id} 
+                    dateRange={{
+                      start: new Date(new Date().setHours(0, 0, 0, 0)),
+                      end: new Date()
+                    }}
+                  />
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        )}
+        
         {/* Weekly Progress Overview */}
         <Card className="mb-6">
           <CardHeader>

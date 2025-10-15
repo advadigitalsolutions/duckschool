@@ -40,6 +40,7 @@ import { PersonalityReportView } from '@/components/PersonalityReportView';
 import { StudentGrades } from '@/components/StudentGrades';
 import { GlobalCourseSettingsDialog } from '@/components/GlobalCourseSettingsDialog';
 import { Settings } from 'lucide-react';
+import { FocusAnalyticsDashboard } from '@/components/FocusAnalyticsDashboard';
 
 export default function StudentDetail() {
   const { id } = useParams();
@@ -286,6 +287,10 @@ export default function StudentDetail() {
             <TabsTrigger value="overdue">Overdue</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
             <TabsTrigger value="all-assignments">All Assignments</TabsTrigger>
+            <TabsTrigger value="time-analytics">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Time Analytics
+            </TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="learning-profile">
               Learning Profile
@@ -540,6 +545,10 @@ export default function StudentDetail() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="time-analytics" className="space-y-4">
+            <FocusAnalyticsDashboard studentId={student.id} />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">

@@ -31,6 +31,7 @@ import { ParentPomodoroControls } from '@/components/ParentPomodoroControls';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
+import { FocusAnalyticsDashboard } from '@/components/FocusAnalyticsDashboard';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -427,6 +428,7 @@ export default function ParentDashboard() {
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="time-tracking">Time Tracking</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="pomodoro">Pomodoro Timers</TabsTrigger>
             <TabsTrigger value="weekly-plans">Weekly Plans</TabsTrigger>
@@ -454,6 +456,44 @@ export default function ParentDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="time-tracking" className="space-y-4">
+            {students.length === 0 ? (
+              <Card>
+                <CardContent className="py-12">
+                  <div className="text-center">
+                    <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">Add students to view time tracking</p>
+                    <AddStudentDialog onStudentAdded={fetchDashboardData} />
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {students.map(student => (
+                  <Card key={student.id}>
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={student.avatar_url || ''} />
+                          <AvatarFallback>
+                            <User className="h-5 w-5" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <CardTitle>{student.name}'s Focus Analytics</CardTitle>
+                          <CardDescription>Time tracking and engagement metrics</CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <FocusAnalyticsDashboard studentId={student.id} />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="pomodoro" className="space-y-4">
