@@ -66,7 +66,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Educational theme - calming blues and greens for focus */
-    --background: 210 40% 98%;
+    --background: 210 40% 96%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -88,7 +88,7 @@ All colors MUST be HSL.
     --accent: 25 95% 53%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96%;
+    --muted: 210 40% 94%;
     --muted-foreground: 215 16% 47%;
 
     /* Success, warning, destructive states */
@@ -101,8 +101,8 @@ All colors MUST be HSL.
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 214 32% 85%;
+    --input: 214 32% 85%;
     --ring: 217 91% 60%;
 
     --radius: 0.75rem;
@@ -123,7 +123,7 @@ All colors MUST be HSL.
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 40% 96%;
     --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
+    --sidebar-border: 214 32% 85%;
     --sidebar-ring: 217 91% 60%;
     
     /* Gradients for visual interest */
@@ -132,20 +132,20 @@ All colors MUST be HSL.
     --gradient-hero: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(142 76% 36%) 100%);
     
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.1);
+    --shadow-sm: 0 2px 4px 0 hsl(222 47% 11% / 0.06);
+    --shadow-md: 0 6px 12px -2px hsl(222 47% 11% / 0.12);
+    --shadow-lg: 0 12px 24px -4px hsl(222 47% 11% / 0.15);
     --shadow-focus: 0 0 0 3px hsl(217 91% 60% / 0.3);
   }
 
   .dark {
-    --background: 222 47% 11%;
+    --background: 222 47% 13%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 13%;
+    --card: 222 40% 18%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 13%;
+    --popover: 222 40% 18%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 217 91% 60%;
@@ -158,7 +158,7 @@ All colors MUST be HSL.
     --accent: 25 95% 53%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 217 33% 17%;
+    --muted: 217 35% 21%;
     --muted-foreground: 215 20% 65%;
 
     --success: 142 76% 36%;
@@ -170,22 +170,22 @@ All colors MUST be HSL.
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
+    --border: 217 25% 28%;
+    --input: 217 25% 28%;
     --ring: 217 91% 60%;
     
-    --sidebar-background: 222 47% 13%;
+    --sidebar-background: 222 47% 15%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent: 217 35% 22%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
+    --sidebar-border: 217 25% 28%;
     --sidebar-ring: 217 91% 60%;
     
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5);
+    --shadow-sm: 0 2px 4px 0 hsl(0 0% 0% / 0.4);
+    --shadow-md: 0 6px 12px -2px hsl(0 0% 0% / 0.5);
+    --shadow-lg: 0 12px 24px -4px hsl(0 0% 0% / 0.6);
   }
 }
 
@@ -197,6 +197,24 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Enhanced focus states for better navigation */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+/* ADHD-friendly spacing utilities */
+.content-section {
+  @apply space-y-6 mb-8;
+}
+
+.section-divider {
+  @apply border-t-2 border-border my-8;
+}
+
+.card-group {
+  @apply grid gap-6;
 }
 
 /* Accessibility Styles */
