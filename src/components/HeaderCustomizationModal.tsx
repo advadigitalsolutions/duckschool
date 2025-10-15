@@ -338,15 +338,15 @@ export function HeaderCustomizationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Customize Your Header ✨</DialogTitle>
           <DialogDescription>
             Make your dashboard feel like home with these personalization options
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 min-h-0 flex flex-col">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 min-h-0 flex flex-col overflow-hidden">
           <TabsList className="grid w-full grid-cols-5 flex-shrink-0">
             <TabsTrigger value="display">Display</TabsTrigger>
             <TabsTrigger value="rotating">Subtext</TabsTrigger>
@@ -355,7 +355,7 @@ export function HeaderCustomizationModal({
             <TabsTrigger value="effects">Effects</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1 min-h-0 pr-4 max-h-[calc(90vh-12rem)]">
+          <ScrollArea className="flex-1 min-h-0 pr-4">
             <TabsContent value="display" className="space-y-4 mt-4">
               <Card className="p-4 space-y-4">
                 <div className="space-y-2">
