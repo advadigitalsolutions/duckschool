@@ -330,7 +330,7 @@ export default function AssignmentDetail() {
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="questions">Questions</TabsTrigger>
+            <TabsTrigger value="questions">Lesson</TabsTrigger>
             {isParent && (
               <TabsTrigger value="teacher-guide">Teacher's Guide</TabsTrigger>
             )}
