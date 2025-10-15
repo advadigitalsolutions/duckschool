@@ -393,10 +393,12 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
             )}
           </div>
 
-          {targetDate && (
+          {(targetDate || metrics.recommendedDailyMinutes > 0) && (
             <div className="rounded-lg bg-muted p-4 space-y-2">
               <div className="font-semibold">
-                To complete by {format(targetDate, 'MMM dd, yyyy')}:
+                {targetDate 
+                  ? `To complete by ${format(targetDate, 'MMM dd, yyyy')}:` 
+                  : 'Suggested pace (based on 9-month school year):'}
               </div>
               <div className="text-2xl font-bold text-primary">
                 {Math.round(metrics.recommendedDailyMinutes)} minutes per day
@@ -404,6 +406,11 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
               <div className="text-sm text-muted-foreground">
                 ({(metrics.recommendedDailyMinutes / 60).toFixed(1)} hours per day)
               </div>
+              {!targetDate && (
+                <div className="text-xs text-muted-foreground mt-2">
+                  💡 Set a target date above to see personalized pacing recommendations
+                </div>
+              )}
             </div>
           )}
         </CardContent>

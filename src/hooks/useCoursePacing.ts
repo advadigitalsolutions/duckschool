@@ -336,6 +336,11 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       if (targetDate) {
         const daysUntilTarget = Math.max(1, Math.ceil((targetDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
         recommendedDailyMinutes = remainingMinutes / daysUntilTarget;
+      } else if (remainingMinutes > 0) {
+        // Baseline: Assume completion in 9 months (270 days = typical school year)
+        // This gives parents a starting point even without setting a target
+        const assumedDays = 270; // 9-month school year
+        recommendedDailyMinutes = remainingMinutes / assumedDays;
       }
 
       console.log('📊 RECOMMENDATION DEBUG:', {
