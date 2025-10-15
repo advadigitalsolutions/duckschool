@@ -56,10 +56,7 @@ interface ProfileSettingsModalProps {
   onOpenChange: (open: boolean) => void;
   student: any;
   onProfileUpdate: () => void;
-  headerSettings: any;
-  onHeaderSettingsUpdate: (settings: any) => void;
-  onDemoCelebration: () => void;
-  initialTab?: 'profile' | 'accessibility' | 'assessment' | 'header';
+  initialTab?: 'profile' | 'accessibility' | 'assessment';
 }
 
 export function ProfileSettingsModal({
@@ -67,12 +64,9 @@ export function ProfileSettingsModal({
   onOpenChange,
   student,
   onProfileUpdate,
-  headerSettings,
-  onHeaderSettingsUpdate,
-  onDemoCelebration,
   initialTab = 'profile',
 }: ProfileSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'accessibility' | 'assessment' | 'header'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'profile' | 'accessibility' | 'assessment'>(initialTab);
   const [displayName, setDisplayName] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -226,8 +220,8 @@ export function ProfileSettingsModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'profile' | 'accessibility' | 'assessment' | 'header')} className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'profile' | 'accessibility' | 'assessment')} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
             <TabsTrigger value="assessment" className="relative">
@@ -236,7 +230,6 @@ export function ProfileSettingsModal({
                 <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
               )}
             </TabsTrigger>
-            <TabsTrigger value="header">Header</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="flex-1 min-h-0 pr-4">
@@ -605,46 +598,9 @@ export function ProfileSettingsModal({
                 />
               )}
             </TabsContent>
-
-            <TabsContent value="header" className="mt-4">
-              {headerSettings && (
-                <HeaderSettingsContent
-                  settings={headerSettings}
-                  onSave={onHeaderSettingsUpdate}
-                  onDemo={onDemoCelebration}
-                  studentName={student?.display_name || student?.name || ''}
-                />
-              )}
-            </TabsContent>
           </ScrollArea>
         </Tabs>
       </DialogContent>
     </Dialog>
-  );
-}
-
-// Import HeaderCustomizationModal content inline to avoid circular dependencies
-import { HeaderCustomizationModal } from './HeaderCustomizationModal';
-
-function HeaderSettingsContent({ settings, onSave, onDemo, studentName }: any) {
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground mb-4">
-        These settings are displayed in the HeaderCustomizationModal component. Click the settings icon in your dashboard header to access all customization options.
-      </p>
-      <Card>
-        <CardHeader>
-          <CardTitle>Header Customization</CardTitle>
-          <CardDescription>
-            Customize your dashboard header appearance and functionality
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Header settings include display options, rotating text, clocks, reminders, countdowns, Pomodoro timer, and visual effects. Access the full customization interface from your dashboard header.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
   );
 }

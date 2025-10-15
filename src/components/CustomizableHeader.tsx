@@ -886,9 +886,7 @@ function ProfileAvatarMenu({ student, onSignOut, onOpenProfileSettings, onOpenHe
           <User className="mr-2 h-4 w-4" />
           Profile Settings
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => {
-          window.dispatchEvent(new CustomEvent('openProfileModal', { detail: { tab: 'header' } }));
-        }}>
+        <DropdownMenuItem onClick={onOpenHeaderSettings}>
           <Settings className="mr-2 h-4 w-4" />
           Header Settings
         </DropdownMenuItem>

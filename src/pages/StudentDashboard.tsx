@@ -42,7 +42,7 @@ export default function StudentDashboard() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [headerSettings, setHeaderSettings] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [profileModalTab, setProfileModalTab] = useState<'profile' | 'header'>('profile');
+  const [profileModalTab, setProfileModalTab] = useState<'profile' | 'accessibility' | 'assessment'>('profile');
   const navigate = useNavigate();
   const getDefaultHeaderSettings = () => ({
     showName: true,
@@ -719,9 +719,6 @@ export default function StudentDashboard() {
         onOpenChange={setShowProfileModal}
         student={student}
         onProfileUpdate={fetchStudentData}
-        headerSettings={headerSettings || getDefaultHeaderSettings()}
-        onHeaderSettingsUpdate={saveHeaderSettings}
-        onDemoCelebration={() => setShowConfetti(true)}
         initialTab={profileModalTab}
       />
     </PomodoroProvider>;
