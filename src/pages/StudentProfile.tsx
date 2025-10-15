@@ -140,6 +140,11 @@ export default function StudentProfile() {
     try {
       setUploading(true);
       
+      if (!student) {
+        toast.error('Profile not loaded yet. Please try again.');
+        return;
+      }
+      
       if (!event.target.files || event.target.files.length === 0) {
         return;
       }

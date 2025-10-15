@@ -132,6 +132,11 @@ export default function ParentProfile() {
     try {
       setUploading(true);
       
+      if (!profile) {
+        toast.error('Profile not loaded yet. Please try again.');
+        return;
+      }
+      
       if (!event.target.files || event.target.files.length === 0) {
         return;
       }
