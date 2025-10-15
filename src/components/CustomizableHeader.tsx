@@ -834,7 +834,7 @@ function ProfileAvatarMenu({ student, onSignOut, onOpenProfileSettings, onOpenHe
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-12 w-12 rounded-full p-0">
+        <Button variant="ghost" className="h-12 w-12 rounded-full p-0 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <Avatar className="h-12 w-12">
             <AvatarImage src={student?.avatar_url || ''} />
             <AvatarFallback>
