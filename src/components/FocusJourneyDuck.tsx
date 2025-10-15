@@ -415,7 +415,7 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
         }
 
         .duck-container.celebrating .duck {
-          animation: celebrate 2s ease-in-out;
+          animation: celebrate 2s ease-in-out infinite;
         }
 
         .duck-container.jumping .duck {
