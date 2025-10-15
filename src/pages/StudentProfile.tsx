@@ -115,20 +115,37 @@ export default function StudentProfile() {
 
   const fetchStudentProfile = async () => {
     try {
+      console.log('🔍 Fetching student profile...');
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        console.log('❌ No user found, redirecting to auth');
         navigate('/auth');
         return;
       }
+
+      console.log('👤 User ID:', user.id);
+      console.log('👤 User metadata:', user.user_metadata);
 
       const { data: studentData, error } = await supabase
         .from('students')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Query error:', error);
+        throw error;
+      }
       
+      if (!studentData) {
+        console.log('⚠️ No student record found - user may be a parent');
+        toast.error('This account is not a student account. Please use the Parent Dashboard.');
+        navigate('/parent/profile');
+        return;
+      }
+      
+      console.log('✅ Student data loaded:', studentData.id);
       setStudent(studentData);
       setDisplayName(studentData.display_name || studentData.name);
       setSelectedAvatar(studentData.avatar_url || defaultAvatars[0]);
@@ -145,8 +162,8 @@ export default function StudentProfile() {
         }
       }
     } catch (error: any) {
-      console.error('Error fetching profile:', error);
-      toast.error('Failed to load profile');
+      console.error('❌ Error fetching profile:', error);
+      toast.error('Failed to load profile. ' + (error.message || ''));
     } finally {
       setLoading(false);
     }
