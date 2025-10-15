@@ -66,3 +66,6 @@ verify_jwt = false
 [functions.generate-trivia]
 verify_jwt = false
 
+[functions.seed-all-states]
+verify_jwt = true
+

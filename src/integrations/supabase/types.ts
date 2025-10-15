@@ -1387,6 +1387,51 @@ export type Database = {
         }
         Relationships: []
       }
+      standards_library: {
+        Row: {
+          created_at: string | null
+          framework: string
+          grade_level: string
+          id: string
+          legal_requirements: Json | null
+          scraped_at: string | null
+          source_urls: Json | null
+          standards: Json
+          state: string
+          subject: string
+          updated_at: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          framework?: string
+          grade_level: string
+          id?: string
+          legal_requirements?: Json | null
+          scraped_at?: string | null
+          source_urls?: Json | null
+          standards?: Json
+          state: string
+          subject: string
+          updated_at?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          framework?: string
+          grade_level?: string
+          id?: string
+          legal_requirements?: Json | null
+          scraped_at?: string | null
+          source_urls?: Json | null
+          standards?: Json
+          state?: string
+          subject?: string
+          updated_at?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       standards_planning_sessions: {
         Row: {
           compiled_standards: Json | null
