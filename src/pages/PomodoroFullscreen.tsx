@@ -7,31 +7,43 @@ import { supabase } from '@/integrations/supabase/client';
 
 export default function PomodoroFullscreen() {
   const [studentId, setStudentId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
     const init = async () => {
-      // Get student ID if logged in
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: studentData } = await supabase
-          .from('students')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (studentData) {
-          setStudentId(studentData.id);
+      try {
+        console.log('🔍 Fetching student ID...');
+        // Get student ID if logged in
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: studentData } = await supabase
+            .from('students')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (studentData) {
+            console.log('✅ Student ID found:', studentData.id);
+            setStudentId(studentData.id);
+          }
         }
-      }
 
-      // Request fullscreen
-      const goFullscreen = () => {
-        if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen();
-        }
-      };
-      
-      // Small delay to ensure page is loaded
-      setTimeout(goFullscreen, 100);
+        // Request fullscreen
+        const goFullscreen = () => {
+          if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => {
+              console.warn('Fullscreen request failed:', err);
+            });
+          }
+        };
+        
+        // Small delay to ensure page is loaded
+        setTimeout(goFullscreen, 100);
+      } catch (error) {
+        console.error('❌ Initialization error:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     init();
@@ -57,7 +69,14 @@ export default function PomodoroFullscreen() {
             <X className="h-6 w-6" />
           </Button>
           
-          <PomodoroTimer />
+          {loading ? (
+            <div className="text-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+              <p className="text-muted-foreground">Loading...</p>
+            </div>
+          ) : (
+            <PomodoroTimer />
+          )}
         </div>
       </div>
     </PomodoroProvider>

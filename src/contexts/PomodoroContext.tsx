@@ -76,13 +76,23 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
 
   // Leader election and initialization
   useEffect(() => {
+    console.log('🚀 PomodoroContext initializing...', { studentId });
+    
     const initialize = async () => {
-      if (studentId) {
-        await loadFromSupabase();
-      } else {
-        loadFromLocalStorage();
+      try {
+        if (studentId) {
+          console.log('📊 Loading from Supabase...');
+          await loadFromSupabase();
+        } else {
+          console.log('💾 Loading from localStorage...');
+          loadFromLocalStorage();
+        }
+        console.log('✅ Initialization complete');
+      } catch (error) {
+        console.error('❌ Initialization error:', error);
+      } finally {
+        setIsInitializing(false);
       }
-      setIsInitializing(false);
     };
 
     // Set up BroadcastChannel for leader election and cross-window sync
@@ -671,7 +681,16 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
 
   return (
     <PomodoroContext.Provider value={value}>
-      {children}
+      {isInitializing ? (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+            <p className="text-muted-foreground">Loading timer...</p>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </PomodoroContext.Provider>
   );
 }
