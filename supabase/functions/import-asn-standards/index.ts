@@ -7,34 +7,40 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Common Core State Standards Document IDs (from asn.desire2learn.com/resources/ASNJurisdiction/CCSS)
-// Using CCSS as they are adopted by California and most states
+// California Common Core State Standards Document IDs (verified from ASN)
 const CALIFORNIA_DOCUMENTS = {
-  'Mathematics': ['D10003FB'], // Common Core State Standards for Mathematics
-  'English Language Arts': ['D10003FC'], // Common Core State Standards for ELA & Literacy
+  'Mathematics': ['D2513639'], // California Common Core State Standards: Mathematics
+  'English Language Arts': ['D2513640'], // California Common Core State Standards: English Language Arts
 };
 
-interface ASNStatement {
-  '@id': string;
-  '@type': string;
-  'asn:statementNotation'?: string;
-  'dcterms:description'?: string;
-  'asn:educationLevel'?: string[];
-  'dcterms:subject'?: string;
-  'gemq:isChildOf'?: { '@id': string };
+// RDF/JSON format interfaces
+interface RDFValue {
+  value: string;
+  type: 'uri' | 'literal';
+  lang?: string;
+  datatype?: string;
 }
 
-interface ASNDocument {
-  '@context': any;
-  '@graph': ASNStatement[];
+interface RDFResource {
+  [predicate: string]: RDFValue[];
 }
 
-const extractGradeBand = (educationLevels?: string[]): string => {
+interface RDFDocument {
+  [uri: string]: RDFResource;
+}
+
+const extractValue = (values?: RDFValue[]): string | null => {
+  if (!values || values.length === 0) return null;
+  return values[0].value;
+};
+
+const extractGradeBand = (educationLevels?: RDFValue[]): string => {
   if (!educationLevels || educationLevels.length === 0) return 'K-12';
   
-  const levels = educationLevels.map(l => {
-    if (l === 'K' || l === '0') return 0;
-    return parseInt(l) || 0;
+  const levels = educationLevels.map(level => {
+    const gradeStr = level.value.split('/').pop(); // Extract grade from URI
+    if (gradeStr === 'K') return 0;
+    return parseInt(gradeStr || '0') || 0;
   }).filter(l => l >= 0);
   
   if (levels.length === 0) return 'K-12';
@@ -46,9 +52,9 @@ const extractGradeBand = (educationLevels?: string[]): string => {
   return `${min === 0 ? 'K' : min}-${max}`;
 };
 
-const extractParentCode = (parent?: { '@id': string }): string | null => {
-  if (!parent) return null;
-  const parts = parent['@id'].split('/');
+const extractParentCode = (parentRefs?: RDFValue[]): string | null => {
+  if (!parentRefs || parentRefs.length === 0) return null;
+  const parts = parentRefs[0].value.split('/');
   return parts[parts.length - 1];
 };
 
@@ -91,8 +97,8 @@ serve(async (req) => {
 
       for (const docId of documentIds) {
         try {
-          // Correct URL format uses _full.json suffix
-          const asnUrl = `http://asn.desire2learn.com/resources/${docId}_full.json`;
+          // Use standard .json format (not _full.json)
+          const asnUrl = `http://asn.desire2learn.com/resources/${docId}.json`;
           console.log(`Fetching ${subject} from ${asnUrl}...`);
 
           // Add headers to mimic browser request
@@ -115,33 +121,38 @@ serve(async (req) => {
             continue;
           }
 
-          const asnData: ASNDocument = await response.json();
-          console.log(`Received ${asnData['@graph']?.length || 0} items for ${subject}`);
+          const asnData: RDFDocument = await response.json();
+          const resourceCount = Object.keys(asnData).length;
+          console.log(`Received ${resourceCount} resources for ${subject}`);
 
           const standards: any[] = [];
           
-          // Parse ASN JSON-LD format
-          for (const item of asnData['@graph'] || []) {
+          // Parse RDF/JSON format
+          for (const [uri, resource] of Object.entries(asnData)) {
             // Only process Statement types (actual standards)
-            if (item['@type'] !== 'asn:Statement') continue;
+            const rdfType = resource['http://www.w3.org/1999/02/22-rdf-syntax-ns#type'];
+            if (!rdfType || !rdfType.some(t => t.value === 'http://purl.org/ASN/schema/core/Statement')) {
+              continue;
+            }
             
-            const code = item['asn:statementNotation'];
-            const text = item['dcterms:description'];
+            const code = extractValue(resource['http://purl.org/ASN/schema/core/statementNotation']);
+            const text = extractValue(resource['http://purl.org/dc/terms/description']);
             
+            // Skip items without both code and text (these are usually parent nodes)
             if (!code || !text) continue;
 
             standards.push({
               code: code,
               text: text,
               subject: subject,
-              grade_band: extractGradeBand(item['asn:educationLevel']),
+              grade_band: extractGradeBand(resource['http://purl.org/dc/terms/educationLevel']),
               framework: 'CA-CCSS',
               region: 'California',
-              parent_code: extractParentCode(item['gemq:isChildOf']),
+              parent_code: extractParentCode(resource['http://purl.org/gem/qualifiers/isChildOf']),
               metadata: {
-                asn_id: item['@id'],
+                asn_id: uri,
                 document_id: docId,
-                asn_uri: item['@id']
+                asn_uri: uri
               }
             });
           }
