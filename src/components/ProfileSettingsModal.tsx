@@ -14,6 +14,7 @@ import { Slider } from '@/components/ui/slider';
 import { Upload, User, X } from 'lucide-react';
 import { AccessibilityControls } from '@/components/AccessibilityControls';
 import { BionicText } from '@/components/BionicText';
+import { ProfileAssessment } from '@/components/ProfileAssessment';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useBionicReading } from '@/contexts/BionicReadingContext';
@@ -58,7 +59,7 @@ interface ProfileSettingsModalProps {
   headerSettings: any;
   onHeaderSettingsUpdate: (settings: any) => void;
   onDemoCelebration: () => void;
-  initialTab?: 'profile' | 'header';
+  initialTab?: 'profile' | 'accessibility' | 'assessment' | 'header';
 }
 
 export function ProfileSettingsModal({
@@ -71,7 +72,7 @@ export function ProfileSettingsModal({
   onDemoCelebration,
   initialTab = 'profile',
 }: ProfileSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'header'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'profile' | 'accessibility' | 'assessment' | 'header'>(initialTab);
   const [displayName, setDisplayName] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -225,24 +226,21 @@ export function ProfileSettingsModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'profile' | 'header')} className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'profile' | 'accessibility' | 'assessment' | 'header')} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
+            <TabsTrigger value="assessment" className="relative">
+              Learning
+              {!student?.profile_assessment_completed && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
+              )}
+            </TabsTrigger>
             <TabsTrigger value="header">Header</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="flex-1 min-h-0 pr-4">
             <TabsContent value="profile" className="space-y-4 mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Access Controls</CardTitle>
-                  <CardDescription>Toggle accessibility features on/off with one click or keyboard shortcuts</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <AccessibilityControls />
-                </CardContent>
-              </Card>
-
               <Card>
                 <CardHeader>
                   <CardTitle>Profile Settings</CardTitle>
@@ -372,6 +370,18 @@ export function ProfileSettingsModal({
                   <Button onClick={handleSaveProfile} className="w-full">
                     Save Profile
                   </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="accessibility" className="space-y-4 mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Access Controls</CardTitle>
+                  <CardDescription>Toggle accessibility features on/off with one click or keyboard shortcuts</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AccessibilityControls />
                 </CardContent>
               </Card>
 
@@ -585,6 +595,15 @@ export function ProfileSettingsModal({
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="assessment" className="mt-4">
+              {student && (
+                <ProfileAssessment
+                  studentId={student.id}
+                  onComplete={onProfileUpdate}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="header" className="mt-4">
