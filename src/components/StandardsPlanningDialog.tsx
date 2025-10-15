@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BookOpen, Search, FileCheck, Save, MessageSquare, Wand2 } from "lucide-react";
+import { BookOpen, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { StandardsPlanningChat } from "./StandardsPlanningChat";
-import { StandardsReviewPanel } from "./StandardsReviewPanel";
-import { LegalRequirementsPanel } from "./LegalRequirementsPanel";
-import { ResearchLoadingState } from "./ResearchLoadingState";
-import { StandardsWizardForm } from "./StandardsWizardForm";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { useAvailableFrameworks } from "@/hooks/useAvailableFrameworks";
 
 interface StandardsPlanningDialogProps {
   studentId?: string;
@@ -19,135 +17,74 @@ interface StandardsPlanningDialogProps {
 
 export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: StandardsPlanningDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [phase, setPhase] = useState<'gathering' | 'researching' | 'reviewing' | 'finalizing'>('gathering');
-  const [mode, setMode] = useState<'wizard' | 'chat'>('wizard');
-  const [requirements, setRequirements] = useState<any>({});
-  const [researchResults, setResearchResults] = useState<any>(null);
-  const [compiledStandards, setCompiledStandards] = useState<any[]>([]);
-  const [legalRequirements, setLegalRequirements] = useState<any>(null);
+  const [selectedFramework, setSelectedFramework] = useState<string>('');
+  const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [standards, setStandards] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [studentData, setStudentData] = useState<any>(null);
+  const { frameworks, loading: frameworksLoading } = useAvailableFrameworks();
   const { toast } = useToast();
 
+  // Load available subjects when framework is selected
   useEffect(() => {
-    if (studentId && open) {
-      loadStudentData();
-      checkExistingSession();
+    if (selectedFramework && selectedFramework !== 'CUSTOM') {
+      loadSubjects();
+    } else {
+      setAvailableSubjects([]);
+      setSelectedSubjects([]);
+      setStandards([]);
     }
-  }, [studentId, open]);
+  }, [selectedFramework]);
 
-  const loadStudentData = async () => {
+  // Load standards when subjects are selected
+  useEffect(() => {
+    if (selectedFramework && selectedSubjects.length > 0) {
+      loadStandards();
+    } else {
+      setStandards([]);
+    }
+  }, [selectedFramework, selectedSubjects]);
+
+  const loadSubjects = async () => {
     try {
       const { data, error } = await supabase
-        .from('students')
-        .select('grade_level, name')
-        .eq('id', studentId)
-        .single();
+        .from('standards')
+        .select('subject')
+        .eq('framework', selectedFramework)
+        .order('subject');
 
       if (error) throw error;
-      setStudentData(data);
+
+      // Get unique subjects
+      const uniqueSubjects = [...new Set(data.map(s => s.subject).filter(Boolean))];
+      setAvailableSubjects(uniqueSubjects);
     } catch (error) {
-      console.error('Error loading student data:', error);
-    }
-  };
-
-  const checkExistingSession = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Look for existing incomplete session
-      const { data: existingSession } = await supabase
-        .from('standards_planning_sessions')
-        .select('*')
-        .eq('parent_id', user.id)
-        .eq('student_id', studentId)
-        .in('status', ['gathering_requirements', 'researching'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (existingSession) {
-        setSessionId(existingSession.id);
-        setRequirements(existingSession.requirements || {});
-        const standards = existingSession.compiled_standards;
-        setCompiledStandards(Array.isArray(standards) ? standards : []);
-        setLegalRequirements(existingSession.legal_requirements || {});
-        setResearchResults(existingSession.research_results || null);
-
-        // Restore phase based on session state
-        const compiledStds = Array.isArray(standards) ? standards : [];
-        if (compiledStds.length > 0) {
-          setPhase('reviewing');
-        } else if (existingSession.research_results) {
-          setPhase('researching');
-        } else {
-          setPhase('gathering');
-        }
-
-        toast({
-          title: "Session Restored",
-          description: "Continuing from where you left off.",
-        });
-      }
-    } catch (error) {
-      console.error('Error checking existing session:', error);
-    }
-  };
-
-  const startSession = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { data, error } = await supabase
-        .from('standards_planning_sessions')
-        .insert({
-          parent_id: user.id,
-          student_id: studentId,
-          status: 'gathering_requirements'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      setSessionId(data.id);
-      setPhase('gathering');
-    } catch (error: any) {
+      console.error('Error loading subjects:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to load available subjects",
         variant: "destructive"
       });
     }
   };
 
-  const handleRequirementsComplete = async (reqs: any) => {
-    setRequirements(reqs);
-    setPhase('researching');
+  const loadStandards = async () => {
     setIsLoading(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke('research-standards', {
-        body: { sessionId, requirements: reqs }
-      });
+      const { data, error } = await supabase
+        .from('standards')
+        .select('*')
+        .eq('framework', selectedFramework)
+        .in('subject', selectedSubjects)
+        .order('code');
 
       if (error) throw error;
-
-      setResearchResults(data.researchResults);
-      setCompiledStandards(data.compiledStandards);
-      setLegalRequirements(data.legalRequirements);
-      setPhase('reviewing');
-
+      setStandards(data || []);
+    } catch (error) {
+      console.error('Error loading standards:', error);
       toast({
-        title: "Research Complete",
-        description: `Found ${data.compiledStandards.length} standards and compiled legal requirements.`
-      });
-    } catch (error: any) {
-      toast({
-        title: "Research Error",
-        description: error.message,
+        title: "Error",
+        description: "Failed to load standards",
         variant: "destructive"
       });
     } finally {
@@ -155,46 +92,39 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
     }
   };
 
-  const handleApprove = async (notes: string) => {
+  const toggleSubject = (subject: string) => {
+    setSelectedSubjects(prev =>
+      prev.includes(subject)
+        ? prev.filter(s => s !== subject)
+        : [...prev, subject]
+    );
+  };
+
+  const handleCreateCourse = async () => {
+    if (!studentId || selectedSubjects.length === 0) return;
+
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      // Create a course for each selected subject
+      for (const subject of selectedSubjects) {
+        const { error } = await supabase
+          .from('courses')
+          .insert({
+            student_id: studentId,
+            title: subject,
+            subject: subject,
+            standards_scope: [{
+              framework: selectedFramework,
+              subject: subject
+            }]
+          });
 
-      // Create custom framework
-      const frameworkName = `${requirements.state} Grade ${requirements.grade} Standards`;
-      
-      const { data, error } = await supabase
-        .from('custom_frameworks')
-        .insert({
-          created_by: user.id,
-          name: frameworkName,
-          description: notes,
-          region: requirements.state,
-          grade_levels: [requirements.grade],
-          subjects: requirements.subjects || [],
-          standards: compiledStandards,
-          legal_requirements: legalRequirements,
-          is_approved: true,
-          approved_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update session status
-      await supabase
-        .from('standards_planning_sessions')
-        .update({
-          status: 'completed',
-          parent_notes: notes
-        })
-        .eq('id', sessionId);
+        if (error) throw error;
+      }
 
       toast({
-        title: "Framework Created",
-        description: `"${frameworkName}" is now available for curriculum planning.`
+        title: "Courses Created",
+        description: `Created ${selectedSubjects.length} course(s) with ${standards.length} standards`
       });
 
       setOpen(false);
@@ -211,119 +141,106 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
-      if (isOpen && !sessionId) startSession();
-    }}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <BookOpen className="h-4 w-4" />
-          Create Standards Framework
+          Create Course from Standards
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-3xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Standards Framework Planning</DialogTitle>
+          <DialogTitle>Create Course from Standards</DialogTitle>
           <DialogDescription>
-            AI-assisted standards research and legal compliance setup for homeschool curriculum
+            Select from available standards frameworks and subjects to create new courses
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={phase} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger 
-              value="gathering" 
-              disabled={phase !== 'gathering'}
-              onClick={() => phase === 'gathering' && setPhase('gathering')}
-            >
-              <Search className="h-4 w-4 mr-2" />
-              Gather Info
-            </TabsTrigger>
-            <TabsTrigger value="researching" disabled={phase !== 'researching' && phase !== 'reviewing'}>
-              <BookOpen className="h-4 w-4 mr-2" />
-              Research
-            </TabsTrigger>
-            <TabsTrigger value="reviewing" disabled={phase !== 'reviewing' && phase !== 'finalizing'}>
-              <FileCheck className="h-4 w-4 mr-2" />
-              Review
-            </TabsTrigger>
-          </TabsList>
+        <ScrollArea className="h-[500px]">
+          <div className="space-y-6 p-6">
+            {/* Framework Selection */}
+            <div className="space-y-2">
+              <Label>Standards Framework *</Label>
+              <Select 
+                value={selectedFramework} 
+                onValueChange={setSelectedFramework}
+                disabled={frameworksLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={frameworksLoading ? "Loading..." : "Select framework"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {frameworks.filter(f => f.value !== 'CUSTOM').map(fw => (
+                    <SelectItem key={fw.value} value={fw.value}>
+                      {fw.label} {fw.standardCount > 0 && `(${fw.standardCount} standards)`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <ScrollArea className="h-[500px] mt-4">
-            <TabsContent value="gathering" className="space-y-4">
-              <div className="flex gap-2 mb-4 justify-center">
-                <Button
-                  variant={mode === 'wizard' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setMode('wizard')}
-                  className="gap-2"
-                >
-                  <Wand2 className="h-4 w-4" />
-                  Quick Setup
-                </Button>
-                <Button
-                  variant={mode === 'chat' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setMode('chat')}
-                  className="gap-2"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  Guided Chat
-                </Button>
+            {/* Subject Selection */}
+            {availableSubjects.length > 0 && (
+              <div className="space-y-2">
+                <Label>Select Subjects *</Label>
+                <div className="flex flex-wrap gap-2 p-4 border rounded-lg bg-muted/50">
+                  {availableSubjects.map(subject => (
+                    <Badge
+                      key={subject}
+                      variant={selectedSubjects.includes(subject) ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => toggleSubject(subject)}
+                    >
+                      {subject}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Click subjects to select. A course will be created for each selected subject.
+                </p>
               </div>
+            )}
 
-              {mode === 'wizard' ? (
-                <StandardsWizardForm
-                  studentId={studentId}
-                  studentData={studentData}
-                  onComplete={handleRequirementsComplete}
-                />
-              ) : (
-                sessionId && (
-                  <StandardsPlanningChat
-                    sessionId={sessionId}
-                    phase="gathering_requirements"
-                    onComplete={handleRequirementsComplete}
-                  />
-                )
-              )}
-            </TabsContent>
-
-            <TabsContent value="researching" className="space-y-4">
-              <ResearchLoadingState 
-                state={requirements.state} 
-                grade={requirements.grade} 
-              />
-            </TabsContent>
-
-            <TabsContent value="reviewing" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <StandardsReviewPanel
-                  standards={compiledStandards}
-                  onUpdate={setCompiledStandards}
-                />
-                <LegalRequirementsPanel
-                  requirements={legalRequirements}
-                  sources={researchResults?.sources}
-                />
+            {/* Standards Preview */}
+            {standards.length > 0 && (
+              <div className="space-y-2">
+                <Label>Available Standards ({standards.length})</Label>
+                <div className="border rounded-lg p-4 bg-muted/50 max-h-[300px] overflow-y-auto">
+                  <div className="space-y-2 text-sm">
+                    {standards.slice(0, 10).map(std => (
+                      <div key={std.id} className="pb-2 border-b last:border-0">
+                        <div className="font-mono text-xs text-primary">{std.code}</div>
+                        <div className="text-muted-foreground line-clamp-2">{std.text}</div>
+                      </div>
+                    ))}
+                    {standards.length > 10 && (
+                      <div className="text-center text-muted-foreground pt-2">
+                        ... and {standards.length - 10} more standards
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button
-                  onClick={() => {
-                    const notes = prompt("Add any notes about this framework:");
-                    if (notes !== null) handleApprove(notes);
-                  }}
-                  disabled={isLoading}
-                  className="gap-2"
-                >
-                  <Save className="h-4 w-4" />
-                  Approve & Create Framework
-                </Button>
-              </div>
-            </TabsContent>
-          </ScrollArea>
-        </Tabs>
+            )}
+          </div>
+        </ScrollArea>
+
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreateCourse}
+            disabled={isLoading || selectedSubjects.length === 0 || !selectedFramework}
+            className="gap-2"
+          >
+            <Save className="h-4 w-4" />
+            Create {selectedSubjects.length > 0 && `${selectedSubjects.length} `}Course{selectedSubjects.length !== 1 && 's'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
