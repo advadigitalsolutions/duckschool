@@ -108,23 +108,36 @@ serve(async (req) => {
     const standards: Standard[] = [];
     const codeToId: { [code: string]: string } = {};
 
+    let skippedNoType = 0;
+    let skippedNoCode = 0;
+    let skippedNoText = 0;
+
     // First pass: collect all standards with codes
     for (const [uri, resource] of resources) {
       const type = extractValue(resource['http://www.w3.org/1999/02/22-rdf-syntax-ns#type']);
       
       // Only process Statement types
-      if (type !== 'http://purl.org/ASN/schema/core/Statement') continue;
+      if (type !== 'http://purl.org/ASN/schema/core/Statement') {
+        skippedNoType++;
+        continue;
+      }
 
       // Try statementNotation first, then fall back to listID (used in CTE standards)
       const code = extractValue(resource['http://purl.org/ASN/schema/core/statementNotation']) ||
                    extractValue(resource['http://purl.org/ASN/schema/core/listID']);
       
       // Skip if no code (these are organizational nodes)
-      if (!code) continue;
+      if (!code) {
+        skippedNoCode++;
+        continue;
+      }
 
       const text = extractValue(resource['http://purl.org/dc/terms/description']) ||
                    extractValue(resource['http://purl.org/ASN/schema/core/comment']);
-      if (!text) continue;
+      if (!text) {
+        skippedNoText++;
+        continue;
+      }
 
       // CTE standards use dc/terms/educationLevel, academic standards use ASN/schema/core/educationLevel
       const educationLevels = resource['http://purl.org/dc/terms/educationLevel'] ||
@@ -148,6 +161,7 @@ serve(async (req) => {
       });
     }
 
+    console.log(`Skipped: ${skippedNoType} non-Statement, ${skippedNoCode} no code, ${skippedNoText} no text`);
     console.log(`Parsed ${standards.length} standards with codes`);
 
     // Second pass: resolve parent codes
