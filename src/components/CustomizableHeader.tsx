@@ -6,7 +6,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { HeaderCustomizationModal } from '@/components/HeaderCustomizationModal';
-import { LogOut, User, Settings, Trash2 } from 'lucide-react';
+import { LogOut, User, Settings, Trash2, ArrowLeft, Sun, Moon, Monitor } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { useTheme } from 'next-themes';
 import { getRandomQuote } from '@/utils/inspirationalQuotes';
 import { getRandomAffirmation } from '@/utils/affirmations';
 import { useNavigate } from 'react-router-dom';
@@ -560,17 +562,16 @@ export function CustomizableHeader({
         <div className="container mx-auto px-4 py-4 min-h-[80px]">
           {/* Main header grid - prevents collapse */}
           <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-start">
-            {/* Left section - Avatar and greeting with reminders below */}
+            {/* Left section - Back button and greeting with reminders below */}
             <div className="flex gap-4 min-w-0">
-              <Avatar 
-                className="h-12 w-12 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
-                onClick={() => navigate('/student/profile')}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-12 w-12 flex-shrink-0"
+                onClick={() => navigate(-1)}
               >
-                <AvatarImage src={student?.avatar_url || ''} />
-                <AvatarFallback>
-                  <User className="h-6 w-6" />
-                </AvatarFallback>
-              </Avatar>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
               
               <div className="flex-1 min-w-0">
                 {settings.showName && settings.greetingType !== 'none' ? (
@@ -731,10 +732,12 @@ export function CustomizableHeader({
                 }
               })}
               
-              <ThemeToggle />
-              <Button variant="outline" size="icon" onClick={onSignOut}>
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <ProfileAvatarMenu 
+                student={student}
+                onSignOut={onSignOut}
+                onOpenProfileSettings={() => navigate('/student/profile')}
+                onOpenHeaderSettings={() => handleOpenSettingsAtTab('display')}
+              />
             </div>
           </div>
 
@@ -815,5 +818,63 @@ export function CustomizableHeader({
         initialTab={modalInitialTab}
       />
     </>
+  );
+}
+
+interface ProfileAvatarMenuProps {
+  student: any;
+  onSignOut: () => void;
+  onOpenProfileSettings: () => void;
+  onOpenHeaderSettings: () => void;
+}
+
+function ProfileAvatarMenu({ student, onSignOut, onOpenProfileSettings, onOpenHeaderSettings }: ProfileAvatarMenuProps) {
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-12 w-12 rounded-full p-0">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={student?.avatar_url || ''} />
+            <AvatarFallback>
+              <User className="h-6 w-6" />
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>Theme</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => setTheme('light')}>
+          <Sun className="mr-2 h-4 w-4" />
+          Light
+          {theme === 'light' && <span className="ml-auto">✓</span>}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme('dark')}>
+          <Moon className="mr-2 h-4 w-4" />
+          Dark
+          {theme === 'dark' && <span className="ml-auto">✓</span>}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme('system')}>
+          <Monitor className="mr-2 h-4 w-4" />
+          System
+          {theme === 'system' && <span className="ml-auto">✓</span>}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onOpenProfileSettings}>
+          <User className="mr-2 h-4 w-4" />
+          Profile Settings
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onOpenHeaderSettings}>
+          <Settings className="mr-2 h-4 w-4" />
+          Header Settings
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onSignOut} className="text-destructive focus:text-destructive">
+          <LogOut className="mr-2 h-4 w-4" />
+          Log Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
