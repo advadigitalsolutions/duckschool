@@ -74,9 +74,17 @@ serve(async (req) => {
     // Get standards - either custom or from database
     let allStandards = null;
     
+    console.log('🔍 Looking for standards:', { 
+      isCustomFramework, 
+      framework, 
+      subject: course.subject, 
+      gradeLevel 
+    });
+    
     if (isCustomFramework) {
       // Use AI-generated custom standards
       allStandards = course.standards_scope?.[0]?.custom_standards || null;
+      console.log('📚 Custom standards found:', allStandards?.length || 0);
     } else {
       // Get standards from database - try exact grade first
       let { data, error: standardsError } = await supabaseClient
@@ -86,18 +94,29 @@ serve(async (req) => {
         .eq('subject', course.subject)
         .eq('grade_band', gradeLevel);
 
+      console.log('📊 Exact grade query results:', { 
+        found: data?.length || 0, 
+        error: standardsError?.message 
+      });
+
       if (standardsError) {
         console.error('Standards error:', standardsError);
       }
 
       // If no exact match, try grade ranges (e.g., "K-12" that includes this grade)
       if (!data || data.length === 0) {
+        console.log('🔄 No exact match, trying grade ranges...');
         const gradeNum = parseInt(gradeLevel) || 12;
         const { data: allGradeData } = await supabaseClient
           .from('standards')
           .select('*')
           .eq('framework', framework)
           .eq('subject', course.subject);
+        
+        console.log('📋 All grades query:', { 
+          totalFound: allGradeData?.length || 0,
+          sampleGradeBands: allGradeData?.slice(0, 3).map(s => s.grade_band) 
+        });
         
         if (allGradeData && allGradeData.length > 0) {
           // Filter for grade ranges that include our grade
@@ -108,15 +127,23 @@ serve(async (req) => {
               // Handle 'K' as kindergarten (grade 0)
               const start = startStr.toUpperCase() === 'K' ? 0 : parseInt(startStr);
               const end = parseInt(endStr);
-              return gradeNum >= start && gradeNum <= end;
+              const matches = gradeNum >= start && gradeNum <= end;
+              if (matches) {
+                console.log(`✅ Matched grade band: ${gradeBand} (grade ${gradeNum})`);
+              }
+              return matches;
             }
             return parseInt(gradeBand) === gradeNum;
           });
+          
+          console.log('✨ Filtered standards:', data.length);
         }
       }
       
       allStandards = data;
     }
+    
+    console.log('📚 Final standards count:', allStandards?.length || 0);
 
     // Get covered standards from existing curriculum
     const coveredStandardCodes = new Set(
