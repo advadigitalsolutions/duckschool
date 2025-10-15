@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SessionHistoryTableProps {
   studentId: string;
@@ -92,19 +92,74 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
     return `${minutes}m`;
   };
 
-  const getStatusBadge = (session: any) => {
-    if (!session.session_end) {
-      // Check if session is stale (started more than 2 hours ago with no end)
-      const startTime = new Date(session.session_start).getTime();
-      const now = Date.now();
-      const hoursAgo = (now - startTime) / (1000 * 60 * 60);
-      
-      if (hoursAgo > 2) {
-        return <Badge variant="outline">Abandoned</Badge>;
-      }
-      return <Badge>In Progress</Badge>;
+  // Group sessions by date
+  const groupedSessions: Record<string, any[]> = sessions.reduce((acc, session) => {
+    const date = format(new Date(session.session_start), 'MMM d, yyyy');
+    if (!acc[date]) {
+      acc[date] = [];
     }
-    return <Badge variant="secondary">Completed</Badge>;
+    acc[date].push(session);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  interface SegmentedBarProps {
+    activeSeconds: number;
+    idleSeconds: number;
+    awaySeconds: number;
+  }
+
+  const SegmentedBar = ({ activeSeconds, idleSeconds, awaySeconds }: SegmentedBarProps) => {
+    const total = activeSeconds + idleSeconds + awaySeconds;
+    if (total === 0) return null;
+
+    const activePercent = (activeSeconds / total) * 100;
+    const idlePercent = (idleSeconds / total) * 100;
+    const awayPercent = (awaySeconds / total) * 100;
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex h-6 w-full rounded-md overflow-hidden border border-border cursor-help">
+              {activePercent > 0 && (
+                <div 
+                  className="bg-success transition-all" 
+                  style={{ width: `${activePercent}%` }}
+                />
+              )}
+              {idlePercent > 0 && (
+                <div 
+                  className="bg-warning transition-all" 
+                  style={{ width: `${idlePercent}%` }}
+                />
+              )}
+              {awayPercent > 0 && (
+                <div 
+                  className="bg-destructive transition-all" 
+                  style={{ width: `${awayPercent}%` }}
+                />
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="text-sm space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded bg-success" />
+                <span>Active: {formatTime(activeSeconds)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded bg-warning" />
+                <span>Idle: {formatTime(idleSeconds)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded bg-destructive" />
+                <span>Away: {formatTime(awaySeconds)}</span>
+              </div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
 
   if (loading) {
@@ -131,46 +186,45 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
             No sessions found
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Start Time</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Active</TableHead>
-                  <TableHead>Idle</TableHead>
-                  <TableHead>Away</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sessions.map((session) => {
-                  const duration = session.total_active_seconds + session.total_idle_seconds + session.total_away_seconds;
-                  return (
-                    <TableRow key={session.id}>
-                      <TableCell>
-                        {format(new Date(session.session_start), 'MMM d, yyyy')}
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(session.session_start), 'h:mm a')}
-                      </TableCell>
-                      <TableCell>{formatTime(duration)}</TableCell>
-                      <TableCell className="text-success font-medium">
-                        {formatTime(session.total_active_seconds)}
-                      </TableCell>
-                      <TableCell className="text-warning">
-                        {formatTime(session.total_idle_seconds)}
-                      </TableCell>
-                      <TableCell className="text-destructive">
-                        {formatTime(session.total_away_seconds)}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(session)}</TableCell>
+          <div className="space-y-6">
+            {Object.entries(groupedSessions).map(([date, dateSessions]) => (
+              <div key={date} className="space-y-2">
+                <h3 className="text-sm font-semibold text-muted-foreground border-b pb-1">
+                  {date}
+                </h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-24">Start Time</TableHead>
+                      <TableHead>Activity</TableHead>
+                      <TableHead className="w-20 text-right">Total</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {dateSessions.map((session) => {
+                      const duration = session.total_active_seconds + session.total_idle_seconds + session.total_away_seconds;
+                      return (
+                        <TableRow key={session.id}>
+                          <TableCell className="font-mono text-sm">
+                            {format(new Date(session.session_start), 'h:mm a')}
+                          </TableCell>
+                          <TableCell>
+                            <SegmentedBar 
+                              activeSeconds={session.total_active_seconds}
+                              idleSeconds={session.total_idle_seconds}
+                              awaySeconds={session.total_away_seconds}
+                            />
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatTime(duration)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>
