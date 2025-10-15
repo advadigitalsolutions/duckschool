@@ -84,7 +84,7 @@ const App = () => (
                 path="/student/profile" 
                 element={
                   <AuthGuard>
-                    <StudentProfile />
+                    <StudentDashboard />
                   </AuthGuard>
                 } 
               />

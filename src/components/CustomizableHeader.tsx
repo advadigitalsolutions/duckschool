@@ -573,9 +573,9 @@ export function CustomizableHeader({
                   className="h-12 w-12 flex-shrink-0"
                   onClick={() => {
                     // Smart navigation based on current route
-                    if (location.pathname === '/student/profile' || location.pathname === '/parent/profile') {
-                      // From profile, go to respective dashboard
-                      navigate(location.pathname.startsWith('/parent') ? '/parent' : '/student');
+                    if (location.pathname === '/parent/profile') {
+                      // From parent profile, go to parent dashboard
+                      navigate('/parent');
                     } else if (location.pathname.startsWith('/assignment/')) {
                       // From assignment, go to student dashboard
                       navigate('/student');
@@ -880,11 +880,15 @@ function ProfileAvatarMenu({ student, onSignOut, onOpenProfileSettings, onOpenHe
           {theme === 'system' && <span className="ml-auto">✓</span>}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onOpenProfileSettings}>
+        <DropdownMenuItem onClick={() => {
+          window.dispatchEvent(new CustomEvent('openProfileModal', { detail: { tab: 'profile' } }));
+        }}>
           <User className="mr-2 h-4 w-4" />
           Profile Settings
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onOpenHeaderSettings}>
+        <DropdownMenuItem onClick={() => {
+          window.dispatchEvent(new CustomEvent('openProfileModal', { detail: { tab: 'header' } }));
+        }}>
           <Settings className="mr-2 h-4 w-4" />
           Header Settings
         </DropdownMenuItem>

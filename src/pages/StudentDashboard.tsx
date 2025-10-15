@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,7 @@ import { UnifiedMasteryDashboard } from '@/components/UnifiedMasteryDashboard';
 import { SessionStatsCard } from '@/components/SessionStatsCard';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Activity } from 'lucide-react';
+import { ProfileSettingsModal } from '@/components/ProfileSettingsModal';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -40,6 +41,8 @@ export default function StudentDashboard() {
   const [newGoalText, setNewGoalText] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
   const [headerSettings, setHeaderSettings] = useState<any>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileModalTab, setProfileModalTab] = useState<'profile' | 'header'>('profile');
   const navigate = useNavigate();
   const getDefaultHeaderSettings = () => ({
     showName: true,
@@ -104,6 +107,18 @@ export default function StudentDashboard() {
   useEffect(() => {
     // Set a random quote on mount
     setDailyQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
+  }, []);
+  
+  useEffect(() => {
+    // Listen for profile modal open events
+    const handleOpenProfileModal = (event: any) => {
+      const tab = event.detail?.tab || 'profile';
+      setProfileModalTab(tab);
+      setShowProfileModal(true);
+    };
+    
+    window.addEventListener('openProfileModal', handleOpenProfileModal);
+    return () => window.removeEventListener('openProfileModal', handleOpenProfileModal);
   }, []);
   useEffect(() => {
     checkRoleAndFetch();
@@ -698,5 +713,16 @@ export default function StudentDashboard() {
           </Card>}
       </div>
       </div>
+      
+      <ProfileSettingsModal
+        open={showProfileModal}
+        onOpenChange={setShowProfileModal}
+        student={student}
+        onProfileUpdate={fetchStudentData}
+        headerSettings={headerSettings || getDefaultHeaderSettings()}
+        onHeaderSettingsUpdate={saveHeaderSettings}
+        onDemoCelebration={() => setShowConfetti(true)}
+        initialTab={profileModalTab}
+      />
     </PomodoroProvider>;
 }
