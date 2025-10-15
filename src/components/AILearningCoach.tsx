@@ -170,7 +170,7 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 rounded-full h-14 w-14 shadow-lg z-50"
+        className="fixed bottom-4 left-4 rounded-full h-14 w-14 shadow-lg z-50"
         size="icon"
       >
         <MessageSquare className="h-6 w-6" />
@@ -179,7 +179,7 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-96 h-[600px] shadow-2xl flex flex-col z-50">
+    <Card className="fixed bottom-4 left-4 w-96 h-[600px] shadow-2xl flex flex-col z-50">
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-primary" />
