@@ -15,9 +15,6 @@ verify_jwt = false
 [functions.generate-remedial-assignment]
 verify_jwt = false
 
-[functions.curriculum-planning-chat]
-verify_jwt = false
-
 [functions.generate-study-guide]
 verify_jwt = false
 

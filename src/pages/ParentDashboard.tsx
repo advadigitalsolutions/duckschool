@@ -23,7 +23,6 @@ import { RedemptionApprovals } from '@/components/RedemptionApprovals';
 import { AddStudentDialog } from '@/components/AddStudentDialog';
 import { EditStudentDialog } from '@/components/EditStudentDialog';
 import { DeleteStudentDialog } from '@/components/DeleteStudentDialog';
-import { CurriculumPlanningDialog } from '@/components/CurriculumPlanningDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Pencil, Trash2, User, Sparkles } from 'lucide-react';
 import { ActivityFeed } from '@/components/ActivityFeed';
@@ -45,9 +44,6 @@ export default function ParentDashboard() {
   const [deletingStudent, setDeletingStudent] = useState<any>(null);
   const [userName, setUserName] = useState('');
   const [userAvatar, setUserAvatar] = useState('');
-  const [showPlanningDialog, setShowPlanningDialog] = useState(false);
-  const [planningSessions, setPlanningSessions] = useState<any[]>([]);
-  const [resumingSessionId, setResumingSessionId] = useState<string | undefined>();
   const [headerSettings, setHeaderSettings] = useState<any>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -282,16 +278,6 @@ export default function ParentDashboard() {
       } else {
         setOverdueCount(0);
       }
-
-      // Fetch in-progress curriculum planning sessions
-      const { data: sessionsData } = await supabase
-        .from('curriculum_planning_sessions')
-        .select('*')
-        .eq('parent_id', user.id)
-        .eq('status', 'in_progress')
-        .order('updated_at', { ascending: false });
-
-      setPlanningSessions(sessionsData || []);
     } catch (error: any) {
       toast.error('Failed to load dashboard data');
     } finally {
@@ -444,7 +430,6 @@ export default function ParentDashboard() {
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="pomodoro">Pomodoro Timers</TabsTrigger>
             <TabsTrigger value="weekly-plans">Weekly Plans</TabsTrigger>
-            <TabsTrigger value="curriculum">Curriculum Planning</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
             <TabsTrigger value="todo">To Do List</TabsTrigger>
           </TabsList>
@@ -592,164 +577,6 @@ export default function ParentDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="curriculum" className="space-y-4">
-            {planningSessions.length > 0 && (
-              <Card className="border-orange-500/50 bg-orange-500/5">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-orange-500" />
-                    Resume Planning Sessions
-                  </CardTitle>
-                  <CardDescription>
-                    You have {planningSessions.length} curriculum planning session{planningSessions.length > 1 ? 's' : ''} in progress
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {planningSessions.map((session) => {
-                    const data = (session.collected_data as unknown as any) || {};
-                    return (
-                      <Card key={session.id} className="bg-background">
-                        <CardContent className="pt-6">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1">
-                              <p className="font-medium">
-                                {data.studentName ? `Planning for ${data.studentName}` : 'Curriculum Planning'}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Last updated: {new Date(session.updated_at).toLocaleDateString()}
-                              </p>
-                              {data.gradeLevel && (
-                                <p className="text-xs text-muted-foreground">
-                                  Grade: {data.gradeLevel}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={() => {
-                                  setResumingSessionId(session.id);
-                                  setShowPlanningDialog(true);
-                                }}
-                                variant="outline"
-                              >
-                                Resume
-                              </Button>
-                              <Button
-                                onClick={async () => {
-                                  try {
-                                    const { error } = await supabase
-                                      .from('curriculum_planning_sessions')
-                                      .delete()
-                                      .eq('id', session.id);
-                                    
-                                    if (error) throw error;
-                                    
-                                    setPlanningSessions(planningSessions.filter(s => s.id !== session.id));
-                                    toast.success('Planning session deleted');
-                                  } catch (error: any) {
-                                    toast.error('Failed to delete session');
-                                  }
-                                }}
-                                variant="ghost"
-                                size="icon"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card className="border-primary/50">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    <CardTitle>AI Curriculum Planning</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Create personalized, standards-aligned curriculum plans through conversation
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Our AI assistant will guide you through creating a complete curriculum plan tailored to your student's needs, learning style, and educational goals.
-                  </p>
-                  <Button 
-                    onClick={() => {
-                      setResumingSessionId(undefined);
-                      setShowPlanningDialog(true);
-                    }} 
-                    className="w-full"
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Start New Planning Session
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Add Student</CardTitle>
-                  <CardDescription>
-                    Manually add a student profile without AI assistance
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Use this option if you prefer to set up courses and curriculum yourself, or if you're adding additional students.
-                  </p>
-                  <AddStudentDialog onStudentAdded={fetchDashboardData} />
-                </CardContent>
-              </Card>
-
-              <Card className="border-secondary/50">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-secondary" />
-                    <CardTitle>Standards & Frameworks</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Manage your custom educational standards frameworks
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    View and edit the standards frameworks you've scraped from government sources. These form the backbone of curriculum planning.
-                  </p>
-                  <Button 
-                    onClick={() => navigate('/standards-frameworks')}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    Manage Frameworks
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Course Templates</CardTitle>
-                <CardDescription>Browse pre-built curriculum plans</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    Template library coming soon
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           <TabsContent value="reports" className="space-y-4">
             <Card>
               <CardHeader>
@@ -867,19 +694,7 @@ export default function ParentDashboard() {
         onOpenChange={(open) => !open && setDeletingStudent(null)}
         onStudentDeleted={fetchDashboardData}
       />
-
-        <CurriculumPlanningDialog
-          open={showPlanningDialog}
-          onOpenChange={(open) => {
-            setShowPlanningDialog(open);
-            if (!open) {
-              setResumingSessionId(undefined);
-            }
-          }}
-          onComplete={fetchDashboardData}
-          existingSessionId={resumingSessionId}
-        />
-      </div>
+    </div>
     </PomodoroProvider>
   );
 }
