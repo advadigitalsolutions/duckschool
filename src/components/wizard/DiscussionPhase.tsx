@@ -41,7 +41,7 @@ export const DiscussionPhase: React.FC<DiscussionPhaseProps> = ({
 
       <Card className="p-6 text-center">
         <p className="text-muted-foreground mb-4">
-          Open the AI Coach (button in bottom right) to have a discussion about what you've learned.
+          Open the AI Coach (chat button below this area) to have a discussion about what you've learned.
         </p>
         <p className="text-sm text-muted-foreground">
           The coach will ask you questions to verify your understanding of the key concepts.
