@@ -115,7 +115,9 @@ serve(async (req) => {
       // Only process Statement types
       if (type !== 'http://purl.org/ASN/schema/core/Statement') continue;
 
-      const code = extractValue(resource['http://purl.org/ASN/schema/core/statementNotation']);
+      // Try statementNotation first, then fall back to listID (used in CTE standards)
+      const code = extractValue(resource['http://purl.org/ASN/schema/core/statementNotation']) ||
+                   extractValue(resource['http://purl.org/ASN/schema/core/listID']);
       
       // Skip if no code (these are organizational nodes)
       if (!code) continue;
