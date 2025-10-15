@@ -26,6 +26,38 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
   useEffect(() => {
     fetchStudent();
+
+    // Subscribe to realtime updates for student data
+    const setupRealtimeSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const channel = supabase
+        .channel('student-profile-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'students',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            console.log('Student profile updated, refreshing...', payload);
+            setStudent(payload.new);
+            if (payload.new.header_settings) {
+              setHeaderSettings(payload.new.header_settings);
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    setupRealtimeSubscription();
   }, []);
 
   const fetchStudent = async () => {
