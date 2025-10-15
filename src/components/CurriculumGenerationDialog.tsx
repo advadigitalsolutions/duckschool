@@ -89,12 +89,9 @@ export function CurriculumGenerationDialog({
       const { data: generatedAssignment, error: generateError } = await supabase.functions.invoke('generate-assignment', {
         body: {
           courseId: courseId,
-          title: suggestion.title,
-          description: suggestion.description,
-          standardCode: suggestion.standardCode,
-          objectives: suggestion.objectives,
-          materials: suggestion.materials,
-          estimatedMinutes: suggestion.estimatedMinutes
+          topic: suggestion.title,
+          manualStandards: [suggestion.standardCode],
+          approachOverride: approachOverride || undefined
         }
       });
 
@@ -164,12 +161,9 @@ export function CurriculumGenerationDialog({
           const { data: generatedAssignment, error: generateError } = await supabase.functions.invoke('generate-assignment', {
             body: {
               courseId: courseId,
-              title: suggestion.title,
-              description: suggestion.description,
-              standardCode: suggestion.standardCode,
-              objectives: suggestion.objectives,
-              materials: suggestion.materials,
-              estimatedMinutes: suggestion.estimatedMinutes
+              topic: suggestion.title,
+              manualStandards: [suggestion.standardCode],
+              approachOverride: approachOverride || undefined
             }
           });
 
