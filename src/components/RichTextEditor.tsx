@@ -16,15 +16,18 @@ import {
   Undo,
   Redo
 } from 'lucide-react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
+  debounceMs?: number;
 }
 
-export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, placeholder, debounceMs = 2000 }: RichTextEditorProps) {
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -37,7 +40,17 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     ],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const newContent = editor.getHTML();
+      
+      // Clear existing timer
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+      
+      // Set new timer for debounced onChange
+      debounceTimer.current = setTimeout(() => {
+        onChange(newContent);
+      }, debounceMs);
     },
     editorProps: {
       attributes: {

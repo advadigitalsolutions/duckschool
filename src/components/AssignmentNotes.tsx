@@ -32,16 +32,11 @@ export function AssignmentNotes({ assignmentId, studentId, courseId }: Assignmen
     loadNotes();
   }, [assignmentId, studentId]);
 
-  // Auto-save with debounce
+  // Auto-save when content changes (debounced in RichTextEditor)
   useEffect(() => {
-    if (!noteId) return;
-
-    const timeoutId = setTimeout(() => {
-      saveNotes();
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
-  }, [content, noteId]);
+    if (!noteId || !content) return;
+    saveNotes();
+  }, [content]);
 
   const loadNotes = async () => {
     try {

@@ -49,7 +49,9 @@ export const NotesPhase: React.FC<NotesPhaseProps> = ({
   };
 
   const handleSaveNotes = async (content: any) => {
+    setNotes(content);
     setIsSaving(true);
+    
     try {
       const { error } = await supabase
         .from('assignment_notes')
@@ -62,7 +64,6 @@ export const NotesPhase: React.FC<NotesPhaseProps> = ({
         });
 
       if (error) throw error;
-      setNotes(content);
     } catch (error) {
       console.error('Error saving notes:', error);
       toast({
