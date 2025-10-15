@@ -111,7 +111,7 @@ export default function AdminSeedStandards() {
                     try {
                       toast({
                         title: "Import Started",
-                        description: "Fetching all California standards from ASN...",
+                        description: "Fetching Common Core Math and ELA standards from ASN...",
                       });
 
                       const { data, error } = await supabase.functions.invoke('import-asn-standards', {
@@ -148,7 +148,7 @@ export default function AdminSeedStandards() {
                   variant="default"
                 >
                   {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Import All CA Standards
+                  Import CCSS Math & ELA
                 </Button>
                 
                 <Button
@@ -158,7 +158,7 @@ export default function AdminSeedStandards() {
                     try {
                       toast({
                         title: "Import Started",
-                        description: "Fetching California Math standards from ASN...",
+                        description: "Fetching Common Core Math standards from ASN...",
                       });
 
                       const { data, error } = await supabase.functions.invoke('import-asn-standards', {
@@ -205,7 +205,7 @@ export default function AdminSeedStandards() {
                     try {
                       toast({
                         title: "Import Started",
-                        description: "Fetching California ELA standards from ASN...",
+                        description: "Fetching Common Core ELA standards from ASN...",
                       });
 
                       const { data, error } = await supabase.functions.invoke('import-asn-standards', {
@@ -244,57 +244,10 @@ export default function AdminSeedStandards() {
                   {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   ELA Only
                 </Button>
-
-                <Button
-                  onClick={async () => {
-                    setIsSeeding(true);
-                    setResults(null);
-                    try {
-                      toast({
-                        title: "Import Started",
-                        description: "Fetching California Science standards from ASN...",
-                      });
-
-                      const { data, error } = await supabase.functions.invoke('import-asn-standards', {
-                        body: { subjects: ['Science'] }
-                      });
-
-                      if (error) throw error;
-
-                      setResults({
-                        summary: {
-                          successful: data.imported || 0,
-                          failed: data.failed || 0,
-                          skipped: data.skipped || 0
-                        },
-                        results: data.details
-                      });
-                      
-                      toast({
-                        title: "Import Complete",
-                        description: `Successfully imported ${data.imported} Science standards`,
-                      });
-                    } catch (error: any) {
-                      console.error('Import error:', error);
-                      toast({
-                        title: "Import Failed",
-                        description: error.message,
-                        variant: "destructive",
-                      });
-                    } finally {
-                      setIsSeeding(false);
-                    }
-                  }}
-                  disabled={isSeeding}
-                  variant="outline"
-                >
-                  {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Science Only
-                </Button>
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Imports from Achievement Standards Network (ASN) - the trusted, D2L-maintained repository of official educational standards
+                Imports Common Core State Standards (CCSS) for Mathematics and English Language Arts from Achievement Standards Network (ASN) - the trusted, D2L-maintained repository
               </p>
             </div>
           </CardContent>

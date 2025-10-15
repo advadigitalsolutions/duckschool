@@ -7,12 +7,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// California ASN Document IDs (verified from asn.desire2learn.com)
+// Common Core State Standards Document IDs (from asn.desire2learn.com/resources/ASNJurisdiction/CCSS)
+// Using CCSS as they are adopted by California and most states
 const CALIFORNIA_DOCUMENTS = {
-  'Mathematics': ['D10003FC'], // CCSS Math
-  'English Language Arts': ['D2451F42'], // CCSS ELA
-  'Science': ['D2454348'], // NGSS
-  'History-Social Science': ['D2605750'], // CA HSS
+  'Mathematics': ['D10003FB'], // Common Core State Standards for Mathematics
+  'English Language Arts': ['D10003FC'], // Common Core State Standards for ELA & Literacy
 };
 
 interface ASNStatement {
@@ -92,10 +91,17 @@ serve(async (req) => {
 
       for (const docId of documentIds) {
         try {
-          const asnUrl = `https://asn.desire2learn.com/resources/${docId}.json`;
+          // Correct URL format uses _full.json suffix
+          const asnUrl = `http://asn.desire2learn.com/resources/${docId}_full.json`;
           console.log(`Fetching ${subject} from ${asnUrl}...`);
 
-          const response = await fetch(asnUrl);
+          // Add headers to mimic browser request
+          const response = await fetch(asnUrl, {
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'Mozilla/5.0 (compatible; EducationStandardsImporter/1.0)',
+            }
+          });
           
           if (!response.ok) {
             console.error(`Failed to fetch ${docId}: ${response.status}`);
