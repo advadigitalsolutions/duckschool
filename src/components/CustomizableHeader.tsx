@@ -565,32 +565,32 @@ export function CustomizableHeader({
           <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-start">
             {/* Left section - Back button and greeting with reminders below */}
             <div className="flex gap-4 min-w-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12 flex-shrink-0"
-                onClick={() => {
-                  // Smart navigation based on current route
-                  if (location.pathname === '/student/profile' || location.pathname === '/parent/profile') {
-                    // From profile, go to respective dashboard
-                    navigate(location.pathname.startsWith('/parent') ? '/parent' : '/student');
-                  } else if (location.pathname.startsWith('/assignment/')) {
-                    // From assignment, go to student dashboard
-                    navigate('/student');
-                  } else if (location.pathname.startsWith('/course/')) {
-                    // From course, go to student dashboard
-                    navigate('/student');
-                  } else if (location.pathname.startsWith('/student/')) {
-                    // From student detail, go to parent dashboard
-                    navigate('/parent');
-                  } else {
-                    // Default: go to student dashboard
-                    navigate('/student');
-                  }
-                }}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
+              {/* Only show back button when not on main dashboard pages */}
+              {location.pathname !== '/student' && location.pathname !== '/parent' && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-12 w-12 flex-shrink-0"
+                  onClick={() => {
+                    // Smart navigation based on current route
+                    if (location.pathname === '/student/profile' || location.pathname === '/parent/profile') {
+                      // From profile, go to respective dashboard
+                      navigate(location.pathname.startsWith('/parent') ? '/parent' : '/student');
+                    } else if (location.pathname.startsWith('/assignment/')) {
+                      // From assignment, go to student dashboard
+                      navigate('/student');
+                    } else if (location.pathname.startsWith('/course/')) {
+                      // From course, go to student dashboard
+                      navigate('/student');
+                    } else if (location.pathname.startsWith('/student/')) {
+                      // From student detail, go to parent dashboard
+                      navigate('/parent');
+                    }
+                  }}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              )}
               
               <div className="flex-1 min-w-0">
                 {settings.showName && settings.greetingType !== 'none' ? (
