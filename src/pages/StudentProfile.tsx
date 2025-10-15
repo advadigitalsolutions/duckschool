@@ -65,6 +65,7 @@ export default function StudentProfile() {
   const [newInterest, setNewInterest] = useState('');
   const [pronouns, setPronouns] = useState('');
   const [customPronouns, setCustomPronouns] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const { enabled: bionicEnabled, setEnabled: setBionicEnabled } = useBionicReading();
   const {
     dyslexiaFontEnabled,
@@ -95,7 +96,22 @@ export default function StudentProfile() {
 
   useEffect(() => {
     fetchStudentProfile();
+    checkAdminStatus();
   }, []);
+
+  const checkAdminStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+    
+    setIsAdmin(!!data);
+  };
 
   const fetchStudentProfile = async () => {
     try {
@@ -225,9 +241,11 @@ export default function StudentProfile() {
           <Button variant="ghost" size="icon" onClick={() => navigate('/student')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <Button variant="outline" onClick={() => navigate('/admin/seed-standards')}>
-            Admin Dashboard
-          </Button>
+          {isAdmin && (
+            <Button variant="outline" onClick={() => navigate('/admin/seed-standards')}>
+              Admin Dashboard
+            </Button>
+          )}
         </div>
         <h1 className="text-2xl font-bold mb-6">My Profile</h1>
 

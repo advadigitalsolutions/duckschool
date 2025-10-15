@@ -58,6 +58,7 @@ export default function ParentProfile() {
   const [loading, setLoading] = useState(true);
   const [pronouns, setPronouns] = useState('');
   const [customPronouns, setCustomPronouns] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const { enabled: bionicEnabled, setEnabled: setBionicEnabled } = useBionicReading();
   const {
     dyslexiaFontEnabled,
@@ -88,7 +89,22 @@ export default function ParentProfile() {
 
   useEffect(() => {
     fetchProfile();
+    checkAdminStatus();
   }, []);
+
+  const checkAdminStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+    
+    setIsAdmin(!!data);
+  };
 
   const fetchProfile = async () => {
     try {
@@ -208,7 +224,14 @@ export default function ParentProfile() {
             </Button>
             <h1 className="text-2xl font-bold">My Profile</h1>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/seed-standards')}>
+                Admin Dashboard
+              </Button>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

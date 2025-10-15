@@ -1,20 +1,79 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, AlertCircle, FileText, Database } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, AlertCircle, FileText, Database, ShieldAlert } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AdminSeedStandards() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isSeeding, setIsSeeding] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadSubject, setUploadSubject] = useState<string>('Mathematics');
   const [isUploading, setIsUploading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    checkAdminAccess();
+  }, []);
+
+  const checkAdminAccess = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+      
+      if (!data) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to access this area.",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
+
+      setIsAdmin(true);
+    } catch (error) {
+      console.error('Error checking admin access:', error);
+      navigate('/');
+    }
+  };
+
+  if (isAdmin === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <ShieldAlert className="h-16 w-16 text-destructive" />
+        <h1 className="text-2xl font-bold">Access Denied</h1>
+        <p className="text-muted-foreground">You don't have permission to access this area.</p>
+        <Button onClick={() => navigate('/')}>Return Home</Button>
+      </div>
+    );
+  }
 
   const handleFileUpload = async () => {
     if (!uploadedFile) return;
