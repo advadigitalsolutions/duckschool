@@ -216,9 +216,14 @@ export default function StudentProfile() {
   return (
     <StudentLayout>
       <div className="container mx-auto px-4 py-6">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/student')} className="mb-4">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/student')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/admin-seed-standards')}>
+            Admin Dashboard
+          </Button>
+        </div>
         <h1 className="text-2xl font-bold mb-6">My Profile</h1>
 
         <Tabs defaultValue="profile" className="space-y-4">
