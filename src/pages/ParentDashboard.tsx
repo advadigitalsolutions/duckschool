@@ -202,12 +202,12 @@ export default function ParentDashboard() {
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
 
-        // Today's time from learning_sessions
+        // Today's time from learning_sessions - includes sessions that started before today but are still active or ended today
         const { data: todaySessions, error: todayError } = await supabase
           .from('learning_sessions')
-          .select('total_active_seconds, total_idle_seconds, total_away_seconds')
+          .select('total_active_seconds, total_idle_seconds, total_away_seconds, session_start, session_end, updated_at')
           .in('student_id', studentIds)
-          .gte('session_start', todayStart.toISOString());
+          .or(`session_start.gte.${todayStart.toISOString()},and(session_start.lt.${todayStart.toISOString()},or(session_end.gte.${todayStart.toISOString()},session_end.is.null))`);
 
         if (todayError) {
           console.error('[ParentDashboard] Error fetching today sessions:', todayError);
