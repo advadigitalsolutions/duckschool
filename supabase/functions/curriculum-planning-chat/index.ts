@@ -209,58 +209,80 @@ function extractDataFromMessage(message: string, existingData: any, stage: strin
   const data = { ...existingData };
   const lowerMessage = message.toLowerCase();
 
-  // Extract grade level
+  // Extract grade level - handle college, adult, and numeric grades
   if (!data.gradeLevel) {
-    const gradeMatch = message.match(/\b(\d+)(th|st|nd|rd)?\s*grade\b/i) || 
-                       message.match(/\bgrade\s*(\d+)/i) ||
-                       message.match(/\b(kindergarten|k)\b/i);
-    if (gradeMatch) {
-      data.gradeLevel = gradeMatch[1] === 'kindergarten' || gradeMatch[1] === 'k' ? 'Kindergarten' : `Grade ${gradeMatch[1]}`;
+    if (lowerMessage.includes('college') || lowerMessage.includes('university')) {
+      data.gradeLevel = 'College';
+    } else if (lowerMessage.includes('adult')) {
+      data.gradeLevel = 'Adult';
+    } else {
+      const gradeMatch = message.match(/\b(\d+)(th|st|nd|rd)?\s*grade\b/i) || 
+                         message.match(/\bgrade\s*(\d+)/i) ||
+                         message.match(/\b(kindergarten|k)\b/i);
+      if (gradeMatch) {
+        data.gradeLevel = gradeMatch[1] === 'kindergarten' || gradeMatch[1] === 'k' ? 'Kindergarten' : `Grade ${gradeMatch[1]}`;
+      }
     }
   }
   
-  // Extract name (first capitalized word that's not a location)
+  // Extract name - handle self-directed cases and proper names
   if (!data.studentName) {
-    const nameMatch = message.match(/\b([A-Z][a-z]+)\b/);
-    if (nameMatch && !['California', 'Texas', 'Florida', 'New', 'Common', 'Core'].includes(nameMatch[1])) {
-      data.studentName = nameMatch[1];
+    if (lowerMessage.includes('for me') || lowerMessage.includes('for myself') || lowerMessage.includes('i am') || lowerMessage.includes("i'm")) {
+      data.studentName = 'Self-Directed Learner';
+    } else {
+      const nameMatch = message.match(/\b([A-Z][a-z]+)\b/);
+      if (nameMatch && !['California', 'Texas', 'Florida', 'New', 'Common', 'Core', 'Spain', 'France', 'Germany'].includes(nameMatch[1])) {
+        data.studentName = nameMatch[1];
+      }
     }
   }
 
-  // Extract location
+  // Extract location - handle international locations
   if (!data.location) {
-    const locations = ['california', 'texas', 'florida', 'new york', 'illinois', 'pennsylvania', 'ohio'];
-    const found = locations.find(loc => lowerMessage.includes(loc));
-    if (found) {
-      data.location = found.charAt(0).toUpperCase() + found.slice(1);
+    // US states
+    const usLocations = ['california', 'texas', 'florida', 'new york', 'illinois', 'pennsylvania', 'ohio', 'washington', 'oregon', 'massachusetts'];
+    const foundUS = usLocations.find(loc => lowerMessage.includes(loc));
+    if (foundUS) {
+      data.location = foundUS.charAt(0).toUpperCase() + foundUS.slice(1);
+    } else {
+      // International locations
+      const intlLocations = ['spain', 'france', 'germany', 'uk', 'united kingdom', 'canada', 'australia', 'italy', 'mexico', 'japan', 'china', 'india'];
+      const foundIntl = intlLocations.find(loc => lowerMessage.includes(loc));
+      if (foundIntl) {
+        data.location = foundIntl.charAt(0).toUpperCase() + foundIntl.slice(1);
+      }
     }
   }
 
-  // Extract standards framework
-  if (!data.standardsFramework && (lowerMessage.includes('yes') || lowerMessage.includes('common core') || lowerMessage.includes('sounds good'))) {
-    data.standardsFramework = 'Common Core';
+  // Extract standards framework - be very generous
+  if (!data.standardsFramework) {
+    if (lowerMessage.includes('yes') || lowerMessage.includes('common core') || lowerMessage.includes('sounds good') || 
+        lowerMessage.includes('okay') || lowerMessage.includes('sure') || lowerMessage.includes('that works')) {
+      data.standardsFramework = 'Common Core';
+    } else if (stage === 'framework') {
+      // If we're in the framework stage and they said anything, assume acceptance
+      data.standardsFramework = 'Common Core';
+    }
   }
 
-  // Extract subjects and goals - be generous with any subject/goal keywords
-  if (stage === 'goals') {
-    if (!data.subjects) {
-      const subjects = ['math', 'reading', 'science', 'history', 'english', 'language arts', 'social studies'];
-      const mentioned = subjects.filter(s => lowerMessage.includes(s));
-      if (mentioned.length > 0) {
-        data.subjects = mentioned.join(', ');
-      } else if (message.length > 10) {
-        data.subjects = 'core subjects'; // Default if they mentioned anything
-      }
+  // Extract subjects and goals - be very generous
+  if (!data.subjects) {
+    const subjects = ['math', 'reading', 'science', 'history', 'english', 'language arts', 'social studies', 'language', 'spanish', 'french'];
+    const mentioned = subjects.filter(s => lowerMessage.includes(s));
+    if (mentioned.length > 0) {
+      data.subjects = mentioned.join(', ');
+    } else if (stage === 'goals' && message.length > 10) {
+      data.subjects = 'core subjects'; // Default if they're in goals stage
     }
-    
-    if (!data.goals) {
-      const goals = ['college', 'grade level', 'mastery', 'enrichment', 'catch up', 'advanced', 'prep'];
-      const mentioned = goals.find(g => lowerMessage.includes(g));
-      if (mentioned) {
-        data.goals = mentioned;
-      } else if (message.length > 15) {
-        data.goals = 'grade-level mastery'; // Reasonable default
-      }
+  }
+  
+  if (!data.goals) {
+    const goals = ['college', 'university', 'grade level', 'mastery', 'enrichment', 'catch up', 'advanced', 'prep', 'fluency', 'proficiency', 'learn', 'improve'];
+    const mentioned = goals.find(g => lowerMessage.includes(g));
+    if (mentioned) {
+      data.goals = mentioned;
+    } else if (stage === 'goals' && message.length > 10) {
+      data.goals = 'achieve proficiency'; // Reasonable default
     }
   }
 
@@ -393,15 +415,12 @@ function extractDataFromMessage(message: string, existingData: any, stage: strin
 }
 
 function isReadyToFinalize(data: any): boolean {
-  // Only need the essentials - be generous
-  return !!(
-    data.studentName &&
-    data.gradeLevel &&
-    data.location &&
-    data.standardsFramework &&
-    data.subjects &&
-    data.goals
-  );
+  // More lenient - allow progress if we have most essentials
+  const hasBasicInfo = data.studentName && data.gradeLevel;
+  const hasFramework = data.standardsFramework || data.location; // Location can imply framework
+  const hasGoalsOrSubjects = data.subjects || data.goals || (data.extracurriculars && data.extracurriculars.length > 0);
+  
+  return !!(hasBasicInfo && hasFramework && hasGoalsOrSubjects);
 }
 
 async function analyzeStandardsCoverage(supabase: any, studentId: string, collectedData: any): Promise<string> {
