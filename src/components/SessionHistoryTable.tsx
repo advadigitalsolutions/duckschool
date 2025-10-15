@@ -123,33 +123,50 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
     const awayPercent = (awaySeconds / POMODORO_DURATION) * 100;
     const usedPercent = (totalSeconds / POMODORO_DURATION) * 100;
 
+    // Pastel color palette for focus time
+    const activeColor = 'hsl(151, 100%, 40%)'; // Dark Pastel Green #00CC6C
+    const idleColor = 'hsl(20, 100%, 67%)'; // Mango Tango #FF8F57
+    const awayColor = 'hsl(18, 73%, 72%)'; // Zinnwaldite #EBA482
+    const unusedColor = 'hsl(40, 82%, 95%)'; // Eggwhite #FEF5E7
+
     return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="relative flex h-6 w-full rounded-md overflow-hidden border border-border cursor-help bg-muted/30">
+            <div 
+              className="relative flex h-6 w-full rounded-md overflow-hidden border border-border cursor-help"
+              style={{ backgroundColor: unusedColor }}
+            >
               {/* Active time */}
               {activePercent > 0 && (
                 <div 
-                  className="bg-success transition-all" 
-                  style={{ width: `${activePercent}%` }}
+                  className="transition-all" 
+                  style={{ 
+                    width: `${activePercent}%`,
+                    backgroundColor: activeColor
+                  }}
                 />
               )}
               {/* Idle time */}
               {idlePercent > 0 && (
                 <div 
-                  className="bg-warning transition-all" 
-                  style={{ width: `${idlePercent}%` }}
+                  className="transition-all" 
+                  style={{ 
+                    width: `${idlePercent}%`,
+                    backgroundColor: idleColor
+                  }}
                 />
               )}
               {/* Away time */}
               {awayPercent > 0 && (
                 <div 
-                  className="bg-destructive transition-all" 
-                  style={{ width: `${awayPercent}%` }}
+                  className="transition-all" 
+                  style={{ 
+                    width: `${awayPercent}%`,
+                    backgroundColor: awayColor
+                  }}
                 />
               )}
-              {/* Remaining time (unfilled) is shown by the bg-muted/30 background */}
             </div>
           </TooltipTrigger>
           <TooltipContent>
@@ -158,19 +175,19 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
                 {formatTime(totalSeconds)} of 25-minute block
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-success" />
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: activeColor }} />
                 <span>Active: {formatTime(activeSeconds)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-warning" />
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: idleColor }} />
                 <span>Idle: {formatTime(idleSeconds)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-destructive" />
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: awayColor }} />
                 <span>Away: {formatTime(awaySeconds)}</span>
               </div>
               <div className="flex items-center gap-2 mt-2 pt-2 border-t">
-                <div className="w-3 h-3 rounded bg-muted" />
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: unusedColor }} />
                 <span>Unused: {formatTime(POMODORO_DURATION - totalSeconds)}</span>
               </div>
             </div>
