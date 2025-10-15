@@ -57,15 +57,17 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
     return `${minutes}m`;
   };
 
-  // Group sessions by date
-  const groupedSessions: Record<string, any[]> = sessions.reduce((acc, session) => {
-    const date = format(new Date(session.pomodoro_block_start), 'MMM d, yyyy');
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(session);
-    return acc;
-  }, {} as Record<string, any[]>);
+  // Group sessions by date (filter out sessions without pomodoro_block_start)
+  const groupedSessions: Record<string, any[]> = sessions
+    .filter(session => session.pomodoro_block_start != null)
+    .reduce((acc, session) => {
+      const date = format(new Date(session.pomodoro_block_start), 'MMM d, yyyy');
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(session);
+      return acc;
+    }, {} as Record<string, any[]>);
 
   interface PomodoroBarProps {
     session: any;

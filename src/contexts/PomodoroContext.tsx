@@ -96,7 +96,18 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
       
       // Send heartbeat every 2 seconds
       leaderHeartbeatRef.current = setInterval(() => {
-        channel.postMessage({ type: 'leader_heartbeat', timestamp: Date.now() });
+        try {
+          // Check if channel is still open before posting
+          if (channel) {
+            channel.postMessage({ type: 'leader_heartbeat', timestamp: Date.now() });
+          }
+        } catch (error) {
+          console.warn('Failed to send heartbeat, channel may be closed:', error);
+          if (leaderHeartbeatRef.current) {
+            clearInterval(leaderHeartbeatRef.current);
+            leaderHeartbeatRef.current = null;
+          }
+        }
       }, 2000);
     };
 
@@ -148,9 +159,17 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
     initialize();
 
     return () => {
+      // Clear intervals BEFORE closing channel to prevent posting to closed channel
+      if (leaderHeartbeatRef.current) {
+        clearInterval(leaderHeartbeatRef.current);
+        leaderHeartbeatRef.current = null;
+      }
+      if (leaderCheckRef.current) {
+        clearInterval(leaderCheckRef.current);
+        leaderCheckRef.current = null;
+      }
+      // Now safe to close the channel
       channel.close();
-      if (leaderHeartbeatRef.current) clearInterval(leaderHeartbeatRef.current);
-      if (leaderCheckRef.current) clearInterval(leaderCheckRef.current);
     };
   }, [studentId]);
 
