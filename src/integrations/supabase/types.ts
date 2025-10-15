@@ -2052,6 +2052,10 @@ export type Database = {
         Args: { "": string } | { "": unknown }
         Returns: unknown
       }
+      can_manage_assignment_for_curriculum_item: {
+        Args: { _curriculum_item_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_student_available_xp: {
         Args: { student_uuid: string }
         Returns: number
