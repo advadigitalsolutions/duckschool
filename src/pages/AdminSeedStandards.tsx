@@ -183,6 +183,7 @@ export default function AdminSeedStandards() {
                 type="file"
                 accept=".json"
                 onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
+                onClick={(e) => (e.currentTarget.value = '')}
                 className="w-full p-2 border rounded-md bg-background"
               />
               {uploadedFile && (
