@@ -162,18 +162,30 @@ serve(async (req) => {
     for (let i = 0; i < standards.length; i += batchSize) {
       const batch = standards.slice(i, i + batchSize);
       
-      const { error } = await supabase
+      // Check which standards already exist
+      const codes = batch.map(s => s.code);
+      const { data: existing } = await supabase
         .from('standards')
-        .upsert(batch, { 
-          onConflict: 'framework,code',
-          ignoreDuplicates: true 
-        });
+        .select('code')
+        .eq('framework', framework)
+        .in('code', codes);
+      
+      const existingCodes = new Set(existing?.map(e => e.code) || []);
+      const newStandards = batch.filter(s => !existingCodes.has(s.code));
+      
+      skipped += existingCodes.size;
+      
+      if (newStandards.length > 0) {
+        const { error } = await supabase
+          .from('standards')
+          .insert(newStandards);
 
-      if (error) {
-        console.error(`Batch ${i / batchSize + 1} error:`, error);
-        failed += batch.length;
-      } else {
-        imported += batch.length;
+        if (error) {
+          console.error(`Batch ${i / batchSize + 1} error:`, error);
+          failed += newStandards.length;
+        } else {
+          imported += newStandards.length;
+        }
       }
     }
 
