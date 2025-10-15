@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, BookOpen, Clock, ChevronRight, X } from 'lucide-react';
 import { parseISO, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
-import duckGraduation from '@/assets/duck-graduation.png';
+import { FocusJourneyDuck } from './FocusJourneyDuck';
 
 interface OverdueWorkTabProps {
   studentId: string;
@@ -107,11 +107,11 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
         </Button>
 
         <div className="relative flex items-center gap-6">
-          <div className="flex-shrink-0">
-            <img 
-              src={duckGraduation} 
-              alt="Happy Duck" 
-              className="h-20 w-20 animate-[bounce_2s_ease-in-out_infinite]"
+          <div className="flex-shrink-0 scale-75">
+            <FocusJourneyDuck 
+              animationState="celebrating"
+              onAnimationComplete={() => {}}
+              onStateChange={() => {}}
             />
           </div>
           
