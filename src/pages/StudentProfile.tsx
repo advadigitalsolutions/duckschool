@@ -199,7 +199,19 @@ export default function StudentProfile() {
       // Add cache-busting timestamp to force browser to reload the new image
       const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`;
       setSelectedAvatar(cacheBustedUrl);
-      toast.success('Avatar uploaded!');
+      
+      // Immediately save to database to trigger realtime update throughout the app
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({ avatar_url: cacheBustedUrl })
+        .eq('id', student.id);
+      
+      if (updateError) throw updateError;
+      
+      // Update local state
+      setStudent({ ...student, avatar_url: cacheBustedUrl });
+      
+      toast.success('Avatar updated!');
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
       toast.error('Failed to upload avatar');
