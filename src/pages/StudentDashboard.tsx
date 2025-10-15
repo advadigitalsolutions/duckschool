@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PlayCircle, Clock, Target, TrendingUp, Award, LogOut, Pause, RotateCcw, Plus, Trash2, User, BookOpen } from 'lucide-react';
+import { PlayCircle, Clock, Target, TrendingUp, Award, LogOut, Pause, RotateCcw, Plus, Trash2, User, BookOpen, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -28,6 +28,8 @@ import { AddCourseDialog } from '@/components/AddCourseDialog';
 import { EditCourseDialog } from '@/components/EditCourseDialog';
 import { ArchiveCourseDialog } from '@/components/ArchiveCourseDialog';
 import { DeleteCourseDialog } from '@/components/DeleteCourseDialog';
+import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
+import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -435,6 +437,77 @@ export default function StudentDashboard() {
       {headerSettings && <CustomizableHeader student={student} settings={headerSettings} onSaveSettings={saveHeaderSettings} onSignOut={handleSignOut} onDemoCelebration={() => setShowConfetti(true)} />}
 
       <div className="container mx-auto p-4 md:p-8 max-w-4xl">
+        {/* Today's Tasks - Moved to top */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Today's Tasks</CardTitle>
+            <CardDescription>Your assignments for today</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {assignments.length === 0 ? <div className="text-center py-12">
+                <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No tasks assigned yet</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Check back later or ask your teacher
+                </p>
+              </div> : <div className="space-y-3">
+                {assignments.map(assignment => {
+                  const course = assignment.curriculum_items?.courses;
+                  const isStudentCreated = course?.initiated_by === currentUserId;
+                  
+                  return (
+                    <Card key={assignment.id} className="border">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            {course?.title && <div className="text-xs font-medium text-muted-foreground mb-1">
+                                {course.title}
+                                {!isStudentCreated && <span className="ml-2 text-xs text-muted-foreground">(Teacher-assigned)</span>}
+                              </div>}
+                            <CardTitle className="text-base">
+                              {assignment.curriculum_items?.title || 'Untitled Assignment'}
+                            </CardTitle>
+                            <CardDescription className="mt-1">
+                              <Clock className="inline h-3 w-3 mr-1" />
+                              {assignment.curriculum_items?.est_minutes || 30} minutes
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {isStudentCreated && (
+                              <>
+                                <EditAssignmentDialog
+                                  assignment={assignment}
+                                  onAssignmentUpdated={fetchStudentData}
+                                  trigger={
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                  }
+                                />
+                                <DeleteAssignmentDialog
+                                  assignment={assignment}
+                                  onAssignmentDeleted={fetchStudentData}
+                                  trigger={
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  }
+                                />
+                              </>
+                            )}
+                            <Button size="sm" onClick={() => navigate(`/assignment/${assignment.id}`)}>
+                              Start
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  );
+                })}
+              </div>}
+          </CardContent>
+        </Card>
+
         {/* Focus Time Stats - Collapsible */}
         {student?.id && (
           <Collapsible className="mb-6">
@@ -483,39 +556,6 @@ export default function StudentDashboard() {
 
         {/* Overdue Work Alert */}
         {student?.id && <OverdueWorkTab studentId={student.id} />}
-
-        {/* Today's Work */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Today's Work</CardTitle>
-            <CardDescription>Assignments for today</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {assignments.length === 0 ? <div className="text-center py-8">
-                <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No assignments for today</p>
-              </div> : <div className="space-y-3">
-                {assignments.map(assignment => <Card key={assignment.id} className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate(`/assignment/${assignment.id}`)}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-medium mb-1">
-                            {assignment.curriculum_items?.title}
-                          </h4>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            <span>{assignment.curriculum_items?.est_minutes || 30} min</span>
-                            <span>•</span>
-                            <span>{assignment.curriculum_items?.courses?.title}</span>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm">Start</Button>
-                      </div>
-                    </CardContent>
-                  </Card>)}
-              </div>}
-          </CardContent>
-        </Card>
 
         {/* This Week's View */}
         {student?.id && <Card className="mb-8">
@@ -572,45 +612,6 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Today's Tasks */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Today's Tasks</CardTitle>
-            <CardDescription>Your assignments for today</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {assignments.length === 0 ? <div className="text-center py-12">
-                <Award className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No tasks assigned yet</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Check back later or ask your teacher
-                </p>
-              </div> : <div className="space-y-3">
-                {assignments.map(assignment => <Card key={assignment.id} className="border">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          {assignment.curriculum_items?.courses?.title && <div className="text-xs font-medium text-muted-foreground mb-1">
-                              {assignment.curriculum_items.courses.title}
-                            </div>}
-                          <CardTitle className="text-base">
-                            {assignment.curriculum_items?.title || 'Untitled Assignment'}
-                          </CardTitle>
-                          <CardDescription className="mt-1">
-                            <Clock className="inline h-3 w-3 mr-1" />
-                            {assignment.curriculum_items?.est_minutes || 30} minutes
-                          </CardDescription>
-                        </div>
-                        <Button size="sm" onClick={() => navigate(`/assignment/${assignment.id}`)}>
-                          Start
-                        </Button>
-                      </div>
-                    </CardHeader>
-                  </Card>)}
-              </div>}
-          </CardContent>
-        </Card>
 
         {/* My Courses */}
         <Card className="mt-8">
