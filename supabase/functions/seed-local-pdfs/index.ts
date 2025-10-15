@@ -70,17 +70,43 @@ serve(async (req) => {
 
     // Define local PDF files and their metadata
     const pdfFiles = [
+      // Grade 10
       {
         path: './supabase/data/ca-ccss-math.pdf',
         subject: 'Mathematics',
-        gradeLevel: '3',
+        gradeLevel: '10',
         framework: 'CA-CCSS'
       },
       {
         path: './supabase/data/ca-ccss-ela.pdf',
-        subject: 'English/Language Arts',
-        gradeLevel: '3',
+        subject: 'English Language Arts',
+        gradeLevel: '10',
         framework: 'CA-CCSS'
+      },
+      {
+        path: './supabase/data/ca-history-social-science.pdf',
+        subject: 'History-Social Science',
+        gradeLevel: '10',
+        framework: 'CA State Standards'
+      },
+      // Grade 12
+      {
+        path: './supabase/data/ca-ccss-math.pdf',
+        subject: 'Mathematics',
+        gradeLevel: '12',
+        framework: 'CA-CCSS'
+      },
+      {
+        path: './supabase/data/ca-ccss-ela.pdf',
+        subject: 'English Language Arts',
+        gradeLevel: '12',
+        framework: 'CA-CCSS'
+      },
+      {
+        path: './supabase/data/ca-history-social-science.pdf',
+        subject: 'History-Social Science',
+        gradeLevel: '12',
+        framework: 'CA State Standards'
       }
     ];
 
@@ -126,21 +152,20 @@ serve(async (req) => {
         console.log('Generating standards with AI...');
 
         
-        const systemPrompt = `You are an expert at California Common Core State Standards (CA-CCSS). Generate authentic, comprehensive standards for ${pdfFile.subject} grade ${pdfFile.gradeLevel}.
+        const systemPrompt = `You are an expert at California educational standards. Generate authentic, comprehensive standards for ${pdfFile.subject} grade ${pdfFile.gradeLevel}.
 
-These should be REAL standards from the CA-CCSS, not made up. Use authentic CA-CCSS codes and descriptions.`;
+These should be REAL standards from California state standards, not made up. Use authentic standard codes and descriptions appropriate for high school level.`;
 
-        const userPrompt = `Generate 30-50 authentic CA-CCSS standards for:
+        const userPrompt = `Generate 30-50 authentic California state standards for:
 - Subject: ${pdfFile.subject}
 - Grade Level: ${pdfFile.gradeLevel}
 
 Requirements:
-1. Use EXACT CA-CCSS code format:
-   - Mathematics: "3.OA.A.1", "3.NBT.A.2", etc.
-   - ELA: "RL.3.1", "W.3.2", "SL.3.1", etc.
-2. Generate standards across ALL domains for this grade:
-   - Math Grade 3: Operations & Algebraic Thinking, Number & Operations, Measurement & Data, Geometry
-   - ELA Grade 3: Reading Literature, Reading Informational, Writing, Speaking & Listening, Language
+1. Use EXACT California standard code format appropriate for ${pdfFile.gradeLevel === '10' || pdfFile.gradeLevel === '12' ? 'high school' : 'elementary/middle school'}:
+   - Mathematics: Use CA-CCSS high school codes like "HSN-Q.A.1", "HSA-SSE.A.1", "HSG-CO.A.1" (Number, Algebra, Geometry, etc.)
+   - ELA: Use CA-CCSS codes like "RL.11-12.1", "W.11-12.2", "SL.11-12.1", "L.11-12.1"
+   - History-Social Science: Use CA History-Social Science Framework codes
+2. Generate standards across ALL domains/strands for this grade level
 3. Each standard must have the complete, official description
 4. Include domain/strand information
 5. Generate 30-50 standards (comprehensive coverage)
@@ -148,10 +173,10 @@ Requirements:
 Return ONLY a JSON array:
 [
   {
-    "code": "3.OA.A.1",
-    "text": "Interpret products of whole numbers, e.g., interpret 5 × 7 as the total number of objects in 5 groups of 7 objects each.",
-    "domain": "Operations and Algebraic Thinking",
-    "grade_level": "3",
+    "code": "HSN-Q.A.1",
+    "text": "Use units as a way to understand problems and to guide the solution of multi-step problems; choose and interpret units consistently in formulas; choose and interpret the scale and the origin in graphs and data displays.",
+    "domain": "Number and Quantity",
+    "grade_level": "${pdfFile.gradeLevel}",
     "subject": "${pdfFile.subject}"
   }
 ]`;
