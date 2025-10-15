@@ -355,7 +355,7 @@ export default function StudentProfile() {
                 </div>
 
                 <div className="flex flex-col items-center space-y-4">
-                  <Avatar className="h-32 w-32">
+                  <Avatar className="h-32 w-32" key={selectedAvatar}>
                     <AvatarImage src={selectedAvatar} className="object-cover" />
                     <AvatarFallback>
                       <User className="h-16 w-16" />
