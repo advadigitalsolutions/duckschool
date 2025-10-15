@@ -195,53 +195,68 @@ export default function ParentDashboard() {
       console.log('[ParentDashboard] Student IDs for attendance queries:', studentIds, 'Date:', today);
       
       if (studentIds.length > 0) {
-        // Today's time
-        const { data: todayAttendance, error: todayError } = await supabase
-          .from('attendance_logs')
-          .select('minutes')
-          .eq('date', today)
-          .in('student_id', studentIds);
-
-        if (todayError) {
-          console.error('[ParentDashboard] Error fetching today attendance:', todayError);
-        }
-        console.log('[ParentDashboard] Today attendance data:', todayAttendance);
-
-        const todayTotal = todayAttendance?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
-        setTodayMinutes(todayTotal);
-
-        // This week's time (last 7 days)
+        // Fetch time from learning_sessions instead of attendance_logs
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
-        const weekAgoStr = weekAgo.toISOString().split('T')[0];
 
-        const { data: weekAttendance, error: weekError } = await supabase
-          .from('attendance_logs')
-          .select('minutes')
-          .gte('date', weekAgoStr)
-          .in('student_id', studentIds);
+        // Today's time from learning_sessions
+        const { data: todaySessions, error: todayError } = await supabase
+          .from('learning_sessions')
+          .select('total_active_seconds, total_idle_seconds, total_away_seconds')
+          .in('student_id', studentIds)
+          .gte('session_start', todayStart.toISOString());
+
+        if (todayError) {
+          console.error('[ParentDashboard] Error fetching today sessions:', todayError);
+        }
+
+        const todayMinutesCalc = todaySessions?.reduce((sum, session) => {
+          const totalSeconds = (session.total_active_seconds || 0) + 
+                              (session.total_idle_seconds || 0) + 
+                              (session.total_away_seconds || 0);
+          return sum + (totalSeconds / 60);
+        }, 0) || 0;
+        setTodayMinutes(Math.round(todayMinutesCalc));
+
+        // This week's time from learning_sessions
+        const { data: weekSessions, error: weekError } = await supabase
+          .from('learning_sessions')
+          .select('total_active_seconds, total_idle_seconds, total_away_seconds')
+          .in('student_id', studentIds)
+          .gte('session_start', weekAgo.toISOString());
 
         if (weekError) {
-          console.error('[ParentDashboard] Error fetching week attendance:', weekError);
+          console.error('[ParentDashboard] Error fetching week sessions:', weekError);
         }
-        console.log('[ParentDashboard] Week attendance data:', weekAttendance);
 
-        const weekTotal = weekAttendance?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
-        setWeekMinutes(weekTotal);
+        const weekMinutesCalc = weekSessions?.reduce((sum, session) => {
+          const totalSeconds = (session.total_active_seconds || 0) + 
+                              (session.total_idle_seconds || 0) + 
+                              (session.total_away_seconds || 0);
+          return sum + (totalSeconds / 60);
+        }, 0) || 0;
+        setWeekMinutes(Math.round(weekMinutesCalc));
 
-        // All time
-        const { data: allTimeAttendance, error: allTimeError } = await supabase
-          .from('attendance_logs')
-          .select('minutes')
+        // All time from learning_sessions
+        const { data: allTimeSessions, error: allTimeError } = await supabase
+          .from('learning_sessions')
+          .select('total_active_seconds, total_idle_seconds, total_away_seconds')
           .in('student_id', studentIds);
 
         if (allTimeError) {
-          console.error('[ParentDashboard] Error fetching all time attendance:', allTimeError);
+          console.error('[ParentDashboard] Error fetching all time sessions:', allTimeError);
         }
-        console.log('[ParentDashboard] All time attendance data:', allTimeAttendance);
 
-        const allTimeTotal = allTimeAttendance?.reduce((sum, log) => sum + (log.minutes || 0), 0) || 0;
-        setAllTimeMinutes(allTimeTotal);
+        const allTimeMinutesCalc = allTimeSessions?.reduce((sum, session) => {
+          const totalSeconds = (session.total_active_seconds || 0) + 
+                              (session.total_idle_seconds || 0) + 
+                              (session.total_away_seconds || 0);
+          return sum + (totalSeconds / 60);
+        }, 0) || 0;
+        setAllTimeMinutes(Math.round(allTimeMinutesCalc));
       } else {
         setTodayMinutes(0);
         setWeekMinutes(0);
@@ -250,10 +265,13 @@ export default function ParentDashboard() {
 
       // Fetch completed submissions today
       if (studentIds.length > 0) {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        
         const { data: completedData } = await supabase
           .from('submissions')
           .select('id')
-          .gte('submitted_at', new Date(today).toISOString())
+          .gte('submitted_at', todayStart.toISOString())
           .in('student_id', studentIds);
 
         setCompletedToday(completedData?.length || 0);

@@ -34,8 +34,32 @@ export const useActivitySession = (studentId?: string) => {
   const createSession = useCallback(async () => {
     if (!studentId) return;
     
+    // Check if we already have an active session
+    if (sessionData.sessionId) {
+      console.log('⚠️ Session already exists, not creating duplicate:', sessionData.sessionId);
+      return;
+    }
+    
+    // Check localStorage for existing session
+    const storedSession = localStorage.getItem('focus_journey_session');
+    if (storedSession) {
+      try {
+        const parsed = JSON.parse(storedSession);
+        // If stored session is less than 24 hours old, reuse it
+        const sessionAge = Date.now() - new Date(parsed.startTime).getTime();
+        if (sessionAge < 24 * 60 * 60 * 1000) {
+          console.log('♻️ Reusing existing session from localStorage:', parsed.sessionId);
+          setSessionData(prev => ({ ...prev, sessionId: parsed.sessionId }));
+          return;
+        }
+      } catch (e) {
+        console.error('Error parsing stored session:', e);
+      }
+    }
+    
     const { deviceType, browser } = getDeviceInfo();
     
+    console.log('✨ Creating new learning session for student:', studentId);
     const { data, error } = await supabase
       .from('learning_sessions')
       .insert({
@@ -55,6 +79,7 @@ export const useActivitySession = (studentId?: string) => {
     }
     
     if (data) {
+      console.log('✅ Session created:', data.id);
       setSessionData(prev => ({ ...prev, sessionId: data.id }));
       
       // Log session_start event
@@ -71,7 +96,7 @@ export const useActivitySession = (studentId?: string) => {
         startTime: new Date().toISOString()
       }));
     }
-  }, [studentId]);
+  }, [studentId, sessionData.sessionId]);
 
   const endSession = useCallback(async (endedBy: 'logout' | 'browser_close' | 'timeout' | 'manual' = 'manual') => {
     if (!sessionData.sessionId || !studentId) return;
@@ -106,7 +131,15 @@ export const useActivitySession = (studentId?: string) => {
   const syncSession = useCallback(async () => {
     if (!sessionData.sessionId) return;
     
-    await supabase
+    const totalSeconds = sessionData.activeSeconds + sessionData.idleSeconds + sessionData.awaySeconds;
+    console.log(`🔄 Syncing session ${sessionData.sessionId}:`, {
+      active: sessionData.activeSeconds,
+      idle: sessionData.idleSeconds,
+      away: sessionData.awaySeconds,
+      total: totalSeconds
+    });
+    
+    const { error } = await supabase
       .from('learning_sessions')
       .update({
         total_active_seconds: sessionData.activeSeconds,
@@ -114,13 +147,25 @@ export const useActivitySession = (studentId?: string) => {
         total_away_seconds: sessionData.awaySeconds
       })
       .eq('id', sessionData.sessionId);
+      
+    if (error) {
+      console.error('❌ Error syncing session:', error);
+    } else {
+      console.log('✅ Session synced successfully');
+    }
   }, [sessionData]);
 
   const updateActiveTime = useCallback((seconds: number) => {
-    setSessionData(prev => ({
-      ...prev,
-      activeSeconds: prev.activeSeconds + seconds
-    }));
+    setSessionData(prev => {
+      const newActive = prev.activeSeconds + seconds;
+      if (newActive % 10 === 0) { // Log every 10 seconds
+        console.log(`⏱️ Active time updated: ${newActive}s`);
+      }
+      return {
+        ...prev,
+        activeSeconds: newActive
+      };
+    });
   }, []);
 
   const updateIdleTime = useCallback((seconds: number) => {
