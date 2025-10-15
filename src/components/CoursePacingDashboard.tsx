@@ -17,6 +17,7 @@ import { CustomMilestonesDashboard } from './CustomMilestonesDashboard';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getFrameworkDisplayName } from '@/hooks/useAvailableFrameworks';
 
 interface CoursePacingDashboardProps {
   courseId: string;
@@ -141,12 +142,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
   const getFrameworkName = () => {
     if (!metrics?.needsConfiguration && metrics) {
       const framework = (metrics as any).framework;
-      if (framework === 'CA-CCSS') return 'California Common Core State Standards';
-      if (framework === 'CCSS') return 'Common Core State Standards';
-      if (framework === 'TX-TEKS') return 'Texas Essential Knowledge and Skills';
-      if (framework === 'FL-BEST') return 'Florida B.E.S.T. Standards';
-      if (framework === 'NY-CCLS') return 'New York Common Core Learning Standards';
-      if (framework === 'CUSTOM') return 'Custom Framework (Goals-Based)';
+      return getFrameworkDisplayName(framework);
     }
     return null;
   };

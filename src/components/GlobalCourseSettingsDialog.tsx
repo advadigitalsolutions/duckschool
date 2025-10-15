@@ -13,14 +13,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-
-const FRAMEWORKS = [
-  { value: 'CA-CCSS', label: 'California Common Core' },
-  { value: 'CCSS', label: 'Common Core State Standards' },
-  { value: 'TX-TEKS', label: 'Texas TEKS' },
-  { value: 'FL-BEST', label: 'Florida B.E.S.T.' },
-  { value: 'NY-CCLS', label: 'New York CCLS' },
-];
+import { useAvailableFrameworks } from '@/hooks/useAvailableFrameworks';
 
 const PEDAGOGIES = [
   { value: 'montessori', label: 'Montessori' },
@@ -47,6 +40,7 @@ interface CourseMinutes {
 }
 
 export function GlobalCourseSettingsDialog({ open, onOpenChange, studentId, onUpdate }: GlobalCourseSettingsDialogProps) {
+  const { frameworks, loading: frameworksLoading } = useAvailableFrameworks();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<any[]>([]);
@@ -236,13 +230,16 @@ export function GlobalCourseSettingsDialog({ open, onOpenChange, studentId, onUp
           {/* Standards Framework */}
           <div className="space-y-2">
             <Label>Standards Framework</Label>
-            <Select value={framework} onValueChange={setFramework}>
+            <Select value={framework} onValueChange={setFramework} disabled={frameworksLoading}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {FRAMEWORKS.map(fw => (
-                  <SelectItem key={fw.value} value={fw.value}>{fw.label}</SelectItem>
+                {frameworks.map(fw => (
+                  <SelectItem key={fw.value} value={fw.value}>
+                    {fw.label}
+                    {fw.standardCount > 0 && ` (${fw.standardCount} standards)`}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

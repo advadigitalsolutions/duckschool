@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { useAvailableFrameworks } from '@/hooks/useAvailableFrameworks';
 
 interface CourseSettingsDialogProps {
   open: boolean;
@@ -17,15 +18,6 @@ interface CourseSettingsDialogProps {
   currentSubject?: string;
   onUpdate: () => void;
 }
-
-const FRAMEWORKS = [
-  { value: 'CA-CCSS', label: 'California Common Core State Standards' },
-  { value: 'CCSS', label: 'Common Core State Standards' },
-  { value: 'TX-TEKS', label: 'Texas Essential Knowledge and Skills' },
-  { value: 'FL-BEST', label: 'Florida B.E.S.T. Standards' },
-  { value: 'NY-CCLS', label: 'New York Common Core Learning Standards' },
-  { value: 'CUSTOM', label: 'Custom Framework (Goals-Based)' },
-];
 
 const PEDAGOGIES = [
   { value: 'montessori', label: 'Montessori' },
@@ -50,6 +42,7 @@ export function CourseSettingsDialog({
   currentSubject,
   onUpdate
 }: CourseSettingsDialogProps) {
+  const { frameworks, loading: frameworksLoading } = useAvailableFrameworks();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [gradeLevel, setGradeLevel] = useState(currentGradeLevel || '');
@@ -441,14 +434,15 @@ export function CourseSettingsDialog({
 
           <div className="space-y-2">
             <Label htmlFor="framework">Regional Framework *</Label>
-            <Select value={framework} onValueChange={setFramework}>
+            <Select value={framework} onValueChange={setFramework} disabled={frameworksLoading}>
               <SelectTrigger id="framework">
-                <SelectValue placeholder="Select regional standards" />
+                <SelectValue placeholder={frameworksLoading ? "Loading frameworks..." : "Select regional standards"} />
               </SelectTrigger>
               <SelectContent>
-                {FRAMEWORKS.map((fw) => (
+                {frameworks.map((fw) => (
                   <SelectItem key={fw.value} value={fw.value}>
                     {fw.label}
+                    {fw.standardCount > 0 && ` (${fw.standardCount} standards)`}
                   </SelectItem>
                 ))}
               </SelectContent>
