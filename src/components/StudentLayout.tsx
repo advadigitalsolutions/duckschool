@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
@@ -16,6 +16,13 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   const [headerSettings, setHeaderSettings] = useState<any>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Only show focus duck on learning pages (assignments, dashboard, courses)
+  // NOT on profile, settings, or admin pages
+  const showFocusDuck = !location.pathname.includes('/profile') && 
+                        !location.pathname.includes('/pomodoro-fullscreen') &&
+                        !location.pathname.includes('/admin/');
 
   useEffect(() => {
     fetchStudent();
@@ -115,7 +122,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
               onSignOut={handleSignOut}
               onDemoCelebration={() => setShowConfetti(true)}
             />
-            <FocusJourneyBar studentId={student.id} />
+            {showFocusDuck && <FocusJourneyBar studentId={student.id} />}
           </>
         )}
 
