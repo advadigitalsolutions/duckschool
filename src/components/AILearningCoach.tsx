@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Rnd } from 'react-rnd';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Card } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, Send, Loader2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { MessageSquare, Send, Loader2, ChevronRight, ChevronLeft, Maximize2, Minimize2, PanelRightOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -27,6 +28,7 @@ interface AILearningCoachProps {
   };
   assignmentBody: any;
   onHistoryUpdate?: (history: Message[]) => void;
+  onSidebarModeChange?: (isSidebar: boolean) => void;
 }
 
 export const AILearningCoach: React.FC<AILearningCoachProps> = ({
@@ -35,9 +37,11 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
   currentStep,
   studentContext,
   assignmentBody,
-  onHistoryUpdate
+  onHistoryUpdate,
+  onSidebarModeChange
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSidebarMode, setIsSidebarMode] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -166,6 +170,14 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
     }
   };
 
+  const toggleSidebarMode = () => {
+    const newMode = !isSidebarMode;
+    setIsSidebarMode(newMode);
+    if (onSidebarModeChange) {
+      onSidebarModeChange(newMode);
+    }
+  };
+
   if (!isOpen) {
     return (
       <Button
@@ -178,20 +190,48 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
     );
   }
 
-  return (
-    <Card className="fixed bottom-4 left-1/2 -translate-x-1/2 w-96 h-[600px] shadow-2xl flex flex-col z-50">
-      <div className="flex items-center justify-between p-4 border-b">
+  const chatContent = (
+    <>
+      <div className="flex items-center justify-between p-4 border-b drag-handle cursor-move">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-primary" />
           <h3 className="font-semibold">AI Learning Coach</h3>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsOpen(false)}
-        >
-          <ChevronRight className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          {!isSidebarMode && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebarMode}
+              title="Switch to sidebar mode"
+            >
+              <PanelRightOpen className="h-4 w-4" />
+            </Button>
+          )}
+          {isSidebarMode && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebarMode}
+              title="Switch to floating mode"
+            >
+              <Maximize2 className="h-4 w-4" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setIsOpen(false);
+              if (isSidebarMode && onSidebarModeChange) {
+                setIsSidebarMode(false);
+                onSidebarModeChange(false);
+              }
+            }}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
@@ -267,6 +307,38 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
           </Button>
         </div>
       </div>
-    </Card>
+    </>
+  );
+
+  // Sidebar mode - fixed to right side
+  if (isSidebarMode) {
+    return (
+      <Card className="fixed top-0 right-0 h-screen w-96 shadow-2xl flex flex-col z-40 rounded-none border-l">
+        {chatContent}
+      </Card>
+    );
+  }
+
+  // Floating mode - draggable and resizable
+  return (
+    <Rnd
+      default={{
+        x: window.innerWidth / 2 - 192,
+        y: window.innerHeight - 650,
+        width: 384,
+        height: 600,
+      }}
+      minWidth={320}
+      minHeight={400}
+      maxWidth={600}
+      maxHeight={800}
+      bounds="window"
+      dragHandleClassName="drag-handle"
+      className="z-50"
+    >
+      <Card className="w-full h-full shadow-2xl flex flex-col">
+        {chatContent}
+      </Card>
+    </Rnd>
   );
 };

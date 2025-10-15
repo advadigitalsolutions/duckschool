@@ -33,6 +33,7 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
   const [progress, setProgress] = useState<any>(null);
   const [resources, setResources] = useState<any[]>([]);
   const [notes, setNotes] = useState('');
+  const [isSidebarMode, setIsSidebarMode] = useState(false);
 
   const assignmentBody = typeof assignment.curriculum_items?.body === 'string'
     ? JSON.parse(assignment.curriculum_items.body)
@@ -153,7 +154,7 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 transition-all duration-300 ${isSidebarMode ? 'mr-96' : ''}`}>
       {/* Progress Bar */}
       <Card className="p-6">
         <div className="space-y-3">
@@ -241,6 +242,7 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
         currentStep={currentStep}
         studentContext={studentContext}
         assignmentBody={assignmentBody}
+        onSidebarModeChange={setIsSidebarMode}
       />
     </div>
   );
