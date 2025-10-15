@@ -6,6 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -24,6 +31,7 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [createLogin, setCreateLogin] = useState(false);
+  const [gradeLevel, setGradeLevel] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -32,7 +40,6 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
     const dob = formData.get('dob') as string;
-    const gradeLevel = formData.get('gradeLevel') as string;
     const accommodationsText = formData.get('accommodations') as string;
     const goalsText = formData.get('goals') as string;
     const studentEmail = formData.get('studentEmail') as string;
@@ -101,6 +108,7 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
       );
       setOpen(false);
       setCreateLogin(false);
+      setGradeLevel('');
       onStudentAdded();
       
       // Reset form
@@ -150,12 +158,31 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="gradeLevel">Grade Level *</Label>
-            <Input
-              id="gradeLevel"
-              name="gradeLevel"
-              placeholder="10th Grade"
-              required
-            />
+            <Select value={gradeLevel} onValueChange={setGradeLevel} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select grade level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Preschool">Preschool</SelectItem>
+                <SelectItem value="Kindergarten">Kindergarten</SelectItem>
+                <SelectItem value="1st Grade">1st Grade</SelectItem>
+                <SelectItem value="2nd Grade">2nd Grade</SelectItem>
+                <SelectItem value="3rd Grade">3rd Grade</SelectItem>
+                <SelectItem value="4th Grade">4th Grade</SelectItem>
+                <SelectItem value="5th Grade">5th Grade</SelectItem>
+                <SelectItem value="6th Grade">6th Grade</SelectItem>
+                <SelectItem value="7th Grade">7th Grade</SelectItem>
+                <SelectItem value="8th Grade">8th Grade</SelectItem>
+                <SelectItem value="9th Grade">9th Grade</SelectItem>
+                <SelectItem value="10th Grade">10th Grade</SelectItem>
+                <SelectItem value="11th Grade">11th Grade</SelectItem>
+                <SelectItem value="12th Grade">12th Grade</SelectItem>
+                <SelectItem value="Graduate School">Graduate School</SelectItem>
+                <SelectItem value="Post Graduate">Post Graduate</SelectItem>
+                <SelectItem value="Rogue Brainiac">Rogue Brainiac</SelectItem>
+                <SelectItem value="Educator">Educator</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
