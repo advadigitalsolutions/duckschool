@@ -69,7 +69,7 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="mb-8">
         <CardContent className="flex items-center justify-center p-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </CardContent>
@@ -79,7 +79,7 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
 
   if (overdueAssignments.length === 0) {
     return (
-      <Card>
+      <Card className="mb-8">
         <CardContent className="flex flex-col items-center justify-center p-8 text-center">
           <CalendarX className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="font-semibold text-lg mb-2">All caught up!</h3>
@@ -99,7 +99,7 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-8">
       <Card className="border-destructive bg-destructive/5">
         <CardHeader>
           <div className="flex items-start gap-3">
