@@ -126,7 +126,9 @@ serve(async (req) => {
                    extractValue(resource['http://purl.org/ASN/schema/core/comment']);
       if (!text) continue;
 
-      const educationLevels = resource['http://purl.org/ASN/schema/core/educationLevel'];
+      // CTE standards use dc/terms/educationLevel, academic standards use ASN/schema/core/educationLevel
+      const educationLevels = resource['http://purl.org/dc/terms/educationLevel'] ||
+                             resource['http://purl.org/ASN/schema/core/educationLevel'];
       const gradeBand = extractGradeBand(educationLevels);
 
       const parentRefs = resource['http://purl.org/gem/qualifiers/isChildOf'];
