@@ -104,7 +104,7 @@ export function CurriculumGenerationDialog({
           course_id: courseId,
           title: suggestion.title,
           type: 'lesson',
-          body: generatedAssignment.body,
+          body: generatedAssignment,
           standards: [suggestion.standardCode],
           est_minutes: suggestion.estimatedMinutes
         })
@@ -175,7 +175,7 @@ export function CurriculumGenerationDialog({
               course_id: courseId,
               title: suggestion.title,
               type: 'lesson',
-              body: generatedAssignment.body,
+              body: generatedAssignment,
               standards: [suggestion.standardCode],
               est_minutes: suggestion.estimatedMinutes
             })
