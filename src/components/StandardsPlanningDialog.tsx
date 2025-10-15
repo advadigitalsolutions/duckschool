@@ -27,9 +27,11 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
 
   // Load available subjects when framework is selected
   useEffect(() => {
+    console.log('Framework changed to:', selectedFramework);
     if (selectedFramework && selectedFramework !== 'CUSTOM') {
       loadSubjects();
     } else {
+      console.log('Clearing subjects - framework is:', selectedFramework);
       setAvailableSubjects([]);
       setSelectedSubjects([]);
       setStandards([]);
@@ -47,6 +49,7 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
 
   const loadSubjects = async () => {
     try {
+      console.log('Loading subjects for framework:', selectedFramework);
       const { data, error } = await supabase
         .from('standards')
         .select('subject')
@@ -54,9 +57,11 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
         .order('subject');
 
       if (error) throw error;
+      console.log('Raw subject data:', data);
 
       // Get unique subjects
       const uniqueSubjects = [...new Set(data.map(s => s.subject).filter(Boolean))];
+      console.log('Unique subjects found:', uniqueSubjects);
       setAvailableSubjects(uniqueSubjects);
     } catch (error) {
       console.error('Error loading subjects:', error);
