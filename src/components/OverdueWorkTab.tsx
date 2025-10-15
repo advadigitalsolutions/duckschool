@@ -107,7 +107,7 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
         </Button>
 
         <div className="relative flex items-center gap-6">
-          <div className="flex-shrink-0 scale-75">
+          <div className="flex-shrink-0 scale-[2.5]">
             <FocusJourneyDuck 
               animationState="celebrating"
               onAnimationComplete={() => {}}
