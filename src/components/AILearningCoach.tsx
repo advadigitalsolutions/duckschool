@@ -251,7 +251,7 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-full h-14 w-14 shadow-lg z-50 bg-orange-500 hover:bg-orange-600 text-white"
+        className="fixed bottom-4 right-4 rounded-full h-14 w-14 shadow-lg z-50 bg-orange-500 hover:bg-orange-600 text-white"
         size="icon"
       >
         <MessageSquare className="h-6 w-6" />
