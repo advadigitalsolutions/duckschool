@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useTheme } from 'next-themes';
 import { getRandomQuote } from '@/utils/inspirationalQuotes';
 import { getRandomAffirmation } from '@/utils/affirmations';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { usePomodoro } from '@/contexts/PomodoroContext';
@@ -95,6 +95,7 @@ export function CustomizableHeader({
   const factTextRef = useRef<HTMLParagraphElement>(null);
   const factContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { updateSettings: updatePomodoroSettings } = usePomodoro();
 
   const handleOpenSettingsAtTab = (tab: string) => {
@@ -568,7 +569,14 @@ export function CustomizableHeader({
                 variant="ghost"
                 size="icon"
                 className="h-12 w-12 flex-shrink-0"
-                onClick={() => navigate(-1)}
+                onClick={() => {
+                  // Navigate based on current route
+                  if (location.pathname === '/student/profile' || location.pathname === '/parent/profile') {
+                    navigate(location.pathname.startsWith('/parent') ? '/parent' : '/student');
+                  } else {
+                    navigate(-1);
+                  }
+                }}
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, User, X, ArrowLeft } from 'lucide-react';
+import { Upload, User, X } from 'lucide-react';
 import { AccessibilityControls } from '@/components/AccessibilityControls';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -254,21 +254,13 @@ export default function StudentProfile() {
   return (
     <StudentLayout>
       <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/student')}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
-          {isAdmin && (
+        {isAdmin && (
+          <div className="flex justify-end mb-4">
             <Button variant="outline" onClick={() => navigate('/admin/seed-standards')}>
               Admin Dashboard
             </Button>
-          )}
-        </div>
+          </div>
+        )}
         <h1 className="text-2xl font-bold mb-6">My Profile</h1>
 
         <Tabs defaultValue="profile" className="space-y-4">
