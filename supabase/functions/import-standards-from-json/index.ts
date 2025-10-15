@@ -187,6 +187,7 @@ serve(async (req) => {
         .from('standards')
         .select('code')
         .eq('framework', framework)
+        .eq('subject', subject)
         .in('code', codes);
       
       const existingCodes = new Set(existing?.map(e => e.code) || []);
