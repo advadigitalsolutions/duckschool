@@ -70,7 +70,6 @@ export function AccessibilityControls() {
           parts.push(e.key.toLowerCase());
         }
         setNewHotkey(parts.join('+'));
-        setRecordingKey(false);
         return;
       }
 
@@ -141,7 +140,6 @@ export function AccessibilityControls() {
       
       if (parts.length > 0) {
         setNewHotkey(parts.join('+'));
-        setRecordingKey(false);
       }
     };
 
@@ -455,7 +453,18 @@ export function AccessibilityControls() {
             </div>
             {newHotkey && (
               <Button
-                onClick={() => saveHotkey(editingHotkey!, newHotkey)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onKeyDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onClick={() => {
+                  setRecordingKey(false);
+                  saveHotkey(editingHotkey!, newHotkey);
+                }}
                 className="w-full"
               >
                 Save Hotkey
