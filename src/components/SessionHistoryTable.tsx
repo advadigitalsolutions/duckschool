@@ -123,11 +123,11 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
     const awayPercent = (awaySeconds / POMODORO_DURATION) * 100;
     const usedPercent = (totalSeconds / POMODORO_DURATION) * 100;
 
-    // Pastel color palette for focus time
-    const activeColor = 'hsl(151, 100%, 40%)'; // Dark Pastel Green #00CC6C
-    const idleColor = 'hsl(20, 100%, 67%)'; // Mango Tango #FF8F57
-    const awayColor = 'hsl(18, 73%, 72%)'; // Zinnwaldite #EBA482
-    const unusedColor = 'hsl(40, 82%, 95%)'; // Eggwhite #FEF5E7
+    // Pastel color palette from the provided image
+    const activeColor = '#00CC6C'; // Dark Pastel Green
+    const idleColor = '#EEBAB2';   // Soft peachy pink (idle/pause)
+    const awayColor = '#FF8F57';   // Mango Tango (bright orange for away)
+    const unusedColor = '#FEF5E7'; // Eggwhite
 
     return (
       <TooltipProvider>
