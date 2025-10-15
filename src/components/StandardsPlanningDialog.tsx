@@ -50,11 +50,13 @@ export const StandardsPlanningDialog = ({ studentId, onFrameworkCreated }: Stand
   const loadSubjects = async () => {
     try {
       console.log('Loading subjects for framework:', selectedFramework);
+      
+      // Load all standards with a high limit to get all subjects
       const { data, error } = await supabase
         .from('standards')
         .select('subject')
         .eq('framework', selectedFramework)
-        .order('subject');
+        .limit(10000); // High limit to ensure we get all standards
 
       if (error) throw error;
       console.log('Raw subject data:', data);
