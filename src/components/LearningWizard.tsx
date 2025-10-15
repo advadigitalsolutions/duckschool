@@ -230,7 +230,6 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
           <AssignmentQuestions
             assignment={assignment}
             studentId={studentId}
-            onSubmitComplete={onComplete}
           />
         )}
       </div>
