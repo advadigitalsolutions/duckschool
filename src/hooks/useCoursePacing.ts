@@ -139,7 +139,10 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
               const filtered = data.filter((s: any) => {
                 const gradeBand = s.grade_band;
                 if (gradeBand.includes('-')) {
-                  const [start, end] = gradeBand.split('-').map((g: string) => parseInt(g));
+                  const [startStr, endStr] = gradeBand.split('-');
+                  // Handle 'K' as kindergarten (grade 0)
+                  const start = startStr.toUpperCase() === 'K' ? 0 : parseInt(startStr);
+                  const end = parseInt(endStr);
                   return gradeNum >= start && gradeNum <= end;
                 }
                 return parseInt(gradeBand) === gradeNum;
