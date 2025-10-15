@@ -507,72 +507,8 @@ export default function StudentDashboard() {
               </div>}
           </CardContent>
         </Card>
-
-        {/* Focus Time Stats - Collapsible */}
-        {student?.id && (
-          <Collapsible className="mb-6">
-            <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-lg">My Focus Stats</CardTitle>
-                    </div>
-                    <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
-                  </div>
-                  <CardDescription>View your time tracking and engagement</CardDescription>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  <SessionStatsCard 
-                    studentId={student.id} 
-                    dateRange={{
-                      start: new Date(new Date().setHours(0, 0, 0, 0)),
-                      end: new Date()
-                    }}
-                  />
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-        )}
-        
-        {/* Weekly Progress Overview */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Weekly Progress</CardTitle>
-            <CardDescription>Your progress for this week</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Weekly Completion</span>
-              <span className="text-2xl font-bold">{completedToday}/5 days</span>
-            </div>
-            <Progress value={completedToday / 5 * 100} className="h-2" />
-          </CardContent>
-        </Card>
-
-        {/* Overdue Work Alert */}
-        {student?.id && <OverdueWorkTab studentId={student.id} />}
-
-        {/* This Week's View */}
-        {student?.id && <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>This Week's Schedule</CardTitle>
-              <CardDescription>Your assignments for the week</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <WeeklyView studentId={student.id} />
-            </CardContent>
-          </Card>}
-
-        {/* Pomodoro Timer Card */}
-        
-
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-3 mb-8">
+        <div className="grid gap-4 md:grid-cols-3 mb-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Today's Progress</CardTitle>
@@ -612,6 +548,51 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Focus Time Stats - Collapsible */}
+        {student?.id && (
+          <Collapsible className="mb-6">
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">My Focus Stats</CardTitle>
+                    </div>
+                    <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                  </div>
+                  <CardDescription>View your time tracking and engagement</CardDescription>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <SessionStatsCard 
+                    studentId={student.id} 
+                    dateRange={{
+                      start: new Date(new Date().setHours(0, 0, 0, 0)),
+                      end: new Date()
+                    }}
+                  />
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        )}
+
+        {/* Overdue Work Alert */}
+        {student?.id && <OverdueWorkTab studentId={student.id} />}
+
+        {/* This Week's View */}
+        {student?.id && <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>This Week's Schedule</CardTitle>
+              <CardDescription>Your assignments for the week</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WeeklyView studentId={student.id} />
+            </CardContent>
+          </Card>}
 
         {/* My Courses */}
         <Card className="mt-8">
