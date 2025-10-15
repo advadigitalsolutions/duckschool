@@ -69,3 +69,6 @@ verify_jwt = false
 [functions.seed-all-states]
 verify_jwt = true
 
+[functions.seed-local-pdfs]
+verify_jwt = true
+

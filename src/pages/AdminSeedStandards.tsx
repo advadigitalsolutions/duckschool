@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, AlertCircle, FileText, Database } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,14 +13,22 @@ export default function AdminSeedStandards() {
   const [isSeeding, setIsSeeding] = useState(false);
   const [results, setResults] = useState<any>(null);
 
-  const startSeeding = async (mode: 'test' | 'california' | 'all') => {
+  const startSeeding = async (mode: 'test' | 'california' | 'all' | 'local-pdfs') => {
     setIsSeeding(true);
     setResults(null);
 
     try {
+      let functionName = 'seed-all-states';
       let payload: any = {};
-
-      if (mode === 'test') {
+      
+      if (mode === 'local-pdfs') {
+        functionName = 'seed-local-pdfs';
+        payload = { state: 'California' };
+        toast({
+          title: "Seeding Started",
+          description: "Parsing California PDF files with AI validation...",
+        });
+      } else if (mode === 'test') {
         // Test with just California, Grade 3, Math
         payload = {
           states: ['California'],
@@ -34,15 +42,19 @@ export default function AdminSeedStandards() {
           states: ['California'],
           batchSize: 1
         };
+        toast({
+          title: "Seeding Started",
+          description: "Processing California. This may take a while...",
+        });
+      } else {
+        // mode === 'all' sends empty payload to process all states
+        toast({
+          title: "Seeding Started",
+          description: "Processing all 50 states. This may take a while...",
+        });
       }
-      // mode === 'all' sends empty payload to process all states
 
-      toast({
-        title: "Seeding Started",
-        description: `Processing ${mode === 'test' ? '1 combination' : mode === 'california' ? 'California' : 'all 50 states'}. This may take a while...`,
-      });
-
-      const { data, error } = await supabase.functions.invoke('seed-all-states', {
+      const { data, error } = await supabase.functions.invoke(functionName, {
         body: payload
       });
 
@@ -78,12 +90,38 @@ export default function AdminSeedStandards() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="border-primary">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                California PDFs (Recommended)
+              </CardTitle>
+              <CardDescription>
+                Parse existing CA PDF files with full AI validation. Most reliable method.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => startSeeding('local-pdfs')}
+                disabled={isSeeding}
+                className="w-full"
+                variant="default"
+              >
+                {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Parse CA PDFs
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
-              <CardTitle>Test Run</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="w-5 h-5" />
+                Web Scraping Test
+              </CardTitle>
               <CardDescription>
-                Seed one combination to test
+                Test web scraping for CA Grade 3 Math (may have PDF issues)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -91,18 +129,21 @@ export default function AdminSeedStandards() {
                 onClick={() => startSeeding('test')}
                 disabled={isSeeding}
                 className="w-full"
+                variant="outline"
               >
                 {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Test: CA Grade 3 Math
+                Test Web Scrape
               </Button>
             </CardContent>
           </Card>
+        </div>
 
+        <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>California Only</CardTitle>
+              <CardTitle>California Only (Web)</CardTitle>
               <CardDescription>
-                All grades & subjects for CA
+                All grades & subjects via web scraping
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -113,7 +154,7 @@ export default function AdminSeedStandards() {
                 variant="secondary"
               >
                 {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Seed California
+                Scrape California
               </Button>
             </CardContent>
           </Card>
