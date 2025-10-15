@@ -72,3 +72,6 @@ verify_jwt = true
 [functions.seed-local-pdfs]
 verify_jwt = true
 
+[functions.import-common-standards]
+verify_jwt = true
+

@@ -91,95 +91,64 @@ export default function AdminSeedStandards() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                California PDFs (Recommended)
-              </CardTitle>
-              <CardDescription>
-                Parse existing CA PDF files with full AI validation. Most reliable method.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={() => startSeeding('local-pdfs')}
-                disabled={isSeeding}
-                className="w-full"
-                variant="default"
-              >
-                {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Parse CA PDFs
-              </Button>
-            </CardContent>
-          </Card>
+        <Card className="border-primary">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="w-5 h-5" />
+              Common Standards Project
+            </CardTitle>
+            <CardDescription>
+              Import official California CCSS standards from the open-source Common Standards Project
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={async () => {
+                setIsSeeding(true);
+                setResults(null);
+                try {
+                  toast({
+                    title: "Import Started",
+                    description: "Fetching standards from Common Standards Project...",
+                  });
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5" />
-                Web Scraping Test
-              </CardTitle>
-              <CardDescription>
-                Test web scraping for CA Grade 3 Math (may have PDF issues)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={() => startSeeding('test')}
-                disabled={isSeeding}
-                className="w-full"
-                variant="outline"
-              >
-                {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Test Web Scrape
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+                  const { data, error } = await supabase.functions.invoke('import-common-standards');
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>California Only (Web)</CardTitle>
-              <CardDescription>
-                All grades & subjects via web scraping
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={() => startSeeding('california')}
-                disabled={isSeeding}
-                className="w-full"
-                variant="secondary"
-              >
-                {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Scrape California
-              </Button>
-            </CardContent>
-          </Card>
+                  if (error) throw error;
 
-          <Card>
-            <CardHeader>
-              <CardTitle>All 50 States</CardTitle>
-              <CardDescription>
-                Complete database population
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={() => startSeeding('all')}
-                disabled={isSeeding}
-                className="w-full"
-                variant="default"
-              >
-                {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Seed All States
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+                  setResults({
+                    summary: {
+                      successful: data.imported || 0,
+                      failed: data.failed || 0,
+                      skipped: data.skipped || 0
+                    },
+                    results: data.details
+                  });
+                  
+                  toast({
+                    title: "Import Complete",
+                    description: `Successfully imported ${data.imported} standards`,
+                  });
+                } catch (error: any) {
+                  console.error('Import error:', error);
+                  toast({
+                    title: "Import Failed",
+                    description: error.message,
+                    variant: "destructive",
+                  });
+                } finally {
+                  setIsSeeding(false);
+                }
+              }}
+              disabled={isSeeding}
+              className="w-full"
+              variant="default"
+            >
+              {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Import CA Standards
+            </Button>
+          </CardContent>
+        </Card>
 
         {isSeeding && (
           <Card>
