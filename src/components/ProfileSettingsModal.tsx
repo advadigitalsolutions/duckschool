@@ -332,7 +332,7 @@ export function ProfileSettingsModal({
                   </div>
 
                   <Button onClick={handleSaveProfile} className="w-full">
-                    Save Profile
+                    Update Avatar
                   </Button>
 
                   <div className="space-y-2 pt-4">
