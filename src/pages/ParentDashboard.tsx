@@ -89,6 +89,7 @@ export default function ParentDashboard() {
   });
 
   useEffect(() => {
+    // AuthGuard already handles auth, just check role and fetch data
     checkRoleAndFetch();
   }, []);
 
@@ -97,25 +98,23 @@ export default function ParentDashboard() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        console.log('[ParentDashboard] No user, redirecting to auth');
-        navigate('/auth', { replace: true });
-        return;
+        console.log('[ParentDashboard] No user yet, waiting for auth...');
+        return; // Don't redirect - AuthGuard handles this
       }
 
       console.log('[ParentDashboard] User ID:', user.id);
 
-      // Check user role
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
+      // Check if user is a student by checking students table
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('id')
         .eq('user_id', user.id)
-        .single();
-
-      console.log('[ParentDashboard] Role data:', roleData);
-
-      if (roleData?.role === 'student') {
-        // Redirect to student dashboard if they're a student
-        console.log('[ParentDashboard] User is student, redirecting to /student');
+        .maybeSingle();
+      
+      console.log('[ParentDashboard] Student check result:', studentData);
+      
+      if (studentData) {
+        console.log('[ParentDashboard] Found student record, redirecting to /student');
         navigate('/student', { replace: true });
         return;
       }
@@ -124,24 +123,7 @@ export default function ParentDashboard() {
       fetchDashboardData();
     } catch (error) {
       console.error('[ParentDashboard] Error checking role:', error);
-      // On error, still try to check if user is student by checking students table
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: studentData } = await supabase
-          .from('students')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        console.log('[ParentDashboard] Student check result:', studentData);
-        
-        if (studentData) {
-          console.log('[ParentDashboard] Found student record, redirecting to /student');
-          navigate('/student', { replace: true });
-          return;
-        }
-      }
-      fetchDashboardData();
+      fetchDashboardData(); // Try to fetch anyway
     }
   };
 
