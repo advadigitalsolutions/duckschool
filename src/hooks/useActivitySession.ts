@@ -40,93 +40,136 @@ export const useActivitySession = (studentId?: string) => {
       return;
     }
     
-    // Close any orphaned sessions for this student before creating a new one
-    try {
-      const { data: openSessions } = await supabase
-        .from('learning_sessions')
-        .select('id, total_active_seconds, total_idle_seconds, total_away_seconds')
-        .eq('student_id', studentId)
-        .is('session_end', null);
-      
-      if (openSessions && openSessions.length > 0) {
-        console.log(`🧹 Closing ${openSessions.length} orphaned session(s)`);
-        
-        // Close all orphaned sessions, including zero-time ones
-        await supabase
-          .from('learning_sessions')
-          .update({
-            session_end: new Date().toISOString(),
-            ended_by: 'cleanup'
-          })
-          .eq('student_id', studentId)
-          .is('session_end', null);
-      }
-    } catch (e) {
-      console.error('Error closing orphaned sessions:', e);
-    }
+    const POMODORO_DURATION = 25 * 60 * 1000; // 25 minutes in milliseconds
+    const now = new Date();
     
-    // Check if a session was created very recently (last 5 seconds) to prevent rapid duplicates
+    // Check for an active Pomodoro block (started within last 25 minutes and not ended)
     try {
-      const fiveSecondsAgo = new Date(Date.now() - 5000).toISOString();
-      const { data: recentSessions } = await supabase
+      const twentyFiveMinutesAgo = new Date(now.getTime() - POMODORO_DURATION).toISOString();
+      const { data: activeBlock } = await supabase
         .from('learning_sessions')
-        .select('id')
+        .select('id, pomodoro_block_start, total_active_seconds, total_idle_seconds, total_away_seconds')
         .eq('student_id', studentId)
-        .gte('session_start', fiveSecondsAgo)
-        .limit(1);
+        .is('session_end', null)
+        .gte('pomodoro_block_start', twentyFiveMinutesAgo)
+        .order('pomodoro_block_start', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       
-      if (recentSessions && recentSessions.length > 0) {
-        console.log('⏸️ Session created recently, skipping duplicate creation');
+      if (activeBlock) {
+        console.log('♻️ Resuming active Pomodoro block:', activeBlock.id);
+        setSessionData({
+          sessionId: activeBlock.id,
+          activeSeconds: activeBlock.total_active_seconds || 0,
+          idleSeconds: activeBlock.total_idle_seconds || 0,
+          awaySeconds: activeBlock.total_away_seconds || 0
+        });
+        
+        // Store in localStorage for crash recovery
+        localStorage.setItem('focus_journey_session', JSON.stringify({
+          sessionId: activeBlock.id,
+          pomodoroBlockStart: activeBlock.pomodoro_block_start
+        }));
         return;
       }
     } catch (e) {
-      console.error('Error checking recent sessions:', e);
+      console.error('Error checking for active Pomodoro block:', e);
     }
     
-    // Check localStorage for existing session
+    // Close any old sessions that exceeded 25 minutes
+    try {
+      const { data: oldSessions } = await supabase
+        .from('learning_sessions')
+        .select('id, pomodoro_block_start')
+        .eq('student_id', studentId)
+        .is('session_end', null)
+        .not('pomodoro_block_start', 'is', null);
+      
+      if (oldSessions && oldSessions.length > 0) {
+        const expiredSessions = oldSessions.filter(s => {
+          const blockStart = new Date(s.pomodoro_block_start!);
+          return now.getTime() - blockStart.getTime() > POMODORO_DURATION;
+        });
+        
+        if (expiredSessions.length > 0) {
+          console.log(`🧹 Closing ${expiredSessions.length} expired Pomodoro block(s)`);
+          await supabase
+            .from('learning_sessions')
+            .update({
+              session_end: now.toISOString(),
+              ended_by: 'block_complete',
+              is_block_complete: true
+            })
+            .in('id', expiredSessions.map(s => s.id));
+        }
+      }
+    } catch (e) {
+      console.error('Error closing expired sessions:', e);
+    }
+    
+    // Check localStorage for session recovery
     const storedSession = localStorage.getItem('focus_journey_session');
     if (storedSession) {
       try {
         const parsed = JSON.parse(storedSession);
-        // If stored session is less than 24 hours old, reuse it
-        const sessionAge = Date.now() - new Date(parsed.startTime).getTime();
-        if (sessionAge < 24 * 60 * 60 * 1000) {
-          console.log('♻️ Reusing existing session from localStorage:', parsed.sessionId);
-          setSessionData(prev => ({ ...prev, sessionId: parsed.sessionId }));
-          return;
-        } else {
-          // Session too old, remove it
-          localStorage.removeItem('focus_journey_session');
+        if (parsed.pomodoroBlockStart) {
+          const blockStart = new Date(parsed.pomodoroBlockStart);
+          // If block started within last 25 minutes, try to resume
+          if (now.getTime() - blockStart.getTime() < POMODORO_DURATION) {
+            const { data: existingSession } = await supabase
+              .from('learning_sessions')
+              .select('id, total_active_seconds, total_idle_seconds, total_away_seconds')
+              .eq('id', parsed.sessionId)
+              .is('session_end', null)
+              .maybeSingle();
+            
+            if (existingSession) {
+              console.log('🔄 Recovered session from crash:', existingSession.id);
+              setSessionData({
+                sessionId: existingSession.id,
+                activeSeconds: existingSession.total_active_seconds || 0,
+                idleSeconds: existingSession.total_idle_seconds || 0,
+                awaySeconds: existingSession.total_away_seconds || 0
+              });
+              return;
+            }
+          }
         }
+        // Old or invalid session, remove it
+        localStorage.removeItem('focus_journey_session');
       } catch (e) {
-        console.error('Error parsing stored session:', e);
+        console.error('Error recovering session:', e);
         localStorage.removeItem('focus_journey_session');
       }
     }
     
+    // Create new Pomodoro block
     const { deviceType, browser } = getDeviceInfo();
+    const pomodoroBlockStart = now.toISOString();
     
-    console.log('✨ Creating new learning session for student:', studentId);
+    console.log('✨ Creating new Pomodoro block for student:', studentId);
     const { data, error } = await supabase
       .from('learning_sessions')
       .insert({
         student_id: studentId,
         device_type: deviceType,
         browser: browser,
+        pomodoro_block_start: pomodoroBlockStart,
         total_active_seconds: 0,
         total_idle_seconds: 0,
-        total_away_seconds: 0
+        total_away_seconds: 0,
+        is_block_complete: false
       })
       .select()
       .single();
     
     if (error) {
-      console.error('Error creating session:', error);
+      console.error('Error creating Pomodoro block:', error);
       return;
     }
     
     if (data) {
-      console.log('✅ Session created:', data.id);
+      console.log('✅ Pomodoro block created:', data.id);
       setSessionData(prev => ({ ...prev, sessionId: data.id }));
       
       // Log session_start event
@@ -134,19 +177,23 @@ export const useActivitySession = (studentId?: string) => {
         student_id: studentId,
         session_id: data.id,
         event_type: 'session_start',
-        metadata: { deviceType, browser }
+        metadata: { deviceType, browser, pomodoroBlockStart }
       });
       
-      // Store in localStorage for recovery
+      // Store in localStorage for crash recovery
       localStorage.setItem('focus_journey_session', JSON.stringify({
         sessionId: data.id,
-        startTime: new Date().toISOString()
+        pomodoroBlockStart
       }));
     }
   }, [studentId, sessionData.sessionId]);
 
-  const endSession = useCallback(async (endedBy: 'logout' | 'browser_close' | 'timeout' | 'manual' = 'manual') => {
+  const endSession = useCallback(async (endedBy: 'logout' | 'browser_close' | 'timeout' | 'manual' | 'block_complete' = 'manual') => {
     if (!sessionData.sessionId || !studentId) return;
+    
+    const totalSeconds = sessionData.activeSeconds + sessionData.idleSeconds + sessionData.awaySeconds;
+    const POMODORO_DURATION_SECONDS = 25 * 60; // 25 minutes in seconds
+    const isComplete = totalSeconds >= POMODORO_DURATION_SECONDS;
     
     await supabase
       .from('learning_sessions')
@@ -155,7 +202,8 @@ export const useActivitySession = (studentId?: string) => {
         ended_by: endedBy,
         total_active_seconds: sessionData.activeSeconds,
         total_idle_seconds: sessionData.idleSeconds,
-        total_away_seconds: sessionData.awaySeconds
+        total_away_seconds: sessionData.awaySeconds,
+        is_block_complete: isComplete
       })
       .eq('id', sessionData.sessionId);
     
@@ -167,7 +215,8 @@ export const useActivitySession = (studentId?: string) => {
         total_active_seconds: sessionData.activeSeconds,
         total_idle_seconds: sessionData.idleSeconds,
         total_away_seconds: sessionData.awaySeconds,
-        ended_by: endedBy
+        ended_by: endedBy,
+        is_block_complete: isComplete
       }
     });
     

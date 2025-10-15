@@ -902,6 +902,8 @@ export type Database = {
           device_type: string | null
           ended_by: string | null
           id: string
+          is_block_complete: boolean | null
+          pomodoro_block_start: string | null
           session_end: string | null
           session_start: string
           student_id: string
@@ -916,6 +918,8 @@ export type Database = {
           device_type?: string | null
           ended_by?: string | null
           id?: string
+          is_block_complete?: boolean | null
+          pomodoro_block_start?: string | null
           session_end?: string | null
           session_start?: string
           student_id: string
@@ -930,6 +934,8 @@ export type Database = {
           device_type?: string | null
           ended_by?: string | null
           id?: string
+          is_block_complete?: boolean | null
+          pomodoro_block_start?: string | null
           session_end?: string | null
           session_start?: string
           student_id?: string

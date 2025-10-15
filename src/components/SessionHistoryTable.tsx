@@ -19,66 +19,28 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
   }, [studentId, dateRange]);
 
   const fetchSessions = async () => {
+    if (!studentId) return;
+    
+    setLoading(true);
     try {
       let query = supabase
         .from('learning_sessions')
         .select('*')
         .eq('student_id', studentId)
-        .order('session_start', { ascending: false })
-        .limit(100);
+        .not('pomodoro_block_start', 'is', null)
+        .order('pomodoro_block_start', { ascending: false })
+        .limit(50);
 
       if (dateRange) {
         query = query
-          .gte('session_start', dateRange.start.toISOString())
-          .lte('session_start', dateRange.end.toISOString());
+          .gte('pomodoro_block_start', dateRange.start.toISOString())
+          .lte('pomodoro_block_start', dateRange.end.toISOString());
       }
 
       const { data, error } = await query;
       if (error) throw error;
 
-      // Group sessions into 25-minute Pomodoro blocks
-      // Sessions within 5 minutes of each other are considered part of the same block
-      const pomodoroBlocks: any[] = [];
-      
-      (data || []).forEach(session => {
-        const totalTime = session.total_active_seconds + session.total_idle_seconds + session.total_away_seconds;
-        if (totalTime < 30) return; // Skip very short sessions
-
-        const sessionStart = new Date(session.session_start).getTime();
-        
-        // Try to find an existing block within 5 minutes
-        const existingBlock = pomodoroBlocks.find(block => {
-          const blockEnd = new Date(block.session_start).getTime() + (block.total_duration_seconds * 1000);
-          const timeSinceBlockEnd = (sessionStart - blockEnd) / 1000; // seconds
-          
-          // Merge if this session starts within 5 minutes of the previous block ending
-          return timeSinceBlockEnd >= 0 && timeSinceBlockEnd <= 300; // 5 minutes
-        });
-
-        if (existingBlock && existingBlock.total_duration_seconds < 1500) { // Don't exceed 25 minutes per block
-          // Merge into existing block
-          existingBlock.total_active_seconds += session.total_active_seconds;
-          existingBlock.total_idle_seconds += session.total_idle_seconds;
-          existingBlock.total_away_seconds += session.total_away_seconds;
-          existingBlock.total_duration_seconds = existingBlock.total_active_seconds + 
-                                                 existingBlock.total_idle_seconds + 
-                                                 existingBlock.total_away_seconds;
-          existingBlock.session_count = (existingBlock.session_count || 1) + 1;
-        } else {
-          // Create new block
-          pomodoroBlocks.push({
-            id: session.id,
-            session_start: session.session_start,
-            total_active_seconds: session.total_active_seconds,
-            total_idle_seconds: session.total_idle_seconds,
-            total_away_seconds: session.total_away_seconds,
-            total_duration_seconds: totalTime,
-            session_count: 1
-          });
-        }
-      });
-      
-      setSessions(pomodoroBlocks.slice(0, 20));
+      setSessions(data || []);
     } catch (error) {
       console.error('Error fetching sessions:', error);
     } finally {
@@ -97,7 +59,7 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
 
   // Group sessions by date
   const groupedSessions: Record<string, any[]> = sessions.reduce((acc, session) => {
-    const date = format(new Date(session.session_start), 'MMM d, yyyy');
+    const date = format(new Date(session.pomodoro_block_start), 'MMM d, yyyy');
     if (!acc[date]) {
       acc[date] = [];
     }
@@ -106,13 +68,16 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
   }, {} as Record<string, any[]>);
 
   interface PomodoroBarProps {
-    activeSeconds: number;
-    idleSeconds: number;
-    awaySeconds: number;
-    totalSeconds: number;
+    session: any;
   }
 
-  const PomodoroBar = ({ activeSeconds, idleSeconds, awaySeconds, totalSeconds }: PomodoroBarProps) => {
+  const PomodoroBar = ({ session }: PomodoroBarProps) => {
+    const activeSeconds = session.total_active_seconds || 0;
+    const idleSeconds = session.total_idle_seconds || 0;
+    const awaySeconds = session.total_away_seconds || 0;
+    const totalSeconds = activeSeconds + idleSeconds + awaySeconds;
+    const isComplete = session.is_block_complete;
+    
     const POMODORO_DURATION = 25 * 60; // 25 minutes in seconds
     
     if (totalSeconds === 0) return null;
@@ -131,68 +96,73 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
 
     return (
       <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div 
-              className="relative flex h-6 w-full rounded-md overflow-hidden border border-border cursor-help"
-              style={{ backgroundColor: unusedColor }}
-            >
-              {/* Active time */}
-              {activePercent > 0 && (
-                <div 
-                  className="transition-all" 
-                  style={{ 
-                    width: `${activePercent}%`,
-                    backgroundColor: activeColor
-                  }}
-                />
-              )}
-              {/* Idle time */}
-              {idlePercent > 0 && (
-                <div 
-                  className="transition-all" 
-                  style={{ 
-                    width: `${idlePercent}%`,
-                    backgroundColor: idleColor
-                  }}
-                />
-              )}
-              {/* Away time */}
-              {awayPercent > 0 && (
-                <div 
-                  className="transition-all" 
-                  style={{ 
-                    width: `${awayPercent}%`,
-                    backgroundColor: awayColor
-                  }}
-                />
-              )}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <div className="text-sm space-y-1">
-              <div className="font-semibold mb-2">
-                {formatTime(totalSeconds)} of 25-minute block
+        <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div 
+                className="relative flex h-6 flex-1 rounded-md overflow-hidden border border-border cursor-help"
+                style={{ backgroundColor: unusedColor }}
+              >
+                {/* Active time */}
+                {activePercent > 0 && (
+                  <div 
+                    className="transition-all" 
+                    style={{ 
+                      width: `${activePercent}%`,
+                      backgroundColor: activeColor
+                    }}
+                  />
+                )}
+                {/* Idle time */}
+                {idlePercent > 0 && (
+                  <div 
+                    className="transition-all" 
+                    style={{ 
+                      width: `${idlePercent}%`,
+                      backgroundColor: idleColor
+                    }}
+                  />
+                )}
+                {/* Away time */}
+                {awayPercent > 0 && (
+                  <div 
+                    className="transition-all" 
+                    style={{ 
+                      width: `${awayPercent}%`,
+                      backgroundColor: awayColor
+                    }}
+                  />
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: activeColor }} />
-                <span>Active: {formatTime(activeSeconds)}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="text-sm space-y-1">
+                <div className="font-semibold mb-2">
+                  {formatTime(totalSeconds)} of 25-minute block
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: activeColor }} />
+                  <span>Active: {formatTime(activeSeconds)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: idleColor }} />
+                  <span>Idle: {formatTime(idleSeconds)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: awayColor }} />
+                  <span>Away: {formatTime(awaySeconds)}</span>
+                </div>
+                <div className="flex items-center gap-2 mt-2 pt-2 border-t">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: unusedColor }} />
+                  <span>Unused: {formatTime(POMODORO_DURATION - totalSeconds)}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: idleColor }} />
-                <span>Idle: {formatTime(idleSeconds)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: awayColor }} />
-                <span>Away: {formatTime(awaySeconds)}</span>
-              </div>
-              <div className="flex items-center gap-2 mt-2 pt-2 border-t">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: unusedColor }} />
-                <span>Unused: {formatTime(POMODORO_DURATION - totalSeconds)}</span>
-              </div>
-            </div>
-          </TooltipContent>
-        </Tooltip>
+            </TooltipContent>
+          </Tooltip>
+          {isComplete && (
+            <span className="text-xs bg-success/20 text-success px-2 py-0.5 rounded whitespace-nowrap">✓ Complete</span>
+          )}
+        </div>
       </TooltipProvider>
     );
   };
@@ -237,21 +207,19 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
                   </TableHeader>
                   <TableBody>
                     {dateSessions.map((session) => {
+                      const totalTime = (session.total_active_seconds || 0) + 
+                                       (session.total_idle_seconds || 0) + 
+                                       (session.total_away_seconds || 0);
                       return (
                         <TableRow key={session.id}>
                           <TableCell className="font-mono text-sm">
-                            {format(new Date(session.session_start), 'h:mm a')}
+                            {format(new Date(session.pomodoro_block_start), 'h:mm a')}
                           </TableCell>
                           <TableCell>
-                            <PomodoroBar 
-                              activeSeconds={session.total_active_seconds}
-                              idleSeconds={session.total_idle_seconds}
-                              awaySeconds={session.total_away_seconds}
-                              totalSeconds={session.total_duration_seconds}
-                            />
+                            <PomodoroBar session={session} />
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {formatTime(session.total_duration_seconds)}
+                            {formatTime(totalTime)}
                           </TableCell>
                         </TableRow>
                       );
