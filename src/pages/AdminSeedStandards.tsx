@@ -62,9 +62,10 @@ export default function AdminSeedStandards() {
 
       setResults(data);
       
+      const successCount = data.summary?.successful || data.results?.success?.length || 0;
       toast({
         title: "Seeding Complete",
-        description: `Successfully seeded ${data.results.success.length} standards sets`,
+        description: `Successfully seeded ${successCount} standards sets`,
       });
 
     } catch (error) {
@@ -233,32 +234,33 @@ export default function AdminSeedStandards() {
                 </div>
               </div>
 
-              {results.results.success.length > 0 && (
+              {/* Handle both response formats */}
+              {(results.results?.success?.length > 0 || (results.results && Array.isArray(results.results))) && (
                 <div>
                   <h3 className="font-semibold mb-2">Successfully Seeded:</h3>
                   <ScrollArea className="h-48 border rounded p-2">
-                    {results.results.success.map((item: any, idx: number) => (
+                    {(results.results?.success || results.results?.filter((r: any) => r.status === 'success') || []).map((item: any, idx: number) => (
                       <div key={idx} className="flex items-center justify-between py-1">
                         <span className="text-sm">
-                          {item.state} - Grade {item.grade} - {item.subject}
+                          {item.state ? `${item.state} - Grade ${item.grade} - ${item.subject}` : `${item.subject} - Grade ${item.gradeLevel}`}
                         </span>
-                        <Badge variant="secondary">{item.count} standards</Badge>
+                        <Badge variant="secondary">{item.count || item.standardsCount || 0} standards</Badge>
                       </div>
                     ))}
                   </ScrollArea>
                 </div>
               )}
 
-              {results.results.failed.length > 0 && (
+              {(results.results?.failed?.length > 0 || (results.results && Array.isArray(results.results) && results.results.some((r: any) => r.status === 'failed'))) && (
                 <div>
                   <h3 className="font-semibold mb-2 text-red-600">Failed:</h3>
                   <ScrollArea className="h-48 border rounded p-2">
-                    {results.results.failed.map((item: any, idx: number) => (
+                    {(results.results?.failed || results.results?.filter((r: any) => r.status === 'failed') || []).map((item: any, idx: number) => (
                       <div key={idx} className="py-1">
                         <span className="text-sm">
-                          {item.state} - Grade {item.grade} - {item.subject}
+                          {item.state ? `${item.state} - Grade ${item.grade} - ${item.subject}` : `${item.subject} - Grade ${item.gradeLevel}`}
                         </span>
-                        <p className="text-xs text-muted-foreground">{item.error || item.reason}</p>
+                        <p className="text-xs text-muted-foreground">{item.error || item.reason || item.message}</p>
                       </div>
                     ))}
                   </ScrollArea>
