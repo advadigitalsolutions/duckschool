@@ -3,9 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, BookOpen, Clock, ChevronRight, CalendarX } from 'lucide-react';
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { AlertCircle, BookOpen, Clock, ChevronRight, X } from 'lucide-react';
+import { parseISO, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
+import duckGraduation from '@/assets/duck-graduation.png';
 
 interface OverdueWorkTabProps {
   studentId: string;
@@ -14,9 +15,17 @@ interface OverdueWorkTabProps {
 export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
   const [loading, setLoading] = useState(true);
   const [overdueAssignments, setOverdueAssignments] = useState<any[]>([]);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   useEffect(() => {
     fetchOverdueWork();
+    
+    // Check if banner was dismissed today
+    const dismissedDate = localStorage.getItem('allCaughtUpBannerDismissed');
+    const today = new Date().toDateString();
+    if (dismissedDate === today) {
+      setBannerDismissed(true);
+    }
   }, [studentId]);
 
   const fetchOverdueWork = async () => {
@@ -67,6 +76,12 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
     return differenceInDays(new Date(), due);
   };
 
+  const dismissBanner = () => {
+    const today = new Date().toDateString();
+    localStorage.setItem('allCaughtUpBannerDismissed', today);
+    setBannerDismissed(true);
+  };
+
   if (loading) {
     return (
       <Card className="mb-8">
@@ -77,18 +92,44 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
     );
   }
 
-  if (overdueAssignments.length === 0) {
+  if (overdueAssignments.length === 0 && !bannerDismissed) {
     return (
-      <Card className="mb-8">
-        <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-          <CalendarX className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="font-semibold text-lg mb-2">All caught up!</h3>
-          <p className="text-sm text-muted-foreground">
-            No overdue assignments. Keep up the great work!
-          </p>
-        </CardContent>
-      </Card>
+      <div className="relative mb-8 overflow-hidden rounded-lg bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 p-6 shadow-lg animate-fade-in">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]" />
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 text-white hover:bg-white/20 z-10"
+          onClick={dismissBanner}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+
+        <div className="relative flex items-center gap-6">
+          <div className="flex-shrink-0">
+            <img 
+              src={duckGraduation} 
+              alt="Happy Duck" 
+              className="h-20 w-20 animate-[bounce_2s_ease-in-out_infinite]"
+            />
+          </div>
+          
+          <div className="flex-1 text-white">
+            <h3 className="font-bold text-2xl mb-2 drop-shadow-sm">
+              🎉 All Caught Up!
+            </h3>
+            <p className="text-white/90 text-lg">
+              No overdue assignments. You're doing amazing — keep up the great work!
+            </p>
+          </div>
+        </div>
+      </div>
     );
+  }
+  
+  if (overdueAssignments.length === 0) {
+    return null;
   }
 
   // Group by how overdue they are
