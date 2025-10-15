@@ -148,24 +148,49 @@ export default function ParentProfile() {
     try {
       setUploading(true);
       
+      console.log('🖼️ Starting avatar upload...');
+      
       if (!profile) {
+        console.error('❌ Profile not loaded');
         toast.error('Profile not loaded yet. Please try again.');
         return;
       }
       
       if (!event.target.files || event.target.files.length === 0) {
+        console.log('⚠️ No file selected');
         return;
       }
 
       const file = event.target.files[0];
+      console.log('📁 File selected:', { name: file.name, size: file.size, type: file.type });
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File is too large. Maximum size is 5MB.');
+        return;
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file (JPG, PNG, GIF, or WebP).');
+        return;
+      }
+      
       const fileExt = file.name.split('.').pop();
       const filePath = `${profile.id}/avatar.${fileExt}`;
+      
+      console.log('📤 Uploading to:', filePath);
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Upload error:', uploadError);
+        throw uploadError;
+      }
+      
+      console.log('✅ Upload successful');
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
@@ -173,11 +198,13 @@ export default function ParentProfile() {
 
       // Add cache-busting timestamp to force browser to reload the new image
       const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`;
+      console.log('🔗 Public URL:', cacheBustedUrl);
+      
       setSelectedAvatar(cacheBustedUrl);
-      toast.success('Avatar uploaded!');
+      toast.success('Avatar uploaded successfully!');
     } catch (error: any) {
-      console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload avatar');
+      console.error('❌ Error uploading avatar:', error);
+      toast.error(error.message || 'Failed to upload avatar. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -185,7 +212,21 @@ export default function ParentProfile() {
 
   const handleSaveProfile = async () => {
     try {
+      console.log('💾 Saving profile...');
+      
+      if (!displayName.trim()) {
+        toast.error('Display name cannot be empty');
+        return;
+      }
+      
       const finalPronouns = pronouns === 'custom' ? customPronouns : (pronouns === 'prefer-not-to-say' ? null : pronouns);
+      
+      console.log('📝 Profile data:', {
+        name: displayName,
+        avatar_url: selectedAvatar,
+        pronouns: finalPronouns,
+        profile_id: profile.id
+      });
       
       const { error } = await supabase
         .from('profiles')
@@ -196,13 +237,17 @@ export default function ParentProfile() {
         })
         .eq('id', profile.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Update error:', error);
+        throw error;
+      }
       
-      toast.success('Profile updated!');
+      console.log('✅ Profile saved successfully');
+      toast.success('Profile updated successfully!');
       setProfile({ ...profile, name: displayName, avatar_url: selectedAvatar, pronouns: finalPronouns });
     } catch (error: any) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      console.error('❌ Error updating profile:', error);
+      toast.error(error.message || 'Failed to update profile. Please try again.');
     }
   };
 
