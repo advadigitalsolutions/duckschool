@@ -224,11 +224,18 @@ export default function StudentProfile() {
     try {
       const finalPronouns = pronouns === 'custom' ? customPronouns : (pronouns === 'prefer-not-to-say' ? null : pronouns);
       
+      // Add cache-busting timestamp if not already present
+      const avatarWithTimestamp = selectedAvatar?.includes('?t=') 
+        ? selectedAvatar 
+        : selectedAvatar 
+          ? `${selectedAvatar}?t=${Date.now()}` 
+          : selectedAvatar;
+      
       const { error } = await supabase
         .from('students')
         .update({
           display_name: displayName,
-          avatar_url: selectedAvatar,
+          avatar_url: avatarWithTimestamp,
           special_interests: specialInterests,
           pronouns: finalPronouns || null,
         })
@@ -236,8 +243,9 @@ export default function StudentProfile() {
 
       if (error) throw error;
       
+      // Update local state with timestamp - this triggers realtime update in StudentLayout
+      setStudent({ ...student, display_name: displayName, avatar_url: avatarWithTimestamp, special_interests: specialInterests, pronouns: finalPronouns });
       toast.success('Profile updated!');
-      setStudent({ ...student, display_name: displayName, avatar_url: selectedAvatar, special_interests: specialInterests, pronouns: finalPronouns });
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
