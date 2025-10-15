@@ -453,7 +453,10 @@ export function AccessibilityControls() {
             </div>
             {newHotkey && (
               <Button
-                onClick={() => saveHotkey(editingHotkey!, newHotkey)}
+                onClick={() => {
+                  setRecordingKey(false);
+                  saveHotkey(editingHotkey!, newHotkey);
+                }}
                 className="w-full"
               >
                 Save Hotkey
