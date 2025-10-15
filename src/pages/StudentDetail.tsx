@@ -39,6 +39,8 @@ import { ArchiveCourseDialog } from '@/components/ArchiveCourseDialog';
 import { PersonalityReportView } from '@/components/PersonalityReportView';
 import { StudentGrades } from '@/components/StudentGrades';
 import { GlobalCourseSettingsDialog } from '@/components/GlobalCourseSettingsDialog';
+import { StudentResearchReview } from '@/components/StudentResearchReview';
+import { CoachingTranscriptViewer } from '@/components/CoachingTranscriptViewer';
 import { Settings } from 'lucide-react';
 import { FocusAnalyticsDashboard } from '@/components/FocusAnalyticsDashboard';
 
@@ -298,6 +300,7 @@ export default function StudentDetail() {
                 <Check className="ml-2 h-4 w-4 text-success" />
               )}
             </TabsTrigger>
+            <TabsTrigger value="learning-process">Learning Process</TabsTrigger>
           </TabsList>
 
           <TabsContent value="this-week" className="space-y-4">
@@ -610,6 +613,28 @@ export default function StudentDetail() {
                 <PersonalityReportView student={student} />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="learning-process" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Research & Resources</CardTitle>
+                <CardDescription>
+                  View resources {student.name} has discovered during research-based assignments
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            <StudentResearchReview studentId={student.id} />
+
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>AI Coaching Conversations</CardTitle>
+                <CardDescription>
+                  View {student.name}'s interactions with the AI learning coach
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            <CoachingTranscriptViewer studentId={student.id} />
           </TabsContent>
         </Tabs>
       </div>
