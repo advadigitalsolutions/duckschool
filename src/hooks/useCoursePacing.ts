@@ -167,15 +167,24 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         return sum + (estimatedHours * 60);
       }, 0);
 
+      // If standards have no hours but exist, estimate based on standard count
+      // Assume ~2-3 hours per standard as a baseline
+      const standardsBasedEstimate = (standards && standards.length > 0 && totalRequiredMinutes === 0)
+        ? standards.length * 150 // 2.5 hours per standard in minutes
+        : 0;
+
       console.log('🔍 PACING DEBUG:', {
         isCustomFramework,
         hasCustomStandards: !!customStandards,
         standardsCount: (standards || []).length,
         totalRequiredMinutes,
+        standardsBasedEstimate,
         totalRequiredHours: totalRequiredMinutes / 60,
+        estimatedHoursFromStandards: standardsBasedEstimate / 60,
         curriculumCreatedMinutes,
         curriculumCreatedHours: curriculumCreatedMinutes / 60,
-        sampleStandard: standards?.[0]
+        sampleStandard: standards?.[0],
+        sampleMetadata: standards?.[0]?.metadata
       });
 
       // Check for missing critical configuration
@@ -203,9 +212,12 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       }
       
       // Use curriculum-based calculation if no standards available
-      const fallbackTotalMinutes = !hasStandards && curriculumCreatedMinutes > 0 
-        ? curriculumCreatedMinutes 
-        : totalRequiredMinutes;
+      // Priority: explicit hours from standards > estimated from standard count > curriculum minutes
+      const fallbackTotalMinutes = totalRequiredMinutes > 0
+        ? totalRequiredMinutes
+        : standardsBasedEstimate > 0
+          ? standardsBasedEstimate
+          : curriculumCreatedMinutes;
 
       // Calculate completed minutes from submissions
       let completedMinutes = 0;

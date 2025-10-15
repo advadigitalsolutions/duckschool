@@ -47,7 +47,7 @@ export function CourseProgressCharts({ timeBySubject, standardsCoverage }: Cours
           <CardDescription>Minutes spent on coursework</CardDescription>
         </CardHeader>
         <CardContent>
-          {timeData.length > 0 ? (
+          {timeData.length > 0 && timeData[0].value > 0 ? (
             <ChartContainer
               config={{
                 time: {
@@ -78,8 +78,9 @@ export function CourseProgressCharts({ timeBySubject, standardsCoverage }: Cours
               </ResponsiveContainer>
             </ChartContainer>
           ) : (
-            <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-              No time data yet
+            <div className="flex h-[300px] flex-col items-center justify-center text-muted-foreground gap-2">
+              <div className="text-lg">No time tracked yet</div>
+              <div className="text-sm">Complete assignments to see time spent</div>
             </div>
           )}
         </CardContent>
@@ -94,7 +95,7 @@ export function CourseProgressCharts({ timeBySubject, standardsCoverage }: Cours
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {standardsData.length > 0 ? (
+          {standardsData.length > 0 && standardsCoverage && standardsCoverage.total > 0 ? (
             <ChartContainer
               config={{
                 covered: {
@@ -129,8 +130,9 @@ export function CourseProgressCharts({ timeBySubject, standardsCoverage }: Cours
               </ResponsiveContainer>
             </ChartContainer>
           ) : (
-            <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-              No standards data yet
+            <div className="flex h-[300px] flex-col items-center justify-center text-muted-foreground gap-2">
+              <div className="text-lg">No curriculum built yet</div>
+              <div className="text-sm">Generate curriculum to track standards coverage</div>
             </div>
           )}
         </CardContent>

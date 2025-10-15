@@ -44,7 +44,7 @@ export function StandardsCoverageDashboard({
       // Get all relevant standards for this course
       let query = supabase
         .from('standards')
-        .select('code, text, grade_band')
+        .select('code, text, grade_band, metadata')
         .eq('framework', framework);
 
       if (subject) {
@@ -54,12 +54,18 @@ export function StandardsCoverageDashboard({
       if (gradeLevel) {
         const gradeNum = parseInt(gradeLevel.replace(/\D/g, ''));
         if (!isNaN(gradeNum)) {
-          query = query.or(`grade_band.eq.${gradeNum},grade_band.like.%${gradeNum}%`);
+          // Match exact grade or grade ranges that include this grade
+          query = query.or(`grade_band.eq.${gradeNum},grade_band.eq.K-${gradeNum},grade_band.like.%-${gradeNum},grade_band.like.K-12`);
         }
       }
 
+      console.log('🔍 StandardsCoverageDashboard query:', { framework, subject, gradeLevel });
       const { data: standardsData, error: standardsError } = await query;
-      if (standardsError) throw standardsError;
+      if (standardsError) {
+        console.error('StandardsCoverageDashboard error:', standardsError);
+        throw standardsError;
+      }
+      console.log('📊 StandardsCoverageDashboard found:', standardsData?.length, 'standards');
 
       // Get curriculum items with their standards, estimated minutes, and check completion
       const { data: curriculumData, error: curriculumError } = await supabase
@@ -181,12 +187,21 @@ export function StandardsCoverageDashboard({
       <Card>
         <CardHeader>
           <CardTitle>Standards Coverage</CardTitle>
-          <CardDescription>No standards found for this configuration</CardDescription>
+          <CardDescription>
+            {framework && subject && gradeLevel
+              ? `No ${framework} standards found for ${subject} at grade ${gradeLevel}`
+              : 'No standards found for this configuration'
+            }
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center text-muted-foreground p-8">
             <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Configure your course framework to track standards coverage</p>
+            <div className="space-y-2">
+              <p className="font-semibold">Why am I seeing this?</p>
+              <p className="text-sm">The standards database may not have detailed standards for this specific combination.</p>
+              <p className="text-sm">Generate curriculum to track progress based on what you create.</p>
+            </div>
           </div>
         </CardContent>
       </Card>

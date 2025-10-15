@@ -401,11 +401,21 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
                   : 'Suggested pace (based on 9-month school year):'}
               </div>
               <div className="text-2xl font-bold text-primary">
-                {Math.round(metrics.recommendedDailyMinutes)} minutes per day
+                {metrics.recommendedDailyMinutes < 1 
+                  ? `${Math.round(metrics.recommendedDailyMinutes * 60)} seconds` 
+                  : metrics.recommendedDailyMinutes < 60
+                    ? `${Math.round(metrics.recommendedDailyMinutes)} minutes`
+                    : `${(metrics.recommendedDailyMinutes / 60).toFixed(1)} hours`
+                } per day
               </div>
-              <div className="text-sm text-muted-foreground">
-                ({(metrics.recommendedDailyMinutes / 60).toFixed(1)} hours per day)
-              </div>
+              {metrics.recommendedDailyMinutes >= 1 && (
+                <div className="text-sm text-muted-foreground">
+                  ({metrics.recommendedDailyMinutes < 60 
+                    ? `${(metrics.recommendedDailyMinutes / 60).toFixed(2)} hours`
+                    : `${Math.round(metrics.recommendedDailyMinutes)} minutes`
+                  } per day)
+                </div>
+              )}
               {!targetDate && (
                 <div className="text-xs text-muted-foreground mt-2">
                   💡 Set a target date above to see personalized pacing recommendations
