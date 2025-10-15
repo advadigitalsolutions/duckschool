@@ -95,7 +95,17 @@ export function CurriculumGenerationDialog({
         }
       });
 
-      if (generateError) throw generateError;
+      if (generateError) {
+        console.error('Generation error:', generateError);
+        throw generateError;
+      }
+      
+      if (!generatedAssignment) {
+        console.error('No assignment data returned');
+        throw new Error('No assignment data returned from edge function');
+      }
+      
+      console.log('Generated assignment data:', generatedAssignment);
 
       // Create curriculum item with generated content
       const { data: curriculumItem, error: curriculumError } = await supabase
@@ -167,7 +177,17 @@ export function CurriculumGenerationDialog({
             }
           });
 
-          if (generateError) throw generateError;
+          if (generateError) {
+            console.error('Generation error:', generateError);
+            throw generateError;
+          }
+          
+          if (!generatedAssignment) {
+            console.error('No assignment data returned');
+            throw new Error('No assignment data returned from edge function');
+          }
+          
+          console.log('Generated assignment data:', generatedAssignment);
 
           const { data: curriculumItem, error: curriculumError } = await supabase
             .from('curriculum_items')
