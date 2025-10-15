@@ -93,9 +93,9 @@ export function ActivityTimelineChart({ studentId, days = 7 }: ActivityTimelineC
             <YAxis label={{ value: 'Minutes', angle: -90, position: 'insideLeft' }} />
             <Tooltip />
             <Legend />
-            <Bar dataKey="Active" stackId="a" fill="hsl(var(--success))" />
-            <Bar dataKey="Idle" stackId="a" fill="hsl(var(--warning))" />
-            <Bar dataKey="Away" stackId="a" fill="hsl(var(--destructive))" />
+            <Bar dataKey="Active" stackId="a" fill="#00CC6C" />
+            <Bar dataKey="Idle" stackId="a" fill="#EEBAB2" />
+            <Bar dataKey="Away" stackId="a" fill="#FF8F57" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

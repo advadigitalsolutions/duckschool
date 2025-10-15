@@ -28,8 +28,7 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
         .select('*')
         .eq('student_id', studentId)
         .not('pomodoro_block_start', 'is', null)
-        .order('pomodoro_block_start', { ascending: false })
-        .limit(50);
+        .order('pomodoro_block_start', { ascending: false });
 
       if (dateRange) {
         query = query
@@ -40,7 +39,33 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
       const { data, error } = await query;
       if (error) throw error;
 
-      setSessions(data || []);
+      // Group sessions by pomodoro_block_start and sum up the time
+      const groupedByBlock = (data || []).reduce((acc, session) => {
+        const blockKey = session.pomodoro_block_start;
+        if (!acc[blockKey]) {
+          acc[blockKey] = {
+            id: session.id, // Use first session ID for the key
+            pomodoro_block_start: session.pomodoro_block_start,
+            total_active_seconds: 0,
+            total_idle_seconds: 0,
+            total_away_seconds: 0,
+            is_block_complete: session.is_block_complete,
+            student_id: session.student_id
+          };
+        }
+        acc[blockKey].total_active_seconds += session.total_active_seconds || 0;
+        acc[blockKey].total_idle_seconds += session.total_idle_seconds || 0;
+        acc[blockKey].total_away_seconds += session.total_away_seconds || 0;
+        // Keep is_block_complete true if any session in the block is complete
+        acc[blockKey].is_block_complete = acc[blockKey].is_block_complete || session.is_block_complete;
+        return acc;
+      }, {} as Record<string, any>);
+
+      const consolidatedSessions = Object.values(groupedByBlock)
+        .sort((a, b) => new Date(b.pomodoro_block_start).getTime() - new Date(a.pomodoro_block_start).getTime())
+        .slice(0, 50);
+
+      setSessions(consolidatedSessions);
     } catch (error) {
       console.error('Error fetching sessions:', error);
     } finally {

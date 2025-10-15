@@ -73,9 +73,9 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
   const awayPercent = totalSeconds > 0 ? ((stats.totalAway / totalSeconds) * 100).toFixed(1) : 0;
 
   const chartData = [
-    { name: 'Active', value: stats.totalActive, color: 'hsl(var(--success))' },
-    { name: 'Idle', value: stats.totalIdle, color: 'hsl(var(--warning))' },
-    { name: 'Away', value: stats.totalAway, color: 'hsl(var(--destructive))' }
+    { name: 'Active', value: stats.totalActive, color: '#00CC6C' },
+    { name: 'Idle', value: stats.totalIdle, color: '#EEBAB2' },
+    { name: 'Away', value: stats.totalAway, color: '#FF8F57' }
   ].filter(item => item.value > 0);
 
   if (loading) {
@@ -132,7 +132,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 text-success" />
+                <Activity className="h-4 w-4" style={{ color: '#00CC6C' }} />
                 <span className="text-sm font-medium">Active Time</span>
               </div>
               <div className="text-right">
@@ -143,7 +143,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-warning" />
+                <Clock className="h-4 w-4" style={{ color: '#EEBAB2' }} />
                 <span className="text-sm font-medium">Idle Time</span>
               </div>
               <div className="text-right">
@@ -154,7 +154,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4 text-destructive" />
+                <Eye className="h-4 w-4" style={{ color: '#FF8F57' }} />
                 <span className="text-sm font-medium">Away Time</span>
               </div>
               <div className="text-right">
