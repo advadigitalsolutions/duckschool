@@ -1670,6 +1670,7 @@ export type Database = {
           bionic_reading_enabled: boolean | null
           color_overlay: string | null
           created_at: string | null
+          discussion_tips_shown: number | null
           display_name: string | null
           dob: string | null
           dyslexia_font_enabled: boolean | null
@@ -1704,6 +1705,7 @@ export type Database = {
           bionic_reading_enabled?: boolean | null
           color_overlay?: string | null
           created_at?: string | null
+          discussion_tips_shown?: number | null
           display_name?: string | null
           dob?: string | null
           dyslexia_font_enabled?: boolean | null
@@ -1738,6 +1740,7 @@ export type Database = {
           bionic_reading_enabled?: boolean | null
           color_overlay?: string | null
           created_at?: string | null
+          discussion_tips_shown?: number | null
           display_name?: string | null
           dob?: string | null
           dyslexia_font_enabled?: boolean | null

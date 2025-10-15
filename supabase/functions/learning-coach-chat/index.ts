@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory, currentStep, studentContext, assignmentBody } = await req.json();
+    const { message, conversationHistory, currentStep, studentContext, assignmentBody, exchangeCount = 0 } = await req.json();
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
@@ -19,7 +19,7 @@ serve(async (req) => {
     }
 
     // Build context-aware system prompt based on current step
-    const systemPrompt = buildSystemPrompt(currentStep, studentContext, assignmentBody);
+    const systemPrompt = buildSystemPrompt(currentStep, studentContext, assignmentBody, exchangeCount);
 
     // Prepare messages for OpenAI
     const messages = [
@@ -69,8 +69,14 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(currentStep: string, studentContext: any, assignmentBody: any): string {
-  const basePrompt = `You are an AI learning coach helping a student work through an educational assignment. Be encouraging, supportive, and use Socratic questioning to guide learning rather than giving direct answers.`;
+function buildSystemPrompt(currentStep: string, studentContext: any, assignmentBody: any, exchangeCount: number = 0): string {
+  const basePrompt = `You are an AI learning coach helping a student work through an educational assignment. Be encouraging, supportive, and use Socratic questioning to guide learning rather than giving direct answers.
+
+CRITICAL - ADHD-FRIENDLY COMMUNICATION:
+- Keep ALL responses to 2-3 sentences maximum
+- Ask ONE question at a time - never multiple questions
+- Be concise and direct - avoid lengthy explanations
+- Use simple, clear language`;
 
   const studentInfo = studentContext.personalityType 
     ? `\n\nStudent's learning style: ${studentContext.personalityType}`
@@ -140,25 +146,34 @@ Review their understanding and ask thoughtful questions to deepen their learning
         ? `\n\nConcepts already discussed: ${studentContext.conceptsCovered.join(', ')}`
         : '';
 
+      // Wrap-up mode after 3+ exchanges
+      const wrapUpGuidance = exchangeCount >= 3 
+        ? `\n\n🎯 WRAP-UP MODE (Exchange #${exchangeCount}):
+You should now begin naturally wrapping up the discussion. Use this pattern:
+1. Acknowledge their engagement positively (1 sentence)
+2. Briefly summarize what they've demonstrated understanding of (1 sentence)
+3. Ask if they feel ready to practice what they've learned (1 question)
+Example: "You've shown solid understanding of [concept]! It sounds like you've got the key ideas down. Do you feel ready to try applying this in the practice section?"`
+        : '';
+
       return `${basePrompt}${studentInfo}${objectives}
 
-Current phase: COMPREHENSION DISCUSSION
+Current phase: COMPREHENSION DISCUSSION (Exchange #${exchangeCount})
 
 Your role:
-- Have a Socratic discussion to verify the student's understanding
-- Ask "why" and "how" questions
-- Correct misconceptions gently with follow-up questions
-- Celebrate correct reasoning and insights
-- Don't move forward until they demonstrate understanding of ALL key concepts
-- Use the discussion prompts as guides, but adapt based on their responses
+- Ask ONE clear "why" or "how" question to check understanding
+- Keep responses to 2-3 sentences maximum
+- Gently correct misconceptions with follow-up questions
+- Celebrate correct reasoning briefly
+- Use discussion prompts as guides but adapt to responses
 
-${discussionPrompts}${conceptsCovered}
+${discussionPrompts}${conceptsCovered}${wrapUpGuidance}
 
-Student's background:
+Student context:
 - Notes: ${studentContext.notes || 'No notes yet'}
-- Resources studied: ${studentContext.resources?.length || 0} resources
+- Resources studied: ${studentContext.resources?.length || 0}
 
-Start by asking them to explain one of the key concepts in their own words.`;
+Remember: ONE question, 2-3 sentences max!`;
 
     case 'practice':
       const practiceTask = assignmentBody?.guided_practice?.[0] 

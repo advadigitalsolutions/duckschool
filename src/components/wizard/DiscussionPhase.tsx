@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { AssignmentContentRenderer } from '../AssignmentContentRenderer';
-import { CheckCircle2, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, ArrowLeft, MessageSquare } from 'lucide-react';
+import { DiscussionTipCard } from '../DiscussionTipCard';
+import { useDiscussionProgress } from '@/hooks/useDiscussionProgress';
+import { cn } from '@/lib/utils';
 
 interface DiscussionPhaseProps {
   assignmentId: string;
@@ -19,7 +22,17 @@ export const DiscussionPhase: React.FC<DiscussionPhaseProps> = ({
   onComplete,
   onBack
 }) => {
-  const [conceptsDiscussed, setConceptsDiscussed] = useState<number>(0);
+  const { exchangeCount, shouldShowTip, dismissTip } = useDiscussionProgress(studentId, assignmentId);
+  const [showTip, setShowTip] = useState(false);
+
+  useEffect(() => {
+    setShowTip(shouldShowTip);
+  }, [shouldShowTip]);
+
+  const handleDismissTip = async () => {
+    setShowTip(false);
+    await dismissTip();
+  };
 
   const formatInstructions = () => {
     const promptsList = discussionPrompts?.map((prompt: string, i: number) => 
@@ -29,9 +42,16 @@ export const DiscussionPhase: React.FC<DiscussionPhaseProps> = ({
     return `## 💬 Let's Discuss What You Learned\n\nUse the AI coach to discuss your understanding of the concepts.\n\n**Discussion topics:**\n${promptsList}\n\n**Tips:**\n- Explain concepts in your own words\n- Give examples when you can\n- Ask the coach if you're unsure about something\n- The coach will ask follow-up questions to check your understanding`;
   };
 
-  // For MVP, we'll trust the student used the coach
-  // In production, we'd track actual discussion depth via AI coaching history
   const canAdvance = true;
+
+  // Determine button state based on exchange count
+  const getButtonState = () => {
+    if (exchangeCount === 0) return 'default';
+    if (exchangeCount < 3) return 'engaged';
+    return 'ready';
+  };
+
+  const buttonState = getButtonState();
 
   return (
     <div className="space-y-6">
@@ -39,14 +59,44 @@ export const DiscussionPhase: React.FC<DiscussionPhaseProps> = ({
         <AssignmentContentRenderer content={formatInstructions()} />
       </Card>
 
-      <Card className="p-6 text-center">
-        <p className="text-muted-foreground mb-4">
-          Open the AI Coach (chat button below this area) to have a discussion about what you've learned.
+      <Card className="p-6 text-center space-y-4">
+        <p className="text-muted-foreground">
+          Open the AI Coach (chat button below) to have a discussion about what you've learned.
         </p>
-        <p className="text-sm text-muted-foreground">
-          The coach will ask you questions to verify your understanding of the key concepts.
+        
+        {/* Progress Indicator */}
+        <div className="flex items-center justify-center gap-2">
+          <div className="flex gap-1.5">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={cn(
+                  "w-2 h-2 rounded-full transition-colors",
+                  exchangeCount >= i 
+                    ? "bg-primary" 
+                    : "bg-muted-foreground/20"
+                )}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {exchangeCount === 0 && "Start your discussion"}
+            {exchangeCount > 0 && exchangeCount < 3 && `${exchangeCount} exchange${exchangeCount === 1 ? '' : 's'}`}
+            {exchangeCount >= 3 && "Great engagement!"}
+          </span>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          The more you discuss, the better we understand your learning! 
+          <br />
+          (But 3 exchanges is a great start)
         </p>
       </Card>
+
+      {/* First-time user tip */}
+      {showTip && (
+        <DiscussionTipCard onDismiss={handleDismissTip} />
+      )}
 
       <div className="flex justify-between">
         <Button
@@ -62,10 +112,18 @@ export const DiscussionPhase: React.FC<DiscussionPhaseProps> = ({
           onClick={onComplete}
           disabled={!canAdvance}
           size="lg"
-          className="min-w-[200px]"
+          className={cn(
+            "min-w-[200px] transition-all",
+            buttonState === 'engaged' && "animate-pulse",
+            buttonState === 'ready' && "bg-green-600 hover:bg-green-700"
+          )}
         >
-          <CheckCircle2 className="h-5 w-5 mr-2" />
-          Continue to Practice
+          {buttonState === 'ready' && <CheckCircle2 className="h-5 w-5 mr-2" />}
+          {buttonState === 'default' && <MessageSquare className="h-5 w-5 mr-2" />}
+          {buttonState === 'engaged' && <MessageSquare className="h-5 w-5 mr-2" />}
+          {buttonState === 'ready' ? 'Great discussion! Continue' : 
+           buttonState === 'engaged' ? 'Ready to continue?' : 
+           'Continue to Practice'}
         </Button>
       </div>
     </div>

@@ -130,13 +130,17 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Count user messages for discussion phase
+      const userMessageCount = newMessages.filter(m => m.role === 'user').length;
+
       const response = await supabase.functions.invoke('learning-coach-chat', {
         body: {
           message: userMessage.content,
           conversationHistory: newMessages.slice(-10), // Last 10 messages for context
           currentStep,
           studentContext,
-          assignmentBody
+          assignmentBody,
+          exchangeCount: userMessageCount // Pass exchange count for wrap-up logic
         }
       });
 
