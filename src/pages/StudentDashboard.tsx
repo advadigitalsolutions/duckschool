@@ -499,7 +499,7 @@ export default function StudentDashboard() {
         )}
 
         {/* Today's Tasks - Moved to top */}
-        <Card className="mb-6">
+        <Card className="mb-6 border-primary shadow-md">
           <CardHeader>
             <CardTitle>Today's Tasks</CardTitle>
             <CardDescription>Your assignments for today</CardDescription>

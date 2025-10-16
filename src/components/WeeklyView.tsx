@@ -157,7 +157,7 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
           const isToday = isSameDay(date, todayDate);
 
           return (
-            <Card key={date.toISOString()} className={isToday ? 'border-primary shadow-md' : ''}>
+            <Card key={date.toISOString()}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
