@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { StandardsSelector } from './StandardsSelector';
@@ -41,6 +41,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
   const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
   const [enableCrossSubject, setEnableCrossSubject] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCreated, setIsCreated] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
 
   const toggleCourse = (courseId: string) => {
@@ -161,15 +162,21 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
           ? `Created ${createdAssignments.length} cross-subject assignments!`
           : 'AI-generated assignment created successfully!'
       );
-      setOpen(false);
-      setTopic('');
-      setApproachOverride('');
-      setSelectedCourses([]);
-      setAssignedDate('');
-      setDueDate('');
-      setSelectedStandards([]);
-      setEnableCrossSubject(false);
+      setIsCreated(true);
       onAssignmentAdded();
+      
+      // Close dialog after a short delay to show success state
+      setTimeout(() => {
+        setOpen(false);
+        setTopic('');
+        setApproachOverride('');
+        setSelectedCourses([]);
+        setAssignedDate('');
+        setDueDate('');
+        setSelectedStandards([]);
+        setEnableCrossSubject(false);
+        setIsCreated(false);
+      }, 1500);
     } catch (error: any) {
       toast.error(error.message || 'Failed to create assignment');
       console.error(error);
@@ -352,8 +359,13 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isGenerating}>
-            {isGenerating ? (
+          <Button type="submit" className="w-full" disabled={isGenerating || isCreated}>
+            {isCreated ? (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Created
+              </>
+            ) : isGenerating ? (
               <>
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
                 Generating Assignment...

@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Sparkles, Clock, Target, BookOpen, Loader2, Info, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Clock, Target, BookOpen, Loader2, Info, CheckCircle2, Check } from 'lucide-react';
 
 interface AssignmentSuggestion {
   title: string;
@@ -416,7 +416,10 @@ export function CurriculumGenerationDialog({
                               Creating...
                             </>
                           ) : suggestion.created ? (
-                            '✓ Created'
+                            <>
+                              <Check className="mr-2 h-4 w-4" />
+                              Created
+                            </>
                           ) : (
                             'Create Assignment'
                           )}
