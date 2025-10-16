@@ -18,6 +18,7 @@ import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
 import { UnifiedMasteryDashboard } from '@/components/UnifiedMasteryDashboard';
+import { DemoWizard } from '@/components/DemoWizard';
 import { SessionStatsCard } from '@/components/SessionStatsCard';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Activity } from 'lucide-react';
@@ -468,7 +469,11 @@ export default function StudentDashboard() {
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>;
   }
+  const isDemoUser = localStorage.getItem('isDemoUser') === 'true';
+  const demoRole = localStorage.getItem('demoRole');
+
   return <PomodoroProvider studentId={studentDbId || undefined}>
+      {isDemoUser && demoRole === 'student' && <DemoWizard role="student" />}
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
       

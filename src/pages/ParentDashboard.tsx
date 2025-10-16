@@ -34,6 +34,7 @@ import { PomodoroProvider } from '@/contexts/PomodoroContext';
 import { FocusAnalyticsDashboard } from '@/components/FocusAnalyticsDashboard';
 import { FocusPatternsDashboard } from '@/components/FocusPatternsDashboard';
 import { SmartScheduleCalendar } from '@/components/SmartScheduleCalendar';
+import { DemoWizard } from '@/components/DemoWizard';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -342,8 +343,12 @@ export default function ParentDashboard() {
     pronouns: profile.pronouns
   } : null;
 
+  const isDemoUser = localStorage.getItem('isDemoUser') === 'true';
+  const demoRole = localStorage.getItem('demoRole');
+
   return (
     <PomodoroProvider>
+      {isDemoUser && demoRole === 'parent' && <DemoWizard role="parent" />}
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
         

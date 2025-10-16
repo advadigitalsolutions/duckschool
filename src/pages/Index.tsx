@@ -48,9 +48,6 @@ const Index = () => {
         if (userRoles.includes('student')) {
           console.log('[Index] Redirecting to /student');
           navigate('/student', { replace: true });
-        } else if (userRoles.includes('self_directed_learner')) {
-          console.log('[Index] Redirecting to /parent (self-directed learner)');
-          navigate('/parent', { replace: true }); // Will show unified dashboard
         } else {
           console.log('[Index] Redirecting to /parent');
           navigate('/parent', { replace: true });

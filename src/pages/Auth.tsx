@@ -6,12 +6,45 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { Sparkles } from 'lucide-react';
 import duckGraduation from '@/assets/duck-graduation.png';
 import { ThemeToggle } from '@/components/ThemeToggle';
 export default function Auth() {
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleDemoLogin = async (role: 'parent' | 'student') => {
+    setDemoLoading(true);
+    try {
+      const demoEmail = role === 'parent' 
+        ? 'demo-parent@duckschool.com' 
+        : 'demo-student@duckschool.com';
+      const demoPassword = 'demo123456';
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: demoPassword
+      });
+
+      if (error) throw error;
+
+      // Set demo flag and show wizard
+      localStorage.setItem('isDemoUser', 'true');
+      localStorage.setItem('demoRole', role);
+      localStorage.setItem('showDemoWizard', 'true');
+      
+      toast.success(`Welcome to the ${role === 'parent' ? 'Parent' : 'Student'} Demo!`);
+      navigate('/');
+    } catch (error: any) {
+      console.error('Demo login error:', error);
+      toast.error('Demo account not yet configured. Please use regular sign up.');
+    } finally {
+      setDemoLoading(false);
+    }
+  };
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -119,7 +152,6 @@ export default function Auth() {
                   <select id="signup-role" name="role" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" required>
                     <option value="parent">Parent/Teacher</option>
                     <option value="student">Student</option>
-                    <option value="self_directed_learner">Self-Directed Learner</option>
                   </select>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
@@ -128,6 +160,41 @@ export default function Auth() {
               </form>
             </TabsContent>
           </Tabs>
+
+          <div className="mt-6 space-y-3">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <Separator />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Try Demo</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => handleDemoLogin('parent')}
+                disabled={demoLoading}
+                className="w-full"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Demo Parent
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleDemoLogin('student')}
+                disabled={demoLoading}
+                className="w-full"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Demo Student
+              </Button>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              Explore Duckschool with pre-configured demo accounts
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>;
