@@ -642,7 +642,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                 <Button
                   onClick={() => {
                     setSelectedAssignment(null);
-                    navigate(`/assignment/${selectedAssignment.id}`);
+                    window.open(`/assignment/${selectedAssignment.id}`, '_blank');
                   }}
                   size="lg"
                   className="flex-1 font-semibold"
