@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Calendar, Clock, Sparkles, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Sparkles, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface ReassignAssignmentDialogProps {
   open: boolean;
@@ -32,7 +35,7 @@ export const ReassignAssignmentDialog = ({
   studentId,
   onReassigned 
 }: ReassignAssignmentDialogProps) => {
-  const [newDay, setNewDay] = useState('monday');
+  const [newDate, setNewDate] = useState<Date | undefined>(undefined);
   const [newTime, setNewTime] = useState('09:00');
   const [aiAnalysisEnabled, setAiAnalysisEnabled] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -42,23 +45,34 @@ export const ReassignAssignmentDialog = ({
   // Update state when assignment changes
   useEffect(() => {
     if (assignment) {
-      setNewDay(assignment.day_of_week || 'monday');
+      // Parse existing date if available
+      if (assignment.day_of_week) {
+        const today = new Date();
+        const dayIndex = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+          .indexOf(assignment.day_of_week.toLowerCase());
+        const daysUntilTarget = (dayIndex - today.getDay() + 7) % 7;
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() + daysUntilTarget);
+        setNewDate(targetDate);
+      }
       setNewTime(assignment.auto_scheduled_time?.substring(0, 5) || '09:00');
       setAnalysisResult(null);
     }
   }, [assignment]);
 
   const runAnalysis = async () => {
-    if (!assignment) return;
+    if (!assignment || !newDate) return;
 
     try {
       setIsAnalyzing(true);
       setAnalysisResult(null);
 
+      const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][newDate.getDay()];
+
       const { data, error } = await supabase.functions.invoke('analyze-schedule-change', {
         body: {
           assignmentId: assignment.id,
-          newDay,
+          newDay: dayOfWeek,
           newTime,
           studentId
         }
@@ -76,11 +90,11 @@ export const ReassignAssignmentDialog = ({
     }
   };
 
-  const weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const weekDayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
   const handleSave = async () => {
-    if (!assignment) return;
+    if (!assignment || !newDate) {
+      toast.error('Please select a date');
+      return;
+    }
 
     if (assignment.locked_schedule) {
       toast.error('Cannot reassign locked assignments');
@@ -96,10 +110,12 @@ export const ReassignAssignmentDialog = ({
     try {
       setIsSaving(true);
 
+      const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][newDate.getDay()];
+
       const { error } = await supabase
         .from('assignments')
         .update({
-          day_of_week: newDay,
+          day_of_week: dayOfWeek,
           auto_scheduled_time: `${newTime}:00`
         })
         .eq('id', assignment.id);
@@ -123,7 +139,9 @@ export const ReassignAssignmentDialog = ({
 
   if (!assignment) return null;
 
-  const currentDayLabel = weekDayLabels[weekDays.indexOf(assignment.day_of_week?.toLowerCase() || 'monday')];
+  const currentDayLabel = assignment.day_of_week 
+    ? assignment.day_of_week.charAt(0).toUpperCase() + assignment.day_of_week.slice(1).toLowerCase()
+    : 'Not scheduled';
   const currentTime = assignment.auto_scheduled_time?.substring(0, 5) || '09:00';
 
   return (
@@ -131,7 +149,7 @@ export const ReassignAssignmentDialog = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
+            <CalendarIcon className="h-5 w-5" />
             Reassign Assignment
           </DialogTitle>
           <DialogDescription>
@@ -176,21 +194,33 @@ export const ReassignAssignmentDialog = ({
             </Alert>
           )}
 
-          {/* New Day Selection */}
+          {/* New Date Selection */}
           <div className="space-y-2">
-            <Label htmlFor="new-day">New Day</Label>
-            <Select value={newDay} onValueChange={setNewDay}>
-              <SelectTrigger id="new-day">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {weekDays.map((day, index) => (
-                  <SelectItem key={day} value={day}>
-                    {weekDayLabels[index]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="new-date">New Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="new-date"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !newDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {newDate ? format(newDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={newDate}
+                  onSelect={setNewDate}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* New Time Selection */}
@@ -211,7 +241,7 @@ export const ReassignAssignmentDialog = ({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={isSaving || isAnalyzing || assignment.locked_schedule}
+            disabled={isSaving || isAnalyzing || assignment.locked_schedule || !newDate}
           >
             {isAnalyzing ? (
               <>

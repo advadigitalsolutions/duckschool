@@ -159,6 +159,34 @@ Historical activity: ${focusPatterns?.length || 0} learning events recorded in p
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('AI gateway error:', aiResponse.status, errorText);
+      
+      // Handle specific error cases with user-friendly messages
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'AI analysis unavailable: Workspace credits depleted. Please add credits in Settings → Usage to continue using AI features.',
+            analysis: 'AI analysis unavailable. You can still manually reassign this assignment based on your judgment.'
+          }),
+          { 
+            status: 200, // Return 200 so the dialog can show the message gracefully
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Rate limit exceeded. Please try again in a moment.',
+            analysis: 'AI analysis temporarily unavailable due to rate limits. Please try again shortly or proceed with manual reassignment.'
+          }),
+          { 
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
       throw new Error(`AI analysis failed: ${aiResponse.status}`);
     }
 
