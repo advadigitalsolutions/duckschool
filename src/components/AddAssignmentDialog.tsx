@@ -36,7 +36,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [topic, setTopic] = useState('');
   const [approachOverride, setApproachOverride] = useState('');
-  const [assignedDate, setAssignedDate] = useState('');
+  const [assignedDate, setAssignedDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState('');
   const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
   const [enableCrossSubject, setEnableCrossSubject] = useState(false);
@@ -171,7 +171,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
         setTopic('');
         setApproachOverride('');
         setSelectedCourses([]);
-        setAssignedDate('');
+        setAssignedDate(new Date().toISOString().split('T')[0]);
         setDueDate('');
         setSelectedStandards([]);
         setEnableCrossSubject(false);
@@ -338,10 +338,9 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
                 type="date"
                 value={assignedDate}
                 onChange={(e) => setAssignedDate(e.target.value)}
-                required
               />
               <p className="text-xs text-muted-foreground">
-                When should this work appear
+                Defaults to today, change if needed
               </p>
             </div>
 
