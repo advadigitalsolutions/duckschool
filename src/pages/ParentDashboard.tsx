@@ -32,6 +32,7 @@ import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
 import { FocusAnalyticsDashboard } from '@/components/FocusAnalyticsDashboard';
+import { FocusPatternsDashboard } from '@/components/FocusPatternsDashboard';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -429,6 +430,7 @@ export default function ParentDashboard() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="time-tracking">Time Tracking</TabsTrigger>
+            <TabsTrigger value="focus-intelligence">Focus Intelligence</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="pomodoro">Pomodoro Timers</TabsTrigger>
             <TabsTrigger value="weekly-plans">Weekly Plans</TabsTrigger>
@@ -491,6 +493,40 @@ export default function ParentDashboard() {
                       <FocusAnalyticsDashboard studentId={student.id} />
                     </CardContent>
                   </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="focus-intelligence" className="space-y-4">
+            {students.length === 0 ? (
+              <Card>
+                <CardContent className="py-12">
+                  <div className="text-center">
+                    <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">Add students to analyze focus patterns</p>
+                    <AddStudentDialog onStudentAdded={fetchDashboardData} />
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {students.map(student => (
+                  <div key={student.id} className="space-y-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={student.avatar_url || ''} />
+                        <AvatarFallback>
+                          <User className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="text-xl font-semibold">{student.name}'s Focus Intelligence</h3>
+                        <p className="text-sm text-muted-foreground">AI-powered insights about optimal learning times</p>
+                      </div>
+                    </div>
+                    <FocusPatternsDashboard studentId={student.id} />
+                  </div>
                 ))}
               </div>
             )}
