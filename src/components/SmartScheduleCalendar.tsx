@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, GripVertical, Sparkles, RefreshCw, Lock, Unlock, BookOpen, ExternalLink } from 'lucide-react';
@@ -505,8 +505,8 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
 
               {/* Time Slots */}
               {timeSlots.map(time => (
-                <>
-                  <div key={`time-${time}`} className="bg-background p-2 text-xs text-muted-foreground">
+                <React.Fragment key={time}>
+                  <div className="bg-background p-2 text-xs text-muted-foreground">
                     {time}
                   </div>
                   {weekDays.map((day, dayIndex) => {
@@ -604,7 +604,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                       </div>
                     );
                   })}
-                </>
+                </React.Fragment>
               ))}
             </div>
           </div>
