@@ -308,7 +308,9 @@ export default function ParentDashboard() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{todayMinutes} min</div>
+              <div className="text-2xl font-bold">
+                {Math.floor(todayMinutes / 60)}h {todayMinutes % 60}m
+              </div>
               <p className="text-xs text-muted-foreground">
                 Across all students
               </p>
@@ -321,7 +323,9 @@ export default function ParentDashboard() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{weekMinutes} min</div>
+              <div className="text-2xl font-bold">
+                {Math.floor(weekMinutes / 60)}h {weekMinutes % 60}m
+              </div>
               <p className="text-xs text-muted-foreground">
                 Last 7 days
               </p>
@@ -334,8 +338,10 @@ export default function ParentDashboard() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{Math.round(allTimeMinutes / 60)} hrs</div>
-              <p className="text-xs text-muted-foreground">6h 3m</p>
+              <div className="text-2xl font-bold">
+                {Math.floor(allTimeMinutes / 60)}h {allTimeMinutes % 60}m
+              </div>
+              <p className="text-xs text-muted-foreground">08/25 - Today</p>
             </CardContent>
           </Card>
 
@@ -346,7 +352,9 @@ export default function ParentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{completedToday}</div>
-              <p className="text-xs text-muted-foreground">34h 10m</p>
+              <p className="text-xs text-muted-foreground">
+                {completedToday === 1 ? 'Assignment' : 'Assignments'}
+              </p>
             </CardContent>
           </Card>
 
@@ -357,7 +365,9 @@ export default function ParentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{overdueCount}</div>
-              <p className="text-xs text-muted-foreground">203h 47m</p>
+              <p className="text-xs text-muted-foreground">
+                {overdueCount === 1 ? 'Assignment' : 'Assignments'}
+              </p>
             </CardContent>
           </Card>
         </div>
