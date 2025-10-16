@@ -44,13 +44,9 @@ interface SchedulingBlocksManagerProps {
 }
 
 const BLOCK_TYPES = [
-  { value: 'appointment', label: 'Medical Appointment' },
-  { value: 'activity', label: 'Extracurricular Activity' },
-  { value: 'therapy', label: 'Therapy/Tutoring' },
-  { value: 'personal', label: 'Personal Time' },
-  { value: 'family', label: 'Family Event' },
-  { value: 'vacation', label: 'Vacation/Holiday' },
-  { value: 'other', label: 'Other' },
+  { value: 'unavailable', label: 'Unavailable (appointments, activities, etc.)' },
+  { value: 'restricted', label: 'Restricted Time (limited availability)' },
+  { value: 'preferred', label: 'Preferred Time (best for scheduling)' },
 ];
 
 const DAY_NAMES = [
@@ -69,7 +65,7 @@ export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerPr
   const [loading, setLoading] = useState(false);
   
   // Form state
-  const [blockType, setBlockType] = useState('appointment');
+  const [blockType, setBlockType] = useState('unavailable');
   const [isRecurring, setIsRecurring] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedDay, setSelectedDay] = useState<number>();
@@ -155,7 +151,7 @@ export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerPr
   };
 
   const resetForm = () => {
-    setBlockType('appointment');
+    setBlockType('unavailable');
     setIsRecurring(false);
     setSelectedDate(undefined);
     setSelectedDay(undefined);
@@ -191,7 +187,7 @@ export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerPr
             <DialogHeader>
               <DialogTitle>Block Time Slot</DialogTitle>
               <DialogDescription>
-                Block off time for appointments, activities, or other commitments
+                Mark times as unavailable (appointments, activities), restricted (limited use), or preferred (best for scheduling)
               </DialogDescription>
             </DialogHeader>
 
