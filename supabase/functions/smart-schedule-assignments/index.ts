@@ -459,15 +459,19 @@ async function generateScheduleAnalysis(
     throw new Error('OPENAI_API_KEY not configured');
   }
 
-  // Prepare context for AI
+  // Prepare detailed context for AI
   const newScheduleContext = scheduledResults.map((result) => {
     const assignment = unscheduledAssignments.find((a: any) => a.id === result.assignmentId);
+    const estMinutes = assignment?.curriculum_items?.est_minutes || 30;
     return {
       title: assignment?.curriculum_items?.title || 'Unknown',
       subject: assignment?.curriculum_items?.courses?.subject || 'Unknown',
       scheduledTime: result.scheduledTime,
       dayOfWeek: result.dayOfWeek,
-      score: result.score.toFixed(2)
+      timeOfDay: result.scheduledTime.split('T')[1],
+      duration: `${estMinutes} minutes`,
+      schedulingScore: result.score.toFixed(2),
+      dueDate: assignment?.due_at || 'Not specified'
     };
   });
 
@@ -475,20 +479,38 @@ async function generateScheduleAnalysis(
     title: a.curriculum_items?.title || 'Unknown',
     subject: a.curriculum_items?.courses?.subject || 'Unknown',
     dayOfWeek: a.day_of_week,
-    scheduledTime: a.auto_scheduled_time
+    timeOfDay: a.auto_scheduled_time,
+    duration: `${a.curriculum_items?.est_minutes || 30} minutes`
   }));
 
-  const systemPrompt = `You are an educational scheduling expert. Analyze the complete schedule and provide clear, actionable insights.
+  // Format focus patterns for AI
+  const focusPatternDetails = patterns ? `
+Focus Pattern Data:
+- Peak Windows: ${patterns.peak_windows?.map(w => `${w.start_time}-${w.end_time} (score: ${w.average_score.toFixed(2)})`).join(', ') || 'None identified'}
+- Subject-Specific Times: ${patterns.subject_optimal_times ? Object.entries(patterns.subject_optimal_times).map(([subj, times]: [string, any]) => `${subj} best at ${times[0]?.start_time || 'any time'}`).join(', ') : 'Not enough data'}
+- Best Days: ${patterns.day_of_week_patterns ? Object.entries(patterns.day_of_week_patterns).sort((a: any, b: any) => b[1].average_score - a[1].average_score).slice(0, 3).map(([day]) => day).join(', ') : 'Not enough data'}
+` : 'Focus Patterns: Not yet established - scheduling based on general best practices';
+
+  const systemPrompt = `You are an educational scheduling expert. Provide SPECIFIC, DETAILED analysis of scheduling decisions.
+
+CRITICAL: Your explanations must be actionable and specific. NEVER use vague phrases like:
+❌ "based on optimal learning times"
+❌ "scheduled for best results"
+❌ "placed strategically"
+
+INSTEAD, use concrete details like:
+✅ "7 AM Friday aligns with student's morning peak focus window (7-10 AM, score 0.85)"
+✅ "Math placed before lunch when analytical thinking is strongest"
+✅ "Distributed across Thursday/Friday to maintain 4-hour daily target"
+✅ "Grouped with other Spanish lessons to minimize context switching"
+✅ "Scheduled after prerequisite assignment completes"
 
 Your role:
-1. Review both newly scheduled AND existing assignments
-2. Determine if the current schedule is optimal or if improvements could be made
-3. Explain key factors that make the schedule effective
-4. Provide specific recommendations if optimization is possible
+1. Explain the SPECIFIC reasoning behind each placement (time, day, workload balance, focus patterns)
+2. Identify conflicts, overload, or suboptimal patterns
+3. Provide actionable recommendations with concrete suggestions`;
 
-Be direct, specific, and educational in your analysis.`;
-
-  const userPrompt = `Analyze this student's schedule:
+  const userPrompt = `Analyze this schedule with SPECIFIC details for each assignment:
 
 NEWLY SCHEDULED (${scheduledResults.length}):
 ${JSON.stringify(newScheduleContext, null, 2)}
@@ -496,24 +518,26 @@ ${JSON.stringify(newScheduleContext, null, 2)}
 ALREADY SCHEDULED (${alreadyScheduled.length}):
 ${JSON.stringify(existingScheduleContext, null, 2)}
 
-${patterns ? `Focus Patterns: ${patterns.peak_windows?.length || 0} peak windows identified` : 'Focus Patterns: Not yet established'}
-${blocks.length > 0 ? `Blocked Times: ${blocks.length} time slots unavailable` : 'No blocked time slots'}
+${focusPatternDetails}
 
-Provide:
-1. A summary explaining whether the schedule is optimal or could be improved
-2. For newly scheduled assignments, explain the placement rationale
-3. For existing assignments, note if they're well-placed or could be optimized
-4. 2-3 specific recommendations for schedule optimization
+${blocks.length > 0 ? `Blocked Times: ${blocks.map((b: any) => `${b.day_of_week || b.specific_date} ${b.start_time}-${b.end_time} (${b.block_type})`).join(', ')}` : 'No blocked time slots'}
 
-${scheduledResults.length === 0 && alreadyScheduled.length > 0 ? 'NOTE: No new assignments were added. Evaluate if the existing schedule is optimal or if redistributing assignments would improve learning outcomes.' : ''}
+For EACH assignment in "changes", explain:
+1. WHY this specific time was chosen (e.g., "9 AM hits peak focus window", "After work block ends")
+2. WHY this specific day (e.g., "Balances Thursday's 3.5hr load", "Best day for History per patterns")
+3. Subject-specific rationale if applicable
+4. Any prerequisite or sequence considerations
+5. Workload distribution impact
+
+${scheduledResults.length === 0 && alreadyScheduled.length > 0 ? 'NOTE: No new assignments. Analyze existing schedule for improvements.' : ''}
 
 Format as JSON:
 {
-  "summary": "overall evaluation and key scheduling principles applied",
+  "summary": "2-3 sentences about overall schedule quality and key optimization principles used",
   "changes": [
-    {"assignment": "title", "reason": "placement rationale or optimization suggestion"}
+    {"assignment": "exact title", "reason": "SPECIFIC explanation including time/day rationale and concrete factors"}
   ],
-  "recommendations": ["actionable recommendation 1", "actionable recommendation 2"]
+  "recommendations": ["specific actionable recommendation with details"]
 }`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -537,22 +561,33 @@ Format as JSON:
     const errorText = await response.text();
     console.error('AI analysis error:', response.status, errorText);
     
-    // Return a basic analysis on error
+    // Return detailed fallback analysis
     const allAssignments = [...newScheduleContext, ...existingScheduleContext];
     return {
       summary: scheduledResults.length > 0 
-        ? `Scheduled ${scheduledResults.length} new assignments. ${alreadyScheduled.length} assignments remain on their current schedule.`
-        : `Reviewed ${alreadyScheduled.length} existing assignments. Current schedule appears well-optimized based on available data.`,
-      changes: allAssignments.map((ctx: any) => ({
-        assignment: ctx.title,
-        reason: ctx.scheduledTime 
-          ? `Placed at ${ctx.dayOfWeek} ${ctx.scheduledTime.split('T')[1] || ctx.scheduledTime} based on availability and focus patterns.`
-          : `Currently scheduled for ${ctx.dayOfWeek}`
-      })),
-      recommendations: [
-        'Continue tracking focus patterns to improve future scheduling',
-        'Review blocked time slots regularly to ensure accuracy'
-      ]
+        ? `Scheduled ${scheduledResults.length} assignments across available time slots. Focus pattern data ${patterns ? 'was used' : 'not yet available'} for optimization.`
+        : `${alreadyScheduled.length} assignments currently scheduled. Consider tracking focus patterns for future optimization.`,
+      changes: allAssignments.map((ctx: any) => {
+        const timeStr = ctx.timeOfDay || ctx.scheduledTime?.split('T')[1] || '';
+        const hour = timeStr ? parseInt(timeStr.split(':')[0]) : 12;
+        const timeLabel = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+        
+        return {
+          assignment: ctx.title,
+          reason: ctx.scheduledTime 
+            ? `${ctx.dayOfWeek} ${timeLabel} (${timeStr}) - ${ctx.duration} ${ctx.subject} session. ${patterns ? `Scheduling score: ${ctx.schedulingScore}` : 'Placed based on availability'}.`
+            : `Currently at ${ctx.dayOfWeek} ${timeLabel} (${timeStr}) - ${ctx.duration}`
+        };
+      }),
+      recommendations: patterns 
+        ? [
+            'Focus patterns detected - schedule optimized for peak performance windows',
+            `${blocks.length > 0 ? 'Avoided ' + blocks.length + ' blocked time slot(s)' : 'No scheduling conflicts detected'}`
+          ]
+        : [
+            'Start tracking focus sessions to enable personalized time-of-day optimization',
+            'Review workload distribution across days for better balance'
+          ]
     };
   }
 
@@ -561,16 +596,27 @@ Format as JSON:
   
   try {
     return JSON.parse(analysisText);
-  } catch {
-    // Fallback if JSON parsing fails
+  } catch (parseError) {
+    console.error('Failed to parse AI response:', parseError, analysisText);
+    
+    // Better fallback with actual data
     const allAssignments = [...newScheduleContext, ...existingScheduleContext];
     return {
-      summary: analysisText,
-      changes: allAssignments.map((ctx: any) => ({
-        assignment: ctx.title,
-        reason: `Scheduled for ${ctx.dayOfWeek} based on optimal learning times.`
-      })),
-      recommendations: []
+      summary: `Analysis generated for ${allAssignments.length} assignments. ${patterns ? 'Focus patterns considered' : 'Using general scheduling principles'}.`,
+      changes: allAssignments.map((ctx: any) => {
+        const timeStr = ctx.timeOfDay || ctx.scheduledTime?.split('T')[1] || '';
+        const hour = timeStr ? parseInt(timeStr.split(':')[0]) : 12;
+        const period = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+        
+        return {
+          assignment: ctx.title,
+          reason: `${ctx.dayOfWeek.charAt(0).toUpperCase() + ctx.dayOfWeek.slice(1)} ${period} at ${timeStr} (${ctx.duration}). ${ctx.schedulingScore ? `Match score: ${ctx.schedulingScore}/1.0` : 'Scheduled by availability'}`
+        };
+      }),
+      recommendations: [
+        patterns ? 'Schedule leverages identified focus patterns' : 'Complete more sessions to unlock personalized scheduling',
+        'Review schedule weekly and adjust based on student feedback'
+      ]
     };
   }
 }
