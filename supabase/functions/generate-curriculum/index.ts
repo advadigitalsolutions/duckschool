@@ -704,7 +704,32 @@ For each standard, suggest 1-2 high-quality assignments that would effectively c
     
     console.log(`✅ Validated ${suggestions.length} appropriate suggestions for grade ${gradeLevel}`);
 
-    return new Response(JSON.stringify({ 
+    // Check if we have any suggestions to return
+    if (suggestions.length === 0) {
+      let message = '';
+      if (isCustomFramework) {
+        message = courseGoals 
+          ? 'Could not generate curriculum suggestions. Please check your course goals and try again.' 
+          : 'No learning milestones generated yet. Please edit course settings to add course goals and generate milestones.';
+      } else {
+        message = uncoveredStandards.length === 0 
+          ? 'All standards are already covered! Your curriculum is complete.' 
+          : 'Could not generate curriculum suggestions. Please try again.';
+      }
+      
+      return new Response(JSON.stringify({ 
+        suggestions: [],
+        message,
+        uncoveredCount: useGoalsBasedGeneration ? 0 : uncoveredStandards.length,
+        pedagogy,
+        framework,
+        generationType: useGoalsBasedGeneration ? 'goals' : 'standards'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    return new Response(JSON.stringify({
       suggestions,
       uncoveredCount: useGoalsBasedGeneration ? 0 : uncoveredStandards.length,
       pedagogy,

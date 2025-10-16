@@ -71,7 +71,13 @@ export function CurriculumGenerationDialog({
         setFramework(data.framework);
         toast.success(`Generated ${data.suggestions.length} assignment suggestions`);
       } else {
-        toast.info(data.message || 'All standards are already covered!');
+        // Show appropriate message based on the response
+        const message = data.message || (
+          data.framework === 'CUSTOM' 
+            ? 'No curriculum suggestions generated. Please ensure your course has goals set in course settings.' 
+            : 'All standards are already covered!'
+        );
+        toast.info(message);
       }
     } catch (error: any) {
       console.error('Error generating curriculum:', error);
