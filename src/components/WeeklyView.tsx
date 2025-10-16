@@ -191,10 +191,6 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
                             {assignment.curriculum_items?.title}
                           </h4>
                           <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {assignment.curriculum_items?.est_minutes || 30} min
-                            </span>
                             <Badge variant="outline" className="text-xs">
                               {assignment.curriculum_items?.courses?.subject}
                             </Badge>

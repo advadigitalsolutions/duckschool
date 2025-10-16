@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface OverdueAssignmentCardProps {
@@ -39,54 +39,50 @@ export function OverdueAssignmentCard({ assignment }: OverdueAssignmentCardProps
   const course = assignment.curriculum_items?.courses;
   
   return (
-    <Card className="border-destructive/50 bg-destructive/5 hover:bg-destructive/10 transition-colors">
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+    <Card className="border-destructive bg-destructive/10 hover:shadow-lg hover:border-destructive/80 transition-all">
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0 space-y-3">
+            {/* Header with badge */}
+            <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
-              <Badge variant="destructive" className="font-semibold">
+              <Badge variant="destructive" className="font-bold text-xs px-2 py-0.5">
                 OVERDUE
               </Badge>
+              {course?.title && (
+                <span className="text-xs text-muted-foreground">
+                  {course.title}
+                </span>
+              )}
             </div>
             
-            {course?.title && (
-              <div className="text-xs font-medium text-muted-foreground mb-1">
-                {course.title}
-              </div>
-            )}
-            
-            <h3 className="font-semibold text-base mb-1 text-destructive">
+            {/* Assignment title */}
+            <h3 className="font-bold text-lg leading-tight">
               {assignment.curriculum_items?.title || 'Untitled Assignment'}
             </h3>
             
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-              <Clock className="h-3 w-3" />
-              {assignment.curriculum_items?.est_minutes || 30} minutes
-            </div>
-            
             {/* Countdown Timer */}
-            <div className="bg-background/80 rounded-lg p-3 mb-2">
-              <div className="flex items-center justify-center gap-2 text-destructive font-mono font-bold text-lg">
+            <div className="bg-background rounded-lg p-4 border-2 border-destructive/20">
+              <div className="flex items-center justify-center gap-2 text-destructive font-mono font-bold text-xl">
                 {countdown.days > 0 && <span>{countdown.days}d</span>}
                 <span>{countdown.hours.toString().padStart(2, '0')}h</span>
                 <span>{countdown.minutes.toString().padStart(2, '0')}m</span>
                 <span>{countdown.seconds.toString().padStart(2, '0')}s</span>
-                <span className="text-sm font-normal">late</span>
+                <span className="text-sm font-normal ml-1">late</span>
               </div>
             </div>
             
             {/* XP Penalty Warning */}
-            <p className="text-xs text-destructive/80 text-center mb-3 italic">
+            <p className="text-xs text-center text-destructive font-medium">
               ⚠️ Every 100 minutes late eats 10 xp!
             </p>
           </div>
           
           <Button 
             variant="destructive" 
-            size="sm"
+            size="lg"
             onClick={() => navigate(`/assignment/${assignment.id}`)}
-            className="flex-shrink-0"
+            className="flex-shrink-0 font-bold shadow-lg hover:shadow-xl"
           >
             Start Now
           </Button>

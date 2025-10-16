@@ -326,6 +326,9 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
         );
 
         // Create assignment with validation metadata
+        const dueDate = new Date(dayDate);
+        dueDate.setHours(23, 59, 59, 999);
+        
         const { data: newAssignment, error: assignmentError } = await supabase
           .from('assignments')
           .insert({
@@ -334,7 +337,7 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
             week_id: curriculumWeek.id,
             day_of_week: day.day,
             assigned_date: dayDate.toISOString().split('T')[0],
-            due_at: new Date(dayDate.setHours(23, 59, 59)).toISOString(),
+            due_at: dueDate.toISOString(),
             validation_metadata: matchingGateResult ? {
               approval_status: matchingGateResult.approval_status,
               alignment_confidence: matchingGateResult.alignment_confidence,
