@@ -5,7 +5,6 @@ import { BookOpen, CheckSquare, FileText, ChevronDown, ChevronRight } from 'luci
 import { AssignmentContentRenderer } from './AssignmentContentRenderer';
 import { TextToSpeech } from './TextToSpeech';
 import { cleanMarkdown } from '@/utils/textFormatting';
-import { Button } from './ui/button';
 
 interface InstructionsPanelProps {
   content: any;
@@ -36,18 +35,16 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
             onOpenChange={() => toggleSection('instructions')}
           >
             <CardHeader className="pb-3">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0 hover:bg-transparent">
-                  <CardTitle className="flex items-center gap-3 text-lg">
-                    <CheckSquare className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span>What You'll Do</span>
-                  </CardTitle>
-                  {openSections.instructions ? (
-                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </Button>
+              <CollapsibleTrigger className="w-full flex items-center justify-between cursor-pointer group">
+                <CardTitle className="flex items-center gap-3 text-lg">
+                  <CheckSquare className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>What You'll Do</span>
+                </CardTitle>
+                {openSections.instructions ? (
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-hover:text-foreground" />
+                ) : (
+                  <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:text-foreground" />
+                )}
               </CollapsibleTrigger>
             </CardHeader>
             <CollapsibleContent>
@@ -72,18 +69,16 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
             onOpenChange={() => toggleSection('readings')}
           >
             <CardHeader className="pb-3">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0 hover:bg-transparent">
-                  <CardTitle className="flex items-center gap-3 text-lg">
-                    <BookOpen className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                    <span>Required Reading</span>
-                  </CardTitle>
-                  {openSections.readings ? (
-                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </Button>
+              <CollapsibleTrigger className="w-full flex items-center justify-between cursor-pointer group">
+                <CardTitle className="flex items-center gap-3 text-lg">
+                  <BookOpen className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                  <span>Required Reading</span>
+                </CardTitle>
+                {openSections.readings ? (
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-hover:text-foreground" />
+                ) : (
+                  <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:text-foreground" />
+                )}
               </CollapsibleTrigger>
             </CardHeader>
             <CollapsibleContent>
@@ -138,18 +133,16 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
             onOpenChange={() => toggleSection('activities')}
           >
             <CardHeader className="pb-3">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0 hover:bg-transparent">
-                  <CardTitle className="flex items-center gap-3 text-lg">
-                    <FileText className="h-5 w-5 text-green-500 flex-shrink-0" />
-                    <span>Step-by-Step Activities</span>
-                  </CardTitle>
-                  {openSections.activities ? (
-                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </Button>
+              <CollapsibleTrigger className="w-full flex items-center justify-between cursor-pointer group">
+                <CardTitle className="flex items-center gap-3 text-lg">
+                  <FileText className="h-5 w-5 text-green-500 flex-shrink-0" />
+                  <span>Step-by-Step Activities</span>
+                </CardTitle>
+                {openSections.activities ? (
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-hover:text-foreground" />
+                ) : (
+                  <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:text-foreground" />
+                )}
               </CollapsibleTrigger>
             </CardHeader>
             <CollapsibleContent>
