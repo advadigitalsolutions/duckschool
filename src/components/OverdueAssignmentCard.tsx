@@ -24,8 +24,8 @@ export function OverdueAssignmentCard({ assignment }: OverdueAssignmentCardProps
       const dueDate = new Date(assignment.due_at);
       const now = new Date();
       
-      // Check if date is valid and not unreasonably old (more than 1 year)
-      if (isNaN(dueDate.getTime()) || (now.getTime() - dueDate.getTime()) > (365 * 24 * 60 * 60 * 1000)) {
+      // Check if date is valid
+      if (isNaN(dueDate.getTime())) {
         setIsValidDate(false);
         return;
       }
@@ -51,10 +51,6 @@ export function OverdueAssignmentCard({ assignment }: OverdueAssignmentCardProps
   
   const course = assignment.curriculum_items?.courses;
   
-  if (!isValidDate) {
-    return null; // Don't show if date is invalid
-  }
-  
   return (
     <div className="border-l-4 border-destructive bg-destructive/5 rounded-md p-3 hover:bg-destructive/10 transition-colors">
       <div className="flex items-center justify-between gap-4">
@@ -70,13 +66,17 @@ export function OverdueAssignmentCard({ assignment }: OverdueAssignmentCardProps
             <h3 className="font-semibold text-sm truncate">
               {assignment.curriculum_items?.title || 'Untitled Assignment'}
             </h3>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="text-xs font-mono text-destructive font-medium">
-                {countdown.days > 0 && `${countdown.days}d `}
-                {countdown.hours}h {countdown.minutes}m {countdown.seconds}s late
-              </span>
-              <span className="text-xs text-muted-foreground">-10 XP per 100min</span>
-            </div>
+            {isValidDate ? (
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-xs font-mono text-destructive font-medium">
+                  {countdown.days > 0 && `${countdown.days}d `}
+                  {countdown.hours}h {countdown.minutes}m {countdown.seconds}s late
+                </span>
+                <span className="text-xs text-muted-foreground">-10 XP per 100min</span>
+              </div>
+            ) : (
+              <span className="text-xs text-destructive mt-1 block">No due date set</span>
+            )}
           </div>
         </div>
         <Button 
