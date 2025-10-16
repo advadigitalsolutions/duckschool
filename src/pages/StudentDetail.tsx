@@ -52,7 +52,6 @@ export default function StudentDetail() {
   const [loading, setLoading] = useState(true);
   const [expandedAssignments, setExpandedAssignments] = useState<Set<string>>(new Set());
   const [showArchived, setShowArchived] = useState(false);
-  const [processingSession, setProcessingSession] = useState(false);
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
 
   useEffect(() => {
@@ -132,33 +131,6 @@ export default function StudentDetail() {
     });
   };
 
-  const handleProcessSession = async () => {
-    if (!window.confirm('This will update the student profile and recreate courses based on the curriculum planning conversation. Continue?')) {
-      return;
-    }
-
-    setProcessingSession(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('process-curriculum-session', {
-        body: JSON.stringify({ studentId: id }),
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (error) throw error;
-
-      toast.success('Profile updated successfully! Refreshing...');
-      
-      // Reload the student data and courses
-      await fetchStudentData();
-    } catch (error: any) {
-      console.error('Error processing session:', error);
-      toast.error('Error processing session: ' + (error?.message || 'Unknown error'));
-    } finally {
-      setProcessingSession(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -212,24 +184,7 @@ export default function StudentDetail() {
         {/* Student Info Card */}
         <Card className="mb-8">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Student Information</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleProcessSession}
-                disabled={processingSession}
-              >
-                {processingSession ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                    Processing...
-                  </>
-                ) : (
-                  'Update from Planning Session'
-                )}
-              </Button>
-            </div>
+            <CardTitle>Student Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -259,27 +214,6 @@ export default function StudentDetail() {
           </CardContent>
         </Card>
 
-        {/* Processing Overlay */}
-        {processingSession && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-            <Card className="w-96">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                  <div className="text-center">
-                    <p className="font-semibold">Processing Curriculum Planning Session</p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Creating courses and generating assessments...
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      This may take a few minutes
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Tabs */}
         <Tabs defaultValue="this-week" className="space-y-4">
