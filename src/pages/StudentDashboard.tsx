@@ -475,13 +475,41 @@ export default function StudentDashboard() {
   }
   const isDemoUser = localStorage.getItem('isDemoUser') === 'true';
   const demoRole = localStorage.getItem('demoRole');
+  
+  const handleDemoSwitch = async () => {
+    // Switch to parent demo
+    localStorage.setItem('demoRole', 'parent');
+    localStorage.setItem('showDemoWizard', 'true');
+    
+    // Sign out and sign in as demo parent
+    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: 'parent@demo.com',
+      password: 'demo123'
+    });
+    
+    if (!error) {
+      navigate('/parent');
+    }
+  };
 
   return <PomodoroProvider studentId={studentDbId || undefined}>
       {isDemoUser && demoRole === 'student' && <DemoWizard role="student" />}
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
       
-      {headerSettings && <CustomizableHeader student={student} settings={headerSettings} onSaveSettings={saveHeaderSettings} onSignOut={handleSignOut} onDemoCelebration={() => setShowConfetti(true)} />}
+      {headerSettings && (
+        <CustomizableHeader 
+          student={student} 
+          settings={headerSettings} 
+          onSaveSettings={saveHeaderSettings} 
+          onSignOut={handleSignOut} 
+          onDemoCelebration={() => setShowConfetti(true)} 
+          showDemoSwitch={isDemoUser}
+          demoSwitchLabel="Switch to Educator Demo"
+          onDemoSwitch={handleDemoSwitch}
+        />
+      )}
 
       <div className="container mx-auto p-4 md:p-8 max-w-4xl">
         {/* Overdue Assignments - At the very top */}

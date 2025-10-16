@@ -347,6 +347,23 @@ export default function ParentDashboard() {
 
   const isDemoUser = localStorage.getItem('isDemoUser') === 'true';
   const demoRole = localStorage.getItem('demoRole');
+  
+  const handleDemoSwitch = async () => {
+    // Switch to student demo
+    localStorage.setItem('demoRole', 'student');
+    localStorage.setItem('showDemoWizard', 'true');
+    
+    // Sign out and sign in as demo student
+    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: 'student@demo.com',
+      password: 'demo123'
+    });
+    
+    if (!error) {
+      navigate('/student');
+    }
+  };
 
   return (
     <PomodoroProvider>
@@ -361,6 +378,9 @@ export default function ParentDashboard() {
             onSaveSettings={saveHeaderSettings}
             onSignOut={handleSignOut}
             onDemoCelebration={() => setShowConfetti(true)}
+            showDemoSwitch={isDemoUser}
+            demoSwitchLabel="Switch to Student Demo"
+            onDemoSwitch={handleDemoSwitch}
           />
         )}
 

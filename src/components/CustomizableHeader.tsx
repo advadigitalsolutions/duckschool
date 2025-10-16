@@ -71,6 +71,9 @@ interface CustomizableHeaderProps {
   onSaveSettings: (settings: HeaderSettings) => void;
   onSignOut: () => void;
   onDemoCelebration: () => void;
+  showDemoSwitch?: boolean;
+  demoSwitchLabel?: string;
+  onDemoSwitch?: () => void;
 }
 
 export function CustomizableHeader({
@@ -79,6 +82,9 @@ export function CustomizableHeader({
   onSaveSettings,
   onSignOut,
   onDemoCelebration,
+  showDemoSwitch = false,
+  demoSwitchLabel = 'Switch Demo',
+  onDemoSwitch,
 }: CustomizableHeaderProps) {
   const [showModal, setShowModal] = useState(false);
   const [modalInitialTab, setModalInitialTab] = useState<string>('display');
@@ -756,6 +762,9 @@ export function CustomizableHeader({
                 onSignOut={onSignOut}
                 onOpenProfileSettings={() => navigate('/student/profile')}
                 onOpenHeaderSettings={() => handleOpenSettingsAtTab('display')}
+                showDemoSwitch={showDemoSwitch}
+                demoSwitchLabel={demoSwitchLabel}
+                onDemoSwitch={onDemoSwitch}
               />
             </div>
           </div>
@@ -845,9 +854,12 @@ interface ProfileAvatarMenuProps {
   onSignOut: () => void;
   onOpenProfileSettings: () => void;
   onOpenHeaderSettings: () => void;
+  showDemoSwitch?: boolean;
+  demoSwitchLabel?: string;
+  onDemoSwitch?: () => void;
 }
 
-function ProfileAvatarMenu({ student, onSignOut, onOpenProfileSettings, onOpenHeaderSettings }: ProfileAvatarMenuProps) {
+function ProfileAvatarMenu({ student, onSignOut, onOpenProfileSettings, onOpenHeaderSettings, showDemoSwitch, demoSwitchLabel, onDemoSwitch }: ProfileAvatarMenuProps) {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -891,6 +903,15 @@ function ProfileAvatarMenu({ student, onSignOut, onOpenProfileSettings, onOpenHe
           Header Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        {showDemoSwitch && onDemoSwitch && (
+          <>
+            <DropdownMenuItem onClick={onDemoSwitch}>
+              <User className="mr-2 h-4 w-4" />
+              {demoSwitchLabel}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuItem onClick={onSignOut} className="text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
           Log Out

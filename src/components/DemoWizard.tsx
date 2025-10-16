@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, GraduationCap, Calendar, BookOpen, BarChart, MessageSquare, Trophy, CheckCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ChevronRight, GraduationCap, Calendar, BookOpen, BarChart, MessageSquare, Trophy, CheckCircle, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface DemoWizardProps {
   role: 'parent' | 'student';
@@ -11,6 +15,11 @@ interface DemoWizardProps {
 export const DemoWizard = ({ role }: DemoWizardProps) => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const [parentName, setParentName] = useState('');
+  const [parentEmail, setParentEmail] = useState('');
+  const [studentName, setStudentName] = useState('');
+  const [educatorName, setEducatorName] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     const showWizard = localStorage.getItem('showDemoWizard');
@@ -24,7 +33,63 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
     setOpen(false);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Validate and save info on first step
+    if (step === 0) {
+      if (role === 'parent') {
+        if (!parentName.trim() || !parentEmail.trim() || !studentName.trim()) {
+          toast({
+            title: "Missing information",
+            description: "Please fill in all fields to continue.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Save to database
+        try {
+          // @ts-ignore - demo_inquiries table exists but may not be in types
+          await supabase.from('demo_inquiries').insert({
+            name: parentName,
+            email: parentEmail,
+            role: 'parent'
+          });
+          
+          // Store in localStorage for session
+          localStorage.setItem('demo_parent_name', parentName);
+          localStorage.setItem('demo_student_name', studentName);
+        } catch (error) {
+          console.error('Error saving demo inquiry:', error);
+        }
+      } else {
+        // Student demo
+        if (!studentName.trim()) {
+          toast({
+            title: "Missing information",
+            description: "Please enter your name to continue.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Save to database
+        try {
+          // @ts-ignore - demo_inquiries table exists but may not be in types
+          await supabase.from('demo_inquiries').insert({
+            name: studentName,
+            email: '', // No email for student demo
+            role: 'student'
+          });
+          
+          // Store in localStorage for session
+          localStorage.setItem('demo_student_name', studentName);
+          localStorage.setItem('demo_educator_name', educatorName || studentName);
+        } catch (error) {
+          console.error('Error saving demo inquiry:', error);
+        }
+      }
+    }
+    
     if (step < (role === 'parent' ? parentSteps : studentSteps).length - 1) {
       setStep(step + 1);
     } else {
@@ -34,19 +99,64 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
 
   const parentSteps = [
     {
-      title: "Welcome to Duckschool, Parent Demo!",
-      description: "Let's take a quick tour of how you can manage your homeschool.",
+      title: "Welcome to Duckschool!",
+      description: "Let's get started with your information",
       icon: GraduationCap,
       content: (
-        <div className="space-y-3">
-          <p>You're logged in as <strong>Sarah Johnson</strong>, a homeschool parent managing your child's education.</p>
-          <p>Your demo account includes:</p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Your student: Emma (8th Grade)</li>
-            <li>Active courses in Math, Science, and History</li>
-            <li>Pre-scheduled assignments and activities</li>
-            <li>Progress tracking and analytics</li>
-          </ul>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">We'd love to know a bit about you to personalize your demo experience.</p>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="parent-name">Your Name</Label>
+              <Input 
+                id="parent-name" 
+                value={parentName}
+                onChange={(e) => setParentName(e.target.value)}
+                placeholder="Enter your name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="parent-email">Your Email</Label>
+              <Input 
+                id="parent-email" 
+                type="email"
+                value={parentEmail}
+                onChange={(e) => setParentEmail(e.target.value)}
+                placeholder="Enter your email"
+              />
+            </div>
+            <div>
+              <Label htmlFor="student-name">Your Student's Name</Label>
+              <Input 
+                id="student-name" 
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                placeholder="Enter student's name"
+              />
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "The Future of Education is Here",
+      description: "Beyond automation—true personalization",
+      icon: Sparkles,
+      content: (
+        <div className="space-y-4">
+          <p className="font-semibold text-lg">Welcome to the most revolutionary approach to education available today.</p>
+          <p>Duckschool isn't just a robust automated platform—it's an embodiment of mastery-based learning and lifelong education philosophy, powered by modern technology to deliver something previously impossible: <strong>Just-In-Time Curriculum</strong>.</p>
+          <div className="bg-primary/5 p-4 rounded-lg space-y-3">
+            <p className="text-sm font-medium">Every single lesson reconfigures itself based on:</p>
+            <ul className="text-sm space-y-1.5 pl-4">
+              <li>✓ Real-time assessment of student needs</li>
+              <li>✓ Individual learning styles & preferences</li>
+              <li>✓ Your teaching methodology</li>
+              <li>✓ State standards alignment</li>
+              <li>✓ Available resources & constraints</li>
+            </ul>
+          </div>
+          <p className="text-sm">The result? A truly custom educational experience that adapts moment-by-moment, ensuring mastery before progression—the holy grail of pedagogy, now finally achievable.</p>
         </div>
       )
     },
@@ -120,19 +230,54 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
 
   const studentSteps = [
     {
-      title: "Welcome to Duckschool, Student Demo!",
-      description: "Let's explore your personalized learning space.",
+      title: "Welcome to Duckschool!",
+      description: "Let's get to know you",
       icon: GraduationCap,
       content: (
-        <div className="space-y-3">
-          <p>You're logged in as <strong>Emma Johnson</strong>, an 8th grade student.</p>
-          <p>Your demo account includes:</p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Active courses in Algebra, Biology, and US History</li>
-            <li>Today's assignments ready to complete</li>
-            <li>XP rewards system with redeemable prizes</li>
-            <li>AI learning coach to help you succeed</li>
-          </ul>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">Tell us a bit about yourself to personalize your demo.</p>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="student-name-input">Your Name</Label>
+              <Input 
+                id="student-name-input" 
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                placeholder="Enter your name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="educator-name">Your Educator's Name</Label>
+              <Input 
+                id="educator-name" 
+                value={educatorName}
+                onChange={(e) => setEducatorName(e.target.value)}
+                placeholder="Or enter your own name if self-guided"
+              />
+              <p className="text-xs text-muted-foreground mt-1">If you're here for self-guided education, you can enter your own name</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "The Future of Education is Here",
+      description: "Learning that adapts to you",
+      icon: Sparkles,
+      content: (
+        <div className="space-y-4">
+          <p className="font-semibold text-lg">Experience the most modern, supportive learning platform available.</p>
+          <p>Duckschool uses cutting-edge AI to create <strong>Just-In-Time Curriculum</strong>—lessons that adapt to your exact needs, learning style, and pace.</p>
+          <div className="bg-primary/5 p-4 rounded-lg space-y-3">
+            <p className="text-sm font-medium">Your learning experience automatically adjusts based on:</p>
+            <ul className="text-sm space-y-1.5 pl-4">
+              <li>✓ Your current understanding & knowledge gaps</li>
+              <li>✓ How you learn best (visual, hands-on, etc.)</li>
+              <li>✓ Your progress and mastery level</li>
+              <li>✓ Real-time AI coaching & support</li>
+            </ul>
+          </div>
+          <p className="text-sm">Master skills at your own pace with a system designed to ensure you truly understand before moving forward—not just complete assignments.</p>
         </div>
       )
     },
