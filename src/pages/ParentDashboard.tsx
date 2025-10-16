@@ -36,6 +36,7 @@ import { FocusPatternsDashboard } from '@/components/FocusPatternsDashboard';
 import { SmartScheduleCalendar } from '@/components/SmartScheduleCalendar';
 import { DemoWizard } from '@/components/DemoWizard';
 import { ParentTodoList } from '@/components/ParentTodoList';
+import { SetupDemoButton } from '@/components/SetupDemoButton';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -364,6 +365,19 @@ export default function ParentDashboard() {
         )}
 
       <div className="container mx-auto p-4 md:p-8">
+        {/* Demo Setup Button */}
+        {isDemoUser && demoRole === 'parent' && students.length === 0 && (
+          <div className="mb-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-lg">Welcome to the Demo!</h3>
+                <p className="text-sm text-muted-foreground">Click below to populate your demo account with sample data</p>
+              </div>
+              <SetupDemoButton />
+            </div>
+          </div>
+        )}
+        
         {/* KPI Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
           <Card>
