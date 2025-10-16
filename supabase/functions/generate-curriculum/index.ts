@@ -18,6 +18,67 @@ const PEDAGOGY_PROMPTS: Record<string, string> = {
   eclectic: "Combine multiple pedagogical approaches based on what works best for this student. Adapt methods to fit the specific standard and learning objective.",
 };
 
+/**
+ * Extract grade level from a standard code
+ * Examples:
+ * - "3.NBT.A.1" -> 3 (elementary)
+ * - "K.CC.A.1" -> 0 (kindergarten)
+ * - "HSA.REI.B.3" -> 12 (high school)
+ * - "8.EE.A.1" -> 8 (middle school)
+ */
+function extractGradeFromStandardCode(code: string): number | null {
+  if (!code) return null;
+  
+  // Check for high school prefixes (HSA, HSG, HSN, HSS, HSF, HS-)
+  if (code.match(/^HS[AGNFS][\.\-]/i) || code.startsWith('HS-')) {
+    return 12; // Treat all high school as grade 12
+  }
+  
+  // Check for kindergarten
+  if (code.match(/^K[\.\-]/i)) {
+    return 0;
+  }
+  
+  // Check for numeric grade prefix (1-12)
+  const gradeMatch = code.match(/^(\d{1,2})[\.\-]/);
+  if (gradeMatch) {
+    const grade = parseInt(gradeMatch[1]);
+    if (grade >= 0 && grade <= 12) {
+      return grade;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Check if a standard code is appropriate for a target grade level
+ */
+function isStandardAppropriateForGrade(standardCode: string, targetGrade: number, tolerance: number = 1): boolean {
+  const standardGrade = extractGradeFromStandardCode(standardCode);
+  
+  // If we can't determine the grade, be conservative and reject it
+  if (standardGrade === null) {
+    console.log(`⚠️ Cannot determine grade for standard: ${standardCode}`);
+    return false;
+  }
+  
+  // For high school (9-12), allow all high school standards
+  if (targetGrade >= 9 && standardGrade >= 9) {
+    return true;
+  }
+  
+  // For other grades, allow within tolerance range
+  const difference = Math.abs(targetGrade - standardGrade);
+  const appropriate = difference <= tolerance;
+  
+  if (!appropriate) {
+    console.log(`❌ Standard ${standardCode} (grade ${standardGrade}) too far from target grade ${targetGrade}`);
+  }
+  
+  return appropriate;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -122,21 +183,44 @@ serve(async (req) => {
           // Filter for grade ranges that include our grade
           data = allGradeData.filter((s: any) => {
             const gradeBand = s.grade_band;
+            
+            // First check: does the grade band include our target grade?
+            let inGradeBand = false;
             if (gradeBand.includes('-')) {
               const [startStr, endStr] = gradeBand.split('-');
               // Handle 'K' as kindergarten (grade 0)
               const start = startStr.toUpperCase() === 'K' ? 0 : parseInt(startStr);
               const end = parseInt(endStr);
-              const matches = gradeNum >= start && gradeNum <= end;
-              if (matches) {
-                console.log(`✅ Matched grade band: ${gradeBand} (grade ${gradeNum})`);
-              }
-              return matches;
+              inGradeBand = gradeNum >= start && gradeNum <= end;
+            } else {
+              inGradeBand = parseInt(gradeBand) === gradeNum;
             }
-            return parseInt(gradeBand) === gradeNum;
+            
+            if (!inGradeBand) return false;
+            
+            // Second check: does the standard CODE indicate an appropriate grade?
+            // This catches cases where "K-12" band includes elementary standards
+            const codeGrade = extractGradeFromStandardCode(s.code);
+            
+            // For high school (9-12), ONLY accept high school standards
+            if (gradeNum >= 9) {
+              if (codeGrade === null || codeGrade < 9) {
+                console.log(`🚫 Rejecting ${s.code}: grade ${codeGrade} too low for grade ${gradeNum}`);
+                return false;
+              }
+            }
+            
+            // For other grades, be more lenient but still filter
+            if (codeGrade !== null && Math.abs(codeGrade - gradeNum) > 2) {
+              console.log(`🚫 Rejecting ${s.code}: grade ${codeGrade} too far from target ${gradeNum}`);
+              return false;
+            }
+            
+            console.log(`✅ Accepted: ${s.code} (band: ${gradeBand}, code grade: ${codeGrade}, target: ${gradeNum})`);
+            return true;
           });
           
-          console.log('✨ Filtered standards:', data.length);
+          console.log(`✨ Filtered standards: ${data.length} (from ${allGradeData.length} total)`);
         }
       }
       
@@ -307,6 +391,27 @@ ABSOLUTE REQUIREMENTS - VIOLATIONS WILL BE REJECTED:
 5. Mathematical concepts must be at the ${course.subject === 'Mathematics' && parseInt(gradeLevel) >= 9 ? 'Algebra I, Geometry, or higher level' : 'appropriate grade level'}
 6. Language and complexity must match a ${gradeLevel === '10' ? 'teenage' : 'age-appropriate'} reading level
 
+${parseInt(gradeLevel) >= 9 ? `
+🚨 HIGH SCHOOL STANDARDS EXAMPLES:
+✅ CORRECT for Grade ${gradeLevel}:
+- HSA.REI.B.3 (Algebra - solving linear equations)
+- HSG.CO.A.1 (Geometry - congruence)
+- HSF.IF.C.7 (Functions - graphing)
+- HSN.RN.A.1 (Numbers - rational exponents)
+- HSS.ID.A.1 (Statistics - interpreting data)
+
+❌ WRONG for Grade ${gradeLevel} - DO NOT USE:
+- 3.NBT.A.1 (Grade 3 - place value)
+- 4.OA.A.3 (Grade 4 - multiplication)
+- 5.NF.B.3 (Grade 5 - fractions)
+- 6.RP.A.1 (Grade 6 - ratios)
+- 7.EE.B.4 (Grade 7 - equations)
+- 8.EE.A.1 (Grade 8 - exponents)
+- K.CC.A.1 (Kindergarten - counting)
+
+If a standard code starts with a single digit (K, 1-8), it is TOO ELEMENTARY for high school.
+ONLY use standards starting with "HS" for high school students.` : ''}
+
 ⚠️ RED FLAGS TO AVOID:
 - Counting exercises (too elementary)
 - Single-digit arithmetic (too elementary)
@@ -387,6 +492,28 @@ ABSOLUTE REQUIREMENTS - VIOLATIONS WILL BE REJECTED:
 5. Mathematical concepts must be at the ${course.subject === 'Mathematics' && parseInt(gradeLevel) >= 9 ? 'Algebra I, Geometry, or higher level' : 'appropriate grade level'}
 6. Language and complexity must match a ${gradeLevel === '10' ? 'teenage' : 'age-appropriate'} reading level
 7. Use ONLY standards from the provided list that match the grade level
+
+${parseInt(gradeLevel) >= 9 ? `
+🚨 HIGH SCHOOL STANDARDS EXAMPLES:
+✅ CORRECT for Grade ${gradeLevel}:
+- HSA.REI.B.3 (Algebra - solving linear equations)
+- HSG.CO.A.1 (Geometry - congruence)
+- HSF.IF.C.7 (Functions - graphing)
+- HSN.RN.A.1 (Numbers - rational exponents)
+- HSS.ID.A.1 (Statistics - interpreting data)
+
+❌ WRONG for Grade ${gradeLevel} - DO NOT USE:
+- 3.NBT.A.1 (Grade 3 - place value)
+- 4.OA.A.3 (Grade 4 - multiplication)
+- 5.NF.B.3 (Grade 5 - fractions)
+- 6.RP.A.1 (Grade 6 - ratios)
+- 7.EE.B.4 (Grade 7 - equations)
+- 8.EE.A.1 (Grade 8 - exponents)
+- K.CC.A.1 (Kindergarten - counting)
+
+The provided standards list has been PRE-FILTERED for grade ${gradeLevel}.
+If you see any standards with K-8 prefixes, it's an ERROR - report it and skip them.
+ONLY use standards starting with "HS" for high school students.` : ''}
 
 ⚠️ RED FLAGS TO AVOID:
 - Counting exercises (too elementary)
@@ -543,9 +670,42 @@ For each standard, suggest 1-2 high-quality assignments that would effectively c
       throw new Error('No tool call returned from AI and could not extract from content');
     }
 
-    const suggestions = JSON.parse(toolCall.function.arguments).suggestions;
+    let suggestions = JSON.parse(toolCall.function.arguments).suggestions;
 
     console.log(`Generated ${suggestions.length} assignment suggestions for course ${courseId} (${useGoalsBasedGeneration ? 'goals-based' : 'standards-based'})`);
+
+    // POST-GENERATION VALIDATION: Filter out suggestions with inappropriate grade-level standards
+    const targetGrade = parseInt(gradeLevel) || 10;
+    const rejectedSuggestions: any[] = [];
+    
+    suggestions = suggestions.filter((suggestion: any) => {
+      const standardCode = suggestion.standardCode;
+      
+      // Skip validation for goals-based generation (no standard codes)
+      if (!standardCode || useGoalsBasedGeneration) {
+        return true;
+      }
+      
+      const isAppropriate = isStandardAppropriateForGrade(standardCode, targetGrade, 0);
+      
+      if (!isAppropriate) {
+        console.log(`🚫 REJECTED SUGGESTION: "${suggestion.title}" uses inappropriate standard ${standardCode} for grade ${gradeLevel}`);
+        rejectedSuggestions.push({
+          title: suggestion.title,
+          standard: standardCode,
+          reason: `Standard grade level doesn't match target grade ${gradeLevel}`
+        });
+        return false;
+      }
+      
+      return true;
+    });
+    
+    if (rejectedSuggestions.length > 0) {
+      console.log(`⚠️ Rejected ${rejectedSuggestions.length} inappropriate suggestions:`, rejectedSuggestions);
+    }
+    
+    console.log(`✅ Validated ${suggestions.length} appropriate suggestions for grade ${gradeLevel}`);
 
     return new Response(JSON.stringify({ 
       suggestions,
@@ -553,7 +713,13 @@ For each standard, suggest 1-2 high-quality assignments that would effectively c
       pedagogy,
       framework,
       generationType: useGoalsBasedGeneration ? 'goals' : 'standards',
-      goals: useGoalsBasedGeneration ? courseGoals : null
+      goals: useGoalsBasedGeneration ? courseGoals : null,
+      validationStats: {
+        generated: suggestions.length + rejectedSuggestions.length,
+        accepted: suggestions.length,
+        rejected: rejectedSuggestions.length,
+        rejectedReasons: rejectedSuggestions
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
