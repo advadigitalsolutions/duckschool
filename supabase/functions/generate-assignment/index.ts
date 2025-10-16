@@ -182,9 +182,9 @@ serve(async (req) => {
       }
     }
     
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY not configured');
     }
 
     console.log('Generating assignment for:', { 
@@ -482,14 +482,14 @@ CRITICAL:
 - All multiple-choice questions MUST include "I don't know" as the last option in the options array.
 - The teacher_guide must be 100% specific to this lesson topic and student. No generic suggestions.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -583,14 +583,14 @@ Follow these constraints STRICTLY. Do not include any banned codes or terms in c
 `;
         
         // Regenerate with enhanced prompt
-        const retryResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const retryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            model: 'gpt-5-mini-2025-08-07',
             messages: [
               { role: 'system', content: fixesInstruction + '\n\n' + systemPrompt },
               { role: 'user', content: userPrompt }
