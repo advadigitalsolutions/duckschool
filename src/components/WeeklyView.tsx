@@ -112,7 +112,7 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Weekly Overview
+                This Week's Schedule
               </CardTitle>
               {weeklyData?.theme && (
                 <CardDescription className="mt-2">
@@ -120,16 +120,13 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
                 </CardDescription>
               )}
             </div>
-            <Badge variant="outline" className="text-lg">
-              Week {weeklyData?.week_number || '—'}
-            </Badge>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Weekly Progress</span>
+                <span className="text-sm text-muted-foreground">Progress Meter</span>
                 <span className="text-sm font-medium">{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
