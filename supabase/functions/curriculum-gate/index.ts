@@ -193,37 +193,37 @@ serve(async (req) => {
       confidence = "low";
     }
 
-    // Step 5: Enhanced Rigor Analysis
+    // Step 5: Enhanced Rigor Analysis (with error handling)
     if (validCodes.length > 0 && context.mode === "generation") {
-      const gradeNum = parseInt(context.grade_band) || 12;
-      const rigorAnalysis = analyzeRigor(lesson_json, validCodes, gradeNum);
-      
-      console.log("📊 Rigor analysis:", {
-        overall_score: rigorAnalysis.overall_score.toFixed(2),
-        breakdown: rigorAnalysis.breakdown,
-        recommendations: rigorAnalysis.recommendations
-      });
-      
-      console.log("📊 Rigor analysis:", {
-        overall_score: rigorAnalysis.overall_score.toFixed(2),
-        breakdown: rigorAnalysis.breakdown,
-        recommendations: rigorAnalysis.recommendations
-      });
-      
-      if (rigorAnalysis.overall_score < 0.6) {
-        findings.push(`Rigor score too low: ${rigorAnalysis.overall_score.toFixed(2)}/1.0`);
-        findings.push(...rigorAnalysis.recommendations);
+      try {
+        const gradeNum = parseInt(context.grade_band) || 12;
+        const rigorAnalysis = analyzeRigor(lesson_json, validCodes, gradeNum);
         
-        if (rigorAnalysis.overall_score < 0.4) {
-          status = "rejected";
-        } else if (status === "approved") {
-          status = "corrected";
-          corrections.push("Enhanced rigor: " + rigorAnalysis.recommendations[0]);
-        }
+        console.log("📊 Rigor analysis:", {
+          overall_score: rigorAnalysis.overall_score.toFixed(2),
+          breakdown: rigorAnalysis.breakdown,
+          recommendations: rigorAnalysis.recommendations
+        });
         
-        if (confidence === "high") {
-          confidence = rigorAnalysis.overall_score >= 0.5 ? "medium" : "low";
+        if (rigorAnalysis.overall_score < 0.6) {
+          findings.push(`Rigor score too low: ${rigorAnalysis.overall_score.toFixed(2)}/1.0`);
+          findings.push(...rigorAnalysis.recommendations);
+          
+          if (rigorAnalysis.overall_score < 0.4) {
+            status = "rejected";
+          } else if (status === "approved") {
+            status = "corrected";
+            corrections.push("Enhanced rigor: " + rigorAnalysis.recommendations[0]);
+          }
+          
+          if (confidence === "high") {
+            confidence = rigorAnalysis.overall_score >= 0.5 ? "medium" : "low";
+          }
         }
+      } catch (error) {
+        console.error("⚠️ Rigor analysis failed, skipping rigor check:", error);
+        findings.push("Rigor analysis unavailable (system error)");
+        // Continue validation without rigor scoring
       }
     }
 

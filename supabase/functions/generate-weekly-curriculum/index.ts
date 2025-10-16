@@ -237,11 +237,12 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
           if (gateResponse.ok) {
             const gateResult = await gateResponse.json();
             
-            // Collect gate results for weekly summary
+            // Collect gate results for weekly summary, including assignment title for matching
             dayGateResults.push({
               approval_status: gateResult.approval_status,
               alignment_confidence: gateResult.alignment_confidence,
-              findings: gateResult.findings || []
+              findings: gateResult.findings || [],
+              _assignmentTitle: assignment.title // Helper for matching later
             });
             
             if (gateResult.approval_status === "rejected") {
@@ -319,7 +320,12 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
           continue;
         }
 
-        // Create assignment
+        // Find matching validation result for this assignment
+        const matchingGateResult = dayGateResults.find(
+          (result: any) => result._assignmentTitle === assignment.title
+        );
+
+        // Create assignment with validation metadata
         const { data: newAssignment, error: assignmentError } = await supabase
           .from('assignments')
           .insert({
@@ -328,7 +334,13 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
             week_id: curriculumWeek.id,
             day_of_week: day.day,
             assigned_date: dayDate.toISOString().split('T')[0],
-            due_at: new Date(dayDate.setHours(23, 59, 59)).toISOString()
+            due_at: new Date(dayDate.setHours(23, 59, 59)).toISOString(),
+            validation_metadata: matchingGateResult ? {
+              approval_status: matchingGateResult.approval_status,
+              alignment_confidence: matchingGateResult.alignment_confidence,
+              findings: matchingGateResult.findings || [],
+              validated_at: new Date().toISOString()
+            } : null
           })
           .select()
           .single();

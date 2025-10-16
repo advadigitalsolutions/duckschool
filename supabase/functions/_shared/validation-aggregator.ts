@@ -2,6 +2,7 @@ export interface DayGateResult {
   approval_status: 'approved' | 'corrected' | 'rejected' | 'override_approved';
   alignment_confidence: 'high' | 'medium' | 'low';
   findings: string[];
+  _assignmentTitle?: string; // Optional helper for matching during storage
 }
 
 export interface WeekValidationSummary {
