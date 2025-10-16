@@ -34,6 +34,7 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
   const [resources, setResources] = useState<any[]>([]);
   const [notes, setNotes] = useState('');
   const [isSidebarMode, setIsSidebarMode] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const assignmentBody = typeof assignment.curriculum_items?.body === 'string'
     ? JSON.parse(assignment.curriculum_items.body)
@@ -64,6 +65,8 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
       }
     } catch (error) {
       console.error('Error loading progress:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -152,6 +155,14 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
     personalityType: assignment.students?.personality_type,
     learningProfile: assignment.students?.learning_profile
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-6 transition-all duration-300 ${isSidebarMode ? 'mr-96' : ''}`}>
