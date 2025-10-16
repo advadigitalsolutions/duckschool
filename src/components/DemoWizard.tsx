@@ -217,10 +217,10 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
         <div className="space-y-3">
           <p>You're all set! Here's what to try first:</p>
           <ul className="list-disc pl-5 space-y-2">
-            <li>Click on <strong>Emma's profile</strong> to see detailed progress</li>
+            <li>Click on <strong>{studentName}'s profile</strong> to see detailed progress</li>
             <li>Open the <strong>Smart Schedule Calendar</strong> and chat with the AI</li>
             <li>Create a <strong>new course</strong> using the AI curriculum generator</li>
-            <li>Review Emma's <strong>pending submissions</strong> and provide grades</li>
+            <li>Review <strong>{studentName}'s pending submissions</strong> and provide grades</li>
           </ul>
           <p className="text-sm text-muted-foreground mt-4">This is a demo environment. Feel free to experiment—nothing you do here is permanent!</p>
         </div>
