@@ -226,19 +226,29 @@ Deno.serve(async (req) => {
         if (itemsError) throw itemsError;
         console.log(`Created ${createdItems.length} curriculum items for ${course.title}`);
 
-        // Create assignments for the first curriculum item
-        if (createdItems[0]) {
+        // Create assignments for each curriculum item with dates spread across the next 2 weeks
+        const assignmentsToCreate = createdItems.map((item, index) => {
+          const daysAhead = index + 1; // Start from tomorrow
+          const assignDate = new Date(today);
+          assignDate.setDate(assignDate.getDate() + daysAhead);
+          const dueDate = new Date(assignDate);
+          dueDate.setDate(dueDate.getDate() + 1); // Due the next day
+
+          return {
+            curriculum_item_id: item.id,
+            status: 'assigned',
+            due_at: dueDate.toISOString(),
+            assigned_date: assignDate.toISOString().split('T')[0]
+          };
+        });
+
+        if (assignmentsToCreate.length > 0) {
           const { error: assignmentError } = await supabaseClient
             .from('assignments')
-            .insert({
-              curriculum_item_id: createdItems[0].id,
-              status: 'assigned',
-              due_at: tomorrow.toISOString(),
-              assigned_date: today.toISOString().split('T')[0]
-            });
+            .insert(assignmentsToCreate);
 
           if (assignmentError) throw assignmentError;
-          console.log(`Created assignment for ${createdItems[0].title}`);
+          console.log(`Created ${assignmentsToCreate.length} assignments for ${course.title}`);
         }
       }
     }
