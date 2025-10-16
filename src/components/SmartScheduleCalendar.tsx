@@ -661,12 +661,6 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                   </div>
                 )}
 
-                {!selectedAssignment.body?.overview && !selectedAssignment.body?.learning_objectives && (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                    <p>No additional details available for this lesson.</p>
-                  </div>
-                )}
               </div>
 
               {/* Footer Actions - Always visible */}
@@ -680,7 +674,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                   className="flex-1 font-semibold"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Start Lesson
+                  Review Assignment
                 </Button>
                 <Button
                   variant="ghost"
