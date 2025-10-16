@@ -17,6 +17,7 @@ interface Message {
 }
 
 interface AILearningCoachProps {
+  assignment: any; // Full assignment object with title, due_at, etc.
   assignmentId: string;
   studentId: string;
   currentStep: string;
@@ -33,6 +34,7 @@ interface AILearningCoachProps {
 }
 
 export const AILearningCoach: React.FC<AILearningCoachProps> = ({
+  assignment,
   assignmentId,
   studentId,
   currentStep,
@@ -139,6 +141,13 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
           conversationHistory: newMessages.slice(-10), // Last 10 messages for context
           currentStep,
           studentContext,
+          assignment: {
+            title: assignment.curriculum_items?.title || 'Untitled Assignment',
+            due_at: assignment.due_at,
+            status: assignment.status,
+            course: assignment.curriculum_items?.courses?.title,
+            subject: assignment.curriculum_items?.courses?.subject
+          },
           assignmentBody,
           exchangeCount: userMessageCount // Pass exchange count for wrap-up logic
         }

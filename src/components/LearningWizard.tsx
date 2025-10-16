@@ -237,6 +237,7 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
 
       {/* AI Coach - Available on all steps */}
       <AILearningCoach
+        assignment={assignment}
         assignmentId={assignment.id}
         studentId={studentId}
         currentStep={currentStep}

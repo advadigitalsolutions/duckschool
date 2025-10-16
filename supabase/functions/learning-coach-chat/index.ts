@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory, currentStep, studentContext, assignmentBody, exchangeCount = 0 } = await req.json();
+    const { message, conversationHistory, currentStep, studentContext, assignment, assignmentBody, exchangeCount = 0 } = await req.json();
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
@@ -19,7 +19,7 @@ serve(async (req) => {
     }
 
     // Build context-aware system prompt based on current step
-    const systemPrompt = buildSystemPrompt(currentStep, studentContext, assignmentBody, exchangeCount);
+    const systemPrompt = buildSystemPrompt(currentStep, studentContext, assignment, assignmentBody, exchangeCount);
 
     // Prepare messages for OpenAI
     const messages = [
@@ -69,14 +69,22 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(currentStep: string, studentContext: any, assignmentBody: any, exchangeCount: number = 0): string {
+function buildSystemPrompt(currentStep: string, studentContext: any, assignment: any, assignmentBody: any, exchangeCount: number = 0): string {
+  const assignmentContext = assignment 
+    ? `\n\nASSIGNMENT CONTEXT:
+Title: ${assignment.title}
+Course: ${assignment.course || 'Not specified'} - ${assignment.subject || ''}
+Due: ${assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : 'No due date'}
+Status: ${assignment.status || 'In progress'}`
+    : '';
+
   const basePrompt = `You are an AI learning coach helping a student work through an educational assignment. Be encouraging, supportive, and use Socratic questioning to guide learning rather than giving direct answers.
 
 CRITICAL - ADHD-FRIENDLY COMMUNICATION:
 - Keep ALL responses to 2-3 sentences maximum
 - Ask ONE question at a time - never multiple questions
 - Be concise and direct - avoid lengthy explanations
-- Use simple, clear language`;
+- Use simple, clear language${assignmentContext}`;
 
   const studentInfo = studentContext.personalityType 
     ? `\n\nStudent's learning style: ${studentContext.personalityType}`
