@@ -27,9 +27,20 @@ interface SmartScheduleCalendarProps {
   studentId: string;
 }
 
+interface SchedulingBlock {
+  id: string;
+  block_type: string;
+  specific_date: string | null;
+  day_of_week: number | null;
+  start_time: string;
+  end_time: string;
+  reason: string | null;
+}
+
 export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps) => {
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState<ScheduledAssignment[]>([]);
+  const [blocks, setBlocks] = useState<SchedulingBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [scheduling, setScheduling] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -39,7 +50,26 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
 
   useEffect(() => {
     fetchScheduledAssignments();
+    fetchBlocks();
   }, [studentId, selectedDate]);
+
+  const fetchBlocks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('scheduling_blocks')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('active', true);
+
+      if (error) throw error;
+      
+      console.log('📋 Loaded scheduling blocks:', data?.length || 0);
+      setBlocks(data || []);
+    } catch (error: any) {
+      console.error('Error fetching blocks:', error);
+      toast.error('Failed to load scheduling blocks');
+    }
+  };
 
   const fetchScheduledAssignments = async () => {
     try {
@@ -240,6 +270,31 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
     });
   };
 
+  const isSlotBlocked = (date: Date, time: string): SchedulingBlock | null => {
+    const dayOfWeek = date.getDay();
+    const dateStr = date.toISOString().split('T')[0];
+    
+    return blocks.find(block => {
+      // Check if time falls within block's time range
+      const blockStart = block.start_time.substring(0, 5);
+      const blockEnd = block.end_time.substring(0, 5);
+      
+      if (time < blockStart || time >= blockEnd) return false;
+      
+      // Check if it's a recurring block for this day
+      if (block.day_of_week !== null && block.day_of_week === dayOfWeek) {
+        return true;
+      }
+      
+      // Check if it's a one-time block for this specific date
+      if (block.specific_date === dateStr) {
+        return true;
+      }
+      
+      return false;
+    }) || null;
+  };
+
   const getWeekDates = () => {
     const start = getStartOfWeek(selectedDate);
     return weekDays.map((_, i) => {
@@ -321,7 +376,10 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
       <CardContent>
         {/* Scheduling Blocks Manager */}
         <div className="mb-6">
-          <SchedulingBlocksManager studentId={studentId} />
+          <SchedulingBlocksManager 
+            studentId={studentId}
+            onBlocksChange={fetchBlocks}
+          />
         </div>
 
         <div className="overflow-x-auto">
@@ -347,16 +405,27 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                   </div>
                   {weekDays.map((day, dayIndex) => {
                     const slotAssignments = getAssignmentsForSlot(day, time);
+                    const blockedSlot = isSlotBlocked(weekDates[dayIndex], time);
+                    
                     return (
                       <div
                         key={`${day}-${time}`}
                         className={cn(
                           "bg-background p-1 min-h-[60px] relative",
-                          "hover:bg-muted/50 transition-colors"
+                          "hover:bg-muted/50 transition-colors",
+                          blockedSlot && "bg-destructive/5 border-l-2 border-destructive/30"
                         )}
                         onDragOver={handleDragOver}
                         onDrop={(e) => handleDrop(e, weekDates[dayIndex], time)}
                       >
+                        {blockedSlot && (
+                          <div className="absolute inset-0 flex items-center justify-center p-2">
+                            <div className="text-[10px] text-destructive/70 font-medium text-center leading-tight">
+                              {blockedSlot.reason || 'Blocked'}
+                            </div>
+                          </div>
+                        )}
+                        
                         {slotAssignments.map(assignment => (
                           <div
                             key={assignment.id}

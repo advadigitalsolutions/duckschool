@@ -41,6 +41,7 @@ interface SchedulingBlock {
 
 interface SchedulingBlocksManagerProps {
   studentId: string;
+  onBlocksChange?: () => void;
 }
 
 // Only need to mark times as "blocked" - everything else is free by default
@@ -56,7 +57,7 @@ const DAY_NAMES = [
   { value: 6, label: 'Saturday' },
 ];
 
-export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerProps) => {
+export const SchedulingBlocksManager = ({ studentId, onBlocksChange }: SchedulingBlocksManagerProps) => {
   const [blocks, setBlocks] = useState<SchedulingBlock[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -121,6 +122,7 @@ export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerPr
       setIsDialogOpen(false);
       resetForm();
       fetchBlocks();
+      onBlocksChange?.();
     } catch (error: any) {
       console.error('Error adding block:', error);
       toast.error('Failed to add block');
@@ -140,6 +142,7 @@ export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerPr
 
       toast.success('Block removed');
       fetchBlocks();
+      onBlocksChange?.();
     } catch (error: any) {
       console.error('Error deleting block:', error);
       toast.error('Failed to remove block');
