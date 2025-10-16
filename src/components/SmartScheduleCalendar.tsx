@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { SchedulingBlocksManager } from './SchedulingBlocksManager';
+import { BlockedTimeDialog } from './BlockedTimeDialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 
@@ -47,6 +48,9 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
   const [draggedAssignment, setDraggedAssignment] = useState<string | null>(null);
   const [schedulingNotes, setSchedulingNotes] = useState<string[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<ScheduledAssignment | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<SchedulingBlock | null>(null);
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [newBlockSlot, setNewBlockSlot] = useState<{ date: Date; time: string } | null>(null);
 
   useEffect(() => {
     fetchScheduledAssignments();
@@ -411,14 +415,6 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         </div>
       </CardHeader>
       <CardContent>
-        {/* Scheduling Blocks Manager */}
-        <div className="mb-6">
-          <SchedulingBlocksManager 
-            studentId={studentId}
-            onBlocksChange={fetchBlocks}
-          />
-        </div>
-
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
             {/* Calendar Grid */}
@@ -450,15 +446,37 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                         className={cn(
                           "bg-background p-1 min-h-[60px] relative",
                           "hover:bg-muted/50 transition-colors",
-                          blockedSlot && "bg-destructive/5 border-l-2 border-destructive/30"
+                          blockedSlot && "bg-destructive/5 border-l-2 border-destructive/30",
+                          !blockedSlot && !slotAssignments.length && "cursor-pointer group"
                         )}
                         onDragOver={handleDragOver}
                         onDrop={(e) => handleDrop(e, weekDates[dayIndex], time)}
+                        onDoubleClick={() => {
+                          if (!blockedSlot && !slotAssignments.length) {
+                            setNewBlockSlot({ date: weekDates[dayIndex], time });
+                            setSelectedBlock(null);
+                            setBlockDialogOpen(true);
+                          }
+                        }}
                       >
+                        {!blockedSlot && !slotAssignments.length && (
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <div className="text-[10px] text-muted-foreground">
+                              Double-click to block
+                            </div>
+                          </div>
+                        )}
+                        
                         {blockedSlot && (
-                          <div className="absolute inset-0 flex items-center justify-center p-2">
+                          <div 
+                            className="absolute inset-0 flex items-center justify-center p-2 cursor-pointer hover:bg-destructive/10 transition-colors"
+                            onClick={() => {
+                              setSelectedBlock(blockedSlot);
+                              setBlockDialogOpen(true);
+                            }}
+                          >
                             <div className="text-[10px] text-destructive/70 font-medium text-center leading-tight">
-                              {blockedSlot.reason || 'Blocked'}
+                              {blockedSlot.reason || 'Blocked Time'}
                             </div>
                           </div>
                         )}
@@ -663,6 +681,26 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Blocked Time Dialog */}
+      <BlockedTimeDialog
+        open={blockDialogOpen}
+        onOpenChange={(open) => {
+          setBlockDialogOpen(open);
+          if (!open) {
+            setSelectedBlock(null);
+            setNewBlockSlot(null);
+          }
+        }}
+        block={selectedBlock}
+        studentId={studentId}
+        onBlockUpdated={() => {
+          fetchBlocks();
+          fetchScheduledAssignments();
+        }}
+        slotDate={newBlockSlot?.date}
+        slotTime={newBlockSlot?.time}
+      />
     </Card>
   );
 };
