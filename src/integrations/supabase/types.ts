@@ -1179,6 +1179,42 @@ export type Database = {
           },
         ]
       }
+      parent_todo_items: {
+        Row: {
+          completed: boolean
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          parent_id: string
+          priority: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          parent_id: string
+          priority?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          parent_id?: string
+          priority?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pomodoro_sessions: {
         Row: {
           id: string

@@ -35,6 +35,7 @@ import { FocusAnalyticsDashboard } from '@/components/FocusAnalyticsDashboard';
 import { FocusPatternsDashboard } from '@/components/FocusPatternsDashboard';
 import { SmartScheduleCalendar } from '@/components/SmartScheduleCalendar';
 import { DemoWizard } from '@/components/DemoWizard';
+import { ParentTodoList } from '@/components/ParentTodoList';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -720,72 +721,7 @@ export default function ParentDashboard() {
           </TabsContent>
 
           <TabsContent value="todo" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Implementation To Do List</CardTitle>
-                <CardDescription>Areas requiring your input</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3 rounded-lg border p-3">
-                    <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
-                    <div>
-                      <p className="font-medium">Add Student Profile</p>
-                      <p className="text-sm text-muted-foreground">Create student profile with grade level and accommodations</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 rounded-lg border p-3">
-                    <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
-                    <div>
-                      <p className="font-medium">California Standards Data</p>
-                      <p className="text-sm text-muted-foreground">Seed CA Common Core, NGSS, HSS, PE, and Spanish standards</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 rounded-lg border p-3">
-                    <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
-                    <div>
-                      <p className="font-medium">Upload Initial Curriculum Materials</p>
-                      <p className="text-sm text-muted-foreground">Upload PDFs, links to Khan Academy, YouTube videos, or notes about learning goals</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 rounded-lg border p-3">
-                    <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
-                    <div>
-                      <p className="font-medium">AI Plan Builder Configuration</p>
-                      <p className="text-sm text-muted-foreground">Configure AI chatbot for lesson planning and curriculum generation</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 rounded-lg border p-3">
-                    <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
-                    <div>
-                      <p className="font-medium">OCR Integration Setup</p>
-                      <p className="text-sm text-muted-foreground">Enable handwriting and worksheet scanning for work samples</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 rounded-lg border p-3">
-                    <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
-                    <div>
-                      <p className="font-medium">Grading Rubrics</p>
-                      <p className="text-sm text-muted-foreground">Define 4-point standards-based rubrics for assessments</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 rounded-lg border p-3">
-                    <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
-                    <div>
-                      <p className="font-medium">Spanish Curriculum Specifics</p>
-                      <p className="text-sm text-muted-foreground">Define Spanish language learning goals and resources</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 rounded-lg border p-3">
-                    <AlertCircle className="h-5 w-5 text-warning mt-0.5" />
-                    <div>
-                      <p className="font-medium">PE Activity Tracking</p>
-                      <p className="text-sm text-muted-foreground">Define how to track and document physical education activities</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <ParentTodoList />
           </TabsContent>
 
           <TabsContent value="xp" className="space-y-4">
