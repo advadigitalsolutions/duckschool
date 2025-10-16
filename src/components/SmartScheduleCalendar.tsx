@@ -5,6 +5,7 @@ import { Calendar, Clock, GripVertical, Sparkles, RefreshCw, Lock, Unlock } from
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { SchedulingBlocksManager } from './SchedulingBlocksManager';
 
 interface ScheduledAssignment {
   id: string;
@@ -302,6 +303,11 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         </div>
       </CardHeader>
       <CardContent>
+        {/* Scheduling Blocks Manager */}
+        <div className="mb-6">
+          <SchedulingBlocksManager studentId={studentId} />
+        </div>
+
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
             {/* Calendar Grid */}
