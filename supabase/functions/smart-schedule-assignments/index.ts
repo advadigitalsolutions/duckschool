@@ -54,7 +54,7 @@ serve(async (req) => {
 
     console.log(`🗓️ Scheduling assignments for student ${studentId} from ${startDate} to ${endDate}`);
 
-    // 1. Fetch unscheduled assignments
+    // 1. Fetch ALL assigned assignments (both scheduled and unscheduled)
     const { data: assignments, error: assignmentsError } = await supabase
       .from('assignments')
       .select(`
@@ -66,6 +66,7 @@ serve(async (req) => {
         optimal_time_of_day,
         locked_schedule,
         auto_scheduled_time,
+        day_of_week,
         curriculum_items!inner (
           title,
           est_minutes,
@@ -78,22 +79,30 @@ serve(async (req) => {
       `)
       .eq('curriculum_items.courses.student_id', studentId)
       .eq('status', 'assigned')
-      .is('auto_scheduled_time', null)
-      .eq('locked_schedule', false);
+      .eq('locked_schedule', false); // Only consider unlocked assignments for optimization
 
     if (assignmentsError) throw assignmentsError;
 
     if (!assignments || assignments.length === 0) {
       return new Response(
         JSON.stringify({ 
-          message: 'No unscheduled assignments found',
-          scheduled: []
+          message: 'No assignments to optimize',
+          scheduled: [],
+          analysis: {
+            summary: 'No unlocked assignments found to schedule or optimize.',
+            changes: [],
+            recommendations: []
+          }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`📋 Found ${assignments.length} unscheduled assignments`);
+    console.log(`📋 Found ${assignments.length} assignments (${assignments.filter((a: any) => a.auto_scheduled_time).length} already scheduled)`);
+
+    // Separate scheduled and unscheduled
+    const unscheduled = assignments.filter((a: any) => !a.auto_scheduled_time);
+    const alreadyScheduled = assignments.filter((a: any) => a.auto_scheduled_time);
 
     // 2. Fetch focus patterns
     const { data: patterns, error: patternsError } = await supabase
@@ -121,17 +130,27 @@ serve(async (req) => {
 
     const schedulingBlocks = blocks || [];
 
-    // 4. Schedule assignments
-    const { scheduled: scheduledAssignments, notes } = scheduleAssignments(
-      assignments as any[],
+    // 4. Schedule new assignments and analyze existing ones
+    const { scheduled: newlyScheduled, notes: scheduleNotes } = scheduleAssignments(
+      unscheduled as any[],
       patterns as FocusPattern | null,
       schedulingBlocks as SchedulingBlock[],
       startDate ? new Date(startDate) : new Date(),
       endDate ? new Date(endDate) : addDays(new Date(), 14)
     );
 
-    // 5. Update assignments with scheduled times
-    const updates = scheduledAssignments.map(async (scheduled) => {
+    // 5. Always run AI analysis to evaluate the entire schedule
+    console.log('🤖 Running AI analysis on schedule...');
+    const analysis = await generateScheduleAnalysis(
+      newlyScheduled,
+      alreadyScheduled,
+      unscheduled as any[],
+      patterns as FocusPattern | null,
+      schedulingBlocks
+    );
+
+    // 6. Update only the newly scheduled assignments
+    const updates = newlyScheduled.map(async (scheduled) => {
       const timeOnly = scheduled.scheduledTime.split('T')[1];
       
       console.log(`🔍 About to update assignment ${scheduled.assignmentId}:`, {
@@ -158,30 +177,16 @@ serve(async (req) => {
 
     const results = await Promise.all(updates);
 
-    console.log(`✅ Scheduled ${results.filter(r => !r.error).length} assignments`);
-
-    // Generate AI analysis if requested
-    let analysis = null;
-    if (includeAnalysis && results.filter(r => !r.error).length > 0) {
-      try {
-        analysis = await generateScheduleAnalysis(
-          results.filter(r => !r.error),
-          assignments as any[],
-          patterns as FocusPattern | null,
-          schedulingBlocks
-        );
-      } catch (analysisError: any) {
-        console.error('⚠️ Analysis generation failed:', analysisError);
-        // Don't fail the whole request if analysis fails
-      }
-    }
+    console.log(`✅ Scheduled ${results.filter(r => !r.error).length} new assignments`);
 
     return new Response(
       JSON.stringify({
-        message: 'Scheduling complete',
+        message: unscheduled.length === 0 && alreadyScheduled.length > 0 
+          ? 'Schedule optimized - reviewing existing assignments'
+          : 'Scheduling complete',
         scheduled: results.filter(r => !r.error),
         errors: results.filter(r => r.error),
-        notes,
+        notes: scheduleNotes,
         analysis
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -374,7 +379,8 @@ function addDays(date: Date, days: number): Date {
 
 async function generateScheduleAnalysis(
   scheduledResults: any[],
-  assignments: any[],
+  alreadyScheduled: any[],
+  unscheduledAssignments: any[],
   patterns: FocusPattern | null,
   blocks: SchedulingBlock[]
 ): Promise<{
@@ -388,8 +394,8 @@ async function generateScheduleAnalysis(
   }
 
   // Prepare context for AI
-  const scheduleContext = scheduledResults.map((result) => {
-    const assignment = assignments.find(a => a.id === result.assignmentId);
+  const newScheduleContext = scheduledResults.map((result) => {
+    const assignment = unscheduledAssignments.find((a: any) => a.id === result.assignmentId);
     return {
       title: assignment?.curriculum_items?.title || 'Unknown',
       subject: assignment?.curriculum_items?.courses?.subject || 'Unknown',
@@ -399,36 +405,49 @@ async function generateScheduleAnalysis(
     };
   });
 
-  const systemPrompt = `You are an educational scheduling expert. Analyze the schedule changes and provide clear, actionable insights for educators.
+  const existingScheduleContext = alreadyScheduled.map((a: any) => ({
+    title: a.curriculum_items?.title || 'Unknown',
+    subject: a.curriculum_items?.courses?.subject || 'Unknown',
+    dayOfWeek: a.day_of_week,
+    scheduledTime: a.auto_scheduled_time
+  }));
 
-Be concise and specific. Focus on:
-1. Why assignments were scheduled at specific times
-2. How the schedule optimizes for student focus patterns
-3. Any potential concerns or recommendations
+  const systemPrompt = `You are an educational scheduling expert. Analyze the complete schedule and provide clear, actionable insights.
 
-Keep your response structured and professional.`;
+Your role:
+1. Review both newly scheduled AND existing assignments
+2. Determine if the current schedule is optimal or if improvements could be made
+3. Explain key factors that make the schedule effective
+4. Provide specific recommendations if optimization is possible
 
-  const userPrompt = `I've scheduled ${scheduledResults.length} assignments. Here's the context:
+Be direct, specific, and educational in your analysis.`;
 
-Scheduled Assignments:
-${JSON.stringify(scheduleContext, null, 2)}
+  const userPrompt = `Analyze this student's schedule:
 
-${patterns ? `Focus Patterns Available: Yes (${patterns.peak_windows?.length || 0} peak windows identified)` : 'Focus Patterns: Not yet established'}
+NEWLY SCHEDULED (${scheduledResults.length}):
+${JSON.stringify(newScheduleContext, null, 2)}
 
-${blocks.length > 0 ? `Blocked Time Slots: ${blocks.length} (avoided for appointments/activities)` : 'No blocked time slots'}
+ALREADY SCHEDULED (${alreadyScheduled.length}):
+${JSON.stringify(existingScheduleContext, null, 2)}
+
+${patterns ? `Focus Patterns: ${patterns.peak_windows?.length || 0} peak windows identified` : 'Focus Patterns: Not yet established'}
+${blocks.length > 0 ? `Blocked Times: ${blocks.length} time slots unavailable` : 'No blocked time slots'}
 
 Provide:
-1. A brief summary (2-3 sentences) of the overall scheduling strategy
-2. For each assignment, explain why it was scheduled at that specific time
-3. 2-3 recommendations for optimizing the schedule further
+1. A summary explaining whether the schedule is optimal or could be improved
+2. For newly scheduled assignments, explain the placement rationale
+3. For existing assignments, note if they're well-placed or could be optimized
+4. 2-3 specific recommendations for schedule optimization
 
-Format your response as JSON:
+${scheduledResults.length === 0 && alreadyScheduled.length > 0 ? 'NOTE: No new assignments were added. Evaluate if the existing schedule is optimal or if redistributing assignments would improve learning outcomes.' : ''}
+
+Format as JSON:
 {
-  "summary": "overall strategy explanation",
+  "summary": "overall evaluation and key scheduling principles applied",
   "changes": [
-    {"assignment": "title", "reason": "why scheduled at this time"}
+    {"assignment": "title", "reason": "placement rationale or optimization suggestion"}
   ],
-  "recommendations": ["recommendation 1", "recommendation 2"]
+  "recommendations": ["actionable recommendation 1", "actionable recommendation 2"]
 }`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -453,11 +472,16 @@ Format your response as JSON:
     console.error('AI analysis error:', response.status, errorText);
     
     // Return a basic analysis on error
+    const allAssignments = [...newScheduleContext, ...existingScheduleContext];
     return {
-      summary: `Scheduled ${scheduledResults.length} assignments based on due dates and available time slots.`,
-      changes: scheduleContext.map(ctx => ({
+      summary: scheduledResults.length > 0 
+        ? `Scheduled ${scheduledResults.length} new assignments. ${alreadyScheduled.length} assignments remain on their current schedule.`
+        : `Reviewed ${alreadyScheduled.length} existing assignments. Current schedule appears well-optimized based on available data.`,
+      changes: allAssignments.map((ctx: any) => ({
         assignment: ctx.title,
-        reason: `Scheduled for ${ctx.dayOfWeek} at ${ctx.scheduledTime.split('T')[1]} based on availability.`
+        reason: ctx.scheduledTime 
+          ? `Placed at ${ctx.dayOfWeek} ${ctx.scheduledTime.split('T')[1] || ctx.scheduledTime} based on availability and focus patterns.`
+          : `Currently scheduled for ${ctx.dayOfWeek}`
       })),
       recommendations: [
         'Continue tracking focus patterns to improve future scheduling',
@@ -473,9 +497,10 @@ Format your response as JSON:
     return JSON.parse(analysisText);
   } catch {
     // Fallback if JSON parsing fails
+    const allAssignments = [...newScheduleContext, ...existingScheduleContext];
     return {
       summary: analysisText,
-      changes: scheduleContext.map(ctx => ({
+      changes: allAssignments.map((ctx: any) => ({
         assignment: ctx.title,
         reason: `Scheduled for ${ctx.dayOfWeek} based on optimal learning times.`
       })),

@@ -173,15 +173,15 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
       const successCount = data.scheduled?.length || 0;
       const errorCount = data.errors?.length || 0;
       
-      // Store scheduling notes
-      if (data.notes && data.notes.length > 0) {
-        setSchedulingNotes(data.notes);
-      }
-
-      // Store AI analysis if provided
-      if (aiAnalysisEnabled && data.analysis) {
+      // Always show AI analysis in a dialog
+      if (data.analysis) {
         setScheduleAnalysis(data.analysis);
         setScheduleAnalysisOpen(true);
+      }
+      
+      // Store the summary as persistent notes at bottom of calendar
+      if (data.analysis?.summary) {
+        setSchedulingNotes([data.analysis.summary]);
       }
       
       if (successCount > 0) {
@@ -190,6 +190,8 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
       } else if (errorCount > 0) {
         toast.error(`Failed to schedule ${errorCount} assignments`);
         console.error('Scheduling errors:', data.errors);
+      } else if (data.analysis) {
+        toast.success('Schedule analyzed - see results below');
       } else {
         toast.info('No assignments to schedule');
       }
@@ -626,18 +628,19 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
           </div>
         </div>
 
-        {/* AI Scheduling Notes - Why things are scheduled this way */}
+        {/* AI Schedule Analysis - Key factors explaining current schedule */}
         {schedulingNotes.length > 0 && (
-          <div className="mt-6 p-4 rounded-lg bg-gradient-to-br from-primary/5 to-background border border-primary/10">
+          <div className="mt-6 p-5 rounded-lg bg-gradient-to-br from-primary/10 via-primary/5 to-background border-2 border-primary/20 shadow-sm">
             <div className="flex items-start gap-3">
-              <div className="mt-0.5">
-                <Sparkles className="h-4 w-4 text-primary/70" />
+              <div className="mt-0.5 p-2 rounded-full bg-primary/10">
+                <Sparkles className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
-                <h4 className="text-xs font-semibold text-foreground/80 mb-1.5 uppercase tracking-wide">
-                  Smart Scheduling Notes
+                <h4 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
+                  AI Schedule Analysis
+                  <span className="text-xs font-normal text-muted-foreground">(Key Factors & Determinants)</span>
                 </h4>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                <p className="text-sm text-foreground/80 leading-relaxed">
                   {schedulingNotes.join(' ')}
                 </p>
               </div>
