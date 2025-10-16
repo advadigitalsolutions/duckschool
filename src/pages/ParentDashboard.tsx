@@ -43,6 +43,11 @@ export default function ParentDashboard() {
   const [demoParentName, setDemoParentName] = useState<string | null>(null);
   const [demoStudentName, setDemoStudentName] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  // Helper function to get display name for student
+  const getStudentDisplayName = (student: any) => {
+    return demoStudentName || student.display_name || student.name;
+  };
   const getDefaultHeaderSettings = () => ({
     showName: true,
     customName: null,
@@ -432,7 +437,7 @@ export default function ParentDashboard() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <CardTitle>{student.name}'s Focus Analytics</CardTitle>
+                          <CardTitle>{getStudentDisplayName(student)}'s Focus Analytics</CardTitle>
                           <CardDescription>Time tracking and engagement metrics</CardDescription>
                         </div>
                       </div>
@@ -463,7 +468,7 @@ export default function ParentDashboard() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="text-xl font-semibold">{student.name}'s Focus Intelligence</h3>
+                        <h3 className="text-xl font-semibold">{getStudentDisplayName(student)}'s Focus Intelligence</h3>
                         <p className="text-sm text-muted-foreground">AI-powered insights about optimal learning times</p>
                       </div>
                     </div>
@@ -491,7 +496,7 @@ export default function ParentDashboard() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="text-xl font-semibold">{student.name}'s Schedule</h3>
+                        <h3 className="text-xl font-semibold">{getStudentDisplayName(student)}'s Schedule</h3>
                         <p className="text-sm text-muted-foreground">AI-optimized assignment schedule</p>
                       </div>
                     </div>
@@ -528,7 +533,7 @@ export default function ParentDashboard() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <CardTitle className="text-lg">{student.name}</CardTitle>
+                              <CardTitle className="text-lg">{getStudentDisplayName(student)}</CardTitle>
                               <CardDescription>Grade {student.grade_level || 'N/A'}</CardDescription>
                             </div>
                           </div>
@@ -574,7 +579,7 @@ export default function ParentDashboard() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <CardTitle className="text-lg">{student.name}</CardTitle>
+                              <CardTitle className="text-lg">{getStudentDisplayName(student)}</CardTitle>
                               <CardDescription>This week's learning plan</CardDescription>
                             </div>
                           </div>

@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePomodoro } from '@/contexts/PomodoroContext';
 import cloudSet1 from '@/assets/clouds/cloud-1.svg';
 import cloudSet2 from '@/assets/clouds/cloud-2.svg';
+import { useDemoNames } from '@/hooks/useDemoNames';
 
 interface HeaderSettings {
   showName: boolean;
@@ -103,6 +104,12 @@ export function CustomizableHeader({
   const navigate = useNavigate();
   const location = useLocation();
   const { updateSettings: updatePomodoroSettings } = usePomodoro();
+  const demoNames = useDemoNames();
+  
+  // Helper to get student display name with demo support
+  const getStudentDisplayName = () => {
+    return demoNames.studentName !== 'Demo Student' ? demoNames.studentName : (student?.display_name || student?.name || 'Student');
+  };
 
   const handleOpenSettingsAtTab = (tab: string) => {
     setModalInitialTab(tab);
@@ -115,7 +122,7 @@ export function CustomizableHeader({
         const quote = getRandomQuote();
         setRotatingText(`"${quote.quote}" - ${quote.author}`);
       } else if (settings.rotatingDisplay === 'affirmation') {
-        setRotatingText(getRandomAffirmation(student?.display_name || student?.name || 'You', student?.pronouns));
+        setRotatingText(getRandomAffirmation(getStudentDisplayName(), student?.pronouns));
       } else if (settings.rotatingDisplay === 'funFact' && settings.funFactTopic) {
         try {
           const { data, error } = await supabase.functions.invoke('generate-fun-fact', {
@@ -842,7 +849,7 @@ export function CustomizableHeader({
         settings={settings}
         onSave={onSaveSettings}
         onDemo={onDemoCelebration}
-        studentName={student?.display_name || student?.name || 'Student'}
+        studentName={getStudentDisplayName()}
         initialTab={modalInitialTab}
       />
     </>

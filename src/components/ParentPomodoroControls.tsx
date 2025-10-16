@@ -9,6 +9,7 @@ import { Play, Pause, RotateCcw, Clock, Coffee } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import { toast } from 'sonner';
+import { useDemoNames } from '@/hooks/useDemoNames';
 
 interface Student {
   id: string;
@@ -28,6 +29,12 @@ interface PomodoroSession {
 
 export function ParentPomodoroControls() {
   const [students, setStudents] = useState<Student[]>([]);
+  const demoNames = useDemoNames();
+  
+  // Helper to get display name
+  const getStudentDisplayName = (student: Student) => {
+    return demoNames.studentName !== 'Demo Student' ? demoNames.studentName : student.name;
+  };
   const [sessions, setSessions] = useState<Map<string, PomodoroSession>>(new Map());
   const [loading, setLoading] = useState(true);
 
@@ -206,7 +213,7 @@ export function ParentPomodoroControls() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{student.name}</CardTitle>
+                  <CardTitle className="text-lg">{getStudentDisplayName(student)}</CardTitle>
                   <CardDescription>
                     {session.is_break ? <Coffee className="inline h-3 w-3 mr-1" /> : <Clock className="inline h-3 w-3 mr-1" />}
                     {session.is_break ? 'Break Time' : 'Focus Time'}

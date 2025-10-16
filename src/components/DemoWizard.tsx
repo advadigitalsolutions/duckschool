@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { ChevronRight, GraduationCap, Calendar, BookOpen, BarChart, MessageSquare, Trophy, CheckCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useDemoNames } from '@/hooks/useDemoNames';
 
 interface DemoWizardProps {
   role: 'parent' | 'student';
@@ -20,6 +21,7 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
   const [studentName, setStudentName] = useState('');
   const [educatorName, setEducatorName] = useState('');
   const { toast } = useToast();
+  const demoNames = useDemoNames();
 
   useEffect(() => {
     const showWizard = localStorage.getItem('showDemoWizard');
@@ -168,10 +170,10 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
         <div className="space-y-3">
           <p>From your dashboard, you can:</p>
           <ul className="list-disc pl-5 space-y-2">
-            <li><strong>View Student Progress:</strong> See Emma's grades, completed assignments, and mastery levels</li>
+            <li><strong>View Student Progress:</strong> See {studentName || demoNames.studentName}'s grades, completed assignments, and mastery levels</li>
             <li><strong>Manage Courses:</strong> Create curriculum, add assignments, and adjust pacing</li>
             <li><strong>Track Time:</strong> Monitor learning sessions and focus patterns</li>
-            <li><strong>Approve Rewards:</strong> Manage Emma's XP redemptions</li>
+            <li><strong>Approve Rewards:</strong> Manage {studentName || demoNames.studentName}'s XP redemptions</li>
           </ul>
         </div>
       )

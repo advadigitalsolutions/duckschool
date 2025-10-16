@@ -42,12 +42,19 @@ import { StudentResearchReview } from '@/components/StudentResearchReview';
 import { CoachingTranscriptViewer } from '@/components/CoachingTranscriptViewer';
 import { Settings } from 'lucide-react';
 import { FocusAnalyticsDashboard } from '@/components/FocusAnalyticsDashboard';
+import { useDemoNames } from '@/hooks/useDemoNames';
 
 export default function StudentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [student, setStudent] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
+  const demoNames = useDemoNames();
+  
+  // Helper function to get display name for student
+  const getStudentDisplayName = () => {
+    return demoNames.studentName !== 'Demo Student' ? demoNames.studentName : (student?.display_name || student?.name || 'Student');
+  };
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedAssignments, setExpandedAssignments] = useState<Set<string>>(new Set());
@@ -170,7 +177,7 @@ export default function StudentDetail() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-2xl font-bold">{student.name}</h1>
+              <h1 className="text-2xl font-bold">{getStudentDisplayName()}</h1>
               <p className="text-sm text-muted-foreground">
                 Grade {student.grade_level || 'N/A'}
               </p>
@@ -251,7 +258,7 @@ export default function StudentDetail() {
                   <div className="flex items-center gap-2">
                     <div>
                       <CardTitle>Courses</CardTitle>
-                      <CardDescription>Manage courses for {student.name}</CardDescription>
+                      <CardDescription>Manage courses for {getStudentDisplayName()}</CardDescription>
                     </div>
                     <Button
                       variant="ghost"
@@ -529,7 +536,7 @@ export default function StudentDetail() {
               <CardHeader>
                 <CardTitle>Learning Profile & Personality Type</CardTitle>
                 <CardDescription>
-                  View {student.name}'s learning style assessment results
+                  View {getStudentDisplayName()}'s learning style assessment results
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -543,7 +550,7 @@ export default function StudentDetail() {
               <CardHeader>
                 <CardTitle>Research & Resources</CardTitle>
                 <CardDescription>
-                  View resources {student.name} has discovered during research-based assignments
+                  View resources {getStudentDisplayName()} has discovered during research-based assignments
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -553,7 +560,7 @@ export default function StudentDetail() {
               <CardHeader>
                 <CardTitle>AI Coaching Conversations</CardTitle>
                 <CardDescription>
-                  View {student.name}'s interactions with the AI learning coach
+                  View {getStudentDisplayName()}'s interactions with the AI learning coach
                 </CardDescription>
               </CardHeader>
             </Card>
