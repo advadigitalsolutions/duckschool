@@ -617,7 +617,21 @@ Follow these constraints STRICTLY. Do not include any banned codes or terms in c
       console.warn('⚠️ Proceeding with unvalidated content after 3 attempts:', gateResult.findings);
     }
 
-    return new Response(JSON.stringify(finalContent), {
+    // Return both content and validation metadata for audit trail
+    const responseData = {
+      ...finalContent,
+      _validation_metadata: gateResult ? {
+        approval_status: gateResult.approval_status,
+        alignment_confidence: gateResult.alignment_confidence,
+        findings: gateResult.findings || [],
+        corrections_applied: gateResult.corrections_applied || [],
+        course_key_matched: gateResult.course_key_matched,
+        validated_at: gateResult.validated_at,
+        rigor_analysis: gateResult.rigor_analysis
+      } : null
+    };
+
+    return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

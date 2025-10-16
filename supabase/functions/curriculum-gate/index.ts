@@ -64,7 +64,7 @@ serve(async (req) => {
     const courseKeys = normalizeCourseKey({
       state: context.state,
       class_name: context.class_name,
-      grade_level: context.grade_band
+      grade_level: context.grade_band // Using grade_band from context
     });
     
     let courseScope = null;
@@ -197,6 +197,12 @@ serve(async (req) => {
     if (validCodes.length > 0 && context.mode === "generation") {
       const gradeNum = parseInt(context.grade_band) || 12;
       const rigorAnalysis = analyzeRigor(lesson_json, validCodes, gradeNum);
+      
+      console.log("📊 Rigor analysis:", {
+        overall_score: rigorAnalysis.overall_score.toFixed(2),
+        breakdown: rigorAnalysis.breakdown,
+        recommendations: rigorAnalysis.recommendations
+      });
       
       console.log("📊 Rigor analysis:", {
         overall_score: rigorAnalysis.overall_score.toFixed(2),
