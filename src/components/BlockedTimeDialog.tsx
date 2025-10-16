@@ -60,6 +60,31 @@ export const BlockedTimeDialog = ({
     try {
       setIsSaving(true);
 
+      // Validation
+      if (blockType === 'one_time' && !specificDate) {
+        toast.error('Please select a date for one-time blocks');
+        setIsSaving(false);
+        return;
+      }
+
+      if (blockType === 'recurring' && dayOfWeek === null) {
+        toast.error('Please select a day of week for recurring blocks');
+        setIsSaving(false);
+        return;
+      }
+
+      if (!startTime || !endTime) {
+        toast.error('Please enter both start and end times');
+        setIsSaving(false);
+        return;
+      }
+
+      if (startTime >= endTime) {
+        toast.error('End time must be after start time');
+        setIsSaving(false);
+        return;
+      }
+
       const blockData = {
         student_id: studentId,
         block_type: blockType,
@@ -67,7 +92,7 @@ export const BlockedTimeDialog = ({
         day_of_week: blockType === 'recurring' ? dayOfWeek : null,
         start_time: `${startTime}:00`,
         end_time: `${endTime}:00`,
-        reason,
+        reason: reason || null,
         active: true,
       };
 
@@ -77,14 +102,20 @@ export const BlockedTimeDialog = ({
           .update(blockData)
           .eq('id', block.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
         toast.success('Blocked time updated');
       } else {
         const { error } = await supabase
           .from('scheduling_blocks')
           .insert(blockData);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
         toast.success('Blocked time created');
       }
 
@@ -92,7 +123,8 @@ export const BlockedTimeDialog = ({
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error saving block:', error);
-      toast.error('Failed to save blocked time');
+      const errorMessage = error?.message || 'Failed to save blocked time';
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }
