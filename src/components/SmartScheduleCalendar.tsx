@@ -364,6 +364,15 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
     return hour > 23 ? null : `${hour.toString().padStart(2, '0')}:00`;
   }).filter(Boolean) as string[];
 
+  // Check if selected week contains today
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekStart = getStartOfWeek(selectedDate);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+  const isCurrentWeek = today >= weekStart && today <= weekEnd;
+
   const getAssignmentsForSlot = (day: string, time: string) => {
     return assignments.filter(a => {
       if (!a.auto_scheduled_time || !a.day_of_week) return false;
@@ -450,6 +459,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
               variant="outline"
               size="sm"
               onClick={() => setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate() - 7)))}
+              className="hover:border-orange-500 hover:text-orange-500 transition-colors"
             >
               Previous Week
             </Button>
@@ -457,6 +467,12 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
               variant="outline"
               size="sm"
               onClick={() => setSelectedDate(new Date())}
+              className={cn(
+                "transition-colors",
+                isCurrentWeek 
+                  ? "border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950" 
+                  : "hover:border-orange-500 hover:text-orange-500"
+              )}
             >
               Today
             </Button>
@@ -464,6 +480,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
               variant="outline"
               size="sm"
               onClick={() => setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate() + 7)))}
+              className="hover:border-orange-500 hover:text-orange-500 transition-colors"
             >
               Next Week
             </Button>
@@ -494,14 +511,26 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
             <div className="grid grid-cols-8 gap-px bg-border">
               {/* Header Row */}
               <div className="bg-muted p-2 font-medium text-sm">Time</div>
-              {weekDays.map((day, i) => (
-                <div key={day} className="bg-muted p-2 text-center">
-                  <div className="font-medium text-sm">{day}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {weekDates[i].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {weekDays.map((day, i) => {
+                const isToday = weekDates[i].toDateString() === today.toDateString();
+                return (
+                  <div 
+                    key={day} 
+                    className={cn(
+                      "bg-muted p-2 text-center transition-all",
+                      isToday && "border-2 border-orange-500 relative"
+                    )}
+                  >
+                    <div className="font-medium text-sm">{day}</div>
+                    <div className={cn(
+                      "text-xs text-muted-foreground",
+                      isToday && "text-orange-600 dark:text-orange-400 font-semibold"
+                    )}>
+                      {weekDates[i].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {/* Time Slots */}
               {timeSlots.map(time => (
