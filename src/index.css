@@ -139,73 +139,73 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Ultra-dark background for maximum contrast */
-    --background: 240 50% 3%;
-    --foreground: 180 15% 98%;
+    /* Deep dark background - professional and clean */
+    --background: 222 47% 4%;
+    --foreground: 210 20% 98%;
 
-    /* Much lighter cards with purple tint - high contrast */
-    --card: 240 30% 16%;
-    --card-foreground: 180 15% 98%;
+    /* Cards with strong contrast but not harsh */
+    --card: 222 35% 14%;
+    --card-foreground: 210 20% 98%;
 
-    --popover: 240 30% 16%;
-    --popover-foreground: 180 15% 98%;
+    --popover: 222 35% 14%;
+    --popover-foreground: 210 20% 98%;
 
-    /* Vibrant teal primary for energy */
-    --primary: 180 90% 58%;
-    --primary-foreground: 240 50% 5%;
-    --primary-hover: 180 90% 68%;
+    /* Sophisticated cyan - muted but visible */
+    --primary: 180 65% 48%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 180 65% 58%;
 
-    /* Brighter purple secondary */
-    --secondary: 270 80% 65%;
+    /* Professional purple accent */
+    --secondary: 280 70% 62%;
     --secondary-foreground: 0 0% 100%;
     
-    /* Vibrant orange accent */
-    --accent: 30 100% 62%;
-    --accent-foreground: 240 50% 5%;
+    /* Emerald green for success/accent */
+    --accent: 160 70% 45%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Lighter muted for better visibility */
-    --muted: 240 25% 20%;
-    --muted-foreground: 220 15% 75%;
+    /* Subtle muted tones */
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 15% 70%;
 
-    /* Electric teal for success */
-    --success: 165 80% 52%;
+    /* Bright emerald for success states */
+    --success: 160 70% 45%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 40 100% 60%;
-    --warning-foreground: 240 50% 5%;
+    --warning: 45 90% 55%;
+    --warning-foreground: 222 47% 4%;
 
-    --destructive: 0 80% 60%;
+    --destructive: 0 70% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Brighter borders with teal tint */
-    --border: 240 25% 26%;
-    --input: 240 25% 18%;
-    --ring: 180 90% 58%;
+    /* Defined but subtle borders */
+    --border: 220 25% 22%;
+    --input: 220 25% 16%;
+    --ring: 180 65% 48%;
     
-    /* Sidebar slightly lighter than background */
-    --sidebar-background: 240 50% 5%;
-    --sidebar-foreground: 180 15% 98%;
-    --sidebar-primary: 180 90% 58%;
-    --sidebar-primary-foreground: 240 50% 5%;
-    --sidebar-accent: 240 30% 18%;
-    --sidebar-accent-foreground: 180 15% 98%;
-    --sidebar-border: 240 25% 26%;
-    --sidebar-ring: 180 90% 58%;
+    /* Sidebar consistent with background */
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 180 65% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 25% 16%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 220 25% 22%;
+    --sidebar-ring: 180 65% 48%;
     
-    /* Enhanced shadows with vibrant edge glow */
-    --shadow-sm: 0 2px 8px 0 hsl(240 60% 2% / 0.6);
-    --shadow-md: 0 8px 20px -2px hsl(240 60% 2% / 0.7), 0 0 0 1px hsl(180 90% 58% / 0.1);
-    --shadow-lg: 0 16px 40px -4px hsl(240 60% 2% / 0.8), 0 0 0 1px hsl(180 90% 58% / 0.15);
+    /* Professional shadows with depth */
+    --shadow-sm: 0 2px 6px 0 hsl(222 60% 2% / 0.5);
+    --shadow-md: 0 6px 16px -2px hsl(222 60% 2% / 0.6), 0 0 0 1px hsl(220 25% 22% / 0.5);
+    --shadow-lg: 0 12px 32px -4px hsl(222 60% 2% / 0.7), 0 0 0 1px hsl(220 25% 22% / 0.6);
     
-    /* Vibrant gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(180 90% 58%), hsl(270 80% 65%));
-    --gradient-success: linear-gradient(135deg, hsl(165 80% 52%), hsl(180 90% 58%));
-    --gradient-hero: linear-gradient(135deg, hsl(270 80% 65%) 0%, hsl(180 90% 58%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(240 30% 16%) 0%, hsl(240 25% 18%) 100%);
+    /* Sophisticated gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(180 65% 48%), hsl(210 75% 55%));
+    --gradient-success: linear-gradient(135deg, hsl(160 70% 45%), hsl(180 65% 48%));
+    --gradient-hero: linear-gradient(135deg, hsl(280 70% 62%) 0%, hsl(210 75% 55%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(222 35% 14%) 0%, hsl(222 30% 16%) 100%);
     
-    /* Stronger glow effects */
-    --glow-primary: 0 0 24px hsl(180 90% 58% / 0.4);
-    --glow-secondary: 0 0 24px hsl(270 80% 65% / 0.4);
+    /* Subtle glow effects */
+    --glow-primary: 0 0 20px hsl(180 65% 48% / 0.25);
+    --glow-secondary: 0 0 20px hsl(280 70% 62% / 0.25);
   }
 }
 
