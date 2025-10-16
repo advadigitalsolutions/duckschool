@@ -152,11 +152,8 @@ export default function StudentDashboard() {
         }
       } = await supabase.auth.getUser();
       if (!user) {
-        console.log('[StudentDashboard] No user, redirecting to auth');
-        navigate('/auth', {
-          replace: true
-        });
-        return;
+        console.log('[StudentDashboard] No user yet, waiting for auth...');
+        return; // AuthGuard handles authentication redirects
       }
       console.log('[StudentDashboard] User ID:', user.id);
       setCurrentUserId(user.id);
@@ -234,9 +231,9 @@ export default function StudentDashboard() {
         console.log('[StudentDashboard] Final header settings:', finalSettings);
         setHeaderSettings(finalSettings);
       } else {
-        // No student record found, redirect to auth
-        console.log('[StudentDashboard] No student record found, redirecting to auth');
-        navigate('/auth', {
+        // No student record found - redirect to parent dashboard
+        console.log('[StudentDashboard] No student record found, redirecting to /parent');
+        navigate('/parent', {
           replace: true
         });
         return;
