@@ -139,53 +139,73 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222 47% 13%;
-    --foreground: 210 40% 98%;
+    /* Deep navy/purple background inspired by modern AI interfaces */
+    --background: 240 45% 6%;
+    --foreground: 180 20% 96%;
 
-    --card: 222 40% 18%;
-    --card-foreground: 210 40% 98%;
+    /* Cards with subtle purple tint and higher contrast */
+    --card: 240 35% 10%;
+    --card-foreground: 180 15% 96%;
 
-    --popover: 222 40% 18%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 240 35% 10%;
+    --popover-foreground: 180 15% 96%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 217 91% 68%;
+    /* Vibrant teal primary for energy without overwhelming */
+    --primary: 180 85% 55%;
+    --primary-foreground: 240 45% 8%;
+    --primary-hover: 180 85% 65%;
 
-    --secondary: 142 76% 36%;
+    /* Purple secondary for visual interest */
+    --secondary: 270 75% 60%;
     --secondary-foreground: 0 0% 100%;
     
-    --accent: 25 95% 53%;
-    --accent-foreground: 0 0% 100%;
+    /* Keep warm orange accent for important highlights */
+    --accent: 30 100% 60%;
+    --accent-foreground: 240 45% 8%;
 
-    --muted: 217 35% 21%;
-    --muted-foreground: 215 20% 65%;
+    /* Higher contrast muted with purple undertones */
+    --muted: 240 25% 16%;
+    --muted-foreground: 220 15% 72%;
 
-    --success: 142 76% 36%;
+    /* Bright teal for success states */
+    --success: 165 75% 50%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 40 95% 58%;
+    --warning-foreground: 240 45% 8%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 75% 58%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217 25% 28%;
-    --input: 217 25% 28%;
-    --ring: 217 91% 60%;
+    /* More defined borders for better structure */
+    --border: 240 20% 22%;
+    --input: 240 25% 14%;
+    --ring: 180 85% 55%;
     
-    --sidebar-background: 222 47% 15%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 35% 22%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 25% 28%;
-    --sidebar-ring: 217 91% 60%;
+    /* Sidebar with darker purple-navy */
+    --sidebar-background: 240 50% 8%;
+    --sidebar-foreground: 180 15% 96%;
+    --sidebar-primary: 180 85% 55%;
+    --sidebar-primary-foreground: 240 45% 8%;
+    --sidebar-accent: 240 30% 14%;
+    --sidebar-accent-foreground: 180 15% 96%;
+    --sidebar-border: 240 20% 22%;
+    --sidebar-ring: 180 85% 55%;
     
-    --shadow-sm: 0 2px 4px 0 hsl(0 0% 0% / 0.4);
-    --shadow-md: 0 6px 12px -2px hsl(0 0% 0% / 0.5);
-    --shadow-lg: 0 12px 24px -4px hsl(0 0% 0% / 0.6);
+    /* Enhanced shadows with colored hints */
+    --shadow-sm: 0 2px 6px 0 hsl(240 50% 4% / 0.5);
+    --shadow-md: 0 6px 16px -2px hsl(240 50% 4% / 0.6), 0 0 0 1px hsl(180 85% 55% / 0.05);
+    --shadow-lg: 0 12px 32px -4px hsl(240 50% 4% / 0.7), 0 0 0 1px hsl(180 85% 55% / 0.08);
+    
+    /* Gradients inspired by the reference images - teal to purple */
+    --gradient-primary: linear-gradient(135deg, hsl(180 85% 55%), hsl(270 75% 60%));
+    --gradient-success: linear-gradient(135deg, hsl(165 75% 50%), hsl(180 85% 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(270 75% 60%) 0%, hsl(180 85% 55%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(240 35% 10%) 0%, hsl(240 30% 12%) 100%);
+    
+    /* Subtle glow effects for interactive elements */
+    --glow-primary: 0 0 20px hsl(180 85% 55% / 0.3);
+    --glow-secondary: 0 0 20px hsl(270 75% 60% / 0.3);
   }
 }
 
