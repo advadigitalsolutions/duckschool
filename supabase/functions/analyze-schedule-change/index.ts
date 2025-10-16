@@ -114,18 +114,18 @@ serve(async (req) => {
       }
     };
 
-    // 5. Call Lovable AI for analysis
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+    // 5. Call OpenAI for analysis
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           {
             role: 'system',
@@ -151,8 +151,7 @@ ${prerequisiteData.length > 0 ? `Prerequisites (${prerequisiteData.length}): ${p
 Historical activity: ${focusPatterns?.length || 0} learning events recorded in past 30 days`
           }
         ],
-        max_tokens: 200,
-        temperature: 0.7
+        max_completion_tokens: 200
       }),
     });
 
@@ -161,10 +160,10 @@ Historical activity: ${focusPatterns?.length || 0} learning events recorded in p
       console.error('AI gateway error:', aiResponse.status, errorText);
       
       // Handle specific error cases with user-friendly messages
-      if (aiResponse.status === 402) {
+      if (aiResponse.status === 402 || aiResponse.status === 401) {
         return new Response(
           JSON.stringify({ 
-            error: 'AI analysis unavailable: Workspace credits depleted. Please add credits in Settings → Usage to continue using AI features.',
+            error: 'AI analysis unavailable: OpenAI API key not configured or credits depleted.',
             analysis: 'AI analysis unavailable. You can still manually reassign this assignment based on your judgment.'
           }),
           { 
