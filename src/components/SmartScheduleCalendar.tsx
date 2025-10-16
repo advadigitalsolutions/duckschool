@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { SchedulingBlocksManager } from './SchedulingBlocksManager';
 import { BlockedTimeDialog } from './BlockedTimeDialog';
+import { ReassignAssignmentDialog } from './ReassignAssignmentDialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 
@@ -48,6 +49,8 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
   const [draggedAssignment, setDraggedAssignment] = useState<string | null>(null);
   const [schedulingNotes, setSchedulingNotes] = useState<string[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<ScheduledAssignment | null>(null);
+  const [reassignAssignment, setReassignAssignment] = useState<ScheduledAssignment | null>(null);
+  const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<SchedulingBlock | null>(null);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [newBlockSlot, setNewBlockSlot] = useState<{ date: Date; time: string } | null>(null);
@@ -599,8 +602,16 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
 
               {/* Scrollable content */}
               <div className="flex-1 overflow-y-auto space-y-6 py-6">
-                {/* Quick Schedule Info Card */}
-                <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                {/* Quick Schedule Info Card - Clickable to Reassign */}
+                <div 
+                  className="p-4 rounded-lg bg-muted/30 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setReassignAssignment(selectedAssignment);
+                    setReassignDialogOpen(true);
+                  }}
+                  title="Click to reassign to a different time"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-primary/70" />
@@ -620,6 +631,9 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                         Locked
                       </div>
                     )}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-2">
+                    Click to change day/time
                   </div>
                 </div>
 
@@ -700,6 +714,21 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         }}
         slotDate={newBlockSlot?.date}
         slotTime={newBlockSlot?.time}
+      />
+
+      {/* Reassign Assignment Dialog */}
+      <ReassignAssignmentDialog
+        open={reassignDialogOpen}
+        onOpenChange={(open) => {
+          setReassignDialogOpen(open);
+          if (!open) {
+            setReassignAssignment(null);
+          }
+        }}
+        assignment={reassignAssignment}
+        onReassigned={() => {
+          fetchScheduledAssignments();
+        }}
       />
     </Card>
   );
