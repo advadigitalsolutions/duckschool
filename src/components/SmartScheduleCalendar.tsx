@@ -258,10 +258,16 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
 
   const handleDrop = async (e: React.DragEvent, newDate: Date, newTime: string) => {
     e.preventDefault();
+    console.log('Drop triggered', { draggedAssignment, newDate, newTime });
 
-    if (!draggedAssignment) return;
+    if (!draggedAssignment) {
+      console.log('No dragged assignment');
+      return;
+    }
 
     const assignment = assignments.find(a => a.id === draggedAssignment);
+    console.log('Found assignment', assignment);
+    
     if (!assignment || assignment.locked_schedule) {
       toast.error('Cannot reschedule locked assignments');
       setDraggedAssignment(null);
@@ -270,6 +276,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
 
     const timeOnly = `${newTime}:00`;
     const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][newDate.getDay()];
+    console.log('Rescheduling to:', { dayName, timeOnly });
 
     try {
       // Optimistic update - update UI immediately
@@ -304,6 +311,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         }
       }
 
+      console.log('Updating database...');
       const { error } = await supabase
         .from('assignments')
         .update({
@@ -311,6 +319,8 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
           day_of_week: dayName
         })
         .eq('id', draggedAssignment);
+
+      console.log('Database update result:', { error });
 
       if (error) {
         // Revert on error
@@ -328,8 +338,10 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         toast.success('Assignment rescheduled');
       }
     } catch (error: any) {
+      console.error('Reschedule error:', error);
       toast.error('Failed to reschedule');
     } finally {
+      console.log('Cleaning up drag state');
       setDraggedAssignment(null);
     }
   };
