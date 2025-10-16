@@ -41,7 +41,7 @@ export const BlockedTimeDialog = ({
   slotDate,
   slotTime 
 }: BlockedTimeDialogProps) => {
-  const [blockType, setBlockType] = useState(block?.block_type || 'one_time');
+  const [blockType, setBlockType] = useState(block?.block_type || 'unavailable');
   const [specificDate, setSpecificDate] = useState<Date | undefined>(
     block?.specific_date ? new Date(block.specific_date) : slotDate
   );
@@ -61,13 +61,13 @@ export const BlockedTimeDialog = ({
       setIsSaving(true);
 
       // Validation
-      if (blockType === 'one_time' && !specificDate) {
+      if (blockType === 'unavailable' && !specificDate) {
         toast.error('Please select a date for one-time blocks');
         setIsSaving(false);
         return;
       }
 
-      if (blockType === 'recurring' && dayOfWeek === null) {
+      if (blockType === 'recurring_unavailable' && dayOfWeek === null) {
         toast.error('Please select a day of week for recurring blocks');
         setIsSaving(false);
         return;
@@ -88,8 +88,8 @@ export const BlockedTimeDialog = ({
       const blockData = {
         student_id: studentId,
         block_type: blockType,
-        specific_date: blockType === 'one_time' ? specificDate?.toISOString().split('T')[0] : null,
-        day_of_week: blockType === 'recurring' ? dayOfWeek : null,
+        specific_date: blockType === 'unavailable' ? specificDate?.toISOString().split('T')[0] : null,
+        day_of_week: blockType === 'recurring_unavailable' ? dayOfWeek : null,
         start_time: `${startTime}:00`,
         end_time: `${endTime}:00`,
         reason: reason || null,
@@ -176,13 +176,13 @@ export const BlockedTimeDialog = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="one_time">One-time (Specific Date)</SelectItem>
-                <SelectItem value="recurring">Recurring (Weekly)</SelectItem>
+                <SelectItem value="unavailable">Unavailable (One-time)</SelectItem>
+                <SelectItem value="recurring_unavailable">Recurring Unavailable</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {blockType === 'one_time' && (
+          {blockType === 'unavailable' && (
             <div className="space-y-2">
               <Label>Date</Label>
               <Popover>
@@ -211,7 +211,7 @@ export const BlockedTimeDialog = ({
             </div>
           )}
 
-          {blockType === 'recurring' && (
+          {blockType === 'recurring_unavailable' && (
             <div className="space-y-2">
               <Label htmlFor="day-of-week">Day of Week</Label>
               <Select 
