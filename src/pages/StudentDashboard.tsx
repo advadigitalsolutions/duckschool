@@ -32,6 +32,7 @@ import { OverdueAssignmentCard } from '@/components/OverdueAssignmentCard';
 import { useOverdueXPPenalty } from '@/hooks/useOverdueXPPenalty';
 import { useXPRewards } from '@/hooks/useXPRewards';
 import { useXP } from '@/hooks/useXP';
+import { SmartScheduleCalendar } from '@/components/SmartScheduleCalendar';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -642,6 +643,13 @@ export default function StudentDashboard() {
               <WeeklyView studentId={student.id} />
             </CardContent>
           </Card>}
+
+        {/* Smart Schedule Calendar */}
+        {student?.id && (
+          <div className="mb-8">
+            <SmartScheduleCalendar studentId={student.id} />
+          </div>
+        )}
 
         {/* My Courses */}
         <Card className="mt-8">

@@ -84,3 +84,6 @@ verify_jwt = false
 [functions.analyze-focus-patterns]
 verify_jwt = false
 
+[functions.smart-schedule-assignments]
+verify_jwt = false
+

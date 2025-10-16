@@ -33,6 +33,7 @@ import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
 import { FocusAnalyticsDashboard } from '@/components/FocusAnalyticsDashboard';
 import { FocusPatternsDashboard } from '@/components/FocusPatternsDashboard';
+import { SmartScheduleCalendar } from '@/components/SmartScheduleCalendar';
 
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
@@ -431,6 +432,7 @@ export default function ParentDashboard() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="time-tracking">Time Tracking</TabsTrigger>
             <TabsTrigger value="focus-intelligence">Focus Intelligence</TabsTrigger>
+            <TabsTrigger value="smart-schedule">Smart Schedule</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="pomodoro">Pomodoro Timers</TabsTrigger>
             <TabsTrigger value="weekly-plans">Weekly Plans</TabsTrigger>
@@ -526,6 +528,40 @@ export default function ParentDashboard() {
                       </div>
                     </div>
                     <FocusPatternsDashboard studentId={student.id} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="smart-schedule" className="space-y-4">
+            {students.length === 0 ? (
+              <Card>
+                <CardContent className="py-12">
+                  <div className="text-center">
+                    <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">Add students to manage their schedules</p>
+                    <AddStudentDialog onStudentAdded={fetchDashboardData} />
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                {students.map(student => (
+                  <div key={student.id} className="space-y-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={student.avatar_url || ''} />
+                        <AvatarFallback>
+                          <User className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="text-xl font-semibold">{student.name}'s Schedule</h3>
+                        <p className="text-sm text-muted-foreground">AI-optimized assignment schedule</p>
+                      </div>
+                    </div>
+                    <SmartScheduleCalendar studentId={student.id} />
                   </div>
                 ))}
               </div>
