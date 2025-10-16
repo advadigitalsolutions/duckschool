@@ -858,10 +858,12 @@ export type Database = {
           end_date: string
           focus_areas: Json | null
           id: string
+          last_validated_at: string | null
           start_date: string
           status: string | null
           student_id: string
           theme: string | null
+          validation_summary: Json | null
           week_number: number
         }
         Insert: {
@@ -870,10 +872,12 @@ export type Database = {
           end_date: string
           focus_areas?: Json | null
           id?: string
+          last_validated_at?: string | null
           start_date: string
           status?: string | null
           student_id: string
           theme?: string | null
+          validation_summary?: Json | null
           week_number: number
         }
         Update: {
@@ -882,10 +886,12 @@ export type Database = {
           end_date?: string
           focus_areas?: Json | null
           id?: string
+          last_validated_at?: string | null
           start_date?: string
           status?: string | null
           student_id?: string
           theme?: string | null
+          validation_summary?: Json | null
           week_number?: number
         }
         Relationships: [

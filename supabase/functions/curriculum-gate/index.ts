@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { COURSE_SCOPE_MAP, resolveCourseScope } from "../_shared/course-scope-map.ts";
+import { COURSE_SCOPE_MAP, resolveCourseScope, normalizeCourseKey } from "../_shared/course-scope-map.ts";
+import { analyzeRigor } from '../_shared/rigor-analyzer.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,6 +23,8 @@ interface ValidationResult {
   findings: string[];
   corrections_applied: string[];
   validated_lesson: any | null;
+  course_key_matched?: string;
+  validated_at?: string;
   regenerate_with_fixes?: {
     reason: string;
     required_scope: {
@@ -57,10 +60,31 @@ serve(async (req) => {
       mode: context.mode
     });
 
-    // Step 1: Resolve course scope
-    const courseScope = context.course_key 
-      ? COURSE_SCOPE_MAP[context.course_key]
-      : resolveCourseScope(context.class_name, context.state, context.grade_band, context.subject);
+    // Step 1: Determine course scope with normalized keys
+    const courseKeys = normalizeCourseKey({
+      state: context.state,
+      class_name: context.class_name,
+      grade_level: context.grade_band
+    });
+    
+    let courseScope = null;
+    let matchedKey = null;
+    
+    // Try all normalized keys before falling back to dynamic resolver
+    for (const key of courseKeys) {
+      if (COURSE_SCOPE_MAP[key]) {
+        courseScope = COURSE_SCOPE_MAP[key];
+        matchedKey = key;
+        console.log(`✅ Exact match found: ${key}`);
+        break;
+      }
+    }
+    
+    if (!courseScope) {
+      console.log(`⚠️ No exact scope match for keys: ${courseKeys.join(', ')}, using dynamic resolver`);
+      courseScope = resolveCourseScope(context.class_name, context.state, context.grade_band, context.subject);
+      matchedKey = 'dynamic_fallback';
+    }
 
     if (!courseScope) {
       console.warn("⚠️ No scope found, using lenient validation");
@@ -70,6 +94,8 @@ serve(async (req) => {
         findings: ["No specific scope defined for this course"],
         corrections_applied: [],
         validated_lesson: lesson_json,
+        course_key_matched: 'none',
+        validated_at: new Date().toISOString(),
         audit: {
           checked_at: new Date().toISOString(),
           checked_by: "CurriculumGate@v1",
@@ -167,21 +193,31 @@ serve(async (req) => {
       confidence = "low";
     }
 
-    // Step 5: Rigor Check (basic heuristic)
-    const gradeNum = parseInt(context.grade_band) || 12;
-    const isHighSchool = gradeNum >= 9;
-    
-    if (isHighSchool) {
-      const hsVerbs = ["analyze", "evaluate", "model", "prove", "derive", "synthesize"];
-      const hasHsRigor = hsVerbs.some(verb => textToScan.includes(verb));
-      const elemVerbs = ["identify", "count", "name", "list"];
-      const hasElemRigor = elemVerbs.filter(verb => textToScan.includes(verb)).length > 2;
+    // Step 5: Enhanced Rigor Analysis
+    if (validCodes.length > 0 && context.mode === "generation") {
+      const gradeNum = parseInt(context.grade_band) || 12;
+      const rigorAnalysis = analyzeRigor(lesson_json, validCodes, gradeNum);
       
-      if (!hasHsRigor && hasElemRigor) {
-        findings.push("Cognitive demand appears too low for high school level");
-        confidence = "medium";
-        if (status === "approved") status = "corrected";
-        corrections.push("Raised complexity: added analysis/modeling task");
+      console.log("📊 Rigor analysis:", {
+        overall_score: rigorAnalysis.overall_score.toFixed(2),
+        breakdown: rigorAnalysis.breakdown,
+        recommendations: rigorAnalysis.recommendations
+      });
+      
+      if (rigorAnalysis.overall_score < 0.6) {
+        findings.push(`Rigor score too low: ${rigorAnalysis.overall_score.toFixed(2)}/1.0`);
+        findings.push(...rigorAnalysis.recommendations);
+        
+        if (rigorAnalysis.overall_score < 0.4) {
+          status = "rejected";
+        } else if (status === "approved") {
+          status = "corrected";
+          corrections.push("Enhanced rigor: " + rigorAnalysis.recommendations[0]);
+        }
+        
+        if (confidence === "high") {
+          confidence = rigorAnalysis.overall_score >= 0.5 ? "medium" : "low";
+        }
       }
     }
 
@@ -220,6 +256,8 @@ serve(async (req) => {
       findings,
       corrections_applied: corrections,
       validated_lesson: status !== "rejected" ? lesson_json : null,
+      course_key_matched: matchedKey || 'none',
+      validated_at: new Date().toISOString(),
       regenerate_with_fixes: regenerateFeedback,
       audit: {
         checked_at: new Date().toISOString(),

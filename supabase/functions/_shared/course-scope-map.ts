@@ -6,6 +6,31 @@ export interface CourseScope {
   grade_range: [number, number];
 }
 
+/**
+ * Normalize course key to try multiple formats for robust lookup
+ * Converts single grades to ranges where appropriate (e.g., 9 -> 9-10, 11 -> 11-12)
+ */
+export function normalizeCourseKey(context: {
+  state: string;
+  class_name: string;
+  grade_level: string | number;
+}): string[] {
+  const g = String(context.grade_level);
+  
+  // Map single grades to standard ranges
+  const ranges: Record<string, string> = {
+    "9": "9-10", "10": "9-10",
+    "11": "11-12", "12": "11-12"
+  };
+  const range = ranges[g] ?? g;
+
+  return [
+    `${context.state}:${context.class_name}:${range}`,     // Preferred: with range
+    `${context.state}:${context.class_name}:${g}`,         // Fallback 1: exact grade
+    `${context.state}:${context.class_name}`               // Fallback 2: course only
+  ];
+}
+
 export const COURSE_SCOPE_MAP: Record<string, CourseScope> = {
   "CA:Algebra I:9-10": {
     allow_prefixes: ["HSA-", "HSF-", "S-ID"],
@@ -54,6 +79,10 @@ export const COURSE_SCOPE_MAP: Record<string, CourseScope> = {
   }
 };
 
+/**
+ * Resolve course scope dynamically if not in map
+ * Now used as fallback after trying all normalized keys
+ */
 export function resolveCourseScope(
   courseName: string,
   state: string,

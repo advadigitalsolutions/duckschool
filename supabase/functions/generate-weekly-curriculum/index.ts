@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { summarizeWeekValidation, type DayGateResult } from '../_shared/validation-aggregator.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -195,10 +196,11 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
       mode: "generation"
     };
 
-    // Validate each day's assignments
+    // Validate each day's assignments and collect results
     let allValid = true;
     let validationAttempts = 0;
     const MAX_VALIDATION_ATTEMPTS = 2;
+    const dayGateResults: DayGateResult[] = [];
 
     while (validationAttempts < MAX_VALIDATION_ATTEMPTS && !allValid) {
       validationAttempts++;
@@ -235,6 +237,13 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
           if (gateResponse.ok) {
             const gateResult = await gateResponse.json();
             
+            // Collect gate results for weekly summary
+            dayGateResults.push({
+              approval_status: gateResult.approval_status,
+              alignment_confidence: gateResult.alignment_confidence,
+              findings: gateResult.findings || []
+            });
+            
             if (gateResult.approval_status === "rejected") {
               allValid = false;
               failedDays.push(day.day);
@@ -257,9 +266,12 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
       console.warn('⚠️ Some assignments did not pass validation, proceeding with warnings');
     }
 
-    // Create curriculum week record
+    // Create curriculum week record with validation summary
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 4); // Friday
+
+    const weekSummary = summarizeWeekValidation(dayGateResults);
+    console.log('📊 Week validation summary:', weekSummary);
 
     const { data: curriculumWeek, error: weekError } = await supabase
       .from('curriculum_weeks')
@@ -270,7 +282,9 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0],
         theme: weeklyPlan.theme,
-        focus_areas: progressData.recommendations.focusAreas
+        focus_areas: progressData.recommendations.focusAreas,
+        validation_summary: weekSummary,
+        last_validated_at: new Date().toISOString()
       })
       .select()
       .single();
