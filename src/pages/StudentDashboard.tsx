@@ -14,7 +14,6 @@ import { XPDisplay } from '@/components/XPDisplay';
 import { RewardsShop } from '@/components/RewardsShop';
 import { StudentGrades } from '@/components/StudentGrades';
 import { WeeklyView } from '@/components/WeeklyView';
-import { OverdueWorkTab } from '@/components/OverdueWorkTab';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
@@ -30,12 +29,17 @@ import { ArchiveCourseDialog } from '@/components/ArchiveCourseDialog';
 import { DeleteCourseDialog } from '@/components/DeleteCourseDialog';
 import { EditAssignmentDialog } from '@/components/EditAssignmentDialog';
 import { DeleteAssignmentDialog } from '@/components/DeleteAssignmentDialog';
+import { OverdueAssignmentCard } from '@/components/OverdueAssignmentCard';
+import { useOverdueXPPenalty } from '@/hooks/useOverdueXPPenalty';
+import { useXPRewards } from '@/hooks/useXPRewards';
+import { useXP } from '@/hooks/useXP';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<any>(null);
   const [studentDbId, setStudentDbId] = useState<string | null>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
+  const [overdueAssignments, setOverdueAssignments] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
@@ -51,6 +55,16 @@ export default function StudentDashboard() {
   const [profileModalTab, setProfileModalTab] = useState<'profile' | 'accessibility' | 'assessment'>('profile');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  // XP Hooks
+  const { refreshXP } = useXP(studentDbId || undefined);
+  const xpRewards = useXPRewards({ 
+    studentId: studentDbId, 
+    onXPAwarded: () => refreshXP() 
+  });
+  
+  // Apply XP penalty for overdue assignments
+  useOverdueXPPenalty(studentDbId, overdueAssignments);
   const getDefaultHeaderSettings = () => ({
     showName: true,
     customName: null,
@@ -246,13 +260,32 @@ export default function StudentDashboard() {
               title,
               student_id
             )
+          ),
+          submissions (
+            id
           )
         `).eq('curriculum_items.courses.student_id', studentData.id).eq('status', 'assigned').order('due_at', {
         ascending: true
-      }).limit(5);
+      }).limit(20);
       console.log('[StudentDashboard] Assignments data:', assignmentsData);
       console.log('[StudentDashboard] Assignments error:', assignmentsError);
-      setAssignments(assignmentsData || []);
+      
+      // Separate overdue from current assignments
+      const now = new Date();
+      const overdue = (assignmentsData || []).filter(a => {
+        const dueDate = new Date(a.due_at);
+        const hasNoSubmission = !a.submissions || a.submissions.length === 0;
+        return dueDate < now && hasNoSubmission;
+      });
+      
+      const current = (assignmentsData || []).filter(a => {
+        const dueDate = new Date(a.due_at);
+        const hasNoSubmission = !a.submissions || a.submissions.length === 0;
+        return dueDate >= now && hasNoSubmission;
+      }).slice(0, 5);
+      
+      setOverdueAssignments(overdue);
+      setAssignments(current);
 
       // Fetch courses
       console.log('[StudentDashboard] Fetching courses for student:', studentData.id);
@@ -437,6 +470,24 @@ export default function StudentDashboard() {
       {headerSettings && <CustomizableHeader student={student} settings={headerSettings} onSaveSettings={saveHeaderSettings} onSignOut={handleSignOut} onDemoCelebration={() => setShowConfetti(true)} />}
 
       <div className="container mx-auto p-4 md:p-8 max-w-4xl">
+        {/* Overdue Assignments - At the very top */}
+        {overdueAssignments.length > 0 && (
+          <div className="mb-6 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-destructive">
+                ⚠️ {overdueAssignments.length} Overdue Assignment{overdueAssignments.length !== 1 ? 's' : ''}
+              </h2>
+            </div>
+            {overdueAssignments.map(assignment => (
+              <OverdueAssignmentCard 
+                key={assignment.id} 
+                assignment={assignment}
+                onXPPenalty={() => refreshXP()}
+              />
+            ))}
+          </div>
+        )}
+
         {/* Today's Tasks - Moved to top */}
         <Card className="mb-6">
           <CardHeader>
@@ -579,9 +630,6 @@ export default function StudentDashboard() {
             </Card>
           </Collapsible>
         )}
-
-        {/* Overdue Work Alert */}
-        {student?.id && <OverdueWorkTab studentId={student.id} />}
 
         {/* This Week's View */}
         {student?.id && <Card className="mb-8">
