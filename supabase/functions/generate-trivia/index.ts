@@ -16,8 +16,8 @@ serve(async (req) => {
 
     console.log('Generating trivia:', { topic, numQuestions, difficulty });
 
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) throw new Error('LOVABLE_API_KEY not configured');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) throw new Error('OPENAI_API_KEY not configured');
 
     const difficultyDescriptions = {
       easy: 'simple questions suitable for beginners, with straightforward answers',
@@ -50,19 +50,18 @@ Return as a JSON array with this exact format:
 
 Make sure the questions are fun, educational, and appropriate for students. Mix up the position of the correct answer.`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.8,
       }),
     });
 

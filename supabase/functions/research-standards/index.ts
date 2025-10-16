@@ -16,7 +16,7 @@ serve(async (req) => {
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')!;
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -45,14 +45,14 @@ Format as JSON:
   ]
 }`;
 
-    const sourceResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const sourceResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           { role: 'system', content: 'You are an expert on US state education departments and official standards repositories. Provide real, scrapable URLs.' },
           { role: 'user', content: sourcePrompt }
@@ -128,14 +128,14 @@ Format as JSON:
   "documentation": ["attendance records", "grade reports", ...]
 }`;
 
-    const legalResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const legalResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           { role: 'system', content: 'Extract structured legal requirements from homeschool regulation documents.' },
           { role: 'user', content: legalPrompt }
@@ -173,20 +173,19 @@ For each standard provide:
 
 Return as JSON array with ALL standards found.`;
 
-      const extractResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const extractResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${lovableApiKey}`,
+          'Authorization': `Bearer ${openaiApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-pro',
+          model: 'gpt-5-2025-08-07',
           messages: [
             { role: 'system', content: 'Extract ALL standards from educational documents. Be comprehensive - extract every single standard you find.' },
             { role: 'user', content: extractPrompt }
           ],
-          temperature: 0.3,
-          max_tokens: 16000,
+          max_completion_tokens: 16000,
         }),
       });
 

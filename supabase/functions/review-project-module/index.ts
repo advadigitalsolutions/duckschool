@@ -23,7 +23,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')!;
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -134,17 +134,17 @@ Please provide comprehensive feedback in the following JSON format:
   }
 }`;
 
-    console.log('Calling Lovable AI for project review...');
+    console.log('Calling OpenAI for project review...');
 
-    // Call Lovable AI for comprehensive feedback
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Call OpenAI for comprehensive feedback
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro', // Use Pro for deep reasoning and coaching
+        model: 'gpt-5-2025-08-07', // Use flagship for deep reasoning and coaching
         messages: [
           {
             role: 'system',
@@ -156,7 +156,6 @@ Please provide comprehensive feedback in the following JSON format:
           }
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.7,
       }),
     });
 

@@ -34,7 +34,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')!;
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -94,19 +94,18 @@ Return ONLY a JSON object with this structure:
   ]
 }`;
 
-            const sourcesResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            const sourcesResponse = await fetch('https://api.openai.com/v1/chat/completions', {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${lovableApiKey}`,
+                'Authorization': `Bearer ${openaiApiKey}`,
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                model: 'google/gemini-2.5-flash',
+                model: 'gpt-5-mini-2025-08-07',
                 messages: [
                   { role: 'system', content: 'You are a research assistant. Always return valid JSON.' },
                   { role: 'user', content: sourcePrompt }
                 ],
-                temperature: 0.3,
               }),
             });
 
@@ -164,14 +163,14 @@ Return a JSON object categorizing requirements like:
   "notification": ["requirement 1"]
 }`;
 
-              const legalResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+              const legalResponse = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                  'Authorization': `Bearer ${lovableApiKey}`,
+                  'Authorization': `Bearer ${openaiApiKey}`,
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  model: 'google/gemini-2.5-flash',
+                  model: 'gpt-5-mini-2025-08-07',
                   messages: [
                     { role: 'system', content: 'Extract legal requirements. Return valid JSON only.' },
                     { role: 'user', content: legalPrompt }
@@ -210,14 +209,14 @@ Return a JSON array of standards with this structure:
 
 Extract as many relevant standards as you can find. Return ONLY the JSON array.`;
 
-            const standardsResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            const standardsResponse = await fetch('https://api.openai.com/v1/chat/completions', {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${lovableApiKey}`,
+                'Authorization': `Bearer ${openaiApiKey}`,
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                model: 'google/gemini-2.5-pro',
+                model: 'gpt-5-2025-08-07',
                 messages: [
                   { role: 'system', content: 'You are a standards extraction expert. Return valid JSON only.' },
                   { role: 'user', content: standardsPrompt }
