@@ -281,6 +281,29 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         )
       );
 
+      // Run AI analysis if enabled
+      if (aiAnalysisEnabled && assignment.day_of_week && assignment.auto_scheduled_time) {
+        try {
+          const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-schedule-change', {
+            body: {
+              assignmentId: assignment.id,
+              newDay: dayName,
+              newTime: newTime,
+              studentId
+            }
+          });
+
+          if (!analysisError && analysisData?.analysis) {
+            toast.success('Assignment rescheduled', {
+              description: analysisData.analysis
+            });
+          }
+        } catch (error) {
+          console.error('Analysis error:', error);
+          // Don't block the reschedule if analysis fails
+        }
+      }
+
       const { error } = await supabase
         .from('assignments')
         .update({
@@ -301,7 +324,9 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         throw error;
       }
 
-      toast.success('Assignment rescheduled');
+      if (!aiAnalysisEnabled) {
+        toast.success('Assignment rescheduled');
+      }
     } catch (error: any) {
       toast.error('Failed to reschedule');
     } finally {
