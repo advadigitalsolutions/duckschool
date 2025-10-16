@@ -1,117 +1,83 @@
 export interface CourseScope {
-  allow_prefixes: string[];
-  ban_prefixes: string[];
-  ban_terms_core_only: string[];
-  concept_tags: string[];
-  grade_range: [number, number];
-}
-
-/**
- * Normalize course key to try multiple formats for robust lookup
- * Converts single grades to ranges where appropriate (e.g., 9 -> 9-10, 11 -> 11-12)
- */
-export function normalizeCourseKey(context: {
-  state: string;
-  class_name: string;
-  grade_level: string | number;
-}): string[] {
-  const g = String(context.grade_level);
-  
-  // Map single grades to standard ranges
-  const ranges: Record<string, string> = {
-    "9": "9-10", "10": "9-10",
-    "11": "11-12", "12": "11-12"
-  };
-  const range = ranges[g] ?? g;
-
-  return [
-    `${context.state}:${context.class_name}:${range}`,     // Preferred: with range
-    `${context.state}:${context.class_name}:${g}`,         // Fallback 1: exact grade
-    `${context.state}:${context.class_name}`               // Fallback 2: course only
-  ];
+  allowPrefixes: string[];
+  bannedPrefixes: string[];
+  bannedTerms: string[];
+  conceptTags: string[];
+  gradeRange: { min: number; max: number };
 }
 
 export const COURSE_SCOPE_MAP: Record<string, CourseScope> = {
-  "CA:Algebra I:9-10": {
-    allow_prefixes: ["HSA-", "HSF-", "S-ID"],
-    ban_prefixes: ["K.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "NBT", "NS", "EE", "4.NBT", "5.NBT", "6.NS", "7.NS", "8.NS"],
-    ban_terms_core_only: [
-      "place value", "base-10", "ten frame", "expanded form", 
-      "rounding", "regrouping", "unifix cubes", "skip counting",
-      "counting by tens", "number line for addition", "base-ten blocks"
-    ],
-    concept_tags: [
-      "linear equations", "functions", "systems", "polynomials", 
-      "exponents", "modeling", "statistics-linear", "quadratics"
-    ],
-    grade_range: [9, 10]
+  // Mathematics - High School
+  "algebra_1": {
+    allowPrefixes: ["A.SSE", "A.APR", "A.CED", "A.REI", "F.IF", "F.BF", "F.LE", "S.ID"],
+    bannedPrefixes: ["G.", "N.CN", "N.VM", "F.TF", "K.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8."],
+    bannedTerms: ["triangle", "polygon", "circle", "angle", "congruent", "similar", "geometry", "place value", "base-10", "counting"],
+    conceptTags: ["algebra", "equations", "functions", "linear", "quadratic"],
+    gradeRange: { min: 8, max: 10 }
   },
-  "CA:Geometry:9-10": {
-    allow_prefixes: ["HSG-", "HSA-REI", "HSF-TF"],
-    ban_prefixes: ["K.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8."],
-    ban_terms_core_only: ["pattern blocks", "shape sorting", "counting shapes"],
-    concept_tags: ["congruence", "similarity", "trigonometry", "circles", "proofs"],
-    grade_range: [9, 10]
+  
+  "geometry": {
+    allowPrefixes: ["G.CO", "G.SRT", "G.C", "G.GPE", "G.GMD", "G.MG"],
+    bannedPrefixes: ["A.", "F.", "S.", "N.", "K.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8."],
+    bannedTerms: ["algebra", "function", "equation", "variable", "counting", "place value"],
+    conceptTags: ["geometry", "shapes", "proofs", "constructions", "measurement"],
+    gradeRange: { min: 9, max: 11 }
   },
-  "CA:Algebra II:11-12": {
-    allow_prefixes: ["HSA-", "HSF-", "HSN-", "S-"],
-    ban_prefixes: ["K.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8."],
-    ban_terms_core_only: ["manipulatives", "visual models for fractions"],
-    concept_tags: [
-      "complex numbers", "rational expressions", "exponential functions",
-      "logarithms", "trigonometry", "sequences", "series"
-    ],
-    grade_range: [11, 12]
+  
+  "algebra_2": {
+    allowPrefixes: ["A.SSE", "A.APR", "A.CED", "A.REI", "F.IF", "F.BF", "F.TF", "N.CN", "N.VM"],
+    bannedPrefixes: ["G.", "K.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8."],
+    bannedTerms: ["triangle", "polygon", "circle", "angle", "congruent", "elementary", "counting"],
+    conceptTags: ["algebra", "functions", "polynomials", "rational", "exponential", "logarithmic"],
+    gradeRange: { min: 10, max: 12 }
   },
-  "CA:Grade 5 Math:5": {
-    allow_prefixes: ["5.NBT", "5.NF", "5.MD", "5.OA"],
-    ban_prefixes: ["HSA-", "HSF-", "HSG-", "HSN-", "6.", "7.", "8."],
-    ban_terms_core_only: ["matrix", "determinant", "epsilon-delta", "complex numbers"],
-    concept_tags: ["place value", "operations", "fractions", "measurement", "patterns"],
-    grade_range: [5, 5]
+  
+  "precalculus": {
+    allowPrefixes: ["F.TF", "N.CN", "N.VM", "A.APR"],
+    bannedPrefixes: ["G.CO", "G.SRT", "K.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8."],
+    bannedTerms: ["elementary", "basic arithmetic", "counting", "place value"],
+    conceptTags: ["trigonometry", "complex numbers", "vectors", "matrices", "advanced functions"],
+    gradeRange: { min: 11, max: 12 }
   },
-  "CA:Grade 8 Math:8": {
-    allow_prefixes: ["8.NS", "8.EE", "8.F", "8.G", "8.SP"],
-    ban_prefixes: ["HSA-", "HSF-", "1.", "2.", "3.", "4.", "5.", "6.", "7."],
-    ban_terms_core_only: ["counting blocks", "unifix cubes"],
-    concept_tags: ["rational numbers", "linear equations", "functions", "geometry", "pythagorean"],
-    grade_range: [8, 8]
-  }
+  
+  "calculus": {
+    allowPrefixes: ["calculus", "derivative", "integral", "limit", "F."],
+    bannedPrefixes: ["K.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8."],
+    bannedTerms: ["elementary", "basic arithmetic", "counting", "place value"],
+    conceptTags: ["calculus", "derivatives", "integrals", "limits", "applications"],
+    gradeRange: { min: 11, max: 12 }
+  },
+  
+  "statistics": {
+    allowPrefixes: ["S.ID", "S.IC", "S.CP", "S.MD"],
+    bannedPrefixes: ["A.", "G.", "F.IF", "F.BF", "K.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8."],
+    bannedTerms: ["algebra", "geometry", "triangle", "elementary"],
+    conceptTags: ["statistics", "probability", "data analysis", "inference"],
+    gradeRange: { min: 11, max: 12 }
+  },
+  
+  "pre_algebra": {
+    allowPrefixes: ["6.NS", "6.EE", "6.G", "7.NS", "7.EE", "7.G", "8.NS", "8.EE", "8.G", "8.F"],
+    bannedPrefixes: ["A.", "G.CO", "G.SRT", "N.CN", "F.TF"],
+    bannedTerms: ["calculus", "derivative", "trigonometry", "matrix"],
+    conceptTags: ["pre-algebra", "ratios", "expressions", "integers", "basic geometry"],
+    gradeRange: { min: 6, max: 8 }
+  },
+  
+  // Mathematics - General
+  "general_math": {
+    allowPrefixes: [],
+    bannedPrefixes: [],
+    bannedTerms: [],
+    conceptTags: ["mathematics"],
+    gradeRange: { min: 0, max: 12 }
+  },
 };
 
 /**
- * Resolve course scope dynamically if not in map
- * Now used as fallback after trying all normalized keys
+ * Get course scope by course type key
  */
-export function resolveCourseScope(
-  courseName: string,
-  state: string,
-  gradeLevel: string,
-  subject: string
-): CourseScope | null {
-  const key = `${state}:${courseName}:${gradeLevel}`;
-  
-  if (COURSE_SCOPE_MAP[key]) return COURSE_SCOPE_MAP[key];
-  
-  const gradeNum = parseInt(gradeLevel) || 12;
-  
-  if (subject === "Mathematics" && gradeNum >= 9) {
-    return {
-      allow_prefixes: ["HSA-", "HSF-", "HSG-", "HSN-", "S-"],
-      ban_prefixes: ["K.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8."],
-      ban_terms_core_only: ["place value", "base-10", "counting blocks"],
-      concept_tags: ["algebra", "functions", "geometry"],
-      grade_range: [9, 12]
-    };
-  } else if (subject === "Mathematics" && gradeNum <= 8) {
-    return {
-      allow_prefixes: [`${gradeNum}.`],
-      ban_prefixes: ["HSA-", "HSF-", "HSG-"],
-      ban_terms_core_only: ["epsilon-delta", "matrix"],
-      concept_tags: ["arithmetic", "fractions", "basic algebra"],
-      grade_range: [gradeNum, gradeNum]
-    };
-  }
-  
-  return null;
+export function getCourseScope(courseType: string | null | undefined): CourseScope | null {
+  if (!courseType) return null;
+  return COURSE_SCOPE_MAP[courseType] || null;
 }

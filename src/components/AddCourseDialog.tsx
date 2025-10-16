@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
+import { COURSE_TYPES, getCourseTypesBySubject, getCourseTypeByKey } from '@/types/courseTypes';
 
 interface AddCourseDialogProps {
   studentId: string;
@@ -43,17 +44,32 @@ const subjects = [
 export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<string>('');
+  const [selectedCourseType, setSelectedCourseType] = useState<string>('');
+  
+  const availableCourseTypes = selectedSubject ? getCourseTypesBySubject(selectedSubject) : [];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const title = formData.get('title') as string;
+    const courseTypeKey = formData.get('courseType') as string;
+    const customSuffix = formData.get('customSuffix') as string;
     const subject = formData.get('subject') as string;
     const description = formData.get('description') as string;
     const credits = parseFloat(formData.get('credits') as string) || 1.0;
     const gradeLevel = formData.get('gradeLevel') as string;
+
+    const courseType = getCourseTypeByKey(courseTypeKey);
+    if (!courseType) {
+      toast.error('Invalid course type selected');
+      setLoading(false);
+      return;
+    }
+
+    // Build display title from course type + optional suffix
+    const title = customSuffix ? `${courseType.displayName} - ${customSuffix}` : courseType.displayName;
 
     try {
       // Get current user to set as course creator
@@ -65,9 +81,10 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
           student_id: studentId,
           title,
           subject,
+          course_type: courseTypeKey,
           description: description || null,
           credits,
-          grade_level: gradeLevel,
+          grade_level: gradeLevel || courseType.gradeRange,
           initiated_by: user?.id,
           initiated_by_role: 'student',
         })
@@ -135,8 +152,10 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
       setOpen(false);
       onCourseAdded();
       
-      // Reset form
+      // Reset form and state
       (e.target as HTMLFormElement).reset();
+      setSelectedSubject('');
+      setSelectedCourseType('');
     } catch (error: any) {
       console.error('Error adding course:', error);
       toast.error(error.message || 'Failed to add course');
@@ -162,18 +181,16 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Course Title *</Label>
-            <Input
-              id="title"
-              name="title"
-              placeholder="e.g., Algebra I"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="subject">Subject *</Label>
-            <Select name="subject" required>
+            <Select 
+              name="subject" 
+              required
+              value={selectedSubject}
+              onValueChange={(value) => {
+                setSelectedSubject(value);
+                setSelectedCourseType(''); // Reset course type when subject changes
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select a subject" />
               </SelectTrigger>
@@ -185,6 +202,47 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="courseType">Course Type *</Label>
+            <Select 
+              name="courseType" 
+              required
+              value={selectedCourseType}
+              onValueChange={setSelectedCourseType}
+              disabled={!selectedSubject}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={selectedSubject ? "Select a course type" : "Select subject first"} />
+              </SelectTrigger>
+              <SelectContent>
+                {availableCourseTypes.map((courseType) => (
+                  <SelectItem key={courseType.key} value={courseType.key}>
+                    {courseType.displayName}
+                    {courseType.description && (
+                      <span className="text-muted-foreground text-xs ml-2">
+                        ({courseType.description})
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="customSuffix">Custom Title Suffix (Optional)</Label>
+            <Input
+              id="customSuffix"
+              name="customSuffix"
+              placeholder="e.g., Refresher, Accelerated, Honors"
+            />
+            <p className="text-xs text-muted-foreground">
+              {selectedCourseType && getCourseTypeByKey(selectedCourseType) && (
+                <>Display name: {getCourseTypeByKey(selectedCourseType)!.displayName}</>
+              )}
+            </p>
           </div>
 
           <div className="space-y-2">

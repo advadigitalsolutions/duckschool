@@ -125,12 +125,23 @@ serve(async (req) => {
     const gradeLevel = course.grade_level || '10';
     const courseGoals = course.goals;
     const isCustomFramework = framework === 'CUSTOM';
+    const courseType = course.course_type;
     
     // Determine effective approach override: request-level takes priority over course-level
     let approachOverride = requestApproachOverride || '';
     if (!approachOverride && course.description && course.description.startsWith('APPROACH_OVERRIDE:')) {
       approachOverride = course.description.replace('APPROACH_OVERRIDE:', '').trim();
     }
+
+    // Get course scope for filtering standards
+    const { getCourseScope } = await import('../_shared/course-scope-map.ts');
+    const courseScope = getCourseScope(courseType);
+    
+    console.log('🎯 Course scope:', { 
+      courseType, 
+      hasScope: !!courseScope,
+      allowPrefixes: courseScope?.allowPrefixes?.length || 0 
+    });
 
     // Get standards - either custom or from database
     let allStandards = null;
@@ -147,13 +158,27 @@ serve(async (req) => {
       allStandards = course.standards_scope?.[0]?.custom_standards || null;
       console.log('📚 Custom standards found:', allStandards?.length || 0);
     } else {
-      // Get standards from database - try exact grade first
-      let { data, error: standardsError } = await supabaseClient
+      // Build standards query with course scope filtering
+      let query = supabaseClient
         .from('standards')
         .select('*')
         .eq('framework', framework)
-        .eq('subject', course.subject)
-        .eq('grade_band', gradeLevel);
+        .eq('subject', course.subject);
+      
+      // Apply prefix filtering from course scope BEFORE querying
+      if (courseScope?.allowPrefixes && courseScope.allowPrefixes.length > 0) {
+        console.log('🔍 Filtering by prefixes:', courseScope.allowPrefixes);
+        // Use OR condition to match any of the allowed prefixes
+        const orConditions = courseScope.allowPrefixes
+          .map(prefix => `code.ilike.${prefix}%`)
+          .join(',');
+        query = query.or(orConditions);
+      } else {
+        // No prefix filter, try grade-based filtering
+        query = query.eq('grade_band', gradeLevel);
+      }
+      
+      let { data, error: standardsError } = await query;
 
       console.log('📊 Exact grade query results:', { 
         found: data?.length || 0, 
@@ -164,64 +189,36 @@ serve(async (req) => {
         console.error('Standards error:', standardsError);
       }
 
-      // If no exact match, try grade ranges (e.g., "K-12" that includes this grade)
-      if (!data || data.length === 0) {
-        console.log('🔄 No exact match, trying grade ranges...');
-        const gradeNum = parseInt(gradeLevel) || 12;
-        const { data: allGradeData } = await supabaseClient
-          .from('standards')
-          .select('*')
-          .eq('framework', framework)
-          .eq('subject', course.subject);
+      // Apply post-query filtering based on course scope
+      if (data && data.length > 0 && courseScope) {
+        const preFilterCount = data.length;
         
-        console.log('📋 All grades query:', { 
-          totalFound: allGradeData?.length || 0,
-          sampleGradeBands: allGradeData?.slice(0, 3).map(s => s.grade_band) 
-        });
-        
-        if (allGradeData && allGradeData.length > 0) {
-          // Filter for grade ranges that include our grade
-          data = allGradeData.filter((s: any) => {
-            const gradeBand = s.grade_band;
-            
-            // First check: does the grade band include our target grade?
-            let inGradeBand = false;
-            if (gradeBand.includes('-')) {
-              const [startStr, endStr] = gradeBand.split('-');
-              // Handle 'K' as kindergarten (grade 0)
-              const start = startStr.toUpperCase() === 'K' ? 0 : parseInt(startStr);
-              const end = parseInt(endStr);
-              inGradeBand = gradeNum >= start && gradeNum <= end;
-            } else {
-              inGradeBand = parseInt(gradeBand) === gradeNum;
+        // Filter out banned prefixes
+        if (courseScope.bannedPrefixes && courseScope.bannedPrefixes.length > 0) {
+          data = data.filter((s: any) => {
+            const isBanned = courseScope.bannedPrefixes.some(banned => s.code.startsWith(banned));
+            if (isBanned) {
+              console.log(`🚫 Banned prefix: ${s.code}`);
             }
-            
-            if (!inGradeBand) return false;
-            
-            // Second check: does the standard CODE indicate an appropriate grade?
-            // This catches cases where "K-12" band includes elementary standards
-            const codeGrade = extractGradeFromStandardCode(s.code);
-            
-            // For high school (9-12), ONLY accept high school standards
-            if (gradeNum >= 9) {
-              if (codeGrade === null || codeGrade < 9) {
-                console.log(`🚫 Rejecting ${s.code}: grade ${codeGrade} too low for grade ${gradeNum}`);
-                return false;
-              }
-            }
-            
-            // For other grades, be more lenient but still filter
-            if (codeGrade !== null && Math.abs(codeGrade - gradeNum) > 2) {
-              console.log(`🚫 Rejecting ${s.code}: grade ${codeGrade} too far from target ${gradeNum}`);
-              return false;
-            }
-            
-            console.log(`✅ Accepted: ${s.code} (band: ${gradeBand}, code grade: ${codeGrade}, target: ${gradeNum})`);
-            return true;
+            return !isBanned;
           });
-          
-          console.log(`✨ Filtered standards: ${data.length} (from ${allGradeData.length} total)`);
         }
+        
+        // Filter out standards with banned terms in their text
+        if (courseScope.bannedTerms && courseScope.bannedTerms.length > 0) {
+          data = data.filter((s: any) => {
+            const textLower = s.text.toLowerCase();
+            const hasBannedTerm = courseScope.bannedTerms.some(term => 
+              textLower.includes(term.toLowerCase())
+            );
+            if (hasBannedTerm) {
+              console.log(`🚫 Banned term in: ${s.code}`);
+            }
+            return !hasBannedTerm;
+          });
+        }
+        
+        console.log(`✨ Filtered by scope: ${data.length} (from ${preFilterCount})`);
       }
       
       allStandards = data;

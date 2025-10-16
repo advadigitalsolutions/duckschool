@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { COURSE_SCOPE_MAP, resolveCourseScope, normalizeCourseKey } from "../_shared/course-scope-map.ts";
+import { COURSE_SCOPE_MAP, getCourseScope } from "../_shared/course-scope-map.ts";
 import { analyzeRigor } from '../_shared/rigor-analyzer.ts';
 
 const corsHeaders = {
@@ -60,30 +60,14 @@ serve(async (req) => {
       mode: context.mode
     });
 
-    // Step 1: Determine course scope with normalized keys
-    const courseKeys = normalizeCourseKey({
-      state: context.state,
-      class_name: context.class_name,
-      grade_level: context.grade_band // Using grade_band from context
-    });
-    
+    // Step 1: Determine course scope using course_key
     let courseScope = null;
     let matchedKey = null;
     
-    // Try all normalized keys before falling back to dynamic resolver
-    for (const key of courseKeys) {
-      if (COURSE_SCOPE_MAP[key]) {
-        courseScope = COURSE_SCOPE_MAP[key];
-        matchedKey = key;
-        console.log(`✅ Exact match found: ${key}`);
-        break;
-      }
-    }
-    
-    if (!courseScope) {
-      console.log(`⚠️ No exact scope match for keys: ${courseKeys.join(', ')}, using dynamic resolver`);
-      courseScope = resolveCourseScope(context.class_name, context.state, context.grade_band, context.subject);
-      matchedKey = 'dynamic_fallback';
+    if (context.course_key) {
+      courseScope = getCourseScope(context.course_key);
+      matchedKey = context.course_key;
+      console.log(`✅ Course scope found: ${matchedKey}`);
     }
 
     if (!courseScope) {
@@ -151,7 +135,7 @@ serve(async (req) => {
       const code = std.code || std;
       
       // Check if code starts with banned prefix
-      const isBanned = courseScope.ban_prefixes.some(prefix => code.startsWith(prefix));
+      const isBanned = courseScope.bannedPrefixes.some((prefix: string) => code.startsWith(prefix));
       if (isBanned) {
         bannedCodes.push(code);
         findings.push(`Banned code for this course: ${code}`);
@@ -159,7 +143,8 @@ serve(async (req) => {
       }
 
       // Check if code starts with allowed prefix
-      const isAllowed = courseScope.allow_prefixes.some(prefix => code.startsWith(prefix));
+      const isAllowed = courseScope.allowPrefixes.length === 0 || 
+        courseScope.allowPrefixes.some((prefix: string) => code.startsWith(prefix));
       if (!isAllowed) {
         invalidCodes.push(code);
         findings.push(`Code outside allowed scope: ${code}`);
@@ -181,7 +166,7 @@ serve(async (req) => {
     ].join(" ").toLowerCase();
 
     const foundBannedTerms: string[] = [];
-    for (const term of courseScope.ban_terms_core_only) {
+    for (const term of courseScope.bannedTerms) {
       if (textToScan.includes(term.toLowerCase())) {
         foundBannedTerms.push(term);
         findings.push(`Banned term found in core content: "${term}"`);
@@ -233,8 +218,8 @@ serve(async (req) => {
       regenerateFeedback = {
         reason: findings.join("; "),
         required_scope: {
-          allow_prefixes: courseScope.allow_prefixes,
-          ban_terms: courseScope.ban_terms_core_only
+          allow_prefixes: courseScope.allowPrefixes,
+          ban_terms: courseScope.bannedTerms
         },
         notes: [
           "Use only standards with allowed prefixes",

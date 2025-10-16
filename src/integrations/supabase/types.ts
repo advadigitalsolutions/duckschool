@@ -604,6 +604,7 @@ export type Database = {
         Row: {
           archived: boolean | null
           auto_generate_weekly: boolean | null
+          course_type: string | null
           created_at: string | null
           credits: number | null
           description: string | null
@@ -626,6 +627,7 @@ export type Database = {
         Insert: {
           archived?: boolean | null
           auto_generate_weekly?: boolean | null
+          course_type?: string | null
           created_at?: string | null
           credits?: number | null
           description?: string | null
@@ -648,6 +650,7 @@ export type Database = {
         Update: {
           archived?: boolean | null
           auto_generate_weekly?: boolean | null
+          course_type?: string | null
           created_at?: string | null
           credits?: number | null
           description?: string | null
