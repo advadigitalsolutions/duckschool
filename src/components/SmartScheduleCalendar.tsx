@@ -37,9 +37,15 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
     try {
       setLoading(true);
 
-      // Get start and end of week
+      // Get start and end of week dates for filtering
       const startOfWeek = getStartOfWeek(selectedDate);
       const endOfWeek = getEndOfWeek(selectedDate);
+      const weekDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const weekDays = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(startOfWeek);
+        date.setDate(startOfWeek.getDate() + i);
+        return weekDayNames[date.getDay()];
+      });
 
       const { data, error } = await supabase
         .from('assignments')
@@ -61,8 +67,8 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         `)
         .eq('curriculum_items.courses.student_id', studentId)
         .eq('status', 'assigned')
-        .gte('auto_scheduled_time', startOfWeek.toISOString())
-        .lte('auto_scheduled_time', endOfWeek.toISOString());
+        .not('auto_scheduled_time', 'is', null)
+        .in('day_of_week', weekDays);
 
       if (error) throw error;
 
@@ -147,13 +153,13 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
     }
 
     try {
-      const newDateTime = `${newDate.toISOString().split('T')[0]}T${newTime}:00`;
+      const timeOnly = `${newTime}:00`;
       const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][newDate.getDay()];
 
       const { error } = await supabase
         .from('assignments')
         .update({
-          auto_scheduled_time: newDateTime,
+          auto_scheduled_time: timeOnly,
           day_of_week: dayName
         })
         .eq('id', draggedAssignment);
@@ -189,11 +195,9 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
 
   const getAssignmentsForSlot = (day: string, time: string) => {
     return assignments.filter(a => {
-      if (!a.auto_scheduled_time) return false;
-      const assignmentDate = new Date(a.auto_scheduled_time);
-      const assignmentDay = weekDays[assignmentDate.getDay()];
-      const assignmentTime = a.auto_scheduled_time.split('T')[1].substring(0, 5);
-      return assignmentDay === day && assignmentTime === time;
+      if (!a.auto_scheduled_time || !a.day_of_week) return false;
+      const assignmentTime = a.auto_scheduled_time.substring(0, 5);
+      return a.day_of_week === day && assignmentTime === time;
     });
   };
 
