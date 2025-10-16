@@ -134,6 +134,13 @@ serve(async (req) => {
     const updates = scheduledAssignments.map(async (scheduled) => {
       const timeOnly = scheduled.scheduledTime.split('T')[1];
       
+      console.log(`🔍 About to update assignment ${scheduled.assignmentId}:`, {
+        auto_scheduled_time: timeOnly,
+        day_of_week: scheduled.dayOfWeek,
+        dayOfWeekType: typeof scheduled.dayOfWeek,
+        dayOfWeekValue: JSON.stringify(scheduled.dayOfWeek)
+      });
+      
       const { error } = await supabase
         .from('assignments')
         .update({
