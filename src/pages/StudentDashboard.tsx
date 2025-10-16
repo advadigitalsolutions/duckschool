@@ -242,6 +242,12 @@ export default function StudentDashboard() {
 
       // Fetch today's assignments
       console.log('[StudentDashboard] Fetching assignments for student:', studentData.id);
+      
+      // Get current time and day of week
+      const now = new Date();
+      const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const todayDayOfWeek = daysOfWeek[now.getDay()];
+      
       const {
         data: assignmentsData,
         error: assignmentsError
@@ -261,30 +267,27 @@ export default function StudentDashboard() {
           submissions (
             id
           )
-        `).eq('curriculum_items.courses.student_id', studentData.id).eq('status', 'assigned').order('due_at', {
+        `).eq('curriculum_items.courses.student_id', studentData.id).eq('status', 'assigned').order('auto_scheduled_time', {
         ascending: true
-      }).limit(20);
+      });
       console.log('[StudentDashboard] Assignments data:', assignmentsData);
       console.log('[StudentDashboard] Assignments error:', assignmentsError);
       
       // Separate overdue from current assignments
-      const now = new Date();
       const overdue = (assignmentsData || []).filter(a => {
         const dueDate = new Date(a.due_at);
         const hasNoSubmission = !a.submissions || a.submissions.length === 0;
         return a.due_at && !isNaN(dueDate.getTime()) && dueDate < now && hasNoSubmission;
       });
       
+      // Filter for TODAY's tasks only - assignments scheduled for current day
       const current = (assignmentsData || []).filter(a => {
         const hasNoSubmission = !a.submissions || a.submissions.length === 0;
         if (!hasNoSubmission) return false;
         
-        // Show assignments with no due date OR future due dates
-        if (!a.due_at) return true;
-        
-        const dueDate = new Date(a.due_at);
-        return !isNaN(dueDate.getTime()) && dueDate >= now;
-      }).slice(0, 5);
+        // Show only assignments scheduled for today
+        return a.day_of_week === todayDayOfWeek && a.auto_scheduled_time;
+      });
       
       setOverdueAssignments(overdue);
       setAssignments(current);

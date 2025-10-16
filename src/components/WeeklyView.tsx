@@ -27,7 +27,7 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
       const upcomingStart = today;
       const upcomingEnd = addDays(today, 14); // Show next 14 days
 
-      // Fetch upcoming assignments
+      // Fetch upcoming assignments with schedule
       const { data: assignmentsData, error } = await supabase
         .from('assignments')
         .select(`
@@ -42,11 +42,12 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
             )
           )
         `)
-        .gte('assigned_date', format(upcomingStart, 'yyyy-MM-dd'))
-        .lte('assigned_date', format(upcomingEnd, 'yyyy-MM-dd'))
         .eq('curriculum_items.courses.student_id', studentId)
-        .order('assigned_date', { ascending: true })
-        .order('day_of_week', { ascending: true });
+        .eq('status', 'assigned')
+        .not('day_of_week', 'is', null)
+        .not('auto_scheduled_time', 'is', null)
+        .order('day_of_week', { ascending: true })
+        .order('auto_scheduled_time', { ascending: true });
 
       if (error) throw error;
 
@@ -72,15 +73,16 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
 
   const groupByDay = () => {
     const today = new Date();
+    const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const next10Days = Array.from({ length: 10 }, (_, i) => addDays(today, i));
     
-    return next10Days.map(date => ({
-      date,
-      assignments: assignments.filter(a => {
-        if (!a.assigned_date) return false;
-        return isSameDay(parseISO(a.assigned_date), date);
-      })
-    })).filter(day => day.assignments.length > 0); // Only show days with assignments
+    return next10Days.map(date => {
+      const dayOfWeek = daysOfWeek[date.getDay()];
+      return {
+        date,
+        assignments: assignments.filter(a => a.day_of_week === dayOfWeek)
+      };
+    }).filter(day => day.assignments.length > 0); // Only show days with assignments
   };
 
   const calculateProgress = () => {
