@@ -41,24 +41,11 @@ const subjects = [
   'Other'
 ];
 
-const PEDAGOGIES = [
-  { value: 'montessori', label: 'Montessori' },
-  { value: 'classical', label: 'Classical Education' },
-  { value: 'charlotte-mason', label: 'Charlotte Mason' },
-  { value: 'unschooling', label: 'Unschooling' },
-  { value: 'traditional', label: 'Traditional' },
-  { value: 'project-based', label: 'Project-Based Learning' },
-  { value: 'waldorf', label: 'Waldorf' },
-  { value: 'eclectic', label: 'Eclectic' },
-];
-
 export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [selectedCourseType, setSelectedCourseType] = useState<string>('');
-  const [pedagogy, setPedagogy] = useState<string>('eclectic');
-  const [framework, setFramework] = useState<string>('CA-CCSS');
   
   const availableCourseTypes = selectedSubject ? getCourseTypesBySubject(selectedSubject) : [];
 
@@ -84,12 +71,6 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
     // Build display title from course type + optional suffix
     const title = customSuffix ? `${courseType.displayName} - ${customSuffix}` : courseType.displayName;
 
-    // Extract a single grade from the grade range for standards lookup
-    // e.g., "6-8" -> "6", "9-10" -> "9", "11-12" -> "11"
-    const defaultGrade = courseType.gradeRange.includes('-') 
-      ? courseType.gradeRange.split('-')[0] 
-      : courseType.gradeRange;
-
     try {
       // Get current user to set as course creator
       const { data: { user } } = await supabase.auth.getUser();
@@ -103,13 +84,9 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
           course_type: courseTypeKey,
           description: description || null,
           credits,
-          grade_level: gradeLevel || defaultGrade,
+          grade_level: gradeLevel || courseType.gradeRange,
           initiated_by: user?.id,
           initiated_by_role: 'student',
-          pacing_config: {
-            pedagogy: pedagogy,
-            framework: framework
-          }
         })
         .select();
 
@@ -179,8 +156,6 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
       (e.target as HTMLFormElement).reset();
       setSelectedSubject('');
       setSelectedCourseType('');
-      setPedagogy('eclectic');
-      setFramework('CA-CCSS');
     } catch (error: any) {
       console.error('Error adding course:', error);
       toast.error(error.message || 'Failed to add course');
@@ -271,64 +246,12 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="pedagogy">Educational Pedagogy *</Label>
-            <Select 
-              name="pedagogy" 
-              required
-              value={pedagogy}
-              onValueChange={setPedagogy}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PEDAGOGIES.map((ped) => (
-                  <SelectItem key={ped.value} value={ped.value}>
-                    {ped.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Influences how AI generates curriculum and assignments
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="framework">Regional Standards Framework *</Label>
-            <Select 
-              name="framework" 
-              required
-              value={framework}
-              onValueChange={setFramework}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="CA-CCSS">California Common Core State Standards</SelectItem>
-                <SelectItem value="CUSTOM">Custom Framework (Goals-Based)</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Used for AI curriculum generation when regional standards aren't available
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="gradeLevel">Grade Level (Optional)</Label>
+            <Label htmlFor="gradeLevel">Grade Level</Label>
             <Input
               id="gradeLevel"
               name="gradeLevel"
-              placeholder={
-                selectedCourseType && getCourseTypeByKey(selectedCourseType)
-                  ? `Suggested: ${getCourseTypeByKey(selectedCourseType)!.gradeRange}`
-                  : "e.g., 6, 7, 8th Grade"
-              }
+              placeholder="e.g., 10th Grade"
             />
-            <p className="text-xs text-muted-foreground">
-              Leave blank to use default for this course type
-            </p>
           </div>
 
           <div className="space-y-2">
