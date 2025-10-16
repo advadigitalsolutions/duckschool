@@ -37,15 +37,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
     try {
       setLoading(true);
 
-      // Get start and end of week dates for filtering
-      const startOfWeek = getStartOfWeek(selectedDate);
-      const endOfWeek = getEndOfWeek(selectedDate);
-      const weekDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const weekDays = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(startOfWeek);
-        date.setDate(startOfWeek.getDate() + i);
-        return weekDayNames[date.getDay()];
-      });
+      console.log('📅 Fetching assignments for student:', studentId);
 
       const { data, error } = await supabase
         .from('assignments')
@@ -66,13 +58,29 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
           )
         `)
         .eq('curriculum_items.courses.student_id', studentId)
-        .eq('status', 'assigned')
-        .not('auto_scheduled_time', 'is', null)
-        .in('day_of_week', weekDays);
+        .eq('status', 'assigned');
 
+      console.log('📊 Query result:', { count: data?.length, error });
+      
       if (error) throw error;
 
-      const formatted = data.map((a: any) => ({
+      // Filter for current week on the client side
+      const startOfWeek = getStartOfWeek(selectedDate);
+      const endOfWeek = getEndOfWeek(selectedDate);
+      const weekDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const weekDays = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(startOfWeek);
+        date.setDate(startOfWeek.getDate() + i);
+        return weekDayNames[date.getDay()];
+      });
+
+      const filtered = (data || []).filter(a => 
+        a.auto_scheduled_time && 
+        a.day_of_week && 
+        weekDays.includes(a.day_of_week)
+      );
+
+      const formatted = filtered.map((a: any) => ({
         id: a.id,
         title: a.curriculum_items.title,
         subject: a.curriculum_items.courses.subject,
@@ -84,6 +92,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         course_id: a.curriculum_items.course_id
       }));
 
+      console.log('✅ Loaded assignments for week:', formatted.length);
       setAssignments(formatted);
     } catch (error: any) {
       console.error('Error fetching scheduled assignments:', error);
@@ -96,10 +105,11 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
   const runSmartScheduler = async () => {
     try {
       setScheduling(true);
-      toast.info('Running smart scheduler...');
-
       const startDate = getStartOfWeek(selectedDate).toISOString().split('T')[0];
       const endDate = getEndOfWeek(selectedDate).toISOString().split('T')[0];
+      
+      console.log('🤖 Starting scheduler:', { studentId, startDate, endDate });
+      toast.info('Running smart scheduler...');
 
       const { data, error } = await supabase.functions.invoke('smart-schedule-assignments', {
         body: { studentId, startDate, endDate }
@@ -107,11 +117,23 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
 
       if (error) throw error;
 
-      toast.success(`Scheduled ${data.scheduled.length} assignments!`);
-      fetchScheduledAssignments();
+      console.log('📊 Scheduler result:', data);
+      
+      const successCount = data.scheduled?.length || 0;
+      const errorCount = data.errors?.length || 0;
+      
+      if (successCount > 0) {
+        toast.success(`Scheduled ${successCount} assignments!`);
+        await fetchScheduledAssignments();
+      } else if (errorCount > 0) {
+        toast.error(`Failed to schedule ${errorCount} assignments`);
+        console.error('Scheduling errors:', data.errors);
+      } else {
+        toast.info('No assignments to schedule');
+      }
     } catch (error: any) {
       console.error('Scheduling error:', error);
-      toast.error('Failed to run scheduler');
+      toast.error(error.message || 'Failed to run scheduler');
     } finally {
       setScheduling(false);
     }
