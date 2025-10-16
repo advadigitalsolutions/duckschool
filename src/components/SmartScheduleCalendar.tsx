@@ -8,8 +8,11 @@ import { cn } from '@/lib/utils';
 import { SchedulingBlocksManager } from './SchedulingBlocksManager';
 import { BlockedTimeDialog } from './BlockedTimeDialog';
 import { ReassignAssignmentDialog } from './ReassignAssignmentDialog';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ScheduledAssignment {
   id: string;
@@ -54,6 +57,13 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
   const [selectedBlock, setSelectedBlock] = useState<SchedulingBlock | null>(null);
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [newBlockSlot, setNewBlockSlot] = useState<{ date: Date; time: string } | null>(null);
+  const [aiAnalysisEnabled, setAiAnalysisEnabled] = useState(true);
+  const [scheduleAnalysisOpen, setScheduleAnalysisOpen] = useState(false);
+  const [scheduleAnalysis, setScheduleAnalysis] = useState<{
+    summary: string;
+    changes: Array<{ assignment: string; reason: string; }>;
+    recommendations: string[];
+  } | null>(null);
 
   useEffect(() => {
     fetchScheduledAssignments();
@@ -157,11 +167,16 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
       const startDate = getStartOfWeek(selectedDate).toISOString().split('T')[0];
       const endDate = getEndOfWeek(selectedDate).toISOString().split('T')[0];
       
-      console.log('🤖 Starting scheduler:', { studentId, startDate, endDate });
-      toast.info('Running smart scheduler...');
+      console.log('🤖 Starting scheduler:', { studentId, startDate, endDate, aiAnalysisEnabled });
+      toast.info(aiAnalysisEnabled ? 'Analyzing schedule with AI...' : 'Running scheduler...');
 
       const { data, error } = await supabase.functions.invoke('smart-schedule-assignments', {
-        body: { studentId, startDate, endDate }
+        body: { 
+          studentId, 
+          startDate, 
+          endDate,
+          includeAnalysis: aiAnalysisEnabled 
+        }
       });
 
       if (error) throw error;
@@ -174,6 +189,12 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
       // Store scheduling notes
       if (data.notes && data.notes.length > 0) {
         setSchedulingNotes(data.notes);
+      }
+
+      // Store AI analysis if provided
+      if (aiAnalysisEnabled && data.analysis) {
+        setScheduleAnalysis(data.analysis);
+        setScheduleAnalysisOpen(true);
       }
       
       if (successCount > 0) {
@@ -375,7 +396,19 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
               AI-optimized schedule based on your focus patterns
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border bg-muted/30">
+              <Switch
+                id="ai-analysis"
+                checked={aiAnalysisEnabled}
+                onCheckedChange={setAiAnalysisEnabled}
+                className="data-[state=checked]:bg-primary"
+              />
+              <Label htmlFor="ai-analysis" className="text-sm font-medium cursor-pointer">
+                AI Analysis
+              </Label>
+            </div>
+            <div className="h-6 w-px bg-border" />
             <Button
               variant="outline"
               size="sm"
@@ -725,6 +758,75 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
           fetchScheduledAssignments();
         }}
       />
+
+      {/* Schedule Analysis Dialog */}
+      <Dialog open={scheduleAnalysisOpen} onOpenChange={setScheduleAnalysisOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Schedule Analysis
+            </DialogTitle>
+            <DialogDescription>
+              AI analysis of your scheduling decisions
+            </DialogDescription>
+          </DialogHeader>
+
+          {scheduleAnalysis && (
+            <div className="space-y-4 py-4">
+              {/* Summary */}
+              <Alert className="border-primary/20 bg-primary/5">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-sm">
+                  {scheduleAnalysis.summary}
+                </AlertDescription>
+              </Alert>
+
+              {/* Changes Made */}
+              {scheduleAnalysis.changes && scheduleAnalysis.changes.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    Changes Made
+                  </h3>
+                  <div className="space-y-2">
+                    {scheduleAnalysis.changes.map((change, index) => (
+                      <div key={index} className="rounded-lg border bg-muted/30 p-3">
+                        <div className="font-medium text-sm mb-1">{change.assignment}</div>
+                        <div className="text-xs text-muted-foreground">{change.reason}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {scheduleAnalysis.recommendations && scheduleAnalysis.recommendations.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Recommendations
+                  </h3>
+                  <ul className="space-y-2">
+                    {scheduleAnalysis.recommendations.map((rec, index) => (
+                      <li key={index} className="text-sm text-muted-foreground flex gap-2">
+                        <span className="text-primary">•</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setScheduleAnalysisOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

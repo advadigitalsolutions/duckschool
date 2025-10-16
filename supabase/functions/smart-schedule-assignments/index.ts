@@ -46,7 +46,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { studentId, startDate, endDate } = await req.json();
+    const { studentId, startDate, endDate, includeAnalysis } = await req.json();
 
     if (!studentId) {
       throw new Error('studentId is required');
@@ -160,12 +160,29 @@ serve(async (req) => {
 
     console.log(`✅ Scheduled ${results.filter(r => !r.error).length} assignments`);
 
+    // Generate AI analysis if requested
+    let analysis = null;
+    if (includeAnalysis && results.filter(r => !r.error).length > 0) {
+      try {
+        analysis = await generateScheduleAnalysis(
+          results.filter(r => !r.error),
+          assignments as any[],
+          patterns as FocusPattern | null,
+          schedulingBlocks
+        );
+      } catch (analysisError: any) {
+        console.error('⚠️ Analysis generation failed:', analysisError);
+        // Don't fail the whole request if analysis fails
+      }
+    }
+
     return new Response(
       JSON.stringify({
         message: 'Scheduling complete',
         scheduled: results.filter(r => !r.error),
         errors: results.filter(r => r.error),
-        notes
+        notes,
+        analysis
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -353,4 +370,117 @@ function addDays(date: Date, days: number): Date {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
   return result;
+}
+
+async function generateScheduleAnalysis(
+  scheduledResults: any[],
+  assignments: any[],
+  patterns: FocusPattern | null,
+  blocks: SchedulingBlock[]
+): Promise<{
+  summary: string;
+  changes: Array<{ assignment: string; reason: string }>;
+  recommendations: string[];
+}> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    throw new Error('LOVABLE_API_KEY not configured');
+  }
+
+  // Prepare context for AI
+  const scheduleContext = scheduledResults.map((result) => {
+    const assignment = assignments.find(a => a.id === result.assignmentId);
+    return {
+      title: assignment?.curriculum_items?.title || 'Unknown',
+      subject: assignment?.curriculum_items?.courses?.subject || 'Unknown',
+      scheduledTime: result.scheduledTime,
+      dayOfWeek: result.dayOfWeek,
+      score: result.score.toFixed(2)
+    };
+  });
+
+  const systemPrompt = `You are an educational scheduling expert. Analyze the schedule changes and provide clear, actionable insights for educators.
+
+Be concise and specific. Focus on:
+1. Why assignments were scheduled at specific times
+2. How the schedule optimizes for student focus patterns
+3. Any potential concerns or recommendations
+
+Keep your response structured and professional.`;
+
+  const userPrompt = `I've scheduled ${scheduledResults.length} assignments. Here's the context:
+
+Scheduled Assignments:
+${JSON.stringify(scheduleContext, null, 2)}
+
+${patterns ? `Focus Patterns Available: Yes (${patterns.peak_windows?.length || 0} peak windows identified)` : 'Focus Patterns: Not yet established'}
+
+${blocks.length > 0 ? `Blocked Time Slots: ${blocks.length} (avoided for appointments/activities)` : 'No blocked time slots'}
+
+Provide:
+1. A brief summary (2-3 sentences) of the overall scheduling strategy
+2. For each assignment, explain why it was scheduled at that specific time
+3. 2-3 recommendations for optimizing the schedule further
+
+Format your response as JSON:
+{
+  "summary": "overall strategy explanation",
+  "changes": [
+    {"assignment": "title", "reason": "why scheduled at this time"}
+  ],
+  "recommendations": ["recommendation 1", "recommendation 2"]
+}`;
+
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      max_tokens: 1000,
+      temperature: 0.7,
+      response_format: { type: 'json_object' }
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('AI analysis error:', response.status, errorText);
+    
+    // Return a basic analysis on error
+    return {
+      summary: `Scheduled ${scheduledResults.length} assignments based on due dates and available time slots.`,
+      changes: scheduleContext.map(ctx => ({
+        assignment: ctx.title,
+        reason: `Scheduled for ${ctx.dayOfWeek} at ${ctx.scheduledTime.split('T')[1]} based on availability.`
+      })),
+      recommendations: [
+        'Continue tracking focus patterns to improve future scheduling',
+        'Review blocked time slots regularly to ensure accuracy'
+      ]
+    };
+  }
+
+  const aiData = await response.json();
+  const analysisText = aiData.choices[0].message.content;
+  
+  try {
+    return JSON.parse(analysisText);
+  } catch {
+    // Fallback if JSON parsing fails
+    return {
+      summary: analysisText,
+      changes: scheduleContext.map(ctx => ({
+        assignment: ctx.title,
+        reason: `Scheduled for ${ctx.dayOfWeek} based on optimal learning times.`
+      })),
+      recommendations: []
+    };
+  }
 }
