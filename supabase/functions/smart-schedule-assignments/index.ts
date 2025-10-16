@@ -73,7 +73,8 @@ serve(async (req) => {
           course_id,
           courses!inner (
             student_id,
-            subject
+            subject,
+            pacing_config
           )
         )
       `)
@@ -130,13 +131,28 @@ serve(async (req) => {
 
     const schedulingBlocks = blocks || [];
 
+    // Calculate daily work hour goals from pacing_config
+    const pacingConfigs = assignments
+      .map((a: any) => a.curriculum_items?.courses?.pacing_config)
+      .filter((pc: any) => pc);
+    
+    let dailyMinutesGoal = 240; // Default 4 hours
+    if (pacingConfigs.length > 0) {
+      const firstConfig = pacingConfigs[0];
+      dailyMinutesGoal = firstConfig.daily_minutes || firstConfig.weekly_minutes / 7 || 240;
+    }
+    
+    console.log(`📊 Daily work goal: ${dailyMinutesGoal} minutes (${(dailyMinutesGoal / 60).toFixed(1)} hours)`);
+
     // 4. Schedule new assignments and analyze existing ones
     const { scheduled: newlyScheduled, notes: scheduleNotes } = scheduleAssignments(
       unscheduled as any[],
       patterns as FocusPattern | null,
       schedulingBlocks as SchedulingBlock[],
       startDate ? new Date(startDate) : new Date(),
-      endDate ? new Date(endDate) : addDays(new Date(), 14)
+      endDate ? new Date(endDate) : addDays(new Date(), 14),
+      dailyMinutesGoal,
+      alreadyScheduled as any[]
     );
 
     // 5. Always run AI analysis to evaluate the entire schedule
@@ -206,13 +222,29 @@ function scheduleAssignments(
   patterns: FocusPattern | null,
   blocks: SchedulingBlock[],
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  dailyMinutesGoal: number = 240,
+  alreadyScheduled: any[] = []
 ): { scheduled: Array<{ assignmentId: string; scheduledTime: string; dayOfWeek: string; score: number }>, notes: string[] } {
   const scheduled: Array<{ assignmentId: string; scheduledTime: string; dayOfWeek: string; score: number }> = [];
   const usedSlots = new Set<string>();
   const notes: string[] = [];
   
+  // Track daily workload (in minutes) to respect daily work hour goals
+  const dailyWorkload = new Map<string, number>();
+  
+  // Initialize with already scheduled assignments
+  for (const assignment of alreadyScheduled) {
+    if (assignment.day_of_week && assignment.auto_scheduled_time) {
+      const estMinutes = assignment.curriculum_items?.est_minutes || 30;
+      const currentWorkload = dailyWorkload.get(assignment.day_of_week) || 0;
+      dailyWorkload.set(assignment.day_of_week, currentWorkload + estMinutes);
+    }
+  }
+  
   // Add scheduling context notes
+  notes.push(`Daily work goal: ${(dailyMinutesGoal / 60).toFixed(1)} hours. Packing lessons efficiently to meet this target.`);
+  
   if (blocks.length > 0) {
     notes.push(`Avoided ${blocks.length} blocked time slot(s) for appointments and activities.`);
   }
@@ -266,12 +298,28 @@ function scheduleAssignments(
             assignment.optimal_time_of_day
           );
 
-          if (score > bestScore) {
-            bestScore = score;
+          // Boost score for days that are filling up towards the daily goal
+          // Prefer packing into existing partial days before starting new days
+          const dayKey = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][dayOfWeek];
+          const currentDayWorkload = dailyWorkload.get(dayKey) || 0;
+          const utilizationPercent = currentDayWorkload / dailyMinutesGoal;
+          
+          let finalScore = score;
+          // Prefer days that are 20-80% full (pack efficiently but don't overload)
+          if (utilizationPercent >= 0.2 && utilizationPercent <= 0.8) {
+            finalScore *= 1.3; // 30% boost for good packing
+          } else if (utilizationPercent > 0.8 && currentDayWorkload + estMinutes <= dailyMinutesGoal * 1.1) {
+            finalScore *= 1.1; // Small boost if we can still fit it
+          } else if (utilizationPercent > 1.1) {
+            finalScore *= 0.5; // Penalize overloading beyond 110% of goal
+          }
+
+          if (finalScore > bestScore) {
+            bestScore = finalScore;
             bestSlot = {
               date: new Date(d),
               time: timeStr,
-              score
+              score: finalScore
             };
           }
         }
@@ -290,6 +338,10 @@ function scheduleAssignments(
       });
 
       usedSlots.add(`${bestSlot.date.toISOString().split('T')[0]}T${bestSlot.time}`);
+      
+      // Update daily workload tracking
+      const currentWorkload = dailyWorkload.get(dayName) || 0;
+      dailyWorkload.set(dayName, currentWorkload + estMinutes);
 
       console.log(`📅 Scheduled "${assignment.curriculum_items.title}" for ${scheduledDateTime} (score: ${bestSlot.score.toFixed(2)})`);
     } else {

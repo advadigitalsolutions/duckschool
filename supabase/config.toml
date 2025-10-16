@@ -87,3 +87,6 @@ verify_jwt = false
 [functions.smart-schedule-assignments]
 verify_jwt = false
 
+[functions.analyze-schedule-change]
+verify_jwt = false
+

@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,205 +12,151 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { assignmentId, newDay, newTime, studentId } = await req.json();
+    const { assignmentId, newDay, newTime, studentId, oldDay, oldTime } = await req.json();
 
-    console.log('🔍 Analyzing schedule change:', { assignmentId, newDay, newTime, studentId });
+    console.log('🔍 Analyzing schedule change:', { assignmentId, newDay, newTime, oldDay, oldTime });
 
-    // 1. Get assignment details with curriculum context
-    const { data: assignmentData, error: assignmentError } = await supabase
+    // Fetch assignment details
+    const { data: assignment, error: assignmentError } = await supabase
       .from('assignments')
       .select(`
         id,
-        curriculum_items!inner(
-          id,
+        curriculum_items!inner (
           title,
-          body,
+          est_minutes,
           course_id,
-          standards,
-          courses!inner(
+          courses!inner (
             subject,
-            title,
-            student_id
+            student_id,
+            pacing_config
           )
-        ),
-        prerequisite_assignments,
-        auto_scheduled_time,
-        day_of_week
+        )
       `)
       .eq('id', assignmentId)
       .single();
 
-    if (assignmentError || !assignmentData) throw assignmentError || new Error('Assignment not found');
+    if (assignmentError) throw assignmentError;
 
-    const assignment = assignmentData as any;
+    const assignmentData = assignment as any;
+    const currItem = assignmentData.curriculum_items;
+    const course = currItem.courses;
 
-    // 2. Get student's focus patterns for the proposed time
-    const proposedDateTime = new Date();
-    const dayIndex = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(newDay.toLowerCase());
-    proposedDateTime.setDate(proposedDateTime.getDate() + (dayIndex - proposedDateTime.getDay()));
-    const [hours, minutes] = newTime.split(':');
-    proposedDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-    const { data: focusPatterns } = await supabase
-      .from('activity_events')
-      .select('event_type, timestamp, metadata')
-      .eq('student_id', studentId)
-      .eq('page_context', '/assignment')
-      .gte('timestamp', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-      .order('timestamp', { ascending: false })
-      .limit(500);
-
-    // 3. Check prerequisite assignments and their schedules
-    const prerequisiteData: any[] = [];
-    if (assignment.prerequisite_assignments && assignment.prerequisite_assignments.length > 0) {
-      const { data: prerequisites } = await supabase
-        .from('assignments')
-        .select(`
-          id,
-          auto_scheduled_time,
-          day_of_week,
-          curriculum_items!inner(
-            title,
-            standards
+    // Fetch all other scheduled assignments for context
+    const { data: otherAssignments, error: otherError } = await supabase
+      .from('assignments')
+      .select(`
+        id,
+        day_of_week,
+        auto_scheduled_time,
+        curriculum_items!inner (
+          title,
+          est_minutes,
+          course_id,
+          courses!inner (
+            subject
           )
-        `)
-        .in('id', assignment.prerequisite_assignments);
-      
-      if (prerequisites) {
-        prerequisiteData.push(...prerequisites);
-      }
-    }
+        )
+      `)
+      .eq('curriculum_items.courses.student_id', studentId)
+      .eq('status', 'assigned')
+      .neq('id', assignmentId)
+      .not('auto_scheduled_time', 'is', null);
 
-    // 4. Prepare context for AI analysis
-    const analysisContext = {
-      assignment: {
-        title: assignment.curriculum_items.title,
-        subject: assignment.curriculum_items.courses.subject,
-        standards: assignment.curriculum_items.standards,
-        currentSchedule: {
-          day: assignment.day_of_week,
-          time: assignment.auto_scheduled_time
-        },
-        proposedSchedule: {
-          day: newDay,
-          time: newTime
-        }
-      },
-      prerequisites: prerequisiteData.map((p: any) => ({
-        title: p.curriculum_items.title,
-        scheduledDay: p.day_of_week,
-        scheduledTime: p.auto_scheduled_time,
-        standards: p.curriculum_items.standards
-      })),
-      focusPatterns: {
-        totalEvents: focusPatterns?.length || 0,
-        proposedDayOfWeek: newDay,
-        proposedTime: newTime
-      }
-    };
+    if (otherError) throw otherError;
 
-    // 5. Call OpenAI for analysis
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
+    // Get daily work hour goal from pacing_config
+    const pacingConfig = course.pacing_config || {};
+    const dailyMinutesGoal = pacingConfig.daily_minutes || pacingConfig.weekly_minutes / 7 || 240; // default 4 hours
 
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Calculate workload for the new day
+    const newDayAssignments = (otherAssignments || []).filter((a: any) => 
+      a.day_of_week === newDay
+    );
+    const newDayTotalMinutes = newDayAssignments.reduce((sum: number, a: any) => 
+      sum + (a.curriculum_items.est_minutes || 0), 0
+    ) + (currItem.est_minutes || 0);
+
+    // Build AI analysis prompt
+    const prompt = `You are analyzing a schedule change for a student assignment.
+
+ASSIGNMENT MOVED:
+- Title: "${currItem.title}"
+- Subject: ${course.subject}
+- Duration: ${currItem.est_minutes} minutes
+- From: ${oldDay || 'unscheduled'} at ${oldTime || 'no time'}
+- To: ${newDay} at ${newTime}
+
+STUDENT'S DAILY GOAL:
+- Target work time: ${Math.round(dailyMinutesGoal)} minutes (${(dailyMinutesGoal / 60).toFixed(1)} hours) per day
+
+NEW DAY'S SCHEDULE (${newDay.toUpperCase()}):
+- Total assignments: ${newDayAssignments.length + 1}
+- Total workload: ${newDayTotalMinutes} minutes (${(newDayTotalMinutes / 60).toFixed(1)} hours)
+- Capacity utilization: ${((newDayTotalMinutes / dailyMinutesGoal) * 100).toFixed(0)}%
+
+OTHER ASSIGNMENTS ON ${newDay.toUpperCase()}:
+${newDayAssignments.map((a: any) => 
+  `- ${a.curriculum_items.title} (${a.curriculum_items.courses.subject}, ${a.curriculum_items.est_minutes}min) at ${a.auto_scheduled_time}`
+).join('\n') || 'None'}
+
+Provide a 2-3 sentence analysis that:
+1. Evaluates if this is a good placement considering the daily goal and workload
+2. Notes any concerns about overloading or conflicts
+3. Suggests optimization if needed
+
+Keep it concise, actionable, and friendly.`;
+
+    console.log('🤖 Sending to AI:', prompt);
+
+    // Call Lovable AI
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'google/gemini-2.5-flash',
         messages: [
-          {
-            role: 'system',
-            content: `You are an educational scheduling assistant. Analyze proposed schedule changes and provide brief, actionable feedback.
-
-Consider:
-1. Focus patterns: Does the student typically struggle at this time based on historical data?
-2. Prerequisite sequence: Are foundational concepts scheduled before advanced ones?
-3. Subject balancing: Is the timing appropriate for the subject's cognitive demands?
-
-Respond in 2-3 sentences with either approval or specific concerns. Be direct and helpful.`
-          },
-          {
-            role: 'user',
-            content: `Should we move this assignment?
-
-Assignment: "${analysisContext.assignment.title}" (${analysisContext.assignment.subject})
-Current: ${analysisContext.assignment.currentSchedule.day || 'unscheduled'} at ${analysisContext.assignment.currentSchedule.time || 'no time'}
-Proposed: ${analysisContext.assignment.proposedSchedule.day} at ${analysisContext.assignment.proposedSchedule.time}
-
-${prerequisiteData.length > 0 ? `Prerequisites (${prerequisiteData.length}): ${prerequisiteData.map((p: any) => `"${p.curriculum_items.title}" scheduled ${p.day_of_week || 'unscheduled'} at ${p.auto_scheduled_time || 'no time'}`).join(', ')}` : 'No prerequisites'}
-
-Historical activity: ${focusPatterns?.length || 0} learning events recorded in past 30 days`
-          }
+          { role: 'system', content: 'You are a helpful scheduling assistant that provides concise, friendly analysis.' },
+          { role: 'user', content: prompt }
         ],
-        max_completion_tokens: 200
       }),
     });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('AI gateway error:', aiResponse.status, errorText);
-      
-      // Handle specific error cases with user-friendly messages
-      if (aiResponse.status === 402 || aiResponse.status === 401) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'AI analysis unavailable: OpenAI API key not configured or credits depleted.',
-            analysis: 'AI analysis unavailable. You can still manually reassign this assignment based on your judgment.'
-          }),
-          { 
-            status: 200, // Return 200 so the dialog can show the message gracefully
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-      
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'Rate limit exceeded. Please try again in a moment.',
-            analysis: 'AI analysis temporarily unavailable due to rate limits. Please try again shortly or proceed with manual reassignment.'
-          }),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-      
-      throw new Error(`AI analysis failed: ${aiResponse.status}`);
+      console.error('AI API error:', aiResponse.status, errorText);
+      throw new Error(`AI API error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
     const analysis = aiData.choices[0].message.content;
 
-    console.log('✅ Schedule analysis complete');
+    console.log('✅ Analysis complete:', analysis);
 
     return new Response(
       JSON.stringify({ 
         analysis,
-        context: analysisContext 
+        workload: {
+          newDayMinutes: newDayTotalMinutes,
+          dailyGoal: dailyMinutesGoal,
+          utilizationPercent: Math.round((newDayTotalMinutes / dailyMinutesGoal) * 100)
+        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
-    console.error('Error analyzing schedule change:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  } catch (error: any) {
+    console.error('❌ Analysis error:', error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({ error: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });

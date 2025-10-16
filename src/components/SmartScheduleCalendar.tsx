@@ -64,6 +64,8 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
     changes: Array<{ assignment: string; reason: string; }>;
     recommendations: string[];
   } | null>(null);
+  const [moveAnalysisOpen, setMoveAnalysisOpen] = useState(false);
+  const [moveAnalysis, setMoveAnalysis] = useState<string>('');
 
   useEffect(() => {
     fetchScheduledAssignments();
@@ -277,28 +279,8 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         )
       );
 
-      // Run AI analysis if enabled
-      if (aiAnalysisEnabled && assignment.day_of_week && assignment.auto_scheduled_time) {
-        try {
-          const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-schedule-change', {
-            body: {
-              assignmentId: assignment.id,
-              newDay: dayName,
-              newTime: newTime,
-              studentId
-            }
-          });
-
-          if (!analysisError && analysisData?.analysis) {
-            toast.success('Assignment rescheduled', {
-              description: analysisData.analysis
-            });
-          }
-        } catch (error) {
-          console.error('Analysis error:', error);
-          // Don't block the reschedule if analysis fails
-        }
-      }
+      const oldDay = assignment.day_of_week;
+      const oldTime = assignment.auto_scheduled_time?.substring(0, 5);
 
       console.log('Updating database...');
       const { error } = await supabase
@@ -323,8 +305,30 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         throw error;
       }
 
-      if (!aiAnalysisEnabled) {
-        toast.success('Assignment rescheduled');
+      toast.success('Assignment rescheduled');
+
+      // Always run AI analysis after successful move
+      if (aiAnalysisEnabled) {
+        try {
+          const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-schedule-change', {
+            body: {
+              assignmentId: assignment.id,
+              newDay: dayName,
+              newTime: newTime,
+              studentId,
+              oldDay,
+              oldTime
+            }
+          });
+
+          if (!analysisError && analysisData?.analysis) {
+            setMoveAnalysis(analysisData.analysis);
+            setMoveAnalysisOpen(true);
+          }
+        } catch (error) {
+          console.error('Analysis error:', error);
+          // Don't block the reschedule if analysis fails
+        }
       }
     } catch (error: any) {
       console.error('Reschedule error:', error);
@@ -629,7 +633,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         </div>
 
         {/* AI Schedule Analysis - Key factors explaining current schedule */}
-        {schedulingNotes.length > 0 && (
+        {schedulingNotes && schedulingNotes.length > 0 && (
           <div className="mt-6 p-5 rounded-lg bg-gradient-to-br from-primary/10 via-primary/5 to-background border-2 border-primary/20 shadow-sm">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 p-2 rounded-full bg-primary/10">
@@ -640,8 +644,8 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                   AI Schedule Analysis
                   <span className="text-xs font-normal text-muted-foreground">(Key Factors & Determinants)</span>
                 </h4>
-                <p className="text-sm text-foreground/80 leading-relaxed">
-                  {schedulingNotes.join(' ')}
+                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
+                  {Array.isArray(schedulingNotes) ? schedulingNotes.join(' ') : schedulingNotes}
                 </p>
               </div>
             </div>
@@ -879,6 +883,34 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
           <DialogFooter>
             <Button onClick={() => setScheduleAnalysisOpen(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Move Analysis Dialog */}
+      <Dialog open={moveAnalysisOpen} onOpenChange={setMoveAnalysisOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Schedule Change Analysis
+            </DialogTitle>
+            <DialogDescription>
+              AI feedback on your manual scheduling adjustment
+            </DialogDescription>
+          </DialogHeader>
+
+          <Alert className="border-primary/20 bg-primary/5">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <AlertDescription className="text-sm leading-relaxed">
+              {moveAnalysis}
+            </AlertDescription>
+          </Alert>
+
+          <DialogFooter>
+            <Button onClick={() => setMoveAnalysisOpen(false)}>
+              Got it
             </Button>
           </DialogFooter>
         </DialogContent>
