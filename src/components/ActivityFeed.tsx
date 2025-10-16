@@ -23,9 +23,10 @@ interface Activity {
 
 interface ActivityFeedProps {
   studentIds: string[];
+  demoStudentName?: string | null;
 }
 
-export function ActivityFeed({ studentIds }: ActivityFeedProps) {
+export function ActivityFeed({ studentIds, demoStudentName }: ActivityFeedProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -60,10 +61,11 @@ export function ActivityFeed({ studentIds }: ActivityFeedProps) {
 
       submissions?.forEach(sub => {
         const assignmentTitle = (sub.assignments as any)?.curriculum_items?.title || 'Assignment';
+        const studentName = demoStudentName || studentMap.get(sub.student_id) || 'Student';
         allActivities.push({
           id: sub.id,
           type: 'submission',
-          studentName: studentMap.get(sub.student_id) || 'Student',
+          studentName,
           description: `Submitted ${assignmentTitle}`,
           timestamp: sub.submitted_at!,
         });
@@ -80,10 +82,11 @@ export function ActivityFeed({ studentIds }: ActivityFeedProps) {
       grades?.forEach(grade => {
         const assignmentTitle = (grade.assignments as any)?.curriculum_items?.title || 'Assignment';
         const percentage = grade.max_score ? Math.round((Number(grade.score) / Number(grade.max_score)) * 100) : 0;
+        const studentName = demoStudentName || studentMap.get(grade.student_id) || 'Student';
         allActivities.push({
           id: grade.id,
           type: 'grade',
-          studentName: studentMap.get(grade.student_id) || 'Student',
+          studentName,
           description: `Received ${percentage}% on ${assignmentTitle}`,
           timestamp: grade.graded_at!,
           metadata: { score: grade.score, maxScore: grade.max_score }
@@ -99,10 +102,11 @@ export function ActivityFeed({ studentIds }: ActivityFeedProps) {
         .limit(5);
 
       xpEvents?.forEach(xp => {
+        const studentName = demoStudentName || studentMap.get(xp.student_id) || 'Student';
         allActivities.push({
           id: xp.id,
           type: 'xp',
-          studentName: studentMap.get(xp.student_id) || 'Student',
+          studentName,
           description: `Earned ${xp.amount} XP${xp.description ? `: ${xp.description}` : ''}`,
           timestamp: xp.created_at!,
         });
@@ -118,10 +122,11 @@ export function ActivityFeed({ studentIds }: ActivityFeedProps) {
         .limit(5);
 
       goals?.forEach(goal => {
+        const studentName = demoStudentName || studentMap.get(goal.student_id) || 'Student';
         allActivities.push({
           id: goal.id,
           type: 'goal',
-          studentName: studentMap.get(goal.student_id) || 'Student',
+          studentName,
           description: `Completed goal: ${goal.goal_text}`,
           timestamp: goal.created_at!,
         });
@@ -136,10 +141,11 @@ export function ActivityFeed({ studentIds }: ActivityFeedProps) {
         .limit(5);
 
       attendance?.forEach(att => {
+        const studentName = demoStudentName || studentMap.get(att.student_id) || 'Student';
         allActivities.push({
           id: att.id,
           type: 'attendance',
-          studentName: studentMap.get(att.student_id) || 'Student',
+          studentName,
           description: `Logged ${att.minutes} minutes of study time`,
           timestamp: new Date(att.date).toISOString(),
         });
@@ -154,10 +160,11 @@ export function ActivityFeed({ studentIds }: ActivityFeedProps) {
         .limit(5);
 
       progressEvents?.forEach(evt => {
+        const studentName = demoStudentName || studentMap.get(evt.student_id) || 'Student';
         allActivities.push({
           id: evt.id,
           type: 'progress',
-          studentName: studentMap.get(evt.student_id) || 'Student',
+          studentName,
           description: `Progress update: ${evt.event}`,
           timestamp: evt.ts!,
         });

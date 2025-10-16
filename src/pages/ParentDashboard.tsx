@@ -40,6 +40,8 @@ export default function ParentDashboard() {
   const [headerSettings, setHeaderSettings] = useState<any>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [demoParentName, setDemoParentName] = useState<string | null>(null);
+  const [demoStudentName, setDemoStudentName] = useState<string | null>(null);
   const navigate = useNavigate();
   const getDefaultHeaderSettings = () => ({
     showName: true,
@@ -124,11 +126,17 @@ export default function ParentDashboard() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Check for demo names in localStorage
+      const demoParent = localStorage.getItem('demo_parent_name');
+      const demoStudent = localStorage.getItem('demo_student_name');
+      setDemoParentName(demoParent);
+      setDemoStudentName(demoStudent);
+
       // Fetch user profile for name and settings
       const {
         data: profileData
       } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      setUserName(profileData?.name || 'Educator');
+      setUserName(demoParent || profileData?.name || 'Educator');
       setUserAvatar(profileData?.avatar_url || '');
       setProfile(profileData);
 
@@ -287,8 +295,8 @@ export default function ParentDashboard() {
   // Create a mock student object for the header to use parent profile data
   const mockStudentForHeader = profile ? {
     id: profile.id,
-    name: profile.name || 'Educator',
-    display_name: profile.name || 'Educator',
+    name: demoParentName || profile.name || 'Educator',
+    display_name: demoParentName || profile.name || 'Educator',
     avatar_url: profile.avatar_url,
     grade_level: null,
     pronouns: profile.pronouns
@@ -398,7 +406,7 @@ export default function ParentDashboard() {
                     <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground mb-4">No students added yet</p>
                     <AddStudentDialog onStudentAdded={fetchDashboardData} />
-                  </div> : <ActivityFeed studentIds={students.map(s => s.id)} />}
+                  </div> : <ActivityFeed studentIds={students.map(s => s.id)} demoStudentName={demoStudentName} />}
                 </div>
               </CardContent>
             </Card>
