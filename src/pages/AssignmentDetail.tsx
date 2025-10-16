@@ -25,6 +25,7 @@ import { StudentLayout } from '@/components/StudentLayout';
 import { RegradeButton } from '@/components/RegradeButton';
 import { LearningWizard } from '@/components/LearningWizard';
 import { EditAssignmentDatesDialog } from '@/components/EditAssignmentDatesDialog';
+import { InstructionsPanel } from '@/components/InstructionsPanel';
 
 
 export default function AssignmentDetail() {
@@ -351,6 +352,7 @@ export default function AssignmentDetail() {
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="instructions">Instructions</TabsTrigger>
             <TabsTrigger value="questions">Lesson</TabsTrigger>
             {isParent && (
               <TabsTrigger value="teacher-guide">Teacher's Guide</TabsTrigger>
@@ -358,7 +360,6 @@ export default function AssignmentDetail() {
             {isParent && submissions.length > 0 && (
               <TabsTrigger value="attempts">Student Attempts</TabsTrigger>
             )}
-            <TabsTrigger value="instructions">Instructions</TabsTrigger>
             <TabsTrigger value="rubric">Rubric</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
             {!isParent && currentStudentId && (
@@ -744,45 +745,7 @@ export default function AssignmentDetail() {
           </TabsContent>
 
           <TabsContent value="instructions" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Instructions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose dark:prose-invert max-w-none">
-                  {content.instructions ? (
-                    <TextToSpeech text={cleanMarkdown(content.instructions)}>
-                      <p className="whitespace-pre-wrap"><BionicText>{cleanMarkdown(content.instructions)}</BionicText></p>
-                    </TextToSpeech>
-                  ) : (
-                    <p className="text-muted-foreground">No instructions provided</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {content.activities?.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Activities</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {content.activities.map((activity: any, idx: number) => (
-                      <div key={idx} className="border-l-2 border-primary pl-4">
-                        <p className="font-medium">Step {activity.step || idx + 1}</p>
-                        <p className="text-sm text-muted-foreground"><BionicText>{cleanMarkdown(activity.description)}</BionicText></p>
-                        {activity.duration_minutes && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            ~{activity.duration_minutes} minutes
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <InstructionsPanel content={content} />
           </TabsContent>
 
           <TabsContent value="rubric" className="space-y-4">
