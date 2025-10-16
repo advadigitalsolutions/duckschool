@@ -253,8 +253,8 @@ Deno.serve(async (req) => {
     const parentTodos = [
       {
         parent_id: demoParent.id,
-        title: 'Review Emma\'s algebra homework',
-        description: 'Check her work on linear equations worksheet',
+        title: "Review student's algebra homework",
+        description: 'Check their work on linear equations worksheet',
         priority: 'high',
         due_date: tomorrowForTodos.toISOString().split('T')[0]
       },
