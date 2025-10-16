@@ -250,3 +250,20 @@ export function getCourseTypesBySubject(subject: string): CourseType[] {
 export function getCourseTypeByKey(key: string): CourseType | undefined {
   return COURSE_TYPES.find(ct => ct.key === key);
 }
+
+export function getCoursesGroupedBySubject(): Record<string, CourseType[]> {
+  const grouped: Record<string, CourseType[]> = {};
+  
+  COURSE_TYPES.forEach(courseType => {
+    if (!grouped[courseType.subject]) {
+      grouped[courseType.subject] = [];
+    }
+    grouped[courseType.subject].push(courseType);
+  });
+  
+  return grouped;
+}
+
+export function getAllSubjects(): string[] {
+  return [...new Set(COURSE_TYPES.map(ct => ct.subject))];
+}
