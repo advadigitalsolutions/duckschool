@@ -295,14 +295,35 @@ PEDAGOGY GUIDANCE:
 ${pedagogyGuidance}
 ${approachOverrideContext}
 
-CRITICAL CONTENT RULES:
-You are generating curriculum for: ${course.title} (Grade ${gradeLevel})
+🚨 CRITICAL GRADE LEVEL REQUIREMENTS - THIS IS NON-NEGOTIABLE 🚨
+Student Age: ${gradeLevel === '10' ? '15-16 years old' : `Grade ${gradeLevel}`}
+Course: ${course.title} (Grade ${gradeLevel})
 
-STRICT REQUIREMENTS:
-1. Use ONLY standards appropriate for the target grade level
-2. DO NOT include content significantly below or above the grade band
-3. Ensure cognitive demand matches the grade level expectations
-4. Be age-appropriate in language and complexity
+ABSOLUTE REQUIREMENTS - VIOLATIONS WILL BE REJECTED:
+1. Content MUST be appropriate for a ${gradeLevel === '10' ? '15-16 year old high school student' : `grade ${gradeLevel} student`}
+2. DO NOT create elementary school level content (ages 5-10)
+3. DO NOT create middle school content if this is high school
+4. Cognitive demand MUST match ${gradeLevel === '10' ? 'high school / advanced secondary' : `grade ${gradeLevel}`} expectations
+5. Mathematical concepts must be at the ${course.subject === 'Mathematics' && parseInt(gradeLevel) >= 9 ? 'Algebra I, Geometry, or higher level' : 'appropriate grade level'}
+6. Language and complexity must match a ${gradeLevel === '10' ? 'teenage' : 'age-appropriate'} reading level
+
+⚠️ RED FLAGS TO AVOID:
+- Counting exercises (too elementary)
+- Single-digit arithmetic (too elementary)
+- Basic shapes and colors (too elementary)
+- Nursery rhyme level content (too elementary)
+- Picture books or kindergarten activities
+
+✅ EXPECTED COMPLEXITY FOR GRADE ${gradeLevel}:
+${parseInt(gradeLevel) >= 9 ? `
+- High school level mathematics (algebra, geometry, statistics)
+- Complex problem-solving and critical thinking
+- Multi-step reasoning and analysis
+- Abstract mathematical concepts
+- Real-world applications appropriate for teenagers` : `
+- Age-appropriate cognitive complexity
+- Grade-level mathematical reasoning
+- Developmentally appropriate content`}
 
 STUDENT PROFILE:
 ${JSON.stringify(studentContext, null, 2)}
@@ -354,14 +375,36 @@ PEDAGOGY GUIDANCE:
 ${pedagogyGuidance}
 ${approachOverrideContext}
 
-CRITICAL CONTENT RULES:
-You are generating curriculum for: ${course.title} (Grade ${gradeLevel})
+🚨 CRITICAL GRADE LEVEL REQUIREMENTS - THIS IS NON-NEGOTIABLE 🚨
+Student Age: ${gradeLevel === '10' ? '15-16 years old' : `Grade ${gradeLevel}`}
+Course: ${course.title} (Grade ${gradeLevel})
 
-STRICT REQUIREMENTS:
-1. Use ONLY standards from the allowed prefixes for this grade level
-2. DO NOT include standards from other grade bands
-3. Ensure cognitive demand matches grade level expectations
-4. Be age-appropriate in language and complexity
+ABSOLUTE REQUIREMENTS - VIOLATIONS WILL BE REJECTED:
+1. Content MUST be appropriate for a ${gradeLevel === '10' ? '15-16 year old high school student' : `grade ${gradeLevel} student`}
+2. DO NOT create elementary school level content (ages 5-10)
+3. DO NOT create middle school content if this is high school
+4. Cognitive demand MUST match ${gradeLevel === '10' ? 'high school / advanced secondary' : `grade ${gradeLevel}`} expectations
+5. Mathematical concepts must be at the ${course.subject === 'Mathematics' && parseInt(gradeLevel) >= 9 ? 'Algebra I, Geometry, or higher level' : 'appropriate grade level'}
+6. Language and complexity must match a ${gradeLevel === '10' ? 'teenage' : 'age-appropriate'} reading level
+7. Use ONLY standards from the provided list that match the grade level
+
+⚠️ RED FLAGS TO AVOID:
+- Counting exercises (too elementary)
+- Single-digit arithmetic (too elementary)  
+- Basic shapes and colors (too elementary)
+- Nursery rhyme level content (too elementary)
+- Picture books or kindergarten activities
+
+✅ EXPECTED COMPLEXITY FOR GRADE ${gradeLevel}:
+${parseInt(gradeLevel) >= 9 ? `
+- High school level mathematics (algebra, geometry, statistics)
+- Complex problem-solving and critical thinking
+- Multi-step reasoning and analysis
+- Abstract mathematical concepts
+- Real-world applications appropriate for teenagers` : `
+- Age-appropriate cognitive complexity
+- Grade-level mathematical reasoning
+- Developmentally appropriate content`}
 
 STUDENT PROFILE:
 ${JSON.stringify(studentContext, null, 2)}
