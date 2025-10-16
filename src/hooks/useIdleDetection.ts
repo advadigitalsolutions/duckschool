@@ -36,11 +36,16 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
     setIsIdle(false);
     setIsWarning(false);
     
-    // Only call onActive once per idle session
+    // Call onActive when returning from idle/warning state
     if ((wasIdle || wasWarning) && !hasCalledActiveRef.current) {
       console.log('🎯 Activity detected - resetting idle state');
       hasCalledActiveRef.current = true;
       onActive?.();
+    }
+    
+    // Reset the flag when user is active again (not idle/warning)
+    if (!wasIdle && !wasWarning) {
+      hasCalledActiveRef.current = false;
     }
     
     if (idleTimerRef.current) {
@@ -76,9 +81,12 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
       }
     };
 
-    // Add event listeners
+    // Create bound handlers that we can remove later
+    const boundHandlers = new Map<string, () => void>();
     activityEvents.forEach(({ type, throttle: throttleMs }) => {
-      window.addEventListener(type, () => handleActivity(type, throttleMs), { passive: true });
+      const handler = () => handleActivity(type, throttleMs);
+      boundHandlers.set(type, handler);
+      window.addEventListener(type, handler, { passive: true });
     });
 
     // Check for idle state periodically
@@ -104,8 +112,9 @@ export const useIdleDetection = (options: IdleDetectionOptions = {}) => {
     }, 1000); // Check every second for more responsive warning
 
     return () => {
-      activityEvents.forEach(({ type }) => {
-        window.removeEventListener(type, () => {});
+      // Properly remove all event listeners
+      boundHandlers.forEach((handler, type) => {
+        window.removeEventListener(type, handler);
       });
       
       if (checkIntervalRef.current) {
