@@ -28,7 +28,8 @@ export function useOverdueXPPenalty(studentId: string | null, overdueAssignments
               .from('xp_events')
               .select('id')
               .eq('student_id', studentId)
-              .eq('reference_id', penaltyKey)
+              .eq('reference_id', assignment.id)
+              .eq('description', `Overdue penalty chunk ${penaltyChunks}: ${assignment.curriculum_items?.title || 'Assignment'}`)
               .maybeSingle();
             
             if (!existingPenalty) {
@@ -39,8 +40,8 @@ export function useOverdueXPPenalty(studentId: string | null, overdueAssignments
                   student_id: studentId,
                   amount: -10,
                   event_type: 'overdue_penalty',
-                  description: `Overdue: ${assignment.curriculum_items?.title || 'Assignment'}`,
-                  reference_id: penaltyKey,
+                  description: `Overdue penalty chunk ${penaltyChunks}: ${assignment.curriculum_items?.title || 'Assignment'}`,
+                  reference_id: assignment.id,
                 });
               
               if (!error) {

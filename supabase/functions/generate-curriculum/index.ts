@@ -463,10 +463,41 @@ For each standard, suggest 1-2 high-quality assignments that would effectively c
     }
 
     const aiData = await aiResponse.json();
-    const toolCall = aiData.choices[0].message.tool_calls?.[0];
+    console.log('AI Response:', JSON.stringify(aiData, null, 2));
+    
+    const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
     
     if (!toolCall) {
-      throw new Error('No tool call returned from AI');
+      console.error('No tool call in response. Full response:', JSON.stringify(aiData, null, 2));
+      // Try to extract from content if tool call failed
+      const content = aiData.choices[0]?.message?.content;
+      if (content) {
+        console.log('Attempting to parse from content:', content);
+        try {
+          // Try to extract JSON from content
+          const jsonMatch = content.match(/\{[\s\S]*"suggestions"[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (parsed.suggestions) {
+              console.log('Successfully extracted suggestions from content');
+              const suggestions = parsed.suggestions;
+              return new Response(JSON.stringify({ 
+                suggestions,
+                uncoveredCount: useGoalsBasedGeneration ? 0 : uncoveredStandards.length,
+                pedagogy,
+                framework,
+                generationType: useGoalsBasedGeneration ? 'goals' : 'standards',
+                goals: useGoalsBasedGeneration ? courseGoals : null
+              }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              });
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse content as JSON:', e);
+        }
+      }
+      throw new Error('No tool call returned from AI and could not extract from content');
     }
 
     const suggestions = JSON.parse(toolCall.function.arguments).suggestions;
