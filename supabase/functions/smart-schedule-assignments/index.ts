@@ -240,7 +240,7 @@ function scheduleAssignments(
 
     if (bestSlot) {
       const scheduledDateTime = `${bestSlot.date.toISOString().split('T')[0]}T${bestSlot.time}:00`;
-      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][bestSlot.date.getDay()];
+      const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][bestSlot.date.getDay()];
 
       scheduled.push({
         assignmentId: assignment.id,

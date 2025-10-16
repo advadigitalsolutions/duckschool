@@ -67,7 +67,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
       // Filter for current week on the client side
       const startOfWeek = getStartOfWeek(selectedDate);
       const endOfWeek = getEndOfWeek(selectedDate);
-      const weekDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const weekDayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       const weekDays = Array.from({ length: 7 }, (_, i) => {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + i);
@@ -176,7 +176,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
 
     try {
       const timeOnly = `${newTime}:00`;
-      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][newDate.getDay()];
+      const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][newDate.getDay()];
 
       const { error } = await supabase
         .from('assignments')
@@ -219,7 +219,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
     return assignments.filter(a => {
       if (!a.auto_scheduled_time || !a.day_of_week) return false;
       const assignmentTime = a.auto_scheduled_time.substring(0, 5);
-      return a.day_of_week === day && assignmentTime === time;
+      return a.day_of_week.toLowerCase() === day.toLowerCase() && assignmentTime === time;
     });
   };
 
