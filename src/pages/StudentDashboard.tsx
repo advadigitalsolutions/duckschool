@@ -17,7 +17,6 @@ import { WeeklyView } from '@/components/WeeklyView';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
-import { RequestCourseDialog } from '@/components/RequestCourseDialog';
 import { UnifiedMasteryDashboard } from '@/components/UnifiedMasteryDashboard';
 import { SessionStatsCard } from '@/components/SessionStatsCard';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -657,16 +656,10 @@ export default function StudentDashboard() {
               </div>
               <div className="flex gap-2">
                 {studentDbId && (
-                  <>
-                    <AddCourseDialog 
-                      studentId={studentDbId} 
-                      onCourseAdded={fetchStudentData}
-                    />
-                    <RequestCourseDialog 
-                      studentId={studentDbId} 
-                      onCourseCreated={fetchStudentData}
-                    />
-                  </>
+                  <AddCourseDialog 
+                    studentId={studentDbId} 
+                    onCourseAdded={fetchStudentData}
+                  />
                 )}
               </div>
             </div>
