@@ -68,7 +68,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
   useEffect(() => {
     fetchScheduledAssignments();
     fetchBlocks();
-  }, [studentId, selectedDate]);
+  }, [studentId]); // Only refetch when student changes, not when week changes
 
   const fetchBlocks = async () => {
     try {
@@ -121,37 +121,24 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
       
       if (error) throw error;
 
-      // Filter for current week on the client side
-      const startOfWeek = getStartOfWeek(selectedDate);
-      const endOfWeek = getEndOfWeek(selectedDate);
-      const weekDayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-      const weekDays = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(startOfWeek);
-        date.setDate(startOfWeek.getDate() + i);
-        return weekDayNames[date.getDay()];
-      });
+      // Format assignments - show ALL scheduled assignments regardless of selected week
+      const formatted = (data || [])
+        .filter(a => a.auto_scheduled_time && a.day_of_week) // Only show assignments with schedule
+        .map((a: any) => ({
+          id: a.id,
+          title: a.curriculum_items.title,
+          subject: a.curriculum_items.courses.subject,
+          est_minutes: a.curriculum_items.est_minutes,
+          auto_scheduled_time: a.auto_scheduled_time,
+          day_of_week: a.day_of_week,
+          locked_schedule: a.locked_schedule,
+          due_at: a.due_at,
+          course_id: a.curriculum_items.course_id,
+          body: a.curriculum_items.body,
+          curriculum_item_id: a.curriculum_items.id
+        }));
 
-      const filtered = (data || []).filter(a => 
-        a.auto_scheduled_time && 
-        a.day_of_week && 
-        weekDays.includes(a.day_of_week)
-      );
-
-      const formatted = filtered.map((a: any) => ({
-        id: a.id,
-        title: a.curriculum_items.title,
-        subject: a.curriculum_items.courses.subject,
-        est_minutes: a.curriculum_items.est_minutes,
-        auto_scheduled_time: a.auto_scheduled_time,
-        day_of_week: a.day_of_week,
-        locked_schedule: a.locked_schedule,
-        due_at: a.due_at,
-        course_id: a.curriculum_items.course_id,
-        body: a.curriculum_items.body,
-        curriculum_item_id: a.curriculum_items.id
-      }));
-
-      console.log('✅ Loaded assignments for week:', formatted.length);
+      console.log('✅ Loaded scheduled assignments:', formatted.length);
       setAssignments(formatted);
     } catch (error: any) {
       console.error('Error fetching scheduled assignments:', error);
