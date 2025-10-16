@@ -139,73 +139,73 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Deep navy/purple background inspired by modern AI interfaces */
-    --background: 240 45% 6%;
-    --foreground: 180 20% 96%;
+    /* Ultra-dark background for maximum contrast */
+    --background: 240 50% 3%;
+    --foreground: 180 15% 98%;
 
-    /* Cards with subtle purple tint and higher contrast */
-    --card: 240 35% 10%;
-    --card-foreground: 180 15% 96%;
+    /* Much lighter cards with purple tint - high contrast */
+    --card: 240 30% 16%;
+    --card-foreground: 180 15% 98%;
 
-    --popover: 240 35% 10%;
-    --popover-foreground: 180 15% 96%;
+    --popover: 240 30% 16%;
+    --popover-foreground: 180 15% 98%;
 
-    /* Vibrant teal primary for energy without overwhelming */
-    --primary: 180 85% 55%;
-    --primary-foreground: 240 45% 8%;
-    --primary-hover: 180 85% 65%;
+    /* Vibrant teal primary for energy */
+    --primary: 180 90% 58%;
+    --primary-foreground: 240 50% 5%;
+    --primary-hover: 180 90% 68%;
 
-    /* Purple secondary for visual interest */
-    --secondary: 270 75% 60%;
+    /* Brighter purple secondary */
+    --secondary: 270 80% 65%;
     --secondary-foreground: 0 0% 100%;
     
-    /* Keep warm orange accent for important highlights */
-    --accent: 30 100% 60%;
-    --accent-foreground: 240 45% 8%;
+    /* Vibrant orange accent */
+    --accent: 30 100% 62%;
+    --accent-foreground: 240 50% 5%;
 
-    /* Higher contrast muted with purple undertones */
-    --muted: 240 25% 16%;
-    --muted-foreground: 220 15% 72%;
+    /* Lighter muted for better visibility */
+    --muted: 240 25% 20%;
+    --muted-foreground: 220 15% 75%;
 
-    /* Bright teal for success states */
-    --success: 165 75% 50%;
+    /* Electric teal for success */
+    --success: 165 80% 52%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 40 95% 58%;
-    --warning-foreground: 240 45% 8%;
+    --warning: 40 100% 60%;
+    --warning-foreground: 240 50% 5%;
 
-    --destructive: 0 75% 58%;
+    --destructive: 0 80% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* More defined borders for better structure */
-    --border: 240 20% 22%;
-    --input: 240 25% 14%;
-    --ring: 180 85% 55%;
+    /* Brighter borders with teal tint */
+    --border: 240 25% 26%;
+    --input: 240 25% 18%;
+    --ring: 180 90% 58%;
     
-    /* Sidebar with darker purple-navy */
-    --sidebar-background: 240 50% 8%;
-    --sidebar-foreground: 180 15% 96%;
-    --sidebar-primary: 180 85% 55%;
-    --sidebar-primary-foreground: 240 45% 8%;
-    --sidebar-accent: 240 30% 14%;
-    --sidebar-accent-foreground: 180 15% 96%;
-    --sidebar-border: 240 20% 22%;
-    --sidebar-ring: 180 85% 55%;
+    /* Sidebar slightly lighter than background */
+    --sidebar-background: 240 50% 5%;
+    --sidebar-foreground: 180 15% 98%;
+    --sidebar-primary: 180 90% 58%;
+    --sidebar-primary-foreground: 240 50% 5%;
+    --sidebar-accent: 240 30% 18%;
+    --sidebar-accent-foreground: 180 15% 98%;
+    --sidebar-border: 240 25% 26%;
+    --sidebar-ring: 180 90% 58%;
     
-    /* Enhanced shadows with colored hints */
-    --shadow-sm: 0 2px 6px 0 hsl(240 50% 4% / 0.5);
-    --shadow-md: 0 6px 16px -2px hsl(240 50% 4% / 0.6), 0 0 0 1px hsl(180 85% 55% / 0.05);
-    --shadow-lg: 0 12px 32px -4px hsl(240 50% 4% / 0.7), 0 0 0 1px hsl(180 85% 55% / 0.08);
+    /* Enhanced shadows with vibrant edge glow */
+    --shadow-sm: 0 2px 8px 0 hsl(240 60% 2% / 0.6);
+    --shadow-md: 0 8px 20px -2px hsl(240 60% 2% / 0.7), 0 0 0 1px hsl(180 90% 58% / 0.1);
+    --shadow-lg: 0 16px 40px -4px hsl(240 60% 2% / 0.8), 0 0 0 1px hsl(180 90% 58% / 0.15);
     
-    /* Gradients inspired by the reference images - teal to purple */
-    --gradient-primary: linear-gradient(135deg, hsl(180 85% 55%), hsl(270 75% 60%));
-    --gradient-success: linear-gradient(135deg, hsl(165 75% 50%), hsl(180 85% 55%));
-    --gradient-hero: linear-gradient(135deg, hsl(270 75% 60%) 0%, hsl(180 85% 55%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(240 35% 10%) 0%, hsl(240 30% 12%) 100%);
+    /* Vibrant gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(180 90% 58%), hsl(270 80% 65%));
+    --gradient-success: linear-gradient(135deg, hsl(165 80% 52%), hsl(180 90% 58%));
+    --gradient-hero: linear-gradient(135deg, hsl(270 80% 65%) 0%, hsl(180 90% 58%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(240 30% 16%) 0%, hsl(240 25% 18%) 100%);
     
-    /* Subtle glow effects for interactive elements */
-    --glow-primary: 0 0 20px hsl(180 85% 55% / 0.3);
-    --glow-secondary: 0 0 20px hsl(270 75% 60% / 0.3);
+    /* Stronger glow effects */
+    --glow-primary: 0 0 24px hsl(180 90% 58% / 0.4);
+    --glow-secondary: 0 0 24px hsl(270 80% 65% / 0.4);
   }
 }
 
