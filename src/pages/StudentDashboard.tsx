@@ -281,13 +281,17 @@ export default function StudentDashboard() {
         return a.due_at && !isNaN(dueDate.getTime()) && dueDate < now && hasNoSubmission;
       });
       
-      // Filter for TODAY's tasks only - assignments scheduled for current day
+      // Filter for current assignments (not overdue, no submission yet)
       const current = (assignmentsData || []).filter(a => {
         const hasNoSubmission = !a.submissions || a.submissions.length === 0;
         if (!hasNoSubmission) return false;
         
-        // Show only assignments scheduled for today
-        return a.day_of_week === todayDayOfWeek && a.auto_scheduled_time;
+        // Show assigned assignments that aren't overdue
+        // Priority: today's scheduled tasks, then upcoming
+        const isDueToday = a.day_of_week === todayDayOfWeek;
+        const isNotOverdue = !overdue.some(od => od.id === a.id);
+        
+        return isNotOverdue;
       });
       
       setOverdueAssignments(overdue);
