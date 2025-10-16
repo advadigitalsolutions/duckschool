@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
@@ -13,11 +12,24 @@ interface OverdueAssignmentCardProps {
 export function OverdueAssignmentCard({ assignment }: OverdueAssignmentCardProps) {
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [isValidDate, setIsValidDate] = useState(true);
   
   useEffect(() => {
     const calculateCountdown = () => {
+      if (!assignment.due_at) {
+        setIsValidDate(false);
+        return;
+      }
+      
       const dueDate = new Date(assignment.due_at);
       const now = new Date();
+      
+      // Check if date is valid and not unreasonably old (more than 1 year)
+      if (isNaN(dueDate.getTime()) || (now.getTime() - dueDate.getTime()) > (365 * 24 * 60 * 60 * 1000)) {
+        setIsValidDate(false);
+        return;
+      }
+      
       const diff = now.getTime() - dueDate.getTime();
       
       if (diff > 0) {
@@ -27,6 +39,7 @@ export function OverdueAssignmentCard({ assignment }: OverdueAssignmentCardProps
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
         
         setCountdown({ days, hours, minutes, seconds });
+        setIsValidDate(true);
       }
     };
     
@@ -38,56 +51,43 @@ export function OverdueAssignmentCard({ assignment }: OverdueAssignmentCardProps
   
   const course = assignment.curriculum_items?.courses;
   
+  if (!isValidDate) {
+    return null; // Don't show if date is invalid
+  }
+  
   return (
-    <Card className="border-destructive bg-destructive/10 hover:shadow-lg hover:border-destructive/80 transition-all">
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0 space-y-3">
-            {/* Header with badge */}
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
-              <Badge variant="destructive" className="font-bold text-xs px-2 py-0.5">
-                OVERDUE
-              </Badge>
+    <div className="border-l-4 border-destructive bg-destructive/5 rounded-md p-3 hover:bg-destructive/10 transition-colors">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Badge variant="destructive" className="text-xs font-semibold">OVERDUE</Badge>
               {course?.title && (
-                <span className="text-xs text-muted-foreground">
-                  {course.title}
-                </span>
+                <span className="text-xs text-muted-foreground truncate">{course.title}</span>
               )}
             </div>
-            
-            {/* Assignment title */}
-            <h3 className="font-bold text-lg leading-tight">
+            <h3 className="font-semibold text-sm truncate">
               {assignment.curriculum_items?.title || 'Untitled Assignment'}
             </h3>
-            
-            {/* Countdown Timer */}
-            <div className="bg-background rounded-lg p-4 border-2 border-destructive/20">
-              <div className="flex items-center justify-center gap-2 text-destructive font-mono font-bold text-xl">
-                {countdown.days > 0 && <span>{countdown.days}d</span>}
-                <span>{countdown.hours.toString().padStart(2, '0')}h</span>
-                <span>{countdown.minutes.toString().padStart(2, '0')}m</span>
-                <span>{countdown.seconds.toString().padStart(2, '0')}s</span>
-                <span className="text-sm font-normal ml-1">late</span>
-              </div>
+            <div className="flex items-center gap-3 mt-1">
+              <span className="text-xs font-mono text-destructive font-medium">
+                {countdown.days > 0 && `${countdown.days}d `}
+                {countdown.hours}h {countdown.minutes}m {countdown.seconds}s late
+              </span>
+              <span className="text-xs text-muted-foreground">-10 XP per 100min</span>
             </div>
-            
-            {/* XP Penalty Warning */}
-            <p className="text-xs text-center text-destructive font-medium">
-              ⚠️ Every 100 minutes late eats 10 xp!
-            </p>
           </div>
-          
-          <Button 
-            variant="destructive" 
-            size="lg"
-            onClick={() => navigate(`/assignment/${assignment.id}`)}
-            className="flex-shrink-0 font-bold shadow-lg hover:shadow-xl"
-          >
-            Start Now
-          </Button>
         </div>
+        <Button 
+          variant="destructive" 
+          size="sm"
+          onClick={() => navigate(`/assignment/${assignment.id}`)}
+          className="flex-shrink-0"
+        >
+          Start
+        </Button>
       </div>
-    </Card>
+    </div>
   );
 }
