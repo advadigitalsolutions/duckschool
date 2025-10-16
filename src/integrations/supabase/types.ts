@@ -380,16 +380,70 @@ export type Database = {
           },
         ]
       }
+      assignment_time_actuals: {
+        Row: {
+          accuracy_ratio: number | null
+          actual_minutes: number
+          assignment_id: string
+          completed_at: string | null
+          estimated_minutes: number
+          id: string
+          student_id: string
+          subject: string | null
+        }
+        Insert: {
+          accuracy_ratio?: number | null
+          actual_minutes: number
+          assignment_id: string
+          completed_at?: string | null
+          estimated_minutes: number
+          id?: string
+          student_id: string
+          subject?: string | null
+        }
+        Update: {
+          accuracy_ratio?: number | null
+          actual_minutes?: number
+          assignment_id?: string
+          completed_at?: string | null
+          estimated_minutes?: number
+          id?: string
+          student_id?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_time_actuals_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_time_actuals_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignments: {
         Row: {
           assigned_date: string | null
+          auto_scheduled_time: string | null
           created_at: string | null
           curriculum_item_id: string | null
           day_of_week: string | null
           due_at: string | null
           id: string
+          locked_schedule: boolean | null
           max_attempts: number | null
+          optimal_time_of_day: string[] | null
+          prerequisite_assignments: string[] | null
           rubric: Json | null
+          scheduling_flexibility: number | null
+          sequence_order: number | null
           status: Database["public"]["Enums"]["status_t"]
           validation_metadata: Json | null
           week_id: string | null
@@ -397,13 +451,19 @@ export type Database = {
         }
         Insert: {
           assigned_date?: string | null
+          auto_scheduled_time?: string | null
           created_at?: string | null
           curriculum_item_id?: string | null
           day_of_week?: string | null
           due_at?: string | null
           id?: string
+          locked_schedule?: boolean | null
           max_attempts?: number | null
+          optimal_time_of_day?: string[] | null
+          prerequisite_assignments?: string[] | null
           rubric?: Json | null
+          scheduling_flexibility?: number | null
+          sequence_order?: number | null
           status?: Database["public"]["Enums"]["status_t"]
           validation_metadata?: Json | null
           week_id?: string | null
@@ -411,13 +471,19 @@ export type Database = {
         }
         Update: {
           assigned_date?: string | null
+          auto_scheduled_time?: string | null
           created_at?: string | null
           curriculum_item_id?: string | null
           day_of_week?: string | null
           due_at?: string | null
           id?: string
+          locked_schedule?: boolean | null
           max_attempts?: number | null
+          optimal_time_of_day?: string[] | null
+          prerequisite_assignments?: string[] | null
           rubric?: Json | null
+          scheduling_flexibility?: number | null
+          sequence_order?: number | null
           status?: Database["public"]["Enums"]["status_t"]
           validation_metadata?: Json | null
           week_id?: string | null
@@ -1453,6 +1519,66 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduling_blocks: {
+        Row: {
+          active: boolean | null
+          block_type: string
+          created_at: string | null
+          created_by: string | null
+          day_of_week: number | null
+          end_time: string
+          id: string
+          reason: string | null
+          specific_date: string | null
+          start_time: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          block_type: string
+          created_at?: string | null
+          created_by?: string | null
+          day_of_week?: number | null
+          end_time: string
+          id?: string
+          reason?: string | null
+          specific_date?: string | null
+          start_time: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          block_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          day_of_week?: number | null
+          end_time?: string
+          id?: string
+          reason?: string | null
+          specific_date?: string | null
+          start_time?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduling_blocks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduling_blocks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       standard_mastery: {
         Row: {
           confidence_score: number | null
@@ -1697,6 +1823,56 @@ export type Database = {
           },
           {
             foreignKeyName: "standards_priority_queue_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_focus_patterns: {
+        Row: {
+          analysis_date: string
+          confidence_level: number | null
+          data_quality_score: number | null
+          day_patterns: Json | null
+          hourly_focus_scores: Json | null
+          id: string
+          last_calculated_at: string | null
+          peak_focus_windows: Json | null
+          sessions_analyzed: number | null
+          student_id: string
+          subject_performance: Json | null
+        }
+        Insert: {
+          analysis_date?: string
+          confidence_level?: number | null
+          data_quality_score?: number | null
+          day_patterns?: Json | null
+          hourly_focus_scores?: Json | null
+          id?: string
+          last_calculated_at?: string | null
+          peak_focus_windows?: Json | null
+          sessions_analyzed?: number | null
+          student_id: string
+          subject_performance?: Json | null
+        }
+        Update: {
+          analysis_date?: string
+          confidence_level?: number | null
+          data_quality_score?: number | null
+          day_patterns?: Json | null
+          hourly_focus_scores?: Json | null
+          id?: string
+          last_calculated_at?: string | null
+          peak_focus_windows?: Json | null
+          sessions_analyzed?: number | null
+          student_id?: string
+          subject_performance?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_focus_patterns_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
