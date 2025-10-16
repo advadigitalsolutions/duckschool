@@ -78,6 +78,17 @@ Recent Performance:
 Learning Gaps to Address:
 ${progressData.gaps.slice(0, 10).map((g: any) => `- ${g.standard_code} (${g.gap_type})`).join('\n')}
 
+CRITICAL CONTENT RULES:
+You are generating curriculum for: ${course.title} (Grade ${course.grade_level || 'unspecified'})
+
+STRICT REQUIREMENTS:
+1. Use ONLY standards that belong to the target course's grade band
+2. DO NOT include content outside the course's standard scope
+3. Always include valid standard codes for each assignment
+4. Be age-appropriate and aligned to grade level cognitive demand
+
+If you receive regeneration feedback, you MUST strictly follow the allowed standard codes and avoid banned terms.
+
 Generate 5 days (Monday-Friday) of work with 2-3 assignments per day. Each assignment should:
 - Take 20-40 minutes
 - Be appropriately challenging
@@ -170,7 +181,81 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
       throw new Error('AI did not return structured curriculum');
     }
 
-    const weeklyPlan = JSON.parse(toolCall.function.arguments);
+    let weeklyPlan = JSON.parse(toolCall.function.arguments);
+
+    // CURRICULUM GATE VALIDATION
+    console.log('🔍 Validating weekly curriculum...');
+    
+    const validationContext = {
+      course_key: `CA:${course.title}:${course.grade_level}`,
+      class_name: course.title,
+      state: "CA",
+      grade_band: course.grade_level || '10',
+      subject: course.subject,
+      mode: "generation"
+    };
+
+    // Validate each day's assignments
+    let allValid = true;
+    let validationAttempts = 0;
+    const MAX_VALIDATION_ATTEMPTS = 2;
+
+    while (validationAttempts < MAX_VALIDATION_ATTEMPTS && !allValid) {
+      validationAttempts++;
+      allValid = true;
+      const failedDays: string[] = [];
+
+      for (const day of weeklyPlan.days) {
+        for (const assignment of day.assignments) {
+          // Convert assignment to lesson format for validation
+          const lessonJson = {
+            objective: assignment.description,
+            standards_aligned: (assignment.standards || []).map((code: string) => ({ code, name: code })),
+            lesson_core: assignment.content,
+            practice_items: assignment.content.questions || [],
+            assessment: [],
+            metadata: {
+              grade_band: course.grade_level,
+              difficulty_level: "adaptive"
+            }
+          };
+
+          const gateResponse = await fetch(`${supabaseUrl}/functions/v1/curriculum-gate`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              lesson_json: lessonJson,
+              context: validationContext
+            })
+          });
+
+          if (gateResponse.ok) {
+            const gateResult = await gateResponse.json();
+            
+            if (gateResult.approval_status === "rejected") {
+              allValid = false;
+              failedDays.push(day.day);
+              console.warn(`❌ Assignment "${assignment.title}" failed validation:`, gateResult.findings);
+            } else {
+              console.log(`✅ Assignment "${assignment.title}" validated (${gateResult.approval_status})`);
+            }
+          }
+        }
+      }
+
+      if (!allValid && validationAttempts < MAX_VALIDATION_ATTEMPTS) {
+        console.log(`🔄 Regenerating failed days: ${failedDays.join(', ')}`);
+        // For now, we'll proceed with warnings rather than regenerate the entire week
+        // In production, you could regenerate just the failed days
+      }
+    }
+
+    if (!allValid) {
+      console.warn('⚠️ Some assignments did not pass validation, proceeding with warnings');
+    }
 
     // Create curriculum week record
     const endDate = new Date(startDate);

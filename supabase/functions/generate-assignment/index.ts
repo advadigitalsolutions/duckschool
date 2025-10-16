@@ -251,6 +251,11 @@ Include questions that assess prerequisite knowledge as well as course content.
     // Determine pedagogy approach based on framework and student profile
     const pedagogyContext = buildPedagogyContext(standards, studentProfile);
     
+    // Build courses description before using it
+    const coursesDescription = targetCoursesData.map((c: any) => 
+      `${c.title} (${c.subject})`
+    ).join(' + ');
+    
     // Add uncovered standards guidance
     const standardsGuidance = uncoveredStandards.length > 0 ? `
 PRIORITY STANDARDS TO ADDRESS:
@@ -313,6 +318,23 @@ ${standardsGuidance}
 ${crossSubjectGuidance}
 ${pedagogyContext}
 
+CRITICAL CONTENT RULES:
+You are generating lessons for: ${coursesDescription} (Grade ${gradeLevel})
+
+STRICT REQUIREMENTS:
+1. Use ONLY standards that belong to the target course's grade band and jurisdiction
+2. DO NOT include content outside the course's standard scope
+3. DO NOT include banned terms for this course/grade band
+4. Always include at least one valid standard code tied to the objective
+5. Be concise and age-appropriate
+6. If a prerequisite gap is detected, create a clearly labeled Bridge Support (≤10 min) separate from the core lesson
+
+If you receive a regenerate_with_fixes block, you MUST:
+- Use ONLY the allowed standard code prefixes provided
+- Remove ALL banned terms from core content
+- Move any prerequisite review to a separate "bridge_support" section
+- Ensure every standard code is valid and in-scope
+
 CRITICAL: Every assignment MUST include actual questions that students can answer digitally. Questions should test understanding and allow for mastery-based learning through multiple attempts.
 
 RESOURCE GUIDANCE - IMPORTANT:
@@ -330,10 +352,6 @@ TEACHER GUIDE REQUIREMENTS:
 - Reference the student's specific interests, learning style, and challenges
 - Provide topic-specific introduction strategies that connect to prior knowledge
 - Give specific real-world examples and hands-on activities for THIS topic only`;
-
-    const coursesDescription = targetCoursesData.map((c: any) => 
-      `${c.title} (${c.subject})`
-    ).join(' + ');
 
     const approachOverrideContext = effectiveApproachOverride 
       ? `\n🎯 CRITICAL REQUIREMENT - STUDENT'S PREFERRED APPROACH (HIGHEST PRIORITY):
@@ -487,11 +505,119 @@ CRITICAL:
     }
 
     const data = await response.json();
-    const generatedContent = JSON.parse(data.choices[0].message.content);
+    let generatedContent = JSON.parse(data.choices[0].message.content);
     
-    console.log('Generated assignment:', generatedContent);
+    console.log('Generated assignment (pre-validation):', generatedContent.title);
 
-    return new Response(JSON.stringify(generatedContent), {
+    // CURRICULUM GATE VALIDATION LOOP
+    const MAX_ATTEMPTS = 3;
+    let attempt = 0;
+    let validatedLesson = null;
+    let gateResult = null;
+
+    while (attempt < MAX_ATTEMPTS && !validatedLesson) {
+      attempt++;
+      console.log(`🔍 Validation attempt ${attempt}/${MAX_ATTEMPTS}`);
+      
+      // Build validation context
+      const validationContext = {
+        course_key: targetCoursesData[0] ? `CA:${targetCoursesData[0].title}:${targetCoursesData[0].grade_level}` : undefined,
+        class_name: targetCoursesData[0]?.title || 'Course',
+        state: "CA",
+        grade_band: gradeLevel,
+        subject: targetCoursesData[0]?.subject || 'General',
+        mode: "generation"
+      };
+
+      // Call curriculum gate
+      const gateResponse = await fetch(`${supabaseUrl}/functions/v1/curriculum-gate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lesson_json: generatedContent,
+          context: validationContext
+        })
+      });
+
+      if (!gateResponse.ok) {
+        console.error('❌ Gate validation failed:', await gateResponse.text());
+        break; // Proceed without validation if gate fails
+      }
+
+      gateResult = await gateResponse.json();
+
+      if (gateResult.approval_status === "approved" || gateResult.approval_status === "corrected") {
+        validatedLesson = gateResult.validated_lesson;
+        console.log(`✅ Validation passed on attempt ${attempt} (${gateResult.approval_status})`);
+        
+        // Log validation result
+        if (targetCoursesData[0]?.id) {
+          await supabase.from('curriculum_validation_log').insert({
+            entity_type: 'assignment',
+            entity_id: null, // Will be updated when assignment is created
+            validation_result: gateResult
+          });
+        }
+        break;
+      }
+
+      if (gateResult.approval_status === "rejected" && gateResult.regenerate_with_fixes && attempt < MAX_ATTEMPTS) {
+        console.log(`❌ Validation failed, regenerating with fixes...`);
+        
+        // Add regeneration instructions to system prompt
+        const fixesInstruction = `
+CRITICAL: The previous generation was rejected. You MUST fix these issues:
+
+${gateResult.regenerate_with_fixes.reason}
+
+REQUIRED FIXES:
+${gateResult.regenerate_with_fixes.notes.map((n: string) => `- ${n}`).join('\n')}
+
+ALLOWED STANDARD CODES: ${gateResult.regenerate_with_fixes.required_scope.allow_prefixes.join(", ")}
+BANNED TERMS IN CORE CONTENT: ${gateResult.regenerate_with_fixes.required_scope.ban_terms.join(", ")}
+
+Follow these constraints STRICTLY. Do not include any banned codes or terms in core content. You may use banned terms only in bridge_support if needed.
+`;
+        
+        // Regenerate with enhanced prompt
+        const retryResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: fixesInstruction + '\n\n' + systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            response_format: { type: 'json_object' }
+          }),
+        });
+
+        if (retryResponse.ok) {
+          const retryData = await retryResponse.json();
+          generatedContent = JSON.parse(retryData.choices[0].message.content);
+          console.log(`🔄 Regenerated assignment for attempt ${attempt + 1}`);
+          continue;
+        }
+      }
+
+      break; // No more retries or fixes available
+    }
+
+    // Use validated content if available, otherwise use original
+    const finalContent = validatedLesson || generatedContent;
+    
+    if (!validatedLesson && gateResult?.findings?.length > 0) {
+      console.warn('⚠️ Proceeding with unvalidated content after 3 attempts:', gateResult.findings);
+    }
+
+    return new Response(JSON.stringify(finalContent), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

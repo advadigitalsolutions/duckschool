@@ -294,6 +294,16 @@ THIS IS A DIRECT REQUEST FROM THE STUDENT. You MUST respect this approach and re
 PEDAGOGY GUIDANCE:
 ${pedagogyGuidance}
 ${approachOverrideContext}
+
+CRITICAL CONTENT RULES:
+You are generating curriculum for: ${course.title} (Grade ${gradeLevel})
+
+STRICT REQUIREMENTS:
+1. Use ONLY standards appropriate for the target grade level
+2. DO NOT include content significantly below or above the grade band
+3. Ensure cognitive demand matches the grade level expectations
+4. Be age-appropriate in language and complexity
+
 STUDENT PROFILE:
 ${JSON.stringify(studentContext, null, 2)}
 
@@ -343,6 +353,16 @@ Consider what foundational knowledge and skills the student needs to achieve the
 PEDAGOGY GUIDANCE:
 ${pedagogyGuidance}
 ${approachOverrideContext}
+
+CRITICAL CONTENT RULES:
+You are generating curriculum for: ${course.title} (Grade ${gradeLevel})
+
+STRICT REQUIREMENTS:
+1. Use ONLY standards from the allowed prefixes for this grade level
+2. DO NOT include standards from other grade bands
+3. Ensure cognitive demand matches grade level expectations
+4. Be age-appropriate in language and complexity
+
 STUDENT PROFILE:
 ${JSON.stringify(studentContext, null, 2)}
 

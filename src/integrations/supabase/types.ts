@@ -391,6 +391,7 @@ export type Database = {
           max_attempts: number | null
           rubric: Json | null
           status: Database["public"]["Enums"]["status_t"]
+          validation_metadata: Json | null
           week_id: string | null
           weight: number | null
         }
@@ -404,6 +405,7 @@ export type Database = {
           max_attempts?: number | null
           rubric?: Json | null
           status?: Database["public"]["Enums"]["status_t"]
+          validation_metadata?: Json | null
           week_id?: string | null
           weight?: number | null
         }
@@ -417,6 +419,7 @@ export type Database = {
           max_attempts?: number | null
           rubric?: Json | null
           status?: Database["public"]["Enums"]["status_t"]
+          validation_metadata?: Json | null
           week_id?: string | null
           weight?: number | null
         }
@@ -693,6 +696,7 @@ export type Database = {
           title: string
           type: Database["public"]["Enums"]["item_t"]
           unit_id: string | null
+          validation_metadata: Json | null
         }
         Insert: {
           body: Json
@@ -705,6 +709,7 @@ export type Database = {
           title: string
           type: Database["public"]["Enums"]["item_t"]
           unit_id?: string | null
+          validation_metadata?: Json | null
         }
         Update: {
           body?: Json
@@ -717,6 +722,7 @@ export type Database = {
           title?: string
           type?: Database["public"]["Enums"]["item_t"]
           unit_id?: string | null
+          validation_metadata?: Json | null
         }
         Relationships: [
           {
@@ -815,6 +821,33 @@ export type Database = {
           region?: string | null
           structure?: Json | null
           subjects?: Json | null
+        }
+        Relationships: []
+      }
+      curriculum_validation_log: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          validation_result: Json
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          validation_result: Json
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          validation_result?: Json
         }
         Relationships: []
       }
