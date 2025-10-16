@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Brain, TrendingUp, Clock, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface FocusPattern {
   hourly_focus_scores: Record<string, number>;
@@ -291,31 +292,72 @@ export function FocusPatternsDashboard({ studentId }: FocusPatternsDashboardProp
         <CardHeader>
           <CardTitle className="text-lg">Daily Focus Heatmap</CardTitle>
           <CardDescription>
-            15-minute block analysis of focus quality throughout the day
+            Focus intensity patterns throughout the day
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-12 gap-1">
-            {Object.entries(patterns.hourly_focus_scores)
-              .sort((a, b) => a[0].localeCompare(b[0]))
-              .map(([time, score]) => {
-                const intensity = Math.round(score * 100);
-                const color = intensity >= 75 ? 'bg-green-500' : intensity >= 50 ? 'bg-yellow-500' : 'bg-red-500';
-                return (
-                  <div
-                    key={time}
-                    className={`h-12 rounded ${color} flex items-center justify-center text-xs text-white font-medium transition-opacity hover:opacity-100 opacity-80 cursor-help`}
-                    title={`${time}: ${intensity}% focus`}
-                  >
-                    <span className="hidden md:inline">{time.split(':')[0]}</span>
-                  </div>
-                );
-              })}
-          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart
+              data={Object.entries(patterns.hourly_focus_scores)
+                .sort((a, b) => {
+                  const hourA = parseInt(a[0].split(':')[0]);
+                  const hourB = parseInt(b[0].split(':')[0]);
+                  return hourA - hourB;
+                })
+                .map(([time, score]) => {
+                  const hour = parseInt(time.split(':')[0]);
+                  const ampm = hour >= 12 ? 'PM' : 'AM';
+                  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                  return {
+                    time: `${displayHour}${ampm}`,
+                    focus: Math.round(score * 100),
+                    rawScore: score
+                  };
+                })}
+              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="focusGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
+                  <stop offset="25%" stopColor="#84cc16" stopOpacity={0.6} />
+                  <stop offset="50%" stopColor="#eab308" stopOpacity={0.5} />
+                  <stop offset="75%" stopColor="#f97316" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis 
+                dataKey="time" 
+                className="text-xs"
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <YAxis 
+                label={{ value: 'Focus %', angle: -90, position: 'insideLeft' }}
+                className="text-xs"
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+                formatter={(value: number) => [`${value}%`, 'Focus']}
+              />
+              <Area
+                type="monotone"
+                dataKey="focus"
+                stroke="#22c55e"
+                strokeWidth={2}
+                fill="url(#focusGradient)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
           <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
             <span>Lower Focus</span>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-500 rounded" />
+              <div className="w-4 h-4 bg-orange-500 rounded" />
               <div className="w-4 h-4 bg-yellow-500 rounded" />
               <div className="w-4 h-4 bg-green-500 rounded" />
             </div>
