@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, BookOpen, Clock, ChevronRight, X } from 'lucide-react';
+import { Target, BookOpen, Clock, ChevronRight, X, Zap } from 'lucide-react';
 import { parseISO, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
 import { FocusJourneyDuck } from './FocusJourneyDuck';
@@ -132,6 +132,12 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
     return null;
   }
 
+  // Calculate totals for motivation
+  const totalMinutes = overdueAssignments.reduce((sum, a) => sum + (a.curriculum_items?.est_minutes || 30), 0);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const remainingMinutes = totalMinutes % 60;
+  const estimatedXP = overdueAssignments.length * 50; // Approximate XP per assignment
+
   // Group by how overdue they are
   const groupedOverdue = {
     critical: overdueAssignments.filter(a => getDaysOverdue(a.due_at) > 7),
@@ -141,54 +147,64 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
 
   return (
     <div className="space-y-6 mb-8">
-      <Card className="border-destructive bg-destructive/5">
+      <Card className="border-amber-400/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 shadow-lg">
         <CardHeader>
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
-            <div>
-              <CardTitle className="text-destructive">
-                {overdueAssignments.length} Overdue Assignment{overdueAssignments.length !== 1 ? 's' : ''}
+            <Target className="h-6 w-6 text-amber-600 dark:text-amber-400 mt-0.5" />
+            <div className="flex-1">
+              <CardTitle className="text-amber-900 dark:text-amber-100 text-lg">
+                {overdueAssignments.length} Assignment{overdueAssignments.length !== 1 ? 's' : ''} Need Your Attention
               </CardTitle>
-              <CardDescription>
-                Let's work together to get caught up on these assignments
+              <CardDescription className="text-amber-700 dark:text-amber-300 mt-1.5">
+                You've got this! Let's tackle these together — small steps lead to big wins 🎯
               </CardDescription>
+              <div className="flex items-center gap-4 mt-3 text-sm">
+                <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                  <Clock className="h-4 w-4" />
+                  About {totalHours > 0 && `${totalHours}h `}{remainingMinutes}m total
+                </span>
+                <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300 font-medium">
+                  <Zap className="h-4 w-4" />
+                  Earn up to {estimatedXP} XP!
+                </span>
+              </div>
             </div>
           </div>
         </CardHeader>
       </Card>
 
       {groupedOverdue.critical.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Badge variant="destructive">Urgent</Badge>
-            <span className="text-sm text-muted-foreground">Over 1 week overdue</span>
+            <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-0">Priority</Badge>
+            <span className="text-sm text-muted-foreground">Let's focus here first</span>
           </div>
           {groupedOverdue.critical.map((assignment) => (
-            <Card key={assignment.id} className="border-destructive">
-              <CardContent className="p-4">
+            <Card key={assignment.id} className="border-amber-300 dark:border-amber-700 hover:shadow-lg transition-all duration-200 hover:border-amber-400 dark:hover:border-amber-600">
+              <CardContent className="p-5">
                 <div
-                  className="flex items-start gap-3 cursor-pointer"
+                  className="flex items-start gap-4 cursor-pointer group"
                   onClick={() => window.location.href = `/assignment/${assignment.id}`}
                 >
-                  <BookOpen className="h-5 w-5 mt-0.5 text-destructive" />
+                  <BookOpen className="h-5 w-5 mt-0.5 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform" />
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium line-clamp-1">
+                    <h4 className="font-semibold line-clamp-1 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
                       {assignment.curriculum_items?.title}
                     </h4>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
+                        <Clock className="h-3.5 w-3.5" />
                         {assignment.curriculum_items?.est_minutes || 30} min
                       </span>
-                      <span className="text-destructive font-medium">
-                        {getDaysOverdue(assignment.due_at)} days overdue
+                      <span className="text-amber-600 dark:text-amber-400 font-medium">
+                        {getDaysOverdue(assignment.due_at)} days behind
                       </span>
                     </div>
-                    <Badge variant="outline" className="mt-2 text-xs">
+                    <Badge variant="outline" className="mt-2.5 text-xs">
                       {assignment.curriculum_items?.courses?.subject}
                     </Badge>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                 </div>
               </CardContent>
             </Card>
@@ -197,37 +213,37 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
       )}
 
       {groupedOverdue.warning.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Badge variant="secondary">Needs Attention</Badge>
-            <span className="text-sm text-muted-foreground">4-7 days overdue</span>
+            <Badge className="bg-sky-500 text-white hover:bg-sky-600 border-0">Focus On These</Badge>
+            <span className="text-sm text-muted-foreground">Getting close to a week</span>
           </div>
           {groupedOverdue.warning.map((assignment) => (
-            <Card key={assignment.id} className="border-orange-500/50">
-              <CardContent className="p-4">
+            <Card key={assignment.id} className="border-sky-300 dark:border-sky-700 hover:shadow-lg transition-all duration-200 hover:border-sky-400 dark:hover:border-sky-600">
+              <CardContent className="p-5">
                 <div
-                  className="flex items-start gap-3 cursor-pointer"
+                  className="flex items-start gap-4 cursor-pointer group"
                   onClick={() => window.location.href = `/assignment/${assignment.id}`}
                 >
-                  <BookOpen className="h-5 w-5 mt-0.5 text-orange-500" />
+                  <BookOpen className="h-5 w-5 mt-0.5 text-sky-600 dark:text-sky-400 group-hover:scale-110 transition-transform" />
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium line-clamp-1">
+                    <h4 className="font-semibold line-clamp-1 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors">
                       {assignment.curriculum_items?.title}
                     </h4>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
+                        <Clock className="h-3.5 w-3.5" />
                         {assignment.curriculum_items?.est_minutes || 30} min
                       </span>
-                      <span className="text-orange-500 font-medium">
-                        {getDaysOverdue(assignment.due_at)} days overdue
+                      <span className="text-sky-600 dark:text-sky-400 font-medium">
+                        {getDaysOverdue(assignment.due_at)} days behind
                       </span>
                     </div>
-                    <Badge variant="outline" className="mt-2 text-xs">
+                    <Badge variant="outline" className="mt-2.5 text-xs">
                       {assignment.curriculum_items?.courses?.subject}
                     </Badge>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                 </div>
               </CardContent>
             </Card>
@@ -236,37 +252,37 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
       )}
 
       {groupedOverdue.recent.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Badge variant="outline">Recently Overdue</Badge>
-            <span className="text-sm text-muted-foreground">1-3 days overdue</span>
+            <Badge className="bg-purple-500 text-white hover:bg-purple-600 border-0">Quick Wins</Badge>
+            <span className="text-sm text-muted-foreground">Perfect for getting back on track!</span>
           </div>
           {groupedOverdue.recent.map((assignment) => (
-            <Card key={assignment.id}>
-              <CardContent className="p-4">
+            <Card key={assignment.id} className="border-purple-300 dark:border-purple-700 hover:shadow-lg transition-all duration-200 hover:border-purple-400 dark:hover:border-purple-600">
+              <CardContent className="p-5">
                 <div
-                  className="flex items-start gap-3 cursor-pointer"
+                  className="flex items-start gap-4 cursor-pointer group"
                   onClick={() => window.location.href = `/assignment/${assignment.id}`}
                 >
-                  <BookOpen className="h-5 w-5 mt-0.5 text-primary" />
+                  <BookOpen className="h-5 w-5 mt-0.5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium line-clamp-1">
+                    <h4 className="font-semibold line-clamp-1 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
                       {assignment.curriculum_items?.title}
                     </h4>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
+                        <Clock className="h-3.5 w-3.5" />
                         {assignment.curriculum_items?.est_minutes || 30} min
                       </span>
-                      <span className="font-medium">
-                        {getDaysOverdue(assignment.due_at)} days overdue
+                      <span className="text-purple-600 dark:text-purple-400 font-medium">
+                        {getDaysOverdue(assignment.due_at)} day{getDaysOverdue(assignment.due_at) !== 1 ? 's' : ''} behind
                       </span>
                     </div>
-                    <Badge variant="outline" className="mt-2 text-xs">
+                    <Badge variant="outline" className="mt-2.5 text-xs">
                       {assignment.curriculum_items?.courses?.subject}
                     </Badge>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                 </div>
               </CardContent>
             </Card>
