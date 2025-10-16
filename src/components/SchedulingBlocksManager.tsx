@@ -43,11 +43,8 @@ interface SchedulingBlocksManagerProps {
   studentId: string;
 }
 
-const BLOCK_TYPES = [
-  { value: 'unavailable', label: 'Unavailable (appointments, activities, etc.)' },
-  { value: 'restricted', label: 'Restricted Time (limited availability)' },
-  { value: 'preferred', label: 'Preferred Time (best for scheduling)' },
-];
+// Only need to mark times as "blocked" - everything else is free by default
+const BLOCK_TYPE = 'unavailable';
 
 const DAY_NAMES = [
   { value: 0, label: 'Sunday' },
@@ -65,7 +62,6 @@ export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerPr
   const [loading, setLoading] = useState(false);
   
   // Form state
-  const [blockType, setBlockType] = useState('unavailable');
   const [isRecurring, setIsRecurring] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedDay, setSelectedDay] = useState<number>();
@@ -110,7 +106,7 @@ export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerPr
         .from('scheduling_blocks')
         .insert({
           student_id: studentId,
-          block_type: blockType,
+          block_type: BLOCK_TYPE,
           specific_date: isRecurring ? null : format(selectedDate!, 'yyyy-MM-dd'),
           day_of_week: isRecurring ? selectedDay : null,
           start_time: startTime,
@@ -151,7 +147,6 @@ export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerPr
   };
 
   const resetForm = () => {
-    setBlockType('unavailable');
     setIsRecurring(false);
     setSelectedDate(undefined);
     setSelectedDay(undefined);
@@ -161,7 +156,7 @@ export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerPr
   };
 
   const getBlockTypeLabel = (type: string) => {
-    return BLOCK_TYPES.find(t => t.value === type)?.label || type;
+    return 'Blocked Time';
   };
 
   const getDayName = (dayNum: number) => {
@@ -185,29 +180,13 @@ export const SchedulingBlocksManager = ({ studentId }: SchedulingBlocksManagerPr
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Block Time Slot</DialogTitle>
+              <DialogTitle>Block Time</DialogTitle>
               <DialogDescription>
-                Mark times as unavailable (appointments, activities), restricted (limited use), or preferred (best for scheduling)
+                Block off time for appointments, activities, or other commitments
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <Select value={blockType} onValueChange={setBlockType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BLOCK_TYPES.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="space-y-2">
                 <Label>Frequency</Label>
                 <Select 

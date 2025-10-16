@@ -122,7 +122,7 @@ serve(async (req) => {
     const schedulingBlocks = blocks || [];
 
     // 4. Schedule assignments
-    const scheduledAssignments = scheduleAssignments(
+    const { scheduled: scheduledAssignments, notes } = scheduleAssignments(
       assignments as any[],
       patterns as FocusPattern | null,
       schedulingBlocks as SchedulingBlock[],
@@ -164,7 +164,8 @@ serve(async (req) => {
       JSON.stringify({
         message: 'Scheduling complete',
         scheduled: results.filter(r => !r.error),
-        errors: results.filter(r => r.error)
+        errors: results.filter(r => r.error),
+        notes
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -184,9 +185,18 @@ function scheduleAssignments(
   blocks: SchedulingBlock[],
   startDate: Date,
   endDate: Date
-): Array<{ assignmentId: string; scheduledTime: string; dayOfWeek: string; score: number }> {
+): { scheduled: Array<{ assignmentId: string; scheduledTime: string; dayOfWeek: string; score: number }>, notes: string[] } {
   const scheduled: Array<{ assignmentId: string; scheduledTime: string; dayOfWeek: string; score: number }> = [];
   const usedSlots = new Set<string>();
+  const notes: string[] = [];
+  
+  // Add scheduling context notes
+  if (blocks.length > 0) {
+    notes.push(`Avoided ${blocks.length} blocked time slot(s) for appointments and activities.`);
+  }
+  if (patterns?.peak_windows && patterns.peak_windows.length > 0) {
+    notes.push(`Prioritized your peak focus windows for optimal learning.`);
+  }
 
   // Sort by due date and priority
   const sortedAssignments = [...assignments].sort((a, b) => {
@@ -208,8 +218,9 @@ function scheduleAssignments(
       const dayOfWeek = d.getDay();
       const dateStr = d.toISOString().split('T')[0];
 
-      // Check scheduling blocks
+      // Only block "unavailable" times - everything else overlaps
       const isBlocked = blocks.some(block => {
+        if (block.block_type !== 'unavailable') return false;
         if (block.specific_date && block.specific_date === dateStr) return true;
         if (block.day_of_week !== null && block.day_of_week === dayOfWeek) return true;
         return false;
@@ -263,8 +274,12 @@ function scheduleAssignments(
       console.warn(`⚠️ Could not find slot for "${assignment.curriculum_items.title}"`);
     }
   }
+  
+  if (scheduled.length > 0) {
+    notes.push(`Successfully scheduled ${scheduled.length} assignment(s) based on due dates and your learning patterns.`);
+  }
 
-  return scheduled;
+  return { scheduled, notes };
 }
 
 function calculateSlotScore(
