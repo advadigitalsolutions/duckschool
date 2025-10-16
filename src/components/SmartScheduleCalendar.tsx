@@ -188,15 +188,33 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
 
   const toggleLock = async (assignmentId: string, currentLocked: boolean) => {
     try {
+      // Optimistic update - update UI immediately
+      setAssignments(prev => 
+        prev.map(a => 
+          a.id === assignmentId 
+            ? { ...a, locked_schedule: !currentLocked } 
+            : a
+        )
+      );
+
       const { error } = await supabase
         .from('assignments')
         .update({ locked_schedule: !currentLocked })
         .eq('id', assignmentId);
 
-      if (error) throw error;
+      if (error) {
+        // Revert on error
+        setAssignments(prev => 
+          prev.map(a => 
+            a.id === assignmentId 
+              ? { ...a, locked_schedule: currentLocked } 
+              : a
+          )
+        );
+        throw error;
+      }
 
       toast.success(currentLocked ? 'Assignment unlocked' : 'Assignment locked');
-      fetchScheduledAssignments();
     } catch (error: any) {
       toast.error('Failed to toggle lock');
     }
@@ -218,12 +236,22 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
     const assignment = assignments.find(a => a.id === draggedAssignment);
     if (!assignment || assignment.locked_schedule) {
       toast.error('Cannot reschedule locked assignments');
+      setDraggedAssignment(null);
       return;
     }
 
+    const timeOnly = `${newTime}:00`;
+    const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][newDate.getDay()];
+
     try {
-      const timeOnly = `${newTime}:00`;
-      const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][newDate.getDay()];
+      // Optimistic update - update UI immediately
+      setAssignments(prev =>
+        prev.map(a =>
+          a.id === draggedAssignment
+            ? { ...a, auto_scheduled_time: timeOnly, day_of_week: dayName }
+            : a
+        )
+      );
 
       const { error } = await supabase
         .from('assignments')
@@ -233,10 +261,19 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         })
         .eq('id', draggedAssignment);
 
-      if (error) throw error;
+      if (error) {
+        // Revert on error
+        setAssignments(prev =>
+          prev.map(a =>
+            a.id === draggedAssignment
+              ? { ...a, auto_scheduled_time: assignment.auto_scheduled_time, day_of_week: assignment.day_of_week }
+              : a
+          )
+        );
+        throw error;
+      }
 
       toast.success('Assignment rescheduled');
-      fetchScheduledAssignments();
     } catch (error: any) {
       toast.error('Failed to reschedule');
     } finally {
