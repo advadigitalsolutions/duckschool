@@ -273,31 +273,20 @@ export default function StudentDashboard() {
       // Separate overdue from current assignments
       const now = new Date();
       const overdue = (assignmentsData || []).filter(a => {
-        const hasNoSubmission = !a.submissions || a.submissions.length === 0;
-        if (!hasNoSubmission) return false;
-        
-        // If no due date or invalid date, treat as overdue for visibility
-        if (!a.due_at) return true;
-        
         const dueDate = new Date(a.due_at);
-        // Check if date is valid
-        if (isNaN(dueDate.getTime())) return true;
-        
-        return dueDate < now;
+        const hasNoSubmission = !a.submissions || a.submissions.length === 0;
+        return a.due_at && !isNaN(dueDate.getTime()) && dueDate < now && hasNoSubmission;
       });
       
       const current = (assignmentsData || []).filter(a => {
         const hasNoSubmission = !a.submissions || a.submissions.length === 0;
         if (!hasNoSubmission) return false;
         
-        // Skip assignments with no due date (they go to overdue)
-        if (!a.due_at) return false;
+        // Show assignments with no due date OR future due dates
+        if (!a.due_at) return true;
         
         const dueDate = new Date(a.due_at);
-        // Check if date is valid
-        if (isNaN(dueDate.getTime())) return false;
-        
-        return dueDate >= now;
+        return !isNaN(dueDate.getTime()) && dueDate >= now;
       }).slice(0, 5);
       
       setOverdueAssignments(overdue);
