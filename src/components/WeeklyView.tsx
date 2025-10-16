@@ -112,7 +112,7 @@ export function WeeklyView({ studentId }: WeeklyViewProps) {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Upcoming Work
+                Weekly Overview
               </CardTitle>
               {weeklyData?.theme && (
                 <CardDescription className="mt-2">
