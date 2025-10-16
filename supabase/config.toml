@@ -3,6 +3,9 @@ project_id = "tzqxdsxjmpscotdcevdh"
 [functions.hello-world]
 verify_jwt = false
 
+[functions.calendar-assistant-chat]
+verify_jwt = true
+
 [functions.import-asn-standards]
 verify_jwt = true
 

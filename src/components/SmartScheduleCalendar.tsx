@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { SchedulingBlocksManager } from './SchedulingBlocksManager';
 import { BlockedTimeDialog } from './BlockedTimeDialog';
 import { ReassignAssignmentDialog } from './ReassignAssignmentDialog';
+import { CalendarChatAssistant } from './CalendarChatAssistant';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import { Switch } from '@/components/ui/switch';
@@ -915,6 +916,27 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Calendar AI Assistant */}
+      <CalendarChatAssistant
+        studentId={studentId}
+        assignments={assignments}
+        blocks={blocks}
+        currentWeekStart={getStartOfWeek(selectedDate).toISOString().split('T')[0]}
+        currentWeekEnd={getEndOfWeek(selectedDate).toISOString().split('T')[0]}
+        dailyWorkloadMinutes={
+          assignments.reduce((acc, a) => {
+            if (a.day_of_week) {
+              acc[a.day_of_week] = (acc[a.day_of_week] || 0) + (a.est_minutes || 0);
+            }
+            return acc;
+          }, {} as Record<string, number>)
+        }
+        onRefresh={() => {
+          fetchScheduledAssignments();
+          fetchBlocks();
+        }}
+      />
     </Card>
   );
 };
