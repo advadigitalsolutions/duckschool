@@ -726,6 +726,7 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
           }
         }}
         assignment={reassignAssignment}
+        studentId={studentId}
         onReassigned={() => {
           fetchScheduledAssignments();
         }}
