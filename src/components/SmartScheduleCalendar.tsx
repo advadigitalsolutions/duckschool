@@ -433,22 +433,28 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                             onDragStart={() => handleDragStart(assignment.id)}
                             onClick={() => setSelectedAssignment(assignment)}
                             className={cn(
-                              "p-2 rounded text-xs mb-1 group relative",
-                              "bg-primary/10 border border-primary/20",
-                              "hover:bg-primary/20 hover:shadow-md transition-all",
-                              "cursor-pointer",
+                              "p-2 rounded-lg text-xs mb-1 group relative",
+                              "bg-gradient-to-br from-primary/10 to-primary/5",
+                              "border border-primary/20",
+                              "hover:from-primary/20 hover:to-primary/10",
+                              "hover:shadow-lg hover:scale-[1.02] hover:border-primary/40",
+                              "transition-all duration-200",
+                              "cursor-pointer active:scale-[0.98]",
                               assignment.locked_schedule && "opacity-60"
                             )}
                           >
                             <div className="flex items-start justify-between gap-1">
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium truncate flex items-center gap-1">
-                                  <BookOpen className="h-3 w-3 opacity-60" />
-                                  {assignment.title}
+                                <div className="font-semibold truncate flex items-center gap-1.5 mb-1">
+                                  <BookOpen className="h-3.5 w-3.5 text-primary/70" />
+                                  <span>{assignment.title}</span>
                                 </div>
-                                <div className="text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <div className="text-muted-foreground flex items-center gap-1.5">
                                   <Clock className="h-3 w-3" />
-                                  {assignment.est_minutes}m
+                                  <span>{assignment.est_minutes} min</span>
+                                </div>
+                                <div className="text-[10px] text-primary/60 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  Click to view details
                                 </div>
                               </div>
                               <button
@@ -456,12 +462,12 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                                   e.stopPropagation();
                                   toggleLock(assignment.id, assignment.locked_schedule);
                                 }}
-                                className="hover:bg-background/50 p-1 rounded transition-colors"
+                                className="hover:bg-background/80 p-1 rounded transition-all hover:scale-110"
                               >
                                 {assignment.locked_schedule ? (
-                                  <Lock className="h-3 w-3" />
+                                  <Lock className="h-3.5 w-3.5 text-primary/70" />
                                 ) : (
-                                  <Unlock className="h-3 w-3" />
+                                  <Unlock className="h-3.5 w-3.5 text-muted-foreground/70" />
                                 )}
                               </button>
                             </div>
@@ -476,12 +482,22 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
           </div>
         </div>
 
-        {/* Scheduling Notes */}
+        {/* AI Scheduling Notes - Why things are scheduled this way */}
         {schedulingNotes.length > 0 && (
-          <div className="mt-4 p-3 bg-muted/30 rounded-lg border border-border/50">
-            <p className="text-[10px] text-muted-foreground leading-relaxed">
-              {schedulingNotes.join(' ')}
-            </p>
+          <div className="mt-6 p-4 rounded-lg bg-gradient-to-br from-primary/5 to-background border border-primary/10">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5">
+                <Sparkles className="h-4 w-4 text-primary/70" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-xs font-semibold text-foreground/80 mb-1.5 uppercase tracking-wide">
+                  Smart Scheduling Notes
+                </h4>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {schedulingNotes.join(' ')}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -504,50 +520,36 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
         </div>
       </CardContent>
 
-      {/* Assignment Details Dialog */}
+      {/* Lesson Details Dialog - Delightfully Simple */}
       <Dialog open={!!selectedAssignment} onOpenChange={() => setSelectedAssignment(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-hidden flex flex-col">
           {selectedAssignment && (
             <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
+              {/* Header with gradient */}
+              <div className="relative -m-6 mb-0 p-6 bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b">
+                <DialogTitle className="text-2xl font-bold flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                  </div>
                   {selectedAssignment.title}
                 </DialogTitle>
-                <DialogDescription>
-                  {selectedAssignment.subject} • {selectedAssignment.est_minutes} minutes
+                <DialogDescription className="flex items-center gap-4 text-base">
+                  <span className="font-medium text-foreground/80">{selectedAssignment.subject}</span>
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    {selectedAssignment.est_minutes} min
+                  </span>
                 </DialogDescription>
-              </DialogHeader>
+              </div>
 
-              <div className="space-y-4 py-4">
-                {/* Lesson Summary */}
-                {selectedAssignment.body?.overview && (
-                  <div>
-                    <h4 className="font-medium text-sm mb-2">Overview</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedAssignment.body.overview}
-                    </p>
-                  </div>
-                )}
-
-                {/* Learning Objectives */}
-                {selectedAssignment.body?.learning_objectives && (
-                  <div>
-                    <h4 className="font-medium text-sm mb-2">Learning Objectives</h4>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                      {selectedAssignment.body.learning_objectives.map((obj: string, i: number) => (
-                        <li key={i}>{obj}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Schedule Info */}
-                <div className="pt-4 border-t">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto space-y-6 py-6">
+                {/* Quick Schedule Info Card */}
+                <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-primary/70" />
+                      <span className="font-medium text-sm">
                         {selectedAssignment.day_of_week && 
                           selectedAssignment.day_of_week.charAt(0).toUpperCase() + 
                           selectedAssignment.day_of_week.slice(1)
@@ -557,31 +559,67 @@ export const SmartScheduleCalendar = ({ studentId }: SmartScheduleCalendarProps)
                         }
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>{selectedAssignment.est_minutes} minutes</span>
-                    </div>
+                    {selectedAssignment.locked_schedule && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Lock className="h-3 w-3" />
+                        Locked
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2 pt-4">
-                  <Button
-                    onClick={() => {
-                      navigate(`/assignment/${selectedAssignment.id}`);
-                    }}
-                    className="flex-1"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Open Assignment
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setSelectedAssignment(null)}
-                  >
-                    Close
-                  </Button>
-                </div>
+                {/* Lesson Content */}
+                {selectedAssignment.body?.overview && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm text-foreground/80 uppercase tracking-wide">Overview</h4>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      {selectedAssignment.body.overview}
+                    </p>
+                  </div>
+                )}
+
+                {selectedAssignment.body?.learning_objectives && selectedAssignment.body.learning_objectives.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-sm text-foreground/80 uppercase tracking-wide">What You'll Learn</h4>
+                    <ul className="space-y-2">
+                      {selectedAssignment.body.learning_objectives.map((obj: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/60 flex-shrink-0" />
+                          <span className="leading-relaxed">{obj}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {!selectedAssignment.body?.overview && !selectedAssignment.body?.learning_objectives && (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p>No additional details available for this lesson.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Actions - Always visible */}
+              <div className="border-t pt-4 -mb-2 flex gap-3">
+                <Button
+                  onClick={() => {
+                    navigate(`/assignment/${selectedAssignment.id}`);
+                  }}
+                  size="lg"
+                  className="flex-1 font-semibold"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Start Lesson
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={() => setSelectedAssignment(null)}
+                  className="px-6"
+                >
+                  Close
+                </Button>
               </div>
             </>
           )}
