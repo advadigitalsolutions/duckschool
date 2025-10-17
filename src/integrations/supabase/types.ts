@@ -1066,6 +1066,30 @@ export type Database = {
           },
         ]
       }
+      demo_inquiries: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+        }
+        Relationships: []
+      }
       grades: {
         Row: {
           assignment_id: string | null
@@ -2418,7 +2442,12 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "parent" | "student" | "self_directed_learner" | "admin"
+      app_role:
+        | "parent"
+        | "student"
+        | "self_directed_learner"
+        | "admin"
+        | "self_directed"
       artifact_t: "file" | "link" | "text"
       grader_t: "ai" | "human" | "both"
       item_t: "lesson" | "quiz" | "project" | "video" | "reading" | "assignment"
@@ -2559,7 +2588,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["parent", "student", "self_directed_learner", "admin"],
+      app_role: [
+        "parent",
+        "student",
+        "self_directed_learner",
+        "admin",
+        "self_directed",
+      ],
       artifact_t: ["file", "link", "text"],
       grader_t: ["ai", "human", "both"],
       item_t: ["lesson", "quiz", "project", "video", "reading", "assignment"],
