@@ -7,7 +7,7 @@ import { Play, Pause, RotateCcw, CheckCircle2 } from 'lucide-react';
 import { FocusJourneyDuck } from '@/components/FocusJourneyDuck';
 import { Progress } from '@/components/ui/progress';
 import { useActivitySession } from '@/hooks/useActivitySession';
-import { captureCurrentWindow } from '@/utils/screenCapture';
+import { requestScreenCaptureStream, captureFromStream, stopScreenCaptureStream } from '@/utils/screenCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -25,6 +25,8 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
   const [accountabilityEnabled, setAccountabilityEnabled] = useState(false);
   const [showAccountabilityCheck, setShowAccountabilityCheck] = useState(false);
   const [accountabilityTimerId, setAccountabilityTimerId] = useState<NodeJS.Timeout | null>(null);
+  const [screenCaptureStream, setScreenCaptureStream] = useState<MediaStream | null>(null);
+  const [hasScreenCaptureConsent, setHasScreenCaptureConsent] = useState(false);
   
   const { sessionId, createSession, endSession } = useActivitySession(studentId || undefined);
 
@@ -90,12 +92,36 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
 
   const captureAndAnalyze = async () => {
     try {
-      const screenshot = await captureCurrentWindow();
+      // If we don't have consent or stream yet, request it
+      if (!hasScreenCaptureConsent || !screenCaptureStream) {
+        console.log('📸 Requesting screen capture consent...');
+        try {
+          const stream = await requestScreenCaptureStream();
+          setScreenCaptureStream(stream);
+          setHasScreenCaptureConsent(true);
+          
+          // Monitor if user stops sharing
+          stream.getVideoTracks()[0].addEventListener('ended', () => {
+            console.log('📸 User stopped screen sharing');
+            setScreenCaptureStream(null);
+            setHasScreenCaptureConsent(false);
+            toast.error('Screen sharing stopped. Accountability checks paused.');
+          });
+        } catch (error) {
+          console.error('❌ Failed to get screen capture consent:', error);
+          toast.error('Screen sharing permission denied. Accountability checks will not work.');
+          throw error;
+        }
+      }
+
+      console.log('📸 Capturing screenshot from stream...');
+      const screenshot = await captureFromStream(screenCaptureStream!);
       
       // Get penalty setting from localStorage
       const settings = JSON.parse(localStorage.getItem('focusDuckSettings') || '{}');
       const applyPenalties = settings.applyPenalties || false;
       
+      console.log('🤖 Sending to AI for analysis...');
       const { data, error } = await supabase.functions.invoke('analyze-focus-screenshot', {
         body: {
           screenshot,
@@ -121,14 +147,18 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     }
   };
 
-  // Cleanup timers on unmount
+  // Cleanup timers and streams on unmount
   useEffect(() => {
     return () => {
       if (accountabilityTimerId) {
         clearTimeout(accountabilityTimerId);
       }
+      // Clean up screen capture stream
+      if (screenCaptureStream) {
+        stopScreenCaptureStream(screenCaptureStream);
+      }
     };
-  }, [accountabilityTimerId]);
+  }, [accountabilityTimerId, screenCaptureStream]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -184,6 +214,13 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     if (accountabilityTimerId) {
       clearTimeout(accountabilityTimerId);
       setAccountabilityTimerId(null);
+    }
+    
+    // Stop screen capture when resetting
+    if (screenCaptureStream) {
+      stopScreenCaptureStream(screenCaptureStream);
+      setScreenCaptureStream(null);
+      setHasScreenCaptureConsent(false);
     }
     
     if (sessionId) {
@@ -289,7 +326,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
                 </div>
                 
                 <p className="text-xs text-muted-foreground">
-                  Clicking "Yes" will capture your current window for AI analysis
+                  Clicking "Yes" will share your screen once per session for accountability checks
                 </p>
               </div>
             </Card>
