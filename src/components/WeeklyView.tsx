@@ -108,8 +108,13 @@ export function WeeklyView({
   };
   const calculateProgress = () => {
     if (assignments.length === 0) return 0;
-    // This would need to check submissions, simplified for now
-    return 0;
+    
+    // Count assignments that have been submitted
+    const submittedCount = assignments.filter(a => 
+      a.submissions && a.submissions.length > 0
+    ).length;
+    
+    return (submittedCount / assignments.length) * 100;
   };
   if (loading) {
     return <Card>
