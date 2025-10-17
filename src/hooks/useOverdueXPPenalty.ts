@@ -14,12 +14,11 @@ export function useOverdueXPPenalty(studentId: string | null, overdueAssignments
         const now = new Date();
         const diff = now.getTime() - dueDate.getTime();
         const totalMinutesLate = Math.floor(diff / (1000 * 60));
+        const totalDaysLate = Math.floor(diff / (1000 * 60 * 60 * 24));
         
-        // Calculate how many 100-minute chunks have passed
-        const penaltyChunks = Math.floor(totalMinutesLate / 100);
-        
-        if (penaltyChunks > 0) {
-          const penaltyKey = `${assignment.id}-${penaltyChunks}`;
+        // Calculate how many full days have passed since due date
+        if (totalDaysLate > 0) {
+          const penaltyKey = `${assignment.id}-day-${totalDaysLate}`;
           
           // Check if we've already processed this penalty level
           if (!processedPenalties.current.has(penaltyKey)) {
@@ -29,24 +28,24 @@ export function useOverdueXPPenalty(studentId: string | null, overdueAssignments
               .select('id')
               .eq('student_id', studentId)
               .eq('reference_id', assignment.id)
-              .eq('description', `Overdue penalty chunk ${penaltyChunks}: ${assignment.curriculum_items?.title || 'Assignment'}`)
+              .eq('description', `Overdue penalty (Day ${totalDaysLate}): ${assignment.curriculum_items?.title || 'Assignment'}`)
               .maybeSingle();
             
             if (!existingPenalty) {
-              // Apply -10 XP penalty for this chunk
+              // Apply -10 XP penalty for this day
               const { error } = await supabase
                 .from('xp_events')
                 .insert({
                   student_id: studentId,
                   amount: -10,
                   event_type: 'overdue_penalty',
-                  description: `Overdue penalty chunk ${penaltyChunks}: ${assignment.curriculum_items?.title || 'Assignment'}`,
+                  description: `Overdue penalty (Day ${totalDaysLate}): ${assignment.curriculum_items?.title || 'Assignment'}`,
                   reference_id: assignment.id,
                 });
               
               if (!error) {
                 processedPenalties.current.add(penaltyKey);
-                toast.error(`-10 XP: Assignment is ${Math.floor(totalMinutesLate / 60)}h ${totalMinutesLate % 60}m overdue`, {
+                toast.error(`-10 XP: Assignment is ${totalDaysLate} day${totalDaysLate > 1 ? 's' : ''} overdue`, {
                   icon: '⏰',
                 });
               }
@@ -62,8 +61,8 @@ export function useOverdueXPPenalty(studentId: string | null, overdueAssignments
     // Check immediately
     checkAndApplyPenalties();
     
-    // Check every minute for new penalty milestones
-    const interval = setInterval(checkAndApplyPenalties, 60000);
+    // Check every hour for new penalty days (no need to check every minute now)
+    const interval = setInterval(checkAndApplyPenalties, 60 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [studentId, overdueAssignments]);
