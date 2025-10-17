@@ -21,7 +21,6 @@ import { MathText } from '@/components/MathText';
 import { StudyGuidePanel } from '@/components/StudyGuidePanel';
 import { TextToSpeech } from '@/components/TextToSpeech';
 import { AssignmentNotes } from '@/components/AssignmentNotes';
-import { StudentLayout } from '@/components/StudentLayout';
 import { RegradeButton } from '@/components/RegradeButton';
 import { LearningWizard } from '@/components/LearningWizard';
 import { EditAssignmentDatesDialog } from '@/components/EditAssignmentDatesDialog';
@@ -292,8 +291,7 @@ export default function AssignmentDetail() {
   };
 
   return (
-    <StudentLayout>
-      <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-6">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -926,6 +924,5 @@ export default function AssignmentDetail() {
           )}
         </Tabs>
       </div>
-    </StudentLayout>
   );
 }
