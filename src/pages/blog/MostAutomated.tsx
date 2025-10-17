@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
+import busyFamily from '@/assets/blog/busy-family.jpg';
 
 export default function MostAutomated() {
   const navigate = useNavigate();
@@ -30,6 +31,11 @@ export default function MostAutomated() {
                 The Most Automated Homeschool Platform in Existence: What AI Can (and Can't) Replace
               </h1>
             </div>
+            <img 
+              src={busyFamily} 
+              alt="Parent working on laptop while managing multiple children at home - illustrating the need for automation in homeschooling" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
                 Curriculum generation, grading, scheduling, standards tracking, progress monitoring—all automated. But the human connection? That's still yours.

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
+import modernReportCard from '@/assets/blog/modern-report-card.jpg';
 
 export default function PublicSchoolSupplement() {
   const navigate = useNavigate();
@@ -30,6 +31,11 @@ export default function PublicSchoolSupplement() {
                 Supplementing Public School: Enrichment, Intervention, and Summer Learning That Actually Works
               </h1>
             </div>
+            <img 
+              src={modernReportCard} 
+              alt="Modern standards-based report card showing detailed skill assessments - illustrating contemporary education tracking" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
                 Your child attends public school but needs extra support or challenge? Duckschool fills gaps and extends learning without overwhelming schedules.

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
+import vintageReportCard from '@/assets/blog/vintage-report-card.jpg';
 
 export default function StateStandards() {
   const navigate = useNavigate();
@@ -30,6 +31,11 @@ export default function StateStandards() {
                 From California to Coast-to-Coast: How We're Bringing Standards-Aligned AI to All 50 States
               </h1>
             </div>
+            <img 
+              src={vintageReportCard} 
+              alt="Vintage 1970 school report card showing traditional letter grades - illustrating the evolution of educational standards" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
                 We started with California Common Core. Now we support Texas TEKS, Florida BEST, and standards from every US state—with full alignment tracking.

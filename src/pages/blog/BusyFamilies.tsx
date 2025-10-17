@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
+import exhaustedParent from '@/assets/blog/exhausted-parent.webp';
 
 export default function BusyFamilies() {
   const navigate = useNavigate();
@@ -30,6 +31,11 @@ export default function BusyFamilies() {
                 Homeschooling Without the Burnout: For Busy Families Who Need More Hours in the Day
               </h1>
             </div>
+            <img 
+              src={exhaustedParent} 
+              alt="Exhausted parent resting on couch while child watches - illustrating homeschool parent burnout" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
                 Working from home, managing multiple kids, running a household—and somehow teaching school too? AI makes it possible without the mental load.
