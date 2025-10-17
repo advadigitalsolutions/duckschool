@@ -38,7 +38,7 @@ export default function LearningDifferences() {
             />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
-                Dyscalculia, dysgraphia, processing disorders—Duckschool's accessibility features and adaptive pacing turn learning differences into learning opportunities.
+                Dyscalculia, dysgraphia, processing disorders—Masterymode.ai's accessibility features and adaptive pacing turn learning differences into learning opportunities.
               </p>
               <div className="border-t pt-8 mt-12">
                 <Button size="lg" className="mt-4" onClick={() => navigate('/auth')}>

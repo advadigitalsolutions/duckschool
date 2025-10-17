@@ -38,7 +38,7 @@ export default function IndependentLearners() {
             />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
-                The goal isn't to homeschool forever—it's to create learners who don't need you hovering. Here's how Duckschool scaffolds independence at every age.
+                The goal isn't to homeschool forever—it's to create learners who don't need you hovering. Here's how Masterymode.ai scaffolds independence at every age.
               </p>
               <div className="border-t pt-8 mt-12">
                 <Button size="lg" className="mt-4" onClick={() => navigate('/auth')}>

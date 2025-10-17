@@ -34,7 +34,7 @@ export default function ADHDSupport() {
               </div>
               
               <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                Built for ADHD Brains: How Duckschool Turns Executive Function Challenges into Strengths
+                Built for ADHD Brains: How Masterymode.ai Turns Executive Function Challenges into Strengths
               </h1>
             </div>
 
@@ -63,7 +63,7 @@ export default function ADHDSupport() {
                 These are all executive function skills—the very skills ADHD directly impacts. It's like asking someone with broken legs to run a marathon, then calling them lazy when they can't.
               </p>
 
-              <h2 className="text-2xl font-bold mt-8">How Duckschool Supports ADHD Learners</h2>
+              <h2 className="text-2xl font-bold mt-8">How Masterymode.ai Supports ADHD Learners</h2>
 
               <h3 className="text-xl font-bold mt-6">1. Chunked, Focused Lessons</h3>
               <p>
@@ -106,7 +106,7 @@ export default function ADHDSupport() {
               </ul>
 
               <p>
-                Duckschool offloads working memory demands:
+                Masterymode.ai offloads working memory demands:
               </p>
               <ul className="space-y-2">
                 <li>Instructions available in written, visual, and audio formats</li>
@@ -133,7 +133,7 @@ export default function ADHDSupport() {
 
               <h2 className="text-2xl font-bold mt-8">What Parents of ADHD Kids Tell Us</h2>
               <p>
-                "Before Duckschool, homework battles destroyed our relationship. Now he's self-motivated because the system works <em>with</em> his brain, not against it."
+                "Before Masterymode.ai, homework battles destroyed our relationship. Now he's self-motivated because the system works <em>with</em> his brain, not against it."
               </p>
 
               <p>
@@ -157,7 +157,7 @@ export default function ADHDSupport() {
               </ul>
 
               <p>
-                Traditional school forces them into a neurotypical box. Duckschool builds the learning environment around how their brain actually works.
+                Traditional school forces them into a neurotypical box. Masterymode.ai builds the learning environment around how their brain actually works.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">The Bottom Line</h2>
@@ -166,7 +166,7 @@ export default function ADHDSupport() {
               </p>
 
               <p className="text-xl font-semibold">
-                Duckschool was. And the results speak for themselves.
+                Masterymode.ai was. And the results speak for themselves.
               </p>
 
               <div className="border-t pt-8 mt-12">

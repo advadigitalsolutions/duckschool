@@ -38,7 +38,7 @@ export default function PublicSchoolSupplement() {
             />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
-                Your child attends public school but needs extra support or challenge? Duckschool fills gaps and extends learning without overwhelming schedules.
+                Your child attends public school but needs extra support or challenge? Masterymode.ai fills gaps and extends learning without overwhelming schedules.
               </p>
               <div className="border-t pt-8 mt-12">
                 <Button size="lg" className="mt-4" onClick={() => navigate('/auth')}>

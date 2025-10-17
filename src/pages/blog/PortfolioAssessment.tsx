@@ -38,7 +38,7 @@ export default function PortfolioAssessment() {
             />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
-                Multiple-choice tests can't capture creativity, critical thinking, or real-world problem solving. Duckschool's portfolio system documents the learning that actually matters.
+                Multiple-choice tests can't capture creativity, critical thinking, or real-world problem solving. Masterymode.ai's portfolio system documents the learning that actually matters.
               </p>
               <div className="border-t pt-8 mt-12">
                 <Button size="lg" className="mt-4" onClick={() => navigate('/auth')}>

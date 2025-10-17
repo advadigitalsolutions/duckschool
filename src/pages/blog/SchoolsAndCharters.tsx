@@ -34,13 +34,13 @@ export default function SchoolsAndCharters() {
               </div>
               
               <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                Scaling Personalized Learning: How Duckschool Serves Private Schools, Charters, and Pods
+                Scaling Personalized Learning: How Masterymode.ai Serves Private Schools, Charters, and Pods
               </h1>
             </div>
 
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
-                Personalized, AI-powered education isn't just for homeschoolers. Discover how schools are using Duckschool to differentiate instruction at scale—without hiring 100 teachers.
+                Personalized, AI-powered education isn't just for homeschoolers. Discover how schools are using Masterymode.ai to differentiate instruction at scale—without hiring 100 teachers.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">The Differentiation Impossibility</h2>
@@ -62,11 +62,11 @@ export default function SchoolsAndCharters() {
                 So most teachers teach to the middle and hope for the best. Advanced students get bored. Struggling students fall further behind. Everyone loses.
               </p>
 
-              <h2 className="text-2xl font-bold mt-8">How Schools Are Using Duckschool</h2>
+              <h2 className="text-2xl font-bold mt-8">How Schools Are Using Masterymode.ai</h2>
 
               <h3 className="text-xl font-bold mt-6">1. Microschools & Learning Pods (5-15 Students)</h3>
               <p>
-                Small educational environments are exploding in popularity. A single teacher facilitates 10 mixed-age students. With Duckschool:
+                Small educational environments are exploding in popularity. A single teacher facilitates 10 mixed-age students. With Masterymode.ai:
               </p>
               <ul className="space-y-2">
                 <li>Each student gets personalized curriculum auto-generated daily</li>
@@ -84,7 +84,7 @@ export default function SchoolsAndCharters() {
 
               <h3 className="text-xl font-bold mt-6">2. Private Schools (Small Class Sizes)</h3>
               <p>
-                Private schools promise differentiation but often can't deliver it at scale. Duckschool becomes:
+                Private schools promise differentiation but often can't deliver it at scale. Masterymode.ai becomes:
               </p>
               <ul className="space-y-2">
                 <li><strong>Intervention support:</strong> Struggling students get AI-generated remedial work</li>
@@ -95,7 +95,7 @@ export default function SchoolsAndCharters() {
 
               <h3 className="text-xl font-bold mt-6">3. Charter Schools (Flexibility with Accountability)</h3>
               <p>
-                Charters have autonomy to innovate but must still show standards mastery. Duckschool provides:
+                Charters have autonomy to innovate but must still show standards mastery. Masterymode.ai provides:
               </p>
               <ul className="space-y-2">
                 <li>Standards alignment for state testing prep</li>
