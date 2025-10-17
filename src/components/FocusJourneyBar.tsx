@@ -803,7 +803,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
             <div 
               className="absolute flex items-center pointer-events-none"
               style={{ 
-                left: `${progress}%`,
+                left: `${Math.min(progress + 2, 100)}%`,
                 top: '50%',
                 transform: 'translate(-50%, -50%)',
                 zIndex: duckState === 'falling' || duckState === 'climbing' ? 9999 : 10
