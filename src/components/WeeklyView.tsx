@@ -124,10 +124,10 @@ export function WeeklyView({
   return <div className="space-y-6">
       {/* Overdue Assignments */}
       {overdueAssignments.length > 0 && (
-        <Card className="border-destructive bg-destructive/5">
+        <Card className="border-purple-600 bg-purple-50/50 dark:bg-purple-950/20">
           <CardHeader>
-            <CardTitle className="text-destructive flex items-center gap-2">
-              ⚠️ Overdue ({overdueAssignments.length})
+            <CardTitle className="text-purple-700 dark:text-purple-400 flex items-center gap-2">
+              ⚠️ Overdue
             </CardTitle>
             <CardDescription>
               These assignments are past their due date
@@ -142,12 +142,12 @@ export function WeeklyView({
                 return (
                   <div 
                     key={assignment.id} 
-                    className="flex items-start gap-3 p-3 rounded-lg border border-destructive bg-background hover:bg-accent/50 transition-colors cursor-pointer" 
+                    className="flex items-start gap-3 p-3 rounded-lg border border-purple-300 dark:border-purple-700 bg-background hover:bg-accent/50 transition-colors cursor-pointer" 
                     onClick={() => {
                       window.location.href = `/assignment/${assignment.id}`;
                     }}
                   >
-                    <BookOpen className="h-5 w-5 mt-0.5 text-destructive" />
+                    <BookOpen className="h-5 w-5 mt-0.5 text-purple-600 dark:text-purple-400" />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium line-clamp-1">
                         {assignment.curriculum_items?.title}
@@ -156,7 +156,7 @@ export function WeeklyView({
                         <Badge variant="outline" className="text-xs">
                           {assignment.curriculum_items?.courses?.subject}
                         </Badge>
-                        <span className="text-destructive text-xs font-medium">
+                        <span className="text-purple-600 dark:text-purple-400 text-xs font-medium">
                           {daysOverdue} {daysOverdue === 1 ? 'day' : 'days'} overdue
                         </span>
                       </div>
