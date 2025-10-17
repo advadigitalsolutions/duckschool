@@ -28,6 +28,7 @@ export default function StudentDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileModalTab, setProfileModalTab] = useState<'profile' | 'accessibility' | 'assessment'>('profile');
   const [todaysChores, setTodaysChores] = useState<any[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
 
   // Enable automatic XP rewards
@@ -269,6 +270,7 @@ export default function StudentDashboard() {
       });
       if (error) throw error;
       setNewGoalText('');
+      setIsEditMode(false);
       await fetchDailyGoals(studentDbId);
       toast.success('Goal added!');
     } catch (error) {
@@ -373,12 +375,21 @@ export default function StudentDashboard() {
                     <span className={`flex-1 ${goal.completed ? 'line-through text-muted-foreground' : ''}`}>
                       {goal.goal_text}
                     </span>
-                    <Button variant="ghost" size="icon" onClick={() => deleteGoal(goal.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {isEditMode && (
+                      <Button variant="ghost" size="icon" onClick={() => deleteGoal(goal.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>)}
                 <div className="flex gap-2 mt-4">
-                  <Input placeholder="Add a new goal..." value={newGoalText} onChange={e => setNewGoalText(e.target.value)} onKeyPress={e => e.key === 'Enter' && addDailyGoal()} />
+                  <Input 
+                    placeholder="Add a new goal..." 
+                    value={newGoalText} 
+                    onChange={e => setNewGoalText(e.target.value)} 
+                    onFocus={() => setIsEditMode(true)}
+                    onBlur={() => setTimeout(() => setIsEditMode(false), 150)}
+                    onKeyPress={e => e.key === 'Enter' && addDailyGoal()} 
+                  />
                   <Button onClick={addDailyGoal} disabled={!newGoalText.trim()}>
                     <Plus className="h-4 w-4" />
                   </Button>
