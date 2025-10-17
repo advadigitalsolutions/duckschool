@@ -49,7 +49,6 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [isReading, setIsReading] = useState(false);
   const [readingStartTime, setReadingStartTime] = useState<number | null>(null);
   const [readingStartTimestamp, setReadingStartTimestamp] = useState<number | null>(null);
-  const [hoveredSegmentIndex, setHoveredSegmentIndex] = useState<number | null>(null);
   const [celebrationProgress, setCelebrationProgress] = useState<number | null>(null);
   const [celebrationStartSeconds, setCelebrationStartSeconds] = useState<number | null>(null);
   const lastBlurTime = useRef<number>(0);
@@ -269,13 +268,10 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         return;
       }
 
-      // Store current progress AND activeSeconds before starting climb animation
-      // Note: The current segment was already completed and added to focusSegments when duck fell
-      // So we only need to use completedFocusTime, not add current segment progress
+      // Store current progress before starting climb animation
       const currentSeconds = sessionData.activeSeconds;
-      const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
-      const currentProgress = Math.min((completedFocusTime / goalSeconds) * 100, 100);
-      console.log(`🎯 Storing celebration progress: ${completedFocusTime}s = ${currentProgress.toFixed(2)}% at activeSeconds=${currentSeconds}`);
+      const currentProgress = Math.min((currentSeconds / goalSeconds) * 100, 100);
+      console.log(`🎯 Storing celebration progress: ${currentSeconds}s = ${currentProgress.toFixed(2)}%`);
       setCelebrationProgress(currentProgress);
       setCelebrationStartSeconds(currentSeconds);
 
@@ -432,8 +428,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     return () => clearInterval(interval);
   }, [sessionId, isVisible, updateAwayTime]);
 
-  // Calculate duck's visual progress on the bar
-  // The duck's position is the sum of all completed segments + current segment
+  // Calculate progress based on total elapsed time
   useEffect(() => {
     // During celebration, use the preserved progress to prevent jumping
     if (celebrationProgress !== null) {
@@ -442,19 +437,10 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       return;
     }
     
-    // Sum up all completed focus segments
-    const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
+    // Progress is simply: total time elapsed / goal time
+    const newProgress = Math.min((sessionData.activeSeconds / goalSeconds) * 100, 100);
     
-    // Add current segment progress (from currentSegmentStart to now)
-    const currentSegmentProgress = gapStartTime === null && !isOnBreak && !isReading
-      ? (sessionData.activeSeconds - currentSegmentStart)
-      : 0;
-    
-    // Total visual progress on the bar
-    const totalBarProgress = completedFocusTime + currentSegmentProgress;
-    const newProgress = Math.min((totalBarProgress / goalSeconds) * 100, 100);
-    
-    console.log(`📊 PROGRESS CALC: focusSegments=${JSON.stringify(focusSegments.map(s => s.duration))} total=${completedFocusTime}s | currentSegment: activeSeconds=${sessionData.activeSeconds}s - start=${currentSegmentStart}s = ${currentSegmentProgress}s | TOTAL=${totalBarProgress}s (${newProgress.toFixed(2)}%)`);
+    console.log(`📊 PROGRESS: ${sessionData.activeSeconds}s / ${goalSeconds}s = ${newProgress.toFixed(2)}%`);
     setProgress(newProgress);
 
     // Check for milestone achievements
@@ -466,11 +452,11 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         
         if (milestone === 100) {
           setDuckState('celebrating');
-          playSound('complete', 0.7); // Celebration sound!
+          playSound('complete', 0.7);
         }
       }
     });
-  }, [celebrationProgress, focusSegments, sessionData.activeSeconds, currentSegmentStart, gapStartTime, isOnBreak, goalSeconds, milestonesReached]);
+  }, [celebrationProgress, sessionData.activeSeconds, goalSeconds, milestonesReached]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -626,12 +612,9 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
       const currentSeconds = sessionData.activeSeconds;
       
-      // Store current progress AND activeSeconds before starting climb animation
-      // Note: The current segment was already completed and added to focusSegments when duck fell
-      // So we only need to use completedFocusTime, not add current segment progress
-      const completedFocusTime = focusSegments.reduce((sum, seg) => sum + seg.duration, 0);
-      const currentProgress = Math.min((completedFocusTime / goalSeconds) * 100, 100);
-      console.log(`🎯 Storing celebration progress (click): ${completedFocusTime}s = ${currentProgress.toFixed(2)}% at activeSeconds=${currentSeconds}`);
+      // Store current progress before starting climb animation
+      const currentProgress = Math.min((currentSeconds / goalSeconds) * 100, 100);
+      console.log(`🎯 Storing celebration progress (click): ${currentSeconds}s = ${currentProgress.toFixed(2)}%`);
       setCelebrationProgress(currentProgress);
       setCelebrationStartSeconds(currentSeconds);
 
@@ -698,107 +681,20 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           overflow: 'visible',
           background: 'transparent'
         }}>
-          {/* Completed focus segments */}
-          {focusSegments.map((segment, index) => {
-            const isHovered = hoveredSegmentIndex === index;
-            return (
-              <div
-                key={`focus-${index}`}
-                className="absolute inset-y-1 rounded-full flex items-center justify-center text-[10px] font-semibold text-white shadow-md mx-1 transition-all duration-200 cursor-pointer"
-                style={{ 
-                  left: `${segment.startPercent}%`, 
-                  width: `${segment.widthPercent}%`,
-                  minWidth: '40px',
-                  zIndex: isHovered ? 50 : 10,
-                  transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-                  background: 'linear-gradient(90deg, #5FD39E 0%, #4BC187 100%)',
-                  boxShadow: isHovered 
-                    ? '0 0 0 2px rgba(95, 211, 158, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3)'
-                    : undefined
-                }}
-                onMouseEnter={() => setHoveredSegmentIndex(index)}
-                onMouseLeave={() => setHoveredSegmentIndex(null)}
-              >
-                {isHovered && (
-                  <span className="whitespace-nowrap">
-                    {formatDuration(segment.duration)}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Gap segments */}
-          {gapSegments.map((segment, index) => {
-            const isBreak = segment.reason === 'break';
-            const isReading = segment.reason === 'reading';
-            const isShortBreak = isBreak && segment.duration < 30;
-            const isShortReading = isReading && segment.duration < 30;
-            
-            return (
-              <div
-                key={`gap-${index}`}
-                className="absolute inset-y-1 flex items-center justify-center rounded-full mx-1"
-                style={{ 
-                  left: `${segment.startPercent}%`, 
-                  width: `${segment.widthPercent}%`,
-                  minWidth: (isBreak || isReading) ? ((isShortBreak || isShortReading) ? '12px' : '30px') : '8px',
-                  background: isBreak 
-                    ? 'linear-gradient(90deg, #F4C2B0 0%, #F4B5A0 100%)'
-                    : isReading
-                    ? 'linear-gradient(90deg, #93C5FD 0%, #7FB8F9 100%)'
-                    : '#F4A261'
-                }}
-              >
-                {isBreak && !isShortBreak && segment.widthPercent > 2 && (
-                  <span className="text-[10px] font-medium text-red-900/70">
-                    ☕ {formatDuration(segment.duration)}
-                  </span>
-                )}
-                {isReading && !isShortReading && segment.widthPercent > 2 && (
-                  <span className="text-[10px] font-medium text-blue-900/70">
-                    📚 {formatDuration(segment.duration)}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Current active segment */}
-          {gapStartTime === null && !isOnBreak && !isReading && (
-            <div 
-              className="absolute inset-y-1 left-0 transition-all duration-500 ease-out rounded-full mx-1"
-              style={{ 
-                left: `${(currentSegmentStart / goalSeconds) * 100}%`,
-                width: `${((sessionData.activeSeconds - currentSegmentStart) / goalSeconds) * 100}%`,
-                background: 'linear-gradient(90deg, rgba(95, 211, 158, 0.6) 0%, rgba(75, 193, 135, 0.6) 100%)'
-              }}
-            />
-          )}
-          
-          {/* Current reading segment */}
-          {isReading && readingStartTime !== null && (
-            <div 
-              className="absolute inset-y-1 left-0 transition-all duration-500 ease-out rounded-full mx-1"
-              style={{ 
-                left: `${(readingStartTime / goalSeconds) * 100}%`,
-                width: `${((sessionData.activeSeconds - readingStartTime) / goalSeconds) * 100}%`,
-                background: 'linear-gradient(90deg, rgba(147, 197, 253, 0.6) 0%, rgba(127, 184, 249, 0.6) 100%)'
-              }}
-            />
-          )}
-          
-          {/* Current break segment */}
-          {isOnBreak && breakStartTime !== null && (
-            <div 
-              className="absolute inset-y-1 left-0 transition-all duration-500 ease-out rounded-full mx-1"
-              style={{ 
-                left: `${(breakStartTime / goalSeconds) * 100}%`,
-                width: `${((sessionData.activeSeconds - breakStartTime) / goalSeconds) * 100}%`,
-                background: 'linear-gradient(90deg, rgba(244, 194, 176, 0.8) 0%, rgba(244, 181, 160, 0.8) 100%)'
-              }}
-            />
-          )}
+          {/* Single continuous progress fill - color based on current state */}
+          <div 
+            className="absolute inset-y-1 left-0 rounded-full mx-1 transition-all duration-300 ease-out"
+            style={{ 
+              width: `${progress}%`,
+              background: isReading 
+                ? 'linear-gradient(90deg, #93C5FD 0%, #7FB8F9 100%)'
+                : isOnBreak
+                ? 'linear-gradient(90deg, #F4C2B0 0%, #F4B5A0 100%)'
+                : gapStartTime !== null
+                ? 'linear-gradient(90deg, #F4A261 0%, #E89455 100%)'
+                : 'linear-gradient(90deg, #5FD39E 0%, #4BC187 100%)'
+            }}
+          />
 
           {/* Milestone markers */}
           <div className="absolute inset-0 flex justify-between px-2 pointer-events-none">
