@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, BookOpen } from 'lucide-react';
+import { DuckCatchingGame } from '@/components/DuckCatchingGame';
 
 export default function StudentAgenda() {
   const navigate = useNavigate();
@@ -173,6 +174,9 @@ export default function StudentAgenda() {
       )}
 
       <WeeklyView studentId={student.id} />
+
+      {/* Duck Catching Game */}
+      <DuckCatchingGame studentId={student.id} upNextAssignmentId={upNextAssignment?.id} />
     </div>
   );
 }

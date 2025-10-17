@@ -13,6 +13,8 @@ import { PomodoroProvider } from '@/contexts/PomodoroContext';
 import { DemoWizard } from '@/components/DemoWizard';
 import { ProfileSettingsModal } from '@/components/ProfileSettingsModal';
 import { useAutoXPRewards } from '@/hooks/useAutoXPRewards';
+import { ExcitingAgendaButton } from '@/components/ExcitingAgendaButton';
+import { DuckCatchingGame } from '@/components/DuckCatchingGame';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -386,17 +388,14 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
 
-          {/* Agenda Button */}
-          <div className="flex justify-center mb-6">
-            <Button 
-              size="lg" 
-              onClick={() => navigate('/student/agenda')} 
-              className="text-lg px-8 py-6"
-            >
-              Agenda →
-            </Button>
+          {/* Exciting Agenda Button */}
+          <div className="mb-6">
+            <ExcitingAgendaButton />
           </div>
         </div>
+
+        {/* Duck Catching Game */}
+        {studentDbId && <DuckCatchingGame studentId={studentDbId} />}
       </div>
       
       <ProfileSettingsModal
