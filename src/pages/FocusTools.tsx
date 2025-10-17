@@ -45,37 +45,37 @@ export default function FocusTools() {
     window.open(url, 'focusTimer', features);
   };
   return <div className="min-h-screen relative overflow-hidden">
-      {/* Animated Rippling Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(190,70%,15%)] via-[hsl(270,60%,20%)] to-[hsl(190,70%,15%)]">
-        <div className="absolute inset-0 opacity-60">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[hsl(180,80%,40%)] rounded-full mix-blend-screen filter blur-3xl animate-[ripple_8s_ease-in-out_infinite]" />
-          <div className="absolute top-1/3 right-1/3 w-96 h-96 bg-[hsl(270,70%,50%)] rounded-full mix-blend-screen filter blur-3xl animate-[ripple_10s_ease-in-out_infinite_2s]" />
-          <div className="absolute bottom-1/4 left-1/2 w-96 h-96 bg-[hsl(190,75%,45%)] rounded-full mix-blend-screen filter blur-3xl animate-[ripple_12s_ease-in-out_infinite_4s]" />
+      {/* Animated Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-purple-500/20 to-primary/20">
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full mix-blend-screen filter blur-3xl animate-[ripple_8s_ease-in-out_infinite]" />
+          <div className="absolute top-1/3 right-1/3 w-96 h-96 bg-purple-500 rounded-full mix-blend-screen filter blur-3xl animate-[ripple_10s_ease-in-out_infinite_2s]" />
+          <div className="absolute bottom-1/4 left-1/2 w-96 h-96 bg-primary rounded-full mix-blend-screen filter blur-3xl animate-[ripple_12s_ease-in-out_infinite_4s]" />
         </div>
       </div>
       
-      <div className="container mx-auto px-4 py-4 max-w-5xl relative z-10">
+      <div className="container mx-auto px-4 py-8 max-w-5xl relative z-10">
         {/* Header */}
-        <div className="mb-4 text-center">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-cyan-300 to-purple-300 bg-clip-text text-transparent">
+        <div className="mb-8 text-center">
+          <h1 className="text-5xl font-black mb-3 bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent drop-shadow-lg">
             Focus Tools
           </h1>
-          <p className="text-gray-300 text-lg">
+          <p className="text-foreground/80 text-lg font-medium">
             Choose your focus mode and customize it to work best for you
           </p>
         </div>
 
         {/* Main Card */}
-        <Card className="border-2 shadow-2xl overflow-hidden bg-black/40 backdrop-blur-sm border-cyan-500/20">
+        <Card className="border-2 shadow-2xl overflow-hidden backdrop-blur-md bg-card/95 border-primary/30 hover:border-primary/50 transition-colors">
           <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'pomodoro' | 'duck')} className="w-full">
             {/* Tab Navigation */}
-            <div className="border-b bg-muted/30 px-6 pt-6">
-              <TabsList className="grid w-full grid-cols-2 h-14 mb-4">
-                <TabsTrigger value="pomodoro" className="text-base gap-2">
+            <div className="border-b bg-gradient-to-r from-primary/5 via-purple-500/5 to-primary/5 px-6 pt-6">
+              <TabsList className="grid w-full grid-cols-2 h-14 mb-4 bg-background/80">
+                <TabsTrigger value="pomodoro" className="text-base gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <Timer className="h-5 w-5" />
                   Pomodoro Timer
                 </TabsTrigger>
-                <TabsTrigger value="duck" className="text-base gap-2">
+                <TabsTrigger value="duck" className="text-base gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   <Flame className="h-5 w-5" />
                   Focus Duck
                 </TabsTrigger>
@@ -83,20 +83,20 @@ export default function FocusTools() {
             </div>
 
             {/* Actions Bar */}
-            <div className="border-b bg-muted/20 px-6 py-3 flex items-center justify-between">
-              <Button variant="ghost" size="sm" onClick={() => setShowSettings(!showSettings)} className="gap-2">
+            <div className="border-b bg-muted/30 px-6 py-3 flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={() => setShowSettings(!showSettings)} className="gap-2 hover:bg-primary/10">
                 <Settings2 className={`h-4 w-4 ${showSettings ? 'animate-spin' : ''}`} />
                 {showSettings ? 'Hide' : 'Show'} Settings
               </Button>
               
-              <Button variant="outline" size="sm" onClick={handlePopOut} className="gap-2">
+              <Button variant="outline" size="sm" onClick={handlePopOut} className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50">
                 <Maximize2 className="h-4 w-4" />
                 Pop Out Window
               </Button>
             </div>
 
             {/* Content */}
-            <div className="p-8">
+            <div className="p-8 bg-gradient-to-b from-transparent to-primary/5">
               <TabsContent value="pomodoro" className="mt-0 space-y-6">
                 {showSettings && <PomodoroSettingsPanel />}
                 <SimplePomodoroTimer studentId={studentId} />

@@ -452,29 +452,31 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
 
   // Setup view
   return (
-    <Card className="p-8 bg-gradient-to-br from-accent/5 to-primary/5 border-2 max-w-2xl mx-auto">
+    <Card className="p-8 bg-gradient-to-br from-primary/5 via-purple-500/5 to-primary/5 border-2 border-primary/30 max-w-2xl mx-auto shadow-xl">
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Set Your Focus Goal</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
+            Set Your Focus Goal
+          </h2>
+          <p className="text-foreground/70 font-medium">
             What would you like to accomplish in this session?
           </p>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="goal">Your Goal</Label>
+            <Label htmlFor="goal" className="font-semibold">Your Goal</Label>
             <Input
               id="goal"
               placeholder="e.g., Complete math homework, Read chapter 5..."
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
-              className="text-base"
+              className="text-base h-12 border-primary/20 focus-visible:ring-primary"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="duration">Session Duration (minutes)</Label>
+            <Label htmlFor="duration" className="font-semibold">Session Duration (minutes)</Label>
             <div className="flex items-center gap-4">
               <Input
                 id="duration"
@@ -487,7 +489,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
                   setDuration(val);
                   setTimeLeft(val * 60);
                 }}
-                className="text-base w-24"
+                className="text-base w-24 h-12 border-primary/20 focus-visible:ring-primary"
               />
               <span className="text-sm text-muted-foreground">
                 This session only (won't change your default)
@@ -500,7 +502,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
           onClick={handleStart}
           disabled={!goal.trim()}
           size="lg"
-          className="w-full gap-2 text-lg h-14"
+          className="w-full gap-2 text-lg h-14 bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90 shadow-lg hover:shadow-xl transition-all"
         >
           <Play className="h-6 w-6" />
           Start Focus Session
