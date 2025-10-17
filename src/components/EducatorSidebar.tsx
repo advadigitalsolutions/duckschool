@@ -68,7 +68,10 @@ export function EducatorSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar className={isCollapsed ? "w-16" : "w-60"} collapsible="icon">
+    <Sidebar 
+      className={isCollapsed ? "w-16" : "w-64"} 
+      collapsible="icon"
+    >
       <SidebarContent>
         {/* Dashboard */}
         <SidebarGroup>

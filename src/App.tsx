@@ -178,8 +178,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         {!isPublicRoute && <AppSidebar />}
         <div className="flex-1 flex flex-col">
           {!isPublicRoute && !isStudentRoute && (
-            <header className="h-12 border-b flex items-center px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-              <SidebarTrigger className="-ml-1" />
+            <header className="h-14 border-b flex items-center gap-4 px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+              <SidebarTrigger className="h-9 w-9" />
+              <h2 className="font-semibold text-lg">Parent Dashboard</h2>
             </header>
           )}
           
