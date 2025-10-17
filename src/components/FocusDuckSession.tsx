@@ -207,7 +207,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
             style={{ 
               left: `${Math.min(progress, 95)}%`,
               transform: 'translateX(-50%)',
-              top: '-60px'
+              top: '-40px'
             }}
           >
             <FocusJourneyDuck
@@ -216,7 +216,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
               onStateChange={() => {}}
             />
           </div>
-          <div className="pt-12">
+          <div className="pt-8">
             <Progress value={progress} className="h-3" />
           </div>
         </div>
@@ -300,7 +300,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
               style={{ 
                 left: `${Math.min(progress, 95)}%`,
                 transform: 'translateX(-50%)',
-                top: '-60px'
+                top: '-40px'
               }}
             >
               <FocusJourneyDuck
@@ -309,7 +309,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
                 onStateChange={() => {}}
               />
             </div>
-            <div className="pt-12 space-y-3">
+            <div className="pt-8 space-y-3">
               <Progress 
                 value={progress} 
                 className="h-4"
