@@ -2410,6 +2410,10 @@ export type Database = {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: unknown
       }
+      recalculate_all_mastery: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       sparsevec_out: {
         Args: { "": unknown }
         Returns: unknown
@@ -2421,6 +2425,14 @@ export type Database = {
       sparsevec_typmod_in: {
         Args: { "": unknown[] }
         Returns: number
+      }
+      update_course_mastery_for_student: {
+        Args: { p_course_id: string; p_student_id: string }
+        Returns: undefined
+      }
+      update_standard_mastery_for_grade: {
+        Args: { p_grade: Database["public"]["Tables"]["grades"]["Row"] }
+        Returns: undefined
       }
       vector_avg: {
         Args: { "": number[] }

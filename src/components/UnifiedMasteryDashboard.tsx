@@ -202,40 +202,65 @@ export function UnifiedMasteryDashboard({
               </div>
             ) : (
               <>
-                {/* Overall Standards Mastery */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">{overallStandardsMastery}%</span>
-                    <Badge variant={overallStandardsMastery >= 80 ? "default" : overallStandardsMastery >= 60 ? "secondary" : "outline"}>
-                      {overallStandardsMastery >= 80 ? "Excellent" : overallStandardsMastery >= 60 ? "Good Progress" : "Needs Attention"}
-                    </Badge>
-                  </div>
-                  <Progress value={overallStandardsMastery} className="h-3" />
-                </div>
-
-                {/* Course Breakdown */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold">Standards Breakdown by Course</h4>
-                  {courseMastery?.map((course) => (
-                    <div key={course.id} className="space-y-2">
+                {courseMastery && courseMastery.length > 0 ? (
+                  <>
+                    {/* Overall Standards Mastery */}
+                    <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{course.courses?.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {course.standards_mastered} mastered • {course.standards_in_progress} in progress • {course.standards_not_started} not started
-                          </p>
-                        </div>
-                        <span className="text-lg font-semibold">{course.overall_mastery_percentage}%</span>
+                        <span className="text-2xl font-bold">{overallStandardsMastery}%</span>
+                        <Badge variant={overallStandardsMastery >= 80 ? "default" : overallStandardsMastery >= 60 ? "secondary" : "outline"}>
+                          {overallStandardsMastery >= 80 ? "Excellent" : overallStandardsMastery >= 60 ? "Good Progress" : "Needs Attention"}
+                        </Badge>
                       </div>
-                      <Progress value={course.overall_mastery_percentage || 0} className="h-2" />
+                      <Progress value={overallStandardsMastery} className="h-3" />
                     </div>
-                  ))}
-                  {!courseMastery?.length && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No standards mastery data yet. Complete some assignments to see your progress!
-                    </p>
-                  )}
-                </div>
+
+                    {/* Course Breakdown */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold">Standards Breakdown by Course</h4>
+                      {courseMastery.map((course) => (
+                        <div key={course.id} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{course.courses?.title}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {course.standards_mastered} mastered • {course.standards_in_progress} in progress • {course.standards_not_started} not started
+                              </p>
+                            </div>
+                            <span className="text-lg font-semibold">{course.overall_mastery_percentage}%</span>
+                          </div>
+                          <Progress value={course.overall_mastery_percentage || 0} className="h-2" />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-8 text-center space-y-4">
+                    <div className="flex justify-center">
+                      <TrendingUp className="h-12 w-12 text-muted-foreground/50" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold">No Mastery Data Yet</h3>
+                      <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                        Standards mastery tracking requires assignments to have educational standards attached. 
+                        Once your educator adds standards to assignments and you complete them with grades, 
+                        your mastery progress will appear here!
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-muted/50 p-4 text-left max-w-md mx-auto">
+                      <p className="text-xs text-muted-foreground">
+                        <strong>How it works:</strong> When you complete assignments that are tagged with educational standards 
+                        (like Common Core or state standards), the system tracks your performance on each standard and shows 
+                        your mastery level here.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {courseMastery && courseMastery.length > 0 && (
+              <div className="space-y-6">
 
                 {/* Areas for Growth */}
                 {weakStandards && weakStandards.length > 0 && (
@@ -262,7 +287,7 @@ export function UnifiedMasteryDashboard({
                     This shows how you're progressing through the full curriculum framework. 📚
                   </p>
                 </div>
-              </>
+              </div>
             )}
           </TabsContent>
         </Tabs>
