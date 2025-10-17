@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useXP } from '@/hooks/useXP';
+import butterflyNetIcon from '@/assets/butterfly-net.png';
 
 interface DuckCatchingGameProps {
   studentId: string;
@@ -136,10 +137,10 @@ export function DuckCatchingGame({ studentId, upNextAssignmentId }: DuckCatching
     return (
       <button
         onClick={startGame}
-        className="fixed bottom-8 right-8 text-4xl hover:scale-110 transition-transform duration-200 cursor-pointer z-50"
+        className="fixed bottom-8 right-8 p-3 bg-primary/10 hover:bg-primary/20 rounded-full hover:scale-110 transition-all duration-200 cursor-pointer z-50 shadow-lg border-2 border-primary/20"
         title="Catch the Focus Duck!"
       >
-        🦋
+        <img src={butterflyNetIcon} alt="Butterfly net" className="w-8 h-8" />
       </button>
     );
   }
@@ -162,20 +163,22 @@ export function DuckCatchingGame({ studentId, upNextAssignmentId }: DuckCatching
         }}
       >
         <div className="relative">
-          {/* Duck character */}
-          <div className="text-6xl animate-waddle">
-            🦆
-          </div>
-          
-          {/* Running feet animation */}
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-            <div className="w-2 h-2 bg-orange-500 rounded-full animate-run-left" />
-            <div className="w-2 h-2 bg-orange-500 rounded-full animate-run-right" />
+          {/* Duck character with walking animation */}
+          <div className="relative">
+            <div className="text-6xl animate-waddle">
+              🦆
+            </div>
+            
+            {/* Running feet animation */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-run-left" />
+              <div className="w-2 h-2 bg-orange-500 rounded-full animate-run-right" />
+            </div>
           </div>
 
-          {/* Speech bubble */}
+          {/* Speech bubble - always on top */}
           {showMessage && (
-            <div className="absolute -top-16 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white text-black px-3 py-2 rounded-lg shadow-lg text-sm font-medium">
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white text-black px-3 py-2 rounded-lg shadow-lg text-sm font-medium z-[100]">
               {showMessage}
               <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45" />
             </div>

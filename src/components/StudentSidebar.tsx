@@ -120,20 +120,20 @@ export function StudentSidebar() {
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/assignments')} 
-                        className={isActive('/student/assignments') ? 'bg-accent text-accent-foreground' : ''}
-                      >
-                        <ClipboardList className="h-4 w-4" />
-                        <span>Assignments</span>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
                         onClick={() => navigate('/student/agenda')} 
                         className={isActive('/student/agenda') ? 'bg-accent text-accent-foreground' : ''}
                       >
                         <ListTodo className="h-4 w-4" />
                         <span>Agenda</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton 
+                        onClick={() => navigate('/student/assignments')} 
+                        className={isActive('/student/assignments') ? 'bg-accent text-accent-foreground' : ''}
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                        <span>Assignments</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
