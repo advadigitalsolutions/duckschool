@@ -36,18 +36,32 @@ export default function StudentAssignments() {
 
   const fetchAssignments = async () => {
     try {
+      console.log('Fetching assignments...');
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('No user found');
+        return;
+      }
 
-      const { data: studentData } = await supabase
+      const { data: studentData, error: studentError } = await supabase
         .from('students')
         .select('id')
         .eq('user_id', user.id)
         .single();
 
-      if (!studentData) return;
+      if (studentError) {
+        console.error('Student fetch error:', studentError);
+        return;
+      }
 
-      const { data: assignmentsData } = await supabase
+      if (!studentData) {
+        console.log('No student data found');
+        return;
+      }
+
+      console.log('Student ID:', studentData.id);
+
+      const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('assignments')
         .select(`
           *,
@@ -74,6 +88,13 @@ export default function StudentAssignments() {
         `)
         .eq('curriculum_items.courses.student_id', studentData.id)
         .order('created_at', { ascending: false });
+
+      if (assignmentsError) {
+        console.error('Assignments fetch error:', assignmentsError);
+      }
+
+      console.log('Assignments data:', assignmentsData);
+      console.log('Number of assignments:', assignmentsData?.length || 0);
 
       const { data: coursesData } = await supabase
         .from('courses')
