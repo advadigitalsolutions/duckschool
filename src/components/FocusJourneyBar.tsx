@@ -805,14 +805,18 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleReading}
-                  className={`absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-blue-400/20 hover:bg-blue-400/30 text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-200 transition-colors z-[101] ${
+                  className={`absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-colors z-[150] ${
                     buttonFlash && isReading ? 'animate-flash-warning' : ''
+                  } ${
+                    isReading 
+                      ? 'bg-blue-400 text-white shadow-lg' 
+                      : 'bg-blue-400/20 hover:bg-blue-400/30 text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-200'
                   }`}
                   style={{ pointerEvents: 'auto' }}
                   aria-label={isReading ? 'Resume active learning' : 'Reading mode'}
                 >
                   {isReading ? (
-                    <span className="text-xs font-mono text-blue-700 dark:text-blue-300">
+                    <span className="text-xs font-mono font-semibold">
                       {formatDuration(Math.floor((Date.now() - (readingStartTimestamp || Date.now())) / 1000))}
                     </span>
                   ) : (
@@ -820,7 +824,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="z-[102]">
+              <TooltipContent className="z-[151]">
                 <p>{isReading ? 'Resume active learning' : 'Reading/Research mode'}</p>
               </TooltipContent>
             </Tooltip>
@@ -830,14 +834,18 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleTakeBreak}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-sm z-[101] ${
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-colors text-sm z-[150] ${
                     buttonFlash && isOnBreak ? 'animate-flash-warning' : ''
+                  } ${
+                    isOnBreak
+                      ? 'bg-amber-500 text-white shadow-lg'
+                      : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
                   }`}
                   style={{ pointerEvents: 'auto' }}
                   aria-label={isOnBreak ? 'Resume focus' : 'Take a break'}
                 >
                   {isOnBreak ? (
-                    <span className="text-xs font-mono">
+                    <span className="text-xs font-mono font-semibold">
                       {formatDuration(sessionData.activeSeconds - (breakStartTime || 0))}
                     </span>
                   ) : (
@@ -845,7 +853,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="z-[102]">
+              <TooltipContent className="z-[151]">
                 <p>{isOnBreak ? 'Resume focus' : 'Take a quick break!'}</p>
               </TooltipContent>
             </Tooltip>
