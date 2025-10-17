@@ -3,13 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RewardsShop } from '@/components/RewardsShop';
 import { FocusDuckCosmetics } from '@/components/FocusDuckCosmetics';
-import { Gift, ShoppingBag } from 'lucide-react';
+import { Gift, ShoppingBag, Coins } from 'lucide-react';
 import { format } from 'date-fns';
+import { useXP } from '@/hooks/useXP';
 
 export default function StudentRewards() {
   const [studentId, setStudentId] = useState<string | null>(null);
   const [redemptions, setRedemptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { totalXP } = useXP(studentId || '');
 
   useEffect(() => {
     fetchData();
@@ -61,6 +63,31 @@ export default function StudentRewards() {
           Rewards Shop
         </h1>
         <p className="text-muted-foreground">Spend your XP on amazing rewards!</p>
+      </div>
+
+      {/* Total XP Display */}
+      <div className="flex justify-end">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 p-1 shadow-2xl animate-pulse">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-8 py-6">
+            {/* Metallic shine effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[slide-shine_3s_ease-in-out_infinite]" 
+                 style={{
+                   backgroundSize: '200% 100%',
+                   animation: 'slide-shine 3s ease-in-out infinite'
+                 }} 
+            />
+            
+            <div className="relative flex items-center gap-4">
+              <Coins className="h-10 w-10 text-amber-400 animate-bounce" />
+              <div>
+                <p className="text-sm font-medium text-amber-400/80 uppercase tracking-wider">Total XP</p>
+                <p className="text-5xl font-black bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(251,191,36,0.5)]">
+                  {totalXP.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Rewards Shop */}
