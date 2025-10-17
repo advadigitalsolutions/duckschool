@@ -63,6 +63,14 @@ export function ProjectModuleSubmission({ assignment, studentId }: ProjectModule
   const [showFeedback, setShowFeedback] = useState(false);
   const [reviewingWithAI, setReviewingWithAI] = useState(false);
 
+  // Helper function to check if HTML content is actually filled (not just empty tags)
+  const isContentFilled = (htmlContent: string | undefined): boolean => {
+    if (!htmlContent) return false;
+    // Strip HTML tags and check if there's actual text content
+    const stripped = htmlContent.replace(/<[^>]*>/g, '').trim();
+    return stripped.length > 0;
+  };
+
   // Rich text editor for each prompt
   const createEditor = (promptIndex: number) => {
     return useEditor({
@@ -253,8 +261,8 @@ export function ProjectModuleSubmission({ assignment, studentId }: ProjectModule
   };
 
   const handleSubmit = async () => {
-    // Validate required fields
-    const missingReflections = currentModule.prompts.filter((_, idx) => !reflections[`prompt_${idx + 1}`]);
+    // Validate required fields - check for actual content, not just empty HTML tags
+    const missingReflections = currentModule.prompts.filter((_, idx) => !isContentFilled(reflections[`prompt_${idx + 1}`]));
     if (missingReflections.length > 0) {
       toast.error(`Please complete all reflection prompts (${missingReflections.length} remaining)`);
       return;
@@ -805,7 +813,11 @@ export function ProjectModuleSubmission({ assignment, studentId }: ProjectModule
         </p>
         <Button
           onClick={handleSubmit}
-          disabled={submitting || reviewingWithAI}
+          disabled={
+            submitting || 
+            reviewingWithAI || 
+            currentModule.prompts.some((_, idx) => !isContentFilled(reflections[`prompt_${idx + 1}`]))
+          }
           size="lg"
         >
           {submitting ? 'Submitting...' : reviewingWithAI ? 'Getting AI Feedback...' : 'Submit Module for Review'}

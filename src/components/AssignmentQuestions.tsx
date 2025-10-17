@@ -50,6 +50,11 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
   
   const { config: xpConfig } = useXPConfig();
 
+  // Helper function to check if an answer is valid (not empty, undefined, or null)
+  const isAnswerValid = (answer: string | number | undefined): boolean => {
+    return answer !== undefined && answer !== null && answer !== '';
+  };
+
   const assignmentBody = typeof assignment?.curriculum_items?.body === 'string'
     ? JSON.parse(assignment.curriculum_items.body)
     : assignment?.curriculum_items?.body || {};
@@ -96,7 +101,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
         currentQuestionIndex,
         totalQuestions: questions.length,
         isLastQuestion: currentQuestionIndex === questions.length - 1,
-        isCurrentQuestionAnswered: answers[questions[currentQuestionIndex]?.id] !== undefined && answers[questions[currentQuestionIndex]?.id] !== '',
+        isCurrentQuestionAnswered: isAnswerValid(answers[questions[currentQuestionIndex]?.id]),
         currentAnswer: answers[questions[currentQuestionIndex]?.id],
         isSaving
       });
@@ -361,8 +366,8 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
   };
 
   const handleSubmit = async () => {
-    // Check if all questions answered
-    const unanswered = questions.filter(q => !answers[q.id]);
+    // Check if all questions answered with valid values
+    const unanswered = questions.filter(q => !isAnswerValid(answers[q.id]));
     if (unanswered.length > 0) {
       toast.error(`Please answer all questions. ${unanswered.length} remaining.`);
       return;
@@ -632,9 +637,11 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
     );
   }
 
-  const progress = (Object.keys(answers).length / questions.length) * 100;
+  // Calculate progress based on valid answers only
+  const validAnswersCount = questions.filter(q => isAnswerValid(answers[q.id])).length;
+  const progress = (validAnswersCount / questions.length) * 100;
   const currentQuestion = questions[currentQuestionIndex];
-  const isCurrentQuestionAnswered = answers[currentQuestion?.id] !== undefined && answers[currentQuestion?.id] !== '';
+  const isCurrentQuestionAnswered = isAnswerValid(answers[currentQuestion?.id]);
 
   return (
     <div className="space-y-6">
@@ -644,7 +651,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
           <CardTitle className="flex items-center justify-between">
             <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
             <span className="text-sm font-normal text-muted-foreground">
-              {Object.keys(answers).length} / {questions.length} answered
+              {validAnswersCount} / {questions.length} answered
             </span>
           </CardTitle>
         </CardHeader>
@@ -895,7 +902,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
           <CardContent className="pt-6">
             <Button 
               onClick={handleSubmit} 
-              disabled={submitting || questions.some(q => answers[q.id] === undefined || answers[q.id] === '' || answers[q.id] === null)}
+              disabled={submitting || questions.some(q => !isAnswerValid(answers[q.id]))}
               className="w-full"
               size="lg"
             >
