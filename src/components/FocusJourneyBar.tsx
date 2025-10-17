@@ -490,7 +490,28 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setDuckState('walking');
       toast.success('Break over! Back to work! 🦆');
     } else {
-      // Starting break
+      // Starting break - clear any idle gap first
+      if (gapStartTime !== null) {
+        const currentSeconds = sessionData.activeSeconds;
+        const gapDuration = currentSeconds - gapStartTime;
+        const startPercent = (gapStartTime / goalSeconds) * 100;
+        const widthPercent = (gapDuration / goalSeconds) * 100;
+        
+        // Close the idle gap segment
+        setGapSegments(prev => [...prev, {
+          type: 'gap',
+          startSeconds: gapStartTime,
+          endSeconds: currentSeconds,
+          startPercent,
+          widthPercent,
+          duration: gapDuration,
+          reason: 'idle'
+        }]);
+        
+        setGapStartTime(null);
+        setCurrentSegmentStart(currentSeconds);
+      }
+      
       const currentSeconds = sessionData.activeSeconds;
       
       // Complete current focus segment
@@ -542,7 +563,28 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setDuckState('walking');
       toast.success('Back to active learning! 🦆');
     } else {
-      // Starting reading
+      // Starting reading - clear any idle gap first
+      if (gapStartTime !== null) {
+        const currentSeconds = sessionData.activeSeconds;
+        const gapDuration = currentSeconds - gapStartTime;
+        const startPercent = (gapStartTime / goalSeconds) * 100;
+        const widthPercent = (gapDuration / goalSeconds) * 100;
+        
+        // Close the idle gap segment
+        setGapSegments(prev => [...prev, {
+          type: 'gap',
+          startSeconds: gapStartTime,
+          endSeconds: currentSeconds,
+          startPercent,
+          widthPercent,
+          duration: gapDuration,
+          reason: 'idle'
+        }]);
+        
+        setGapStartTime(null);
+        setCurrentSegmentStart(currentSeconds);
+      }
+      
       const currentSeconds = sessionData.activeSeconds;
       
       // Complete current focus segment
