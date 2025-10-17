@@ -102,12 +102,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   const handleWarning = useCallback(() => {
     console.log('⚠️ Duck warning - user idle for 30s');
-    // Don't show warning if duck is fallen or ghostly (already punished)
-    if (!isOnBreak && duckState !== 'fallen' && duckState !== 'ghostly-jumping' && duckState !== 'falling') {
+    // Don't show warning if duck is fallen, ghostly, on break, or reading
+    if (!isOnBreak && !isReading && duckState !== 'fallen' && duckState !== 'ghostly-jumping' && duckState !== 'falling') {
       setDuckState('jumping');
       playRandomAttentionSound(0.6);
     }
-  }, [isOnBreak, duckState]);
+  }, [isOnBreak, isReading, duckState]);
 
   const handleIdle = useCallback(async () => {
     if (isOnBreak || isReading) return; // Don't mark as idle during intentional break or reading
