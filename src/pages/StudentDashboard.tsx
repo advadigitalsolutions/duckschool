@@ -327,16 +327,6 @@ export default function StudentDashboard() {
       {isDemoUser && demoRole === 'student' && <DemoWizard role="student" />}
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
-      
-        {headerSettings && (
-          <CustomizableHeader 
-            student={student} 
-            settings={headerSettings} 
-            onSaveSettings={saveHeaderSettings} 
-            onSignOut={handleSignOut} 
-            onDemoCelebration={() => setShowConfetti(true)} 
-          />
-        )}
 
         <div className="container mx-auto p-4 md:p-8 max-w-4xl">
           {/* Stats Grid */}
