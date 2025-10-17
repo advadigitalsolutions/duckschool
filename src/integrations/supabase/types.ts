@@ -1655,6 +1655,7 @@ export type Database = {
           created_at: string | null
           id: string
           last_assessed_at: string | null
+          last_attempted_at: string | null
           mastery_level: number
           standard_code: string
           student_id: string
@@ -1668,6 +1669,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_assessed_at?: string | null
+          last_attempted_at?: string | null
           mastery_level?: number
           standard_code: string
           student_id: string
@@ -1681,6 +1683,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_assessed_at?: string | null
+          last_attempted_at?: string | null
           mastery_level?: number
           standard_code?: string
           student_id?: string
