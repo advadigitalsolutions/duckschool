@@ -10,6 +10,7 @@ import { useActivitySession } from '@/hooks/useActivitySession';
 import { requestScreenCaptureStream, captureFromStream, stopScreenCaptureStream } from '@/utils/screenCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { FocusDuckWizard } from './FocusDuckWizard';
 
 interface FocusDuckSessionProps {
   studentId: string | null;
@@ -244,7 +245,9 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
 
   if (compact) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] gap-8">
+      <>
+        <FocusDuckWizard />
+        <div className="flex flex-col items-center justify-center min-h-[80vh] gap-8">
         {/* Duck walking along progress */}
         <div className="relative w-full max-w-md">
           <div className="pt-6 relative">
@@ -289,12 +292,14 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
           )}
         </div>
       </div>
+      </>
     );
   }
 
   if (isActive || duckState === 'celebrating') {
     return (
       <>
+        <FocusDuckWizard />
         {/* Accountability Check Modal */}
         {showAccountabilityCheck && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -452,7 +457,9 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
 
   // Setup view
   return (
-    <Card className="p-8 bg-gradient-to-br from-primary/5 via-purple-500/5 to-primary/5 border-2 border-primary/30 max-w-2xl mx-auto shadow-xl">
+    <>
+      <FocusDuckWizard />
+      <Card className="p-8 bg-gradient-to-br from-primary/5 via-purple-500/5 to-primary/5 border-2 border-primary/30 max-w-2xl mx-auto shadow-xl">
       <div className="space-y-6">
         <div className="text-center">
           <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
@@ -509,5 +516,6 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
         </Button>
       </div>
     </Card>
+    </>
   );
 }
