@@ -15,9 +15,9 @@ export function MobileBottomNav() {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/student' },
-    { icon: BookOpen, label: 'Courses', path: '/student' },
+    { icon: BookOpen, label: 'Courses', path: '/student/assignments' },
     { icon: Trophy, label: 'XP', path: '/student/xp' },
-    { icon: Timer, label: 'Focus', path: '/pomodoro-fullscreen' },
+    { icon: Timer, label: 'Focus', path: '/focus-tools' },
   ];
 
   return (
