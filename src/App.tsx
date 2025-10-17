@@ -21,6 +21,7 @@ import Blog from "./pages/Blog";
 import WhyDiagnosticsArentTests from "./pages/blog/WhyDiagnosticsArentTests";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Waitlist from "./pages/Waitlist";
 import ParentDashboard from "./pages/ParentDashboard";
 import ParentProfile from "./pages/ParentProfile";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -205,6 +206,7 @@ const App = () => (
                       <Route path="/blog" element={<Blog />} />
                       <Route path="/blog/why-diagnostics-arent-tests" element={<WhyDiagnosticsArentTests />} />
                       <Route path="/auth" element={<Auth />} />
+                      <Route path="/waitlist" element={<Waitlist />} />
                       <Route path="/dashboard" element={<Index />} />
                       <Route path="/parent" element={<AuthGuard><ParentDashboard /></AuthGuard>} />
                       <Route path="/parent/profile" element={<AuthGuard><ParentProfile /></AuthGuard>} />

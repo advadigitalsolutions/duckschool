@@ -6,72 +6,43 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Sparkles } from 'lucide-react';
 import duckGraduation from '@/assets/duck-graduation.png';
 import { ThemeToggle } from '@/components/ThemeToggle';
 export default function Auth() {
   const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState(false);
   const navigate = useNavigate();
-
-  const handleDemoLogin = async (role: 'parent' | 'student') => {
-    setDemoLoading(true);
-    try {
-      const demoEmail = role === 'parent' 
-        ? 'demo-parent@duckschool.com' 
-        : 'demo-student@duckschool.com';
-      const demoPassword = 'demo123456';
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email: demoEmail,
-        password: demoPassword
-      });
-
-      if (error) throw error;
-
-      // Set demo flag and show wizard
-      localStorage.setItem('isDemoUser', 'true');
-      localStorage.setItem('demoRole', role);
-      localStorage.setItem('showDemoWizard', 'true');
-      
-      toast.success(`Welcome to the ${role === 'parent' ? 'Parent' : 'Student'} Demo!`);
-      navigate('/dashboard');
-    } catch (error: any) {
-      console.error('Demo login error:', error);
-      toast.error('Demo account not yet configured. Please use regular sign up.');
-    } finally {
-      setDemoLoading(false);
-    }
-  };
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
     const name = formData.get('name') as string;
     const role = formData.get('role') as string;
+    
     try {
-      const {
-        error
-      } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            name,
-            role: role || 'parent'
-          }
+      // Store waitlist info in database
+      const { error } = await supabase
+        .from('waitlist')
+        .insert({
+          email,
+          name,
+          role: role || 'parent'
+        });
+      
+      if (error) {
+        // If duplicate email, still redirect to waitlist page
+        if (error.code === '23505') {
+          navigate('/waitlist');
+          return;
         }
-      });
-      if (error) throw error;
-      toast.success('Account created successfully!');
-      setTimeout(() => navigate('/dashboard'), 1000);
+        throw error;
+      }
+      
+      // Redirect to waitlist confirmation page
+      navigate('/waitlist');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create account');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -145,7 +116,8 @@ export default function Auth() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input id="signup-password" name="password" type="password" minLength={6} required />
+                  <Input id="signup-password" name="password" type="password" minLength={6} />
+                  <p className="text-xs text-muted-foreground">Optional - only needed for closed beta access</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-role">I am a...</Label>
@@ -155,46 +127,11 @@ export default function Auth() {
                   </select>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Creating account...' : 'Create Account'}
+                  {loading ? 'Joining waitlist...' : 'Join Waitlist'}
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
-
-          <div className="mt-6 space-y-3">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Try Demo</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => handleDemoLogin('parent')}
-                disabled={demoLoading}
-                className="w-full"
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Demo Parent
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleDemoLogin('student')}
-                disabled={demoLoading}
-                className="w-full"
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Demo Student
-              </Button>
-            </div>
-            <p className="text-xs text-center text-muted-foreground">
-              Explore Duckschool with pre-configured demo accounts
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>;
