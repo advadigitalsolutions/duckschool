@@ -96,6 +96,16 @@ export default {
             backgroundPosition: "200% 0",
           },
         },
+        ripple: {
+          "0%, 100%": {
+            transform: "scale(1) translate(0, 0)",
+            opacity: "0.6",
+          },
+          "50%": {
+            transform: "scale(1.3) translate(20px, 20px)",
+            opacity: "0.3",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",

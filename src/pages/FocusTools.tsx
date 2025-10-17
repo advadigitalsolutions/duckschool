@@ -44,20 +44,29 @@ export default function FocusTools() {
     const features = 'width=400,height=500,resizable=yes,location=no,menubar=no,toolbar=no,status=no';
     window.open(url, 'focusTimer', features);
   };
-  return <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+  return <div className="min-h-screen relative overflow-hidden">
+      {/* Animated Rippling Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(190,70%,15%)] via-[hsl(270,60%,20%)] to-[hsl(190,70%,15%)]">
+        <div className="absolute inset-0 opacity-60">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[hsl(180,80%,40%)] rounded-full mix-blend-screen filter blur-3xl animate-[ripple_8s_ease-in-out_infinite]" />
+          <div className="absolute top-1/3 right-1/3 w-96 h-96 bg-[hsl(270,70%,50%)] rounded-full mix-blend-screen filter blur-3xl animate-[ripple_10s_ease-in-out_infinite_2s]" />
+          <div className="absolute bottom-1/4 left-1/2 w-96 h-96 bg-[hsl(190,75%,45%)] rounded-full mix-blend-screen filter blur-3xl animate-[ripple_12s_ease-in-out_infinite_4s]" />
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 py-4 max-w-5xl relative z-10">
         {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+        <div className="mb-4 text-center">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-cyan-300 to-purple-300 bg-clip-text text-transparent">
             Focus Tools
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-gray-300 text-lg">
             Choose your focus mode and customize it to work best for you
           </p>
         </div>
 
         {/* Main Card */}
-        <Card className="border-2 shadow-2xl overflow-hidden">
+        <Card className="border-2 shadow-2xl overflow-hidden bg-black/40 backdrop-blur-sm border-cyan-500/20">
           <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'pomodoro' | 'duck')} className="w-full">
             {/* Tab Navigation */}
             <div className="border-b bg-muted/30 px-6 pt-6">
