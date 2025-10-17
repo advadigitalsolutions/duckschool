@@ -133,7 +133,7 @@ export default function StudentAssignments() {
           ),
           submissions (
             id,
-            created_at
+            submitted_at
           ),
           grades (
             score,
