@@ -132,6 +132,7 @@ export function useChoreAssignments(studentId?: string) {
 
   const fetchAssignments = async () => {
     try {
+      console.log('[useChoreAssignments] Fetching assignments for student:', studentId);
       const { data, error } = await supabase
         .from('chore_assignments')
         .select(`
@@ -141,7 +142,11 @@ export function useChoreAssignments(studentId?: string) {
         .eq('student_id', studentId!)
         .order('assigned_date', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useChoreAssignments] Error:', error);
+        throw error;
+      }
+      console.log('[useChoreAssignments] Fetched assignments:', data);
       setAssignments(data || []);
     } catch (error) {
       console.error('Error fetching assignments:', error);
