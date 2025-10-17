@@ -51,14 +51,15 @@ export default function StudentAssignments() {
         .from('assignments')
         .select(`
           *,
-          curriculum_items!inner (
+          curriculum_items (
             title,
             type,
             body,
             course_id,
-            courses!inner (
+            courses (
               id,
               title,
+              subject,
               student_id
             )
           ),
@@ -72,7 +73,7 @@ export default function StudentAssignments() {
           )
         `)
         .eq('curriculum_items.courses.student_id', studentData.id)
-        .order('due_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       const { data: coursesData } = await supabase
         .from('courses')
