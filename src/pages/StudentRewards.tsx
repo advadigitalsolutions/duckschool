@@ -57,17 +57,18 @@ export default function StudentRewards() {
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-          <ShoppingBag className="h-8 w-8" />
-          Rewards Shop
-        </h1>
-        <p className="text-muted-foreground">Spend your XP on amazing rewards!</p>
-      </div>
+      {/* Header with XP Display */}
+      <div className="flex items-center justify-between gap-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+            <ShoppingBag className="h-8 w-8" />
+            Rewards Shop
+          </h1>
+          <p className="text-muted-foreground">Spend your XP on amazing rewards!</p>
+        </div>
 
-      {/* Total XP Display */}
-      <div className="flex justify-end">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 p-1 shadow-2xl animate-pulse">
+        {/* Total XP Display */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 p-1 shadow-2xl animate-pulse flex-shrink-0">
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-8 py-6">
             {/* Metallic shine effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[slide-shine_3s_ease-in-out_infinite]" 
