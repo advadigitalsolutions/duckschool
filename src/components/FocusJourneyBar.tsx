@@ -784,7 +784,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           </div>
 
           {/* Duck character - positioned to break out of container */}
-          {(duckState !== 'fallen' && duckState !== 'ghostly-jumping' && duckState !== 'celebrating-return') && (
+          {(duckState !== 'fallen' && duckState !== 'ghostly-jumping') && (
             <div 
               className="absolute flex items-center pointer-events-none"
               style={{ 
@@ -802,8 +802,8 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
             </div>
           )}
 
-          {/* Duck in special states (fallen, ghostly, celebrating-return) - render outside progress bar */}
-          {(duckState === 'fallen' || duckState === 'ghostly-jumping' || duckState === 'celebrating-return') && (
+          {/* Duck in special states (fallen, ghostly) - render outside progress bar */}
+          {(duckState === 'fallen' || duckState === 'ghostly-jumping') && (
             <FocusJourneyDuck 
               animationState={duckState}
               onAnimationComplete={handleDuckAnimationComplete}

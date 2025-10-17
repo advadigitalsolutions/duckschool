@@ -481,10 +481,6 @@ export function FocusJourneyDuck({ animationState, onAnimationComplete, onStateC
         }
 
         /* Celebrating Return - 3 enthusiastic bounces */
-        .duck-container.celebrating-return {
-          z-index: 10000 !important;
-        }
-
         .duck-container.celebrating-return .duck {
           animation: joyful-bounce 3s ease-in-out;
         }
