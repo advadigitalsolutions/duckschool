@@ -96,22 +96,24 @@ export function EducatorSidebar() {
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {students.length > 0 ? (
-                      <div className="max-h-48 overflow-y-auto space-y-0.5 py-1">
-                        {students.map((student) => (
-                          <SidebarMenuItem key={student.id}>
-                            <SidebarMenuButton
-                              onClick={() => navigate(`/student/${student.id}`)}
-                              className={`transition-all duration-200 ${
-                                isActive(`/student/${student.id}`)
-                                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                  : 'hover:bg-accent hover:text-accent-foreground'
-                              }`}
-                            >
-                              <GraduationCap className="h-4 w-4 flex-shrink-0" />
-                              <span className="truncate text-sm">{student.display_name || student.name}</span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
+                      <div className="relative rounded-lg border-2 border-primary/30 bg-background/50 backdrop-blur-sm p-2 transition-all duration-300 group-data-[state=open]:border-primary/50 group-data-[state=open]:shadow-lg group-data-[state=open]:shadow-primary/20">
+                        <div className="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                          {students.map((student) => (
+                            <SidebarMenuItem key={student.id}>
+                              <SidebarMenuButton
+                                onClick={() => navigate(`/student/${student.id}`)}
+                                className={`transition-all duration-200 ${
+                                  isActive(`/student/${student.id}`)
+                                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                    : 'hover:bg-accent hover:text-accent-foreground'
+                                }`}
+                              >
+                                <GraduationCap className="h-4 w-4 flex-shrink-0" />
+                                <span className="truncate text-sm">{student.display_name || student.name}</span>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <div className="px-3 py-2 text-sm text-muted-foreground italic">

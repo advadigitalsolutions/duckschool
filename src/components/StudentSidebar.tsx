@@ -77,19 +77,21 @@ export function StudentSidebar() {
               <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {courses.length > 0 ? <div className="max-h-48 overflow-y-auto space-y-0.5 py-1">
-                        {courses.map(course => <SidebarMenuItem key={course.id}>
-                            <SidebarMenuButton 
-                              onClick={() => navigate(`/course/${course.id}`)} 
-                              className={`
-                                transition-all duration-200 
-                                ${isActive(`/course/${course.id}`) ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-accent hover:text-accent-foreground'}
-                              `}
-                            >
-                              <GraduationCap className="h-4 w-4 flex-shrink-0" />
-                              <span className="truncate text-sm">{course.title}</span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>)}
+                    {courses.length > 0 ? <div className="relative rounded-lg border-2 border-primary/30 bg-background/50 backdrop-blur-sm p-2 transition-all duration-300 group-data-[state=open]:border-primary/50 group-data-[state=open]:shadow-lg group-data-[state=open]:shadow-primary/20">
+                        <div className="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
+                          {courses.map(course => <SidebarMenuItem key={course.id}>
+                              <SidebarMenuButton 
+                                onClick={() => navigate(`/course/${course.id}`)} 
+                                className={`
+                                  transition-all duration-200 
+                                  ${isActive(`/course/${course.id}`) ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-accent hover:text-accent-foreground'}
+                                `}
+                              >
+                                <GraduationCap className="h-4 w-4 flex-shrink-0" />
+                                <span className="truncate text-sm">{course.title}</span>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>)}
+                        </div>
                       </div> : <div className="px-3 py-2 text-sm text-muted-foreground italic">
                           No courses yet
                         </div>}
