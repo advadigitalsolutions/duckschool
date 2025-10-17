@@ -12,7 +12,8 @@ import {
   Sparkles,
   Award,
   Gift,
-  CheckSquare
+  CheckSquare,
+  Timer
 } from 'lucide-react';
 import {
   Sidebar,
@@ -175,6 +176,15 @@ export function EducatorSidebar() {
                   <SidebarMenuSubItem>
                     <SidebarMenuSubButton onClick={() => navigate('/parent?tab=reports')}>
                       {state !== "collapsed" && <span>Activity Feed</span>}
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton 
+                      onClick={() => navigate('/focus-tools')}
+                      className={isActive('/focus-tools') ? 'bg-accent text-accent-foreground' : ''}
+                    >
+                      <Timer className="h-4 w-4" />
+                      {state !== "collapsed" && <span>Focus Tools</span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                 </SidebarMenuSub>

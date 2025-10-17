@@ -253,9 +253,12 @@ export function StudentSidebar() {
               <SidebarGroupContent>
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/pomodoro-fullscreen')}>
+                    <SidebarMenuSubButton 
+                      onClick={() => navigate('/focus-tools')}
+                      className={isActive('/focus-tools') ? 'bg-accent text-accent-foreground' : ''}
+                    >
                       <Timer className="h-4 w-4" />
-                      {state !== "collapsed" && <span>Pomodoro Timer</span>}
+                      {state !== "collapsed" && <span>Focus Tools</span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>

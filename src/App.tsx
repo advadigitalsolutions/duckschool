@@ -23,6 +23,9 @@ import AssignmentDetail from "./pages/AssignmentDetail";
 import StudentProfile from "./pages/StudentProfile";
 import CourseDashboard from "./pages/CourseDashboard";
 import PomodoroFullscreen from "./pages/PomodoroFullscreen";
+import FocusTools from "./pages/FocusTools";
+import PomodoroPopup from "./pages/PomodoroPopup";
+import DuckPopup from "./pages/DuckPopup";
 import NotFound from "./pages/NotFound";
 import LearningWindow from "./pages/LearningWindow";
 import AdminSeedStandards from "./pages/AdminSeedStandards";
@@ -65,6 +68,9 @@ const App = () => (
                         <Route path="/student/grades" element={<AuthGuard><StudentGradesPage /></AuthGuard>} />
                         <Route path="/course/:courseId" element={<AuthGuard><CourseDashboard /></AuthGuard>} />
                         <Route path="/pomodoro-fullscreen" element={<PomodoroFullscreen />} />
+                        <Route path="/focus-tools" element={<AuthGuard><FocusTools /></AuthGuard>} />
+                        <Route path="/pomodoro-popup" element={<PomodoroPopup />} />
+                        <Route path="/duck-popup" element={<DuckPopup />} />
                         <Route path="/standards-frameworks" element={<AuthGuard><StandardsFrameworks /></AuthGuard>} />
                         <Route path="/learning-window" element={<LearningWindow />} />
                         <Route path="/admin/seed-standards" element={<AuthGuard><AdminSeedStandards /></AuthGuard>} />
