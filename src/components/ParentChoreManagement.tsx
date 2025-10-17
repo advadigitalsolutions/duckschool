@@ -7,11 +7,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Users } from 'lucide-react';
-import { useChores, useChoreAssignments } from '@/hooks/useChores';
+import { Plus, Trash2, Users, Edit } from 'lucide-react';
+import { useChores, useChoreAssignments, Chore } from '@/hooks/useChores';
 import { ChoreCard } from './ChoreCard';
 import { ChoreVerificationQueue } from './ChoreVerificationQueue';
 import { toast } from 'sonner';
+import { z } from 'zod';
+
+const choreSchema = z.object({
+  title: z.string()
+    .trim()
+    .min(1, "Title is required")
+    .max(100, "Title must be less than 100 characters"),
+  description: z.string()
+    .trim()
+    .max(500, "Description must be less than 500 characters"),
+  xp_reward: z.number()
+    .int("XP must be a whole number")
+    .min(1, "XP must be at least 1")
+    .max(1000, "XP cannot exceed 1000"),
+  frequency: z.enum(['once', 'daily', 'weekly', 'monthly']),
+  priority: z.enum(['low', 'medium', 'high']),
+  status: z.enum(['active', 'inactive']),
+});
 
 interface Student {
   id: string;
@@ -22,8 +40,11 @@ export function ParentChoreManagement() {
   const [user, setUser] = useState<any>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingChore, setEditingChore] = useState<Chore | null>(null);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedChore, setSelectedChore] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   
   const [formData, setFormData] = useState({
     title: '',
@@ -34,7 +55,7 @@ export function ParentChoreManagement() {
     status: 'active',
   });
 
-  const { chores, loading, createChore, deleteChore, refreshChores } = useChores(user?.id);
+  const { chores, loading, createChore, updateChore, deleteChore, refreshChores } = useChores(user?.id);
   const { assignChore } = useChoreAssignments();
 
   useEffect(() => {
@@ -67,16 +88,93 @@ export function ParentChoreManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createChore(formData);
+    
+    try {
+      choreSchema.parse(formData);
+      await createChore({
+        title: formData.title,
+        description: formData.description,
+        xp_reward: formData.xp_reward,
+        frequency: formData.frequency,
+        priority: formData.priority,
+        status: formData.status,
+      });
+      setFormData({
+        title: '',
+        description: '',
+        xp_reward: 50,
+        frequency: 'once',
+        priority: 'medium',
+        status: 'active',
+      });
+      setValidationErrors({});
+      setIsDialogOpen(false);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            errors[err.path[0].toString()] = err.message;
+          }
+        });
+        setValidationErrors(errors);
+        toast.error('Please fix the validation errors');
+      }
+    }
+  };
+
+  const handleEditClick = (chore: Chore) => {
+    setEditingChore(chore);
     setFormData({
-      title: '',
-      description: '',
-      xp_reward: 50,
-      frequency: 'once',
-      priority: 'medium',
-      status: 'active',
+      title: chore.title,
+      description: chore.description || '',
+      xp_reward: chore.xp_reward,
+      frequency: chore.frequency,
+      priority: chore.priority,
+      status: chore.status,
     });
-    setIsDialogOpen(false);
+    setValidationErrors({});
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingChore) return;
+    
+    try {
+      choreSchema.parse(formData);
+      await updateChore(editingChore.id, {
+        title: formData.title,
+        description: formData.description,
+        xp_reward: formData.xp_reward,
+        frequency: formData.frequency,
+        priority: formData.priority,
+        status: formData.status,
+      });
+      setFormData({
+        title: '',
+        description: '',
+        xp_reward: 50,
+        frequency: 'once',
+        priority: 'medium',
+        status: 'active',
+      });
+      setValidationErrors({});
+      setIsEditDialogOpen(false);
+      setEditingChore(null);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            errors[err.path[0].toString()] = err.message;
+          }
+        });
+        setValidationErrors(errors);
+        toast.error('Please fix the validation errors');
+      }
+    }
   };
 
   const handleAssignChore = async (studentId: string, dueDate?: string) => {
@@ -122,7 +220,11 @@ export function ParentChoreManagement() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
+                  maxLength={100}
                 />
+                {validationErrors.title && (
+                  <p className="text-sm text-destructive mt-1">{validationErrors.title}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="description">Description</Label>
@@ -130,17 +232,26 @@ export function ParentChoreManagement() {
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  maxLength={500}
                 />
+                {validationErrors.description && (
+                  <p className="text-sm text-destructive mt-1">{validationErrors.description}</p>
+                )}
               </div>
               <div>
-                <Label htmlFor="xp_reward">XP Reward</Label>
+                <Label htmlFor="xp_reward">XP Reward (1-1000)</Label>
                 <Input
                   id="xp_reward"
                   type="number"
+                  min="1"
+                  max="1000"
                   value={formData.xp_reward}
-                  onChange={(e) => setFormData({ ...formData, xp_reward: parseInt(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, xp_reward: parseInt(e.target.value) || 0 })}
                   required
                 />
+                {validationErrors.xp_reward && (
+                  <p className="text-sm text-destructive mt-1">{validationErrors.xp_reward}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="frequency">Frequency</Label>
@@ -212,6 +323,14 @@ export function ParentChoreManagement() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => handleEditClick(chore)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       setSelectedChore(chore.id);
                       setAssignDialogOpen(true);
@@ -251,6 +370,104 @@ export function ParentChoreManagement() {
               </Button>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Chore</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+                maxLength={100}
+              />
+              {validationErrors.title && (
+                <p className="text-sm text-destructive mt-1">{validationErrors.title}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                maxLength={500}
+              />
+              {validationErrors.description && (
+                <p className="text-sm text-destructive mt-1">{validationErrors.description}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="edit-xp_reward">XP Reward (1-1000)</Label>
+              <Input
+                id="edit-xp_reward"
+                type="number"
+                min="1"
+                max="1000"
+                value={formData.xp_reward}
+                onChange={(e) => setFormData({ ...formData, xp_reward: parseInt(e.target.value) || 0 })}
+                required
+              />
+              {validationErrors.xp_reward && (
+                <p className="text-sm text-destructive mt-1">{validationErrors.xp_reward}</p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="edit-frequency">Frequency</Label>
+              <Select
+                value={formData.frequency}
+                onValueChange={(value) => setFormData({ ...formData, frequency: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="once">One-time</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="edit-priority">Priority</Label>
+              <Select
+                value={formData.priority}
+                onValueChange={(value) => setFormData({ ...formData, priority: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setEditingChore(null);
+                  setValidationErrors({});
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Save Changes</Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
