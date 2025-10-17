@@ -67,10 +67,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   
   const isStudentRoute = location.pathname.startsWith('/student') || location.pathname.startsWith('/assignment/');
   
-  // Only show focus duck on learning pages
-  const showFocusDuck = isStudentRoute && 
-                        !location.pathname.includes('/profile') && 
-                        !location.pathname.includes('/chores');
+  // Only show focus duck on assignment detail pages and learning windows
+  const showFocusDuck = location.pathname.startsWith('/assignment/') || 
+                        location.pathname === '/learning-window';
 
   useEffect(() => {
     if (isStudentRoute) {
