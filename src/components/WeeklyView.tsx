@@ -16,6 +16,7 @@ export function WeeklyView({
   const [loading, setLoading] = useState(true);
   const [weeklyData, setWeeklyData] = useState<any>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
+  const [overdueAssignments, setOverdueAssignments] = useState<any[]>([]);
   useEffect(() => {
     fetchWeeklyData();
   }, [studentId]);
@@ -24,6 +25,35 @@ export function WeeklyView({
       const today = new Date();
       const upcomingStart = today;
       const upcomingEnd = addDays(today, 14); // Show next 14 days
+
+      // Fetch overdue assignments (due_at is in the past, not submitted yet)
+      const {
+        data: overdueData,
+        error: overdueError
+      } = await supabase.from('assignments').select(`
+          *,
+          curriculum_items!inner (
+            *,
+            courses!inner (
+              id,
+              title,
+              subject,
+              student_id
+            )
+          ),
+          submissions (
+            id
+          )
+        `).eq('curriculum_items.courses.student_id', studentId)
+        .eq('status', 'assigned')
+        .lt('due_at', today.toISOString())
+        .order('due_at', { ascending: true });
+
+      if (overdueError) throw overdueError;
+
+      // Filter out assignments that have submissions
+      const overdueFiltered = (overdueData || []).filter(a => !a.submissions || a.submissions.length === 0);
+      setOverdueAssignments(overdueFiltered);
 
       // Fetch upcoming assignments
       const {
@@ -39,6 +69,9 @@ export function WeeklyView({
               subject,
               student_id
             )
+          ),
+          submissions (
+            id
           )
         `).gte('assigned_date', format(upcomingStart, 'yyyy-MM-dd')).lte('assigned_date', format(upcomingEnd, 'yyyy-MM-dd')).eq('curriculum_items.courses.student_id', studentId).order('assigned_date', {
         ascending: true
@@ -89,6 +122,54 @@ export function WeeklyView({
   const progress = calculateProgress();
   const todayDate = new Date();
   return <div className="space-y-6">
+      {/* Overdue Assignments */}
+      {overdueAssignments.length > 0 && (
+        <Card className="border-destructive bg-destructive/5">
+          <CardHeader>
+            <CardTitle className="text-destructive flex items-center gap-2">
+              ⚠️ Overdue ({overdueAssignments.length})
+            </CardTitle>
+            <CardDescription>
+              These assignments are past their due date
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {overdueAssignments.map(assignment => {
+                const dueDate = assignment.due_at ? new Date(assignment.due_at) : null;
+                const daysOverdue = dueDate ? Math.floor((new Date().getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+                
+                return (
+                  <div 
+                    key={assignment.id} 
+                    className="flex items-start gap-3 p-3 rounded-lg border border-destructive bg-background hover:bg-accent/50 transition-colors cursor-pointer" 
+                    onClick={() => {
+                      window.location.href = `/assignment/${assignment.id}`;
+                    }}
+                  >
+                    <BookOpen className="h-5 w-5 mt-0.5 text-destructive" />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium line-clamp-1">
+                        {assignment.curriculum_items?.title}
+                      </h4>
+                      <div className="flex items-center gap-3 mt-1 text-sm">
+                        <Badge variant="outline" className="text-xs">
+                          {assignment.curriculum_items?.courses?.subject}
+                        </Badge>
+                        <span className="text-destructive text-xs font-medium">
+                          {daysOverdue} {daysOverdue === 1 ? 'day' : 'days'} overdue
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Week Overview Card */}
       <Card>
         <CardHeader>
