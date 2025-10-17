@@ -61,6 +61,24 @@ export default function StudentAssignments() {
 
       console.log('Student ID:', studentData.id);
 
+      // First get the curriculum items for this student's courses
+      const { data: curriculumData } = await supabase
+        .from('curriculum_items')
+        .select('id')
+        .eq('courses.student_id', studentData.id);
+
+      console.log('Curriculum items:', curriculumData);
+
+      if (!curriculumData || curriculumData.length === 0) {
+        console.log('No curriculum items found');
+        setAssignments([]);
+        setLoading(false);
+        return;
+      }
+
+      const curriculumIds = curriculumData.map(c => c.id);
+
+      // Now get assignments for these curriculum items
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('assignments')
         .select(`
@@ -86,7 +104,7 @@ export default function StudentAssignments() {
             max_score
           )
         `)
-        .eq('curriculum_items.courses.student_id', studentData.id)
+        .in('curriculum_item_id', curriculumIds)
         .order('created_at', { ascending: false });
 
       if (assignmentsError) {
