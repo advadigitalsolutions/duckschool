@@ -5,11 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { TrendingUp, Award, Calendar, FileText } from 'lucide-react';
-
 interface StudentGradesProps {
   studentId: string;
 }
-
 interface GradeData {
   id: string;
   assignment_id: string;
@@ -29,20 +27,20 @@ interface GradeData {
     };
   };
 }
-
-export function StudentGrades({ studentId }: StudentGradesProps) {
+export function StudentGrades({
+  studentId
+}: StudentGradesProps) {
   const [grades, setGrades] = useState<GradeData[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchGrades();
   }, [studentId]);
-
   const fetchGrades = async () => {
     try {
-      const { data, error } = await supabase
-        .from('grades')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('grades').select(`
           *,
           assignment:assignments!inner(
             curriculum_items!inner(
@@ -55,10 +53,9 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
               )
             )
           )
-        `)
-        .eq('student_id', studentId)
-        .order('graded_at', { ascending: false });
-
+        `).eq('student_id', studentId).order('graded_at', {
+        ascending: false
+      });
       if (error) throw error;
       setGrades(data || []);
     } catch (error) {
@@ -68,15 +65,12 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
       setLoading(false);
     }
   };
-
   const isAssessment = (title: string) => {
     return title.toLowerCase().includes('assessment');
   };
-
   const calculatePercentage = (score: number, maxScore: number) => {
-    return ((score / maxScore) * 100).toFixed(1);
+    return (score / maxScore * 100).toFixed(1);
   };
-
   const calculateLetterGrade = (percentage: number) => {
     if (percentage >= 93) return 'A';
     if (percentage >= 90) return 'A-';
@@ -91,7 +85,6 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
     if (percentage >= 60) return 'D-';
     return 'F';
   };
-
   const calculateGPA = (percentage: number) => {
     if (percentage >= 93) return 4.0;
     if (percentage >= 90) return 3.7;
@@ -106,7 +99,6 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
     if (percentage >= 60) return 0.7;
     return 0.0;
   };
-
   const getGradeColor = (percentage: number) => {
     if (percentage >= 90) return 'text-success';
     if (percentage >= 80) return 'text-primary';
@@ -116,27 +108,19 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
 
   // Calculate overall statistics (excluding assessments)
   const gradedAssignments = grades.filter(grade => {
-    const assignmentTitle = grade.assignment.curriculum_items.body?.title || 
-                           grade.assignment.curriculum_items.title;
+    const assignmentTitle = grade.assignment.curriculum_items.body?.title || grade.assignment.curriculum_items.title;
     return !isAssessment(assignmentTitle);
   });
-  
   const totalGrades = grades.length;
   const totalGradedAssignments = gradedAssignments.length;
-  
-  const overallAverage = totalGradedAssignments > 0
-    ? gradedAssignments.reduce((sum, grade) => {
-        const percentage = (grade.score / grade.max_score) * 100;
-        return sum + percentage;
-      }, 0) / totalGradedAssignments
-    : 0;
-
-  const overallGPA = totalGradedAssignments > 0
-    ? gradedAssignments.reduce((sum, grade) => {
-        const percentage = (grade.score / grade.max_score) * 100;
-        return sum + calculateGPA(percentage);
-      }, 0) / totalGradedAssignments
-    : 0;
+  const overallAverage = totalGradedAssignments > 0 ? gradedAssignments.reduce((sum, grade) => {
+    const percentage = grade.score / grade.max_score * 100;
+    return sum + percentage;
+  }, 0) / totalGradedAssignments : 0;
+  const overallGPA = totalGradedAssignments > 0 ? gradedAssignments.reduce((sum, grade) => {
+    const percentage = grade.score / grade.max_score * 100;
+    return sum + calculateGPA(percentage);
+  }, 0) / totalGradedAssignments : 0;
 
   // Group grades by course
   const gradesByCourse = grades.reduce((acc, grade) => {
@@ -150,30 +134,21 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
 
   // Count assessments
   const totalAssessments = grades.filter(grade => {
-    const assignmentTitle = grade.assignment.curriculum_items.body?.title || 
-                           grade.assignment.curriculum_items.title;
+    const assignmentTitle = grade.assignment.curriculum_items.body?.title || grade.assignment.curriculum_items.title;
     return isAssessment(assignmentTitle);
   }).length;
-
   if (loading) {
-    return (
-      <div className="flex justify-center py-8">
+    return <div className="flex justify-center py-8">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
+      </div>;
   }
-
   if (totalGrades === 0) {
-    return (
-      <div className="text-center py-12">
+    return <div className="text-center py-12">
         <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
         <p className="text-muted-foreground">No graded assignments yet</p>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Overall Statistics */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -189,11 +164,9 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
               Letter Grade: {calculateLetterGrade(overallAverage)}
             </p>
             <Progress value={overallAverage} className="mt-2" />
-            {totalAssessments > 0 && (
-              <p className="text-xs text-muted-foreground mt-2">
+            {totalAssessments > 0 && <p className="text-xs text-muted-foreground mt-2">
                 ({totalAssessments} assessment{totalAssessments !== 1 ? 's' : ''} excluded)
-              </p>
-            )}
+              </p>}
           </CardContent>
         </Card>
 
@@ -231,22 +204,16 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
       {/* Grades by Course */}
       <div className="space-y-4">
         {Object.entries(gradesByCourse).map(([courseTitle, courseGrades]) => {
-          // Calculate average excluding assessments
-          const gradedCourseAssignments = courseGrades.filter(grade => {
-            const assignmentTitle = grade.assignment.curriculum_items.body?.title || 
-                                   grade.assignment.curriculum_items.title;
-            return !isAssessment(assignmentTitle);
-          });
-          
-          const courseAverage = gradedCourseAssignments.length > 0
-            ? gradedCourseAssignments.reduce((sum, grade) => {
-                const percentage = (grade.score / grade.max_score) * 100;
-                return sum + percentage;
-              }, 0) / gradedCourseAssignments.length
-            : 0;
-
-          return (
-            <Card key={courseTitle}>
+        // Calculate average excluding assessments
+        const gradedCourseAssignments = courseGrades.filter(grade => {
+          const assignmentTitle = grade.assignment.curriculum_items.body?.title || grade.assignment.curriculum_items.title;
+          return !isAssessment(assignmentTitle);
+        });
+        const courseAverage = gradedCourseAssignments.length > 0 ? gradedCourseAssignments.reduce((sum, grade) => {
+          const percentage = grade.score / grade.max_score * 100;
+          return sum + percentage;
+        }, 0) / gradedCourseAssignments.length : 0;
+        return <Card key={courseTitle}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -256,67 +223,45 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
                     </CardDescription>
                   </div>
                   <div className="text-right">
-                    {gradedCourseAssignments.length > 0 ? (
-                      <>
+                    {gradedCourseAssignments.length > 0 ? <>
                         <div className="text-2xl font-bold">{courseAverage.toFixed(1)}%</div>
                         <Badge variant="outline">{calculateLetterGrade(courseAverage)}</Badge>
-                      </>
-                    ) : (
-                      <div className="text-sm text-muted-foreground">
+                      </> : <div className="text-sm text-muted-foreground">
                         Assessments only
-                      </div>
-                    )}
+                      </div>}
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {courseGrades.map((grade) => {
-                    const percentage = parseFloat(calculatePercentage(grade.score, grade.max_score));
-                    const assignmentTitle = grade.assignment.curriculum_items.body?.title || 
-                                          grade.assignment.curriculum_items.title;
-                    const isAssessmentItem = isAssessment(assignmentTitle);
-                    const isPassed = grade.score > 0; // Pass if they completed it (any score > 0)
+                  {courseGrades.map(grade => {
+                const percentage = parseFloat(calculatePercentage(grade.score, grade.max_score));
+                const assignmentTitle = grade.assignment.curriculum_items.body?.title || grade.assignment.curriculum_items.title;
+                const isAssessmentItem = isAssessment(assignmentTitle);
+                const isPassed = grade.score > 0; // Pass if they completed it (any score > 0)
 
-                    return (
-                      <div 
-                        key={grade.id} 
-                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
-                        onClick={() => window.location.href = `/assignment/${grade.assignment_id}`}
-                      >
+                return <div key={grade.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors" onClick={() => window.location.href = `/assignment/${grade.assignment_id}`}>
                         <div className="flex-1">
                           <div className="font-medium">
                             {assignmentTitle}
-                            {isAssessmentItem && (
-                              <Badge variant="secondary" className="ml-2 text-xs">
+                            {isAssessmentItem && <Badge variant="secondary" className="ml-2 text-xs">
                                 Assessment
-                              </Badge>
-                            )}
+                              </Badge>}
                           </div>
                           <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                             <Calendar className="h-3 w-3" />
                             {new Date(grade.graded_at).toLocaleDateString()}
                           </div>
-                          {grade.notes && (
-                            <div className="text-sm text-muted-foreground mt-1">
+                          {grade.notes && <div className="text-sm text-muted-foreground mt-1">
                               {grade.notes}
-                            </div>
-                          )}
+                            </div>}
                         </div>
-                        {isAssessmentItem ? (
-                          <div className="text-right ml-4">
-                            <Badge 
-                              variant={isPassed ? "default" : "destructive"}
-                              className="text-lg px-4 py-1"
-                            >
+                        {isAssessmentItem ? <div className="text-right ml-4">
+                            <Badge variant={isPassed ? "default" : "destructive"} className="text-lg px-4 py-1">
                               {isPassed ? "Pass" : "Incomplete"}
                             </Badge>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Not graded
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-right ml-4">
+                            
+                          </div> : <div className="text-right ml-4">
                             <div className={`text-xl font-bold ${getGradeColor(percentage)}`}>
                               {percentage}%
                             </div>
@@ -326,17 +271,13 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
                             <Badge variant="outline" className="mt-1">
                               {calculateLetterGrade(percentage)}
                             </Badge>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                          </div>}
+                      </div>;
+              })}
                 </div>
               </CardContent>
-            </Card>
-          );
-        })}
+            </Card>;
+      })}
       </div>
-    </div>
-  );
+    </div>;
 }
