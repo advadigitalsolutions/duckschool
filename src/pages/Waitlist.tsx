@@ -20,7 +20,7 @@ export default function Waitlist() {
               <CardTitle className="text-3xl">You're on the list!</CardTitle>
             </div>
             <CardDescription className="text-lg">
-              Welcome to the Duckschool community
+              Welcome to the Masterymode.ai community
             </CardDescription>
           </div>
         </CardHeader>
@@ -29,7 +29,7 @@ export default function Waitlist() {
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 space-y-4">
             <h3 className="text-xl font-semibold text-center">We're in Closed Beta</h3>
             <p className="text-center text-muted-foreground">
-              Duckschool is currently in a closed beta phase. We're carefully onboarding users 
+              Masterymode.ai is currently in a closed beta phase. We're carefully onboarding users 
               to ensure the best possible experience as we refine our platform.
             </p>
           </div>
