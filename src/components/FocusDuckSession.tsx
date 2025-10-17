@@ -202,8 +202,19 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
       <div className="flex flex-col items-center justify-center min-h-[80vh] gap-8">
         {/* Duck walking along progress */}
         <div className="relative w-full max-w-md">
-          <div className="pt-6">
+          <div className="pt-6 relative">
             <Progress value={progress} className="h-3" />
+            {/* Blur effect under duck */}
+            <div 
+              className="absolute top-0 h-3 w-16 transition-all duration-1000 ease-out pointer-events-none"
+              style={{ 
+                left: `${Math.min(progress, 95)}%`,
+                transform: 'translateX(-50%)',
+                background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.15) 0%, transparent 70%)',
+                filter: 'blur(4px)',
+                mixBlendMode: 'soft-light'
+              }}
+            />
           </div>
           <div 
             className="absolute transition-all duration-1000 ease-out"
@@ -296,11 +307,24 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
         <div className="relative w-full max-w-2xl">
           <div className="relative">
             <div className="pt-6 space-y-3">
-              <Progress 
-                value={progress} 
-                className="h-4"
-                variant={duckState === 'celebrating' ? 'success' : 'default'}
-              />
+              <div className="relative">
+                <Progress 
+                  value={progress} 
+                  className="h-4"
+                  variant={duckState === 'celebrating' ? 'success' : 'default'}
+                />
+                {/* Blur effect under duck */}
+                <div 
+                  className="absolute top-0 h-4 w-20 transition-all duration-1000 ease-out pointer-events-none"
+                  style={{ 
+                    left: `${Math.min(progress, 95)}%`,
+                    transform: 'translateX(-50%)',
+                    background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.15) 0%, transparent 70%)',
+                    filter: 'blur(4px)',
+                    mixBlendMode: 'soft-light'
+                  }}
+                />
+              </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Progress</span>
                 <span className="font-mono font-semibold">{Math.round(progress)}%</span>
