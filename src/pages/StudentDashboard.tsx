@@ -505,9 +505,6 @@ export default function StudentDashboard() {
           onSaveSettings={saveHeaderSettings} 
           onSignOut={handleSignOut} 
           onDemoCelebration={() => setShowConfetti(true)} 
-          showDemoSwitch={isDemoUser}
-          demoSwitchLabel="Switch to Educator Demo"
-          onDemoSwitch={handleDemoSwitch}
         />
       )}
 
