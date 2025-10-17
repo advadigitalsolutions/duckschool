@@ -32,7 +32,6 @@ import {
   useSidebar
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Badge } from '@/components/ui/badge';
 
 export function StudentSidebar() {
   const navigate = useNavigate();
@@ -40,7 +39,6 @@ export function StudentSidebar() {
   const { state } = useSidebar();
   const [student, setStudent] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
-  const [overdueCount, setOverdueCount] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -68,16 +66,6 @@ export function StudentSidebar() {
           .eq('student_id', studentData.id)
           .order('title');
         setCourses(coursesData || []);
-
-        // Fetch overdue count
-        const now = new Date().toISOString();
-        const { data: overdueData } = await supabase
-          .from('assignments')
-          .select('id, curriculum_items!inner(courses!inner(student_id))')
-          .eq('curriculum_items.courses.student_id', studentData.id)
-          .eq('status', 'assigned')
-          .lt('due_at', now);
-        setOverdueCount(overdueData?.length || 0);
       }
     } catch (error) {
       console.error('Error fetching sidebar data:', error);
@@ -106,36 +94,42 @@ export function StudentSidebar() {
 
         {/* My Courses */}
         <SidebarGroup>
-          <Collapsible defaultOpen>
+          <Collapsible>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="w-full flex items-center justify-between">
+              <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />
-                  {state !== "collapsed" && <span>My Courses</span>}
+                  {state !== "collapsed" && <span className="font-medium">My Courses</span>}
                 </div>
-                {state !== "collapsed" && <ChevronDown className="h-4 w-4" />}
+                {state !== "collapsed" && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {courses.length > 0 ? (
-                    <div className="max-h-48 overflow-y-auto space-y-1">
+                    <div className="max-h-48 overflow-y-auto space-y-0.5 py-1">
                       {courses.map((course) => (
                         <SidebarMenuItem key={course.id}>
                           <SidebarMenuButton
                             onClick={() => navigate(`/course/${course.id}`)}
-                            className={isActive(`/course/${course.id}`) ? 'bg-accent text-accent-foreground' : ''}
+                            className={`
+                              transition-all duration-200 
+                              ${isActive(`/course/${course.id}`) 
+                                ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                                : 'hover:bg-accent hover:text-accent-foreground'
+                              }
+                            `}
                           >
-                            <GraduationCap className="h-4 w-4" />
-                            {state !== "collapsed" && <span className="truncate">{course.title}</span>}
+                            <GraduationCap className="h-4 w-4 flex-shrink-0" />
+                            {state !== "collapsed" && <span className="truncate text-sm">{course.title}</span>}
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       ))}
                     </div>
                   ) : (
                     state !== "collapsed" && (
-                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                      <div className="px-3 py-2 text-sm text-muted-foreground italic">
                         No courses yet
                       </div>
                     )
@@ -148,18 +142,14 @@ export function StudentSidebar() {
 
         {/* Learning */}
         <SidebarGroup>
-          <Collapsible defaultOpen>
+          <Collapsible>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="w-full flex items-center justify-between">
+              <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />
-                  {state !== "collapsed" && <span>Learning</span>}
+                  {state !== "collapsed" && <span className="font-medium">Learning</span>}
                 </div>
-                {state !== "collapsed" && overdueCount > 0 && (
-                  <Badge variant="destructive" className="ml-auto">
-                    {overdueCount}
-                  </Badge>
-                )}
+                {state !== "collapsed" && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
@@ -200,14 +190,14 @@ export function StudentSidebar() {
 
         {/* XP & Progress */}
         <SidebarGroup>
-          <Collapsible defaultOpen>
+          <Collapsible>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="w-full flex items-center justify-between">
+              <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-[hsl(var(--chart-1))]" />
-                  {state !== "collapsed" && <span>XP & Progress</span>}
+                  {state !== "collapsed" && <span className="font-medium">XP & Progress</span>}
                 </div>
-                {state !== "collapsed" && <ChevronDown className="h-4 w-4" />}
+                {state !== "collapsed" && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
@@ -257,14 +247,14 @@ export function StudentSidebar() {
 
         {/* Focus Tools */}
         <SidebarGroup>
-          <Collapsible defaultOpen>
+          <Collapsible>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="w-full flex items-center justify-between">
+              <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
                   <Timer className="h-4 w-4 text-[hsl(var(--chart-2))]" />
-                  {state !== "collapsed" && <span>Focus Tools</span>}
+                  {state !== "collapsed" && <span className="font-medium">Focus Tools</span>}
                 </div>
-                {state !== "collapsed" && <ChevronDown className="h-4 w-4" />}
+                {state !== "collapsed" && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             <CollapsibleContent>
