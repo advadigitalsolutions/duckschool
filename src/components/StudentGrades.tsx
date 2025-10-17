@@ -69,6 +69,10 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
     }
   };
 
+  const isAssessment = (title: string) => {
+    return title.toLowerCase().includes('assessment');
+  };
+
   const calculatePercentage = (score: number, maxScore: number) => {
     return ((score / maxScore) * 100).toFixed(1);
   };
@@ -110,20 +114,28 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
     return 'text-destructive';
   };
 
-  // Calculate overall statistics
+  // Calculate overall statistics (excluding assessments)
+  const gradedAssignments = grades.filter(grade => {
+    const assignmentTitle = grade.assignment.curriculum_items.body?.title || 
+                           grade.assignment.curriculum_items.title;
+    return !isAssessment(assignmentTitle);
+  });
+  
   const totalGrades = grades.length;
-  const overallAverage = totalGrades > 0
-    ? grades.reduce((sum, grade) => {
+  const totalGradedAssignments = gradedAssignments.length;
+  
+  const overallAverage = totalGradedAssignments > 0
+    ? gradedAssignments.reduce((sum, grade) => {
         const percentage = (grade.score / grade.max_score) * 100;
         return sum + percentage;
-      }, 0) / totalGrades
+      }, 0) / totalGradedAssignments
     : 0;
 
-  const overallGPA = totalGrades > 0
-    ? grades.reduce((sum, grade) => {
+  const overallGPA = totalGradedAssignments > 0
+    ? gradedAssignments.reduce((sum, grade) => {
         const percentage = (grade.score / grade.max_score) * 100;
         return sum + calculateGPA(percentage);
-      }, 0) / totalGrades
+      }, 0) / totalGradedAssignments
     : 0;
 
   // Group grades by course
@@ -135,6 +147,13 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
     acc[courseTitle].push(grade);
     return acc;
   }, {} as Record<string, GradeData[]>);
+
+  // Count assessments
+  const totalAssessments = grades.filter(grade => {
+    const assignmentTitle = grade.assignment.curriculum_items.body?.title || 
+                           grade.assignment.curriculum_items.title;
+    return isAssessment(assignmentTitle);
+  }).length;
 
   if (loading) {
     return (
@@ -170,6 +189,11 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
               Letter Grade: {calculateLetterGrade(overallAverage)}
             </p>
             <Progress value={overallAverage} className="mt-2" />
+            {totalAssessments > 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                ({totalAssessments} assessment{totalAssessments !== 1 ? 's' : ''} excluded)
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -207,10 +231,19 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
       {/* Grades by Course */}
       <div className="space-y-4">
         {Object.entries(gradesByCourse).map(([courseTitle, courseGrades]) => {
-          const courseAverage = courseGrades.reduce((sum, grade) => {
-            const percentage = (grade.score / grade.max_score) * 100;
-            return sum + percentage;
-          }, 0) / courseGrades.length;
+          // Calculate average excluding assessments
+          const gradedCourseAssignments = courseGrades.filter(grade => {
+            const assignmentTitle = grade.assignment.curriculum_items.body?.title || 
+                                   grade.assignment.curriculum_items.title;
+            return !isAssessment(assignmentTitle);
+          });
+          
+          const courseAverage = gradedCourseAssignments.length > 0
+            ? gradedCourseAssignments.reduce((sum, grade) => {
+                const percentage = (grade.score / grade.max_score) * 100;
+                return sum + percentage;
+              }, 0) / gradedCourseAssignments.length
+            : 0;
 
           return (
             <Card key={courseTitle}>
@@ -223,8 +256,16 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
                     </CardDescription>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold">{courseAverage.toFixed(1)}%</div>
-                    <Badge variant="outline">{calculateLetterGrade(courseAverage)}</Badge>
+                    {gradedCourseAssignments.length > 0 ? (
+                      <>
+                        <div className="text-2xl font-bold">{courseAverage.toFixed(1)}%</div>
+                        <Badge variant="outline">{calculateLetterGrade(courseAverage)}</Badge>
+                      </>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        Assessments only
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -234,6 +275,8 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
                     const percentage = parseFloat(calculatePercentage(grade.score, grade.max_score));
                     const assignmentTitle = grade.assignment.curriculum_items.body?.title || 
                                           grade.assignment.curriculum_items.title;
+                    const isAssessmentItem = isAssessment(assignmentTitle);
+                    const isPassed = grade.score > 0; // Pass if they completed it (any score > 0)
 
                     return (
                       <div 
@@ -242,7 +285,14 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
                         onClick={() => window.location.href = `/assignment/${grade.assignment_id}`}
                       >
                         <div className="flex-1">
-                          <div className="font-medium">{assignmentTitle}</div>
+                          <div className="font-medium">
+                            {assignmentTitle}
+                            {isAssessmentItem && (
+                              <Badge variant="secondary" className="ml-2 text-xs">
+                                Assessment
+                              </Badge>
+                            )}
+                          </div>
                           <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                             <Calendar className="h-3 w-3" />
                             {new Date(grade.graded_at).toLocaleDateString()}
@@ -253,17 +303,31 @@ export function StudentGrades({ studentId }: StudentGradesProps) {
                             </div>
                           )}
                         </div>
-                        <div className="text-right ml-4">
-                          <div className={`text-xl font-bold ${getGradeColor(percentage)}`}>
-                            {percentage}%
+                        {isAssessmentItem ? (
+                          <div className="text-right ml-4">
+                            <Badge 
+                              variant={isPassed ? "default" : "destructive"}
+                              className="text-lg px-4 py-1"
+                            >
+                              {isPassed ? "Pass" : "Incomplete"}
+                            </Badge>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Not graded
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            {grade.score} / {grade.max_score}
+                        ) : (
+                          <div className="text-right ml-4">
+                            <div className={`text-xl font-bold ${getGradeColor(percentage)}`}>
+                              {percentage}%
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {grade.score} / {grade.max_score}
+                            </div>
+                            <Badge variant="outline" className="mt-1">
+                              {calculateLetterGrade(percentage)}
+                            </Badge>
                           </div>
-                          <Badge variant="outline" className="mt-1">
-                            {calculateLetterGrade(percentage)}
-                          </Badge>
-                        </div>
+                        )}
                       </div>
                     );
                   })}
