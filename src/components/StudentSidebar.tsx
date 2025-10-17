@@ -43,17 +43,13 @@ export function StudentSidebar() {
   };
   const isActive = (path: string) => location.pathname === path;
   const isCollapsed = state === "collapsed";
-  
   return <Sidebar className={isCollapsed ? "w-16" : "w-60"} collapsible="icon">
       <SidebarContent>
         {/* Dashboard */}
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton 
-                onClick={() => navigate('/student')} 
-                className={isActive('/student') ? 'bg-accent text-accent-foreground' : ''}
-              >
+              <SidebarMenuButton onClick={() => navigate('/student')} className={isActive('/student') ? 'bg-accent text-accent-foreground' : ''}>
                 <Home className="h-5 w-5" />
                 {!isCollapsed && <span>Dashboard</span>}
               </SidebarMenuButton>
@@ -73,20 +69,16 @@ export function StudentSidebar() {
                 {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
-            {!isCollapsed && (
-              <CollapsibleContent>
+            {!isCollapsed && <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {courses.length > 0 ? <div className="relative rounded-lg border-2 border-primary/30 bg-background/50 backdrop-blur-sm p-2 transition-all duration-300 group-data-[state=open]:border-primary/50 group-data-[state=open]:shadow-lg group-data-[state=open]:shadow-primary/20">
                         <div className="max-h-48 overflow-y-auto space-y-0.5 custom-scrollbar">
                           {courses.map(course => <SidebarMenuItem key={course.id}>
-                              <SidebarMenuButton 
-                                onClick={() => navigate(`/course/${course.id}`)} 
-                                className={`
+                              <SidebarMenuButton onClick={() => navigate(`/course/${course.id}`)} className={`
                                   transition-all duration-200 
                                   ${isActive(`/course/${course.id}`) ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-accent hover:text-accent-foreground'}
-                                `}
-                              >
+                                `}>
                                 <GraduationCap className="h-4 w-4 flex-shrink-0" />
                                 <span className="truncate text-sm">{course.title}</span>
                               </SidebarMenuButton>
@@ -97,8 +89,7 @@ export function StudentSidebar() {
                         </div>}
                   </SidebarMenu>
                 </SidebarGroupContent>
-              </CollapsibleContent>
-            )}
+              </CollapsibleContent>}
           </Collapsible>
         </SidebarGroup>
 
@@ -114,50 +105,36 @@ export function StudentSidebar() {
                 {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
-            {!isCollapsed && (
-              <CollapsibleContent>
+            {!isCollapsed && <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/agenda')} 
-                        className={isActive('/student/agenda') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/student/agenda')} className={isActive('/student/agenda') ? 'bg-accent text-accent-foreground' : ''}>
                         <ListTodo className="h-4 w-4" />
                         <span>Agenda</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/assignments')} 
-                        className={isActive('/student/assignments') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/student/assignments')} className={isActive('/student/assignments') ? 'bg-accent text-accent-foreground' : ''}>
                         <ClipboardList className="h-4 w-4" />
                         <span>Assignments</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/chores')} 
-                        className={isActive('/student/chores') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/student/chores')} className={isActive('/student/chores') ? 'bg-accent text-accent-foreground' : ''}>
                         <ListChecks className="h-4 w-4" />
-                        <span>My Chores</span>
+                        <span>Chores</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/calendar')} 
-                        className={isActive('/student/calendar') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/student/calendar')} className={isActive('/student/calendar') ? 'bg-accent text-accent-foreground' : ''}>
                         <CalendarDays className="h-4 w-4" />
                         <span>Calendar</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
                 </SidebarGroupContent>
-              </CollapsibleContent>
-            )}
+              </CollapsibleContent>}
           </Collapsible>
         </SidebarGroup>
 
@@ -173,59 +150,42 @@ export function StudentSidebar() {
                 {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
-            {!isCollapsed && (
-              <CollapsibleContent>
+            {!isCollapsed && <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/xp')} 
-                        className={isActive('/student/xp') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/student/xp')} className={isActive('/student/xp') ? 'bg-accent text-accent-foreground' : ''}>
                         <Trophy className="h-4 w-4" />
                         <span>My XP</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/rewards')} 
-                        className={isActive('/student/rewards') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/student/rewards')} className={isActive('/student/rewards') ? 'bg-accent text-accent-foreground' : ''}>
                         <ShoppingBag className="h-4 w-4" />
                         <span>Rewards Shop</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/mastery-journey')} 
-                        className={isActive('/student/mastery-journey') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/student/mastery-journey')} className={isActive('/student/mastery-journey') ? 'bg-accent text-accent-foreground' : ''}>
                         <Sparkles className="h-4 w-4" />
                         <span>Mastery Journey</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/mastery')} 
-                        className={isActive('/student/mastery') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/student/mastery')} className={isActive('/student/mastery') ? 'bg-accent text-accent-foreground' : ''}>
                         <BarChart3 className="h-4 w-4" />
                         <span>Progress</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/grades')} 
-                        className={isActive('/student/grades') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/student/grades')} className={isActive('/student/grades') ? 'bg-accent text-accent-foreground' : ''}>
                         <Award className="h-4 w-4" />
                         <span>Academic Record</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
                 </SidebarGroupContent>
-              </CollapsibleContent>
-            )}
+              </CollapsibleContent>}
           </Collapsible>
         </SidebarGroup>
 
@@ -241,32 +201,24 @@ export function StudentSidebar() {
                 {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
-            {!isCollapsed && (
-              <CollapsibleContent>
+            {!isCollapsed && <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/focus-tools')} 
-                        className={isActive('/focus-tools') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/focus-tools')} className={isActive('/focus-tools') ? 'bg-accent text-accent-foreground' : ''}>
                         <Timer className="h-4 w-4" />
                         <span>Focus Tools</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        onClick={() => navigate('/student/focus-stats')} 
-                        className={isActive('/student/focus-stats') ? 'bg-accent text-accent-foreground' : ''}
-                      >
+                      <SidebarMenuSubButton onClick={() => navigate('/student/focus-stats')} className={isActive('/student/focus-stats') ? 'bg-accent text-accent-foreground' : ''}>
                         <Activity className="h-4 w-4" />
                         <span>Session Stats</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
                 </SidebarGroupContent>
-              </CollapsibleContent>
-            )}
+              </CollapsibleContent>}
           </Collapsible>
         </SidebarGroup>
 
