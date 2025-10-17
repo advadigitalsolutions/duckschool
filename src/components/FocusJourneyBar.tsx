@@ -607,7 +607,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setIsReading(true);
       setReadingStartTime(currentSeconds);
       setReadingStartTimestamp(Date.now());
-      setDuckState('idle');
+      setDuckState('walking');
       toast.info('Deep reading mode... Duck is focused and hard at work! 📚🦆', {
         description: 'Stay focused on your reading!'
       });
