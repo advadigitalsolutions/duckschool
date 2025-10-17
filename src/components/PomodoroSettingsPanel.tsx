@@ -152,7 +152,6 @@ export function PomodoroSettingsPanel() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="doughnut">Doughnut</SelectItem>
-                  <SelectItem value="traditional">Traditional (Clock)</SelectItem>
                   <SelectItem value="wedge">Wedge (Kitchen Timer)</SelectItem>
                 </SelectContent>
               </Select>

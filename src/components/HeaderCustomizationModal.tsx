@@ -64,7 +64,7 @@ interface HeaderSettings {
     timerColor: string;
     numberColor: string;
     showMinutesInside: boolean;
-    timerStyle: 'doughnut' | 'traditional';
+    timerStyle: 'doughnut' | 'wedge';
     soundEffect: 'beep' | 'chime' | 'bell' | 'gong' | 'airhorn' | 'duck' | 'none';
     timerForegroundColor: string;
     timerBackgroundColor: string;
@@ -782,7 +782,7 @@ export function HeaderCustomizationModal({
                           <Label>Timer Style</Label>
                           <Select
                             value={settings.pomodoroSettings.timerStyle || 'doughnut'}
-                            onValueChange={(value: 'doughnut' | 'traditional') =>
+                            onValueChange={(value: 'doughnut' | 'wedge') =>
                               updateSetting('pomodoroSettings', { ...settings.pomodoroSettings, timerStyle: value })
                             }
                           >
@@ -791,7 +791,7 @@ export function HeaderCustomizationModal({
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="doughnut">Doughnut (Ring)</SelectItem>
-                              <SelectItem value="traditional">Traditional (Pie Chart)</SelectItem>
+                              <SelectItem value="wedge">Wedge (Kitchen Timer)</SelectItem>
                             </SelectContent>
                           </Select>
                           <p className="text-xs text-muted-foreground">

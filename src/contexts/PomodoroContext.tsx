@@ -11,7 +11,7 @@ interface PomodoroSettings {
   timerColor: string;
   numberColor: string;
   showMinutesInside: boolean;
-  timerStyle: 'doughnut' | 'traditional' | 'wedge';
+  timerStyle: 'doughnut' | 'wedge';
   soundEffect: 'beep' | 'chime' | 'bell' | 'gong' | 'airhorn' | 'duck' | 'none';
   timerForegroundColor: string;
   timerBackgroundColor: string;

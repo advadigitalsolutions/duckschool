@@ -36,9 +36,10 @@ export function SimplePomodoroTimer({
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - progress / 100 * circumference;
   
-  // Wedge timer calculations
-  const angle = (remainingProgress / 100) * 360;
-  const endAngle = angle - 90; // Start from top
+  // Wedge timer calculations - clockwise from top
+  const angle = (progress / 100) * 360; // Elapsed time angle
+  const startAngle = -90; // Start at top (12 o'clock)
+  const endAngle = startAngle + angle; // Move clockwise
   const largeArcFlag = angle > 180 ? 1 : 0;
   const centerX = compact ? 64 : 160;
   const centerY = compact ? 64 : 160;
@@ -79,8 +80,8 @@ export function SimplePomodoroTimer({
               className="text-foreground"
             />
             
-            {/* Wedge */}
-            {remainingProgress > 0 && (
+            {/* Wedge - shows elapsed time */}
+            {progress > 0 && (
               <path
                 d={`
                   M ${centerX} ${centerY}
@@ -101,8 +102,8 @@ export function SimplePomodoroTimer({
               fill="#dc2626"
             />
             
-            {/* Hand/pointer */}
-            {remainingProgress > 0 && (
+            {/* Hand/pointer - points to current time */}
+            {progress > 0 && (
               <line
                 x1={centerX}
                 y1={centerY}
