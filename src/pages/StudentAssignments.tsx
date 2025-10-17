@@ -206,6 +206,21 @@ export default function StudentAssignments() {
         case 'date_assigned':
           return new Date(b.assigned_date || b.created_at).getTime() - new Date(a.assigned_date || a.created_at).getTime();
         case 'due_date':
+          // Group by status first: Active (Assigned/Overdue) -> Submitted -> Graded
+          const getStatusPriority = (assignment: any) => {
+            if (assignment.grades && assignment.grades.length > 0) return 3; // Graded (lowest priority)
+            if (assignment.submissions && assignment.submissions.length > 0) return 2; // Submitted
+            return 1; // Assigned/Overdue (highest priority)
+          };
+          
+          const priorityA = getStatusPriority(a);
+          const priorityB = getStatusPriority(b);
+          
+          if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+          }
+          
+          // Within same group, sort by due date
           if (!a.due_at) return 1;
           if (!b.due_at) return -1;
           return new Date(a.due_at).getTime() - new Date(b.due_at).getTime();
@@ -425,51 +440,84 @@ export default function StudentAssignments() {
             </CardContent>
           </Card>
         ) : (
-          filteredAssignments.map((assignment) => (
-            <Card 
-              key={assignment.id}
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate(`/assignment/${assignment.id}`)}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        {assignment.curriculum_items?.courses?.title}
-                      </span>
-                    </div>
-                    <CardTitle className="text-xl mb-2">
-                      {assignment.curriculum_items?.title}
-                    </CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      {assignment.assigned_date && (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Assigned: {new Date(assignment.assigned_date).toLocaleDateString()}
-                        </div>
-                      )}
-                      {assignment.due_at && (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Due: {new Date(assignment.due_at).toLocaleDateString()}
-                        </div>
-                      )}
-                    </div>
+          filteredAssignments.map((assignment, index) => {
+            // Determine if we need a separator (only when sorting by due_date)
+            let showSeparator = false;
+            let separatorLabel = '';
+            
+            if (sortBy === 'due_date' && index > 0) {
+              const prevAssignment = filteredAssignments[index - 1];
+              
+              const getStatusGroup = (a: any) => {
+                if (a.grades && a.grades.length > 0) return 'graded';
+                if (a.submissions && a.submissions.length > 0) return 'submitted';
+                return 'active';
+              };
+              
+              const prevGroup = getStatusGroup(prevAssignment);
+              const currentGroup = getStatusGroup(assignment);
+              
+              if (prevGroup !== currentGroup) {
+                showSeparator = true;
+                if (currentGroup === 'submitted') separatorLabel = 'Submitted';
+                if (currentGroup === 'graded') separatorLabel = 'Graded';
+              }
+            }
+            
+            return (
+              <div key={assignment.id}>
+                {showSeparator && (
+                  <div className="flex items-center gap-4 my-6">
+                    <Separator className="flex-1" />
+                    <span className="text-sm text-muted-foreground font-medium">{separatorLabel}</span>
+                    <Separator className="flex-1" />
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {getStatusBadge(assignment)}
-                    {assignment.grades?.[0] && (
-                      <div className="text-sm font-medium">
-                        {assignment.grades[0].score}/{assignment.grades[0].max_score}
+                )}
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/assignment/${assignment.id}`)}
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {assignment.curriculum_items?.courses?.title}
+                          </span>
+                        </div>
+                        <CardTitle className="text-xl mb-2">
+                          {assignment.curriculum_items?.title}
+                        </CardTitle>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          {assignment.assigned_date && (
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Assigned: {new Date(assignment.assigned_date).toLocaleDateString()}
+                            </div>
+                          )}
+                          {assignment.due_at && (
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Due: {new Date(assignment.due_at).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-          ))
+                      <div className="flex flex-col items-end gap-2">
+                        {getStatusBadge(assignment)}
+                        {assignment.grades?.[0] && (
+                          <div className="text-sm font-medium">
+                            {assignment.grades[0].score}/{assignment.grades[0].max_score}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              </div>
+            );
+          })
         )}
       </div>
     </div>
