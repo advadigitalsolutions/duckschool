@@ -19,6 +19,16 @@ import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import Blog from "./pages/Blog";
 import WhyDiagnosticsArentTests from "./pages/blog/WhyDiagnosticsArentTests";
+import PedagogiesSupported from "./pages/blog/PedagogiesSupported";
+import ADHDSupport from "./pages/blog/ADHDSupport";
+import DyslexiaSupport from "./pages/blog/DyslexiaSupport";
+import ExpatFamilies from "./pages/blog/ExpatFamilies";
+import JustInTimeCurriculum from "./pages/blog/JustInTimeCurriculum";
+import SchoolsAndCharters from "./pages/blog/SchoolsAndCharters";
+import BusyFamilies from "./pages/blog/BusyFamilies";
+import MostAutomated from "./pages/blog/MostAutomated";
+import StateStandards from "./pages/blog/StateStandards";
+import PublicSchoolSupplement from "./pages/blog/PublicSchoolSupplement";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Waitlist from "./pages/Waitlist";
@@ -205,6 +215,16 @@ const App = () => (
                       <Route path="/about" element={<About />} />
                       <Route path="/blog" element={<Blog />} />
                       <Route path="/blog/why-diagnostics-arent-tests" element={<WhyDiagnosticsArentTests />} />
+                      <Route path="/blog/pedagogies-supported" element={<PedagogiesSupported />} />
+                      <Route path="/blog/adhd-support" element={<ADHDSupport />} />
+                      <Route path="/blog/dyslexia-support" element={<DyslexiaSupport />} />
+                      <Route path="/blog/expat-families" element={<ExpatFamilies />} />
+                      <Route path="/blog/just-in-time-curriculum" element={<JustInTimeCurriculum />} />
+                      <Route path="/blog/schools-and-charters" element={<SchoolsAndCharters />} />
+                      <Route path="/blog/busy-families" element={<BusyFamilies />} />
+                      <Route path="/blog/most-automated" element={<MostAutomated />} />
+                      <Route path="/blog/state-standards" element={<StateStandards />} />
+                      <Route path="/blog/public-school-supplement" element={<PublicSchoolSupplement />} />
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/waitlist" element={<Waitlist />} />
                       <Route path="/dashboard" element={<Index />} />
