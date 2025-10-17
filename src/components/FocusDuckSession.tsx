@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,13 +13,6 @@ import { cn } from '@/lib/utils';
 import { captureCurrentWindow } from '@/utils/screenCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { 
-  playRandomFallSound, 
-  playRandomClimbSound, 
-  playRandomAttentionSound, 
-  playRandomReturnSound,
-  playSound 
-} from '@/utils/soundEffects';
 
 interface FocusDuckSessionProps {
   studentId: string | null;
@@ -31,55 +24,25 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
   const [duration, setDuration] = useState(45); // minutes
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(duration * 60); // seconds
-  const [duckState, setDuckState] = useState<'walking' | 'falling' | 'fallen' | 'ghostly-jumping' | 'climbing' | 'celebrating' | 'celebrating-return' | 'idle' | 'jumping'>('idle');
+  const [duckState, setDuckState] = useState<'idle' | 'climbing' | 'celebrating' | 'fallen'>('idle');
   const [accountabilityEnabled, setAccountabilityEnabled] = useState(false);
   const [showAccountabilityCheck, setShowAccountabilityCheck] = useState(false);
   const [accountabilityTimerId, setAccountabilityTimerId] = useState<NodeJS.Timeout | null>(null);
-  const [gapStartTime, setGapStartTime] = useState<number | null>(null);
   
   const { sessionId, createSession, endSession } = useActivitySession(studentId || undefined);
-  
-  const { isVisible } = useWindowVisibility({
-    onHidden: () => {
-      console.log('🚪 Window hidden - duck falling');
-      if (isActive && !showAccountabilityCheck) {
-        setDuckState('falling');
-        playRandomFallSound(0.3);
-      }
-    },
-    onVisible: () => {
-      console.log('👋 Window visible - duck climbing back');
-      if (isActive && !showAccountabilityCheck) {
-        setDuckState('climbing');
-        playRandomClimbSound(0.3);
-      }
-    }
-  });
+  const { isVisible } = useWindowVisibility();
   
   const { isIdle, isWarning } = useIdleDetection({
-    warningThreshold: 30000, // 30 seconds warning
-    idleThreshold: 60000, // 60 seconds until idle
-    onWarning: () => {
-      console.log('⚠️ Idle warning - duck jumping for attention');
-      if (isActive && !showAccountabilityCheck && isVisible) {
-        setDuckState('jumping');
-        playRandomAttentionSound(0.3);
-      }
-    },
+    warningThreshold: 45, // 45 seconds warning
+    idleThreshold: 60, // 1 minute until idle
     onIdle: () => {
-      console.log('😴 User idle - duck falling');
-      if (isActive && !showAccountabilityCheck && isVisible) {
-        setGapStartTime(Date.now());
-        setDuckState('falling');
-        playRandomFallSound(0.3);
+      if (isActive && duckState === 'climbing') {
+        setDuckState('fallen');
       }
     },
     onActive: () => {
-      console.log('🎯 User active - duck returning');
-      if (isActive && !showAccountabilityCheck && (duckState === 'fallen' || duckState === 'ghostly-jumping' || duckState === 'falling')) {
+      if (duckState === 'fallen') {
         setDuckState('climbing');
-        playRandomClimbSound(0.3);
-        setGapStartTime(null);
       }
     }
   });
@@ -130,7 +93,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     if (response === 'yes') {
       // Resume timer first
       setIsActive(true);
-      setDuckState('walking'); // Resume with walking animation
+      setDuckState('climbing');
       
       // Capture and analyze
       try {
@@ -190,7 +153,6 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
         if (prev <= 1) {
           setIsActive(false);
           setDuckState('celebrating');
-          playSound('complete', 0.5);
           if (sessionId) {
             endSession('block_complete');
           }
@@ -203,45 +165,6 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     return () => clearInterval(interval);
   }, [isActive, sessionId, endSession]);
 
-  const handleDuckAnimationComplete = useCallback(() => {
-    console.log('🦆 Duck animation complete, state:', duckState);
-    
-    if (duckState === 'climbing') {
-      // After climbing, transition to celebrating-return briefly, then walking
-      setDuckState('celebrating-return');
-      playRandomReturnSound(0.3);
-      setTimeout(() => {
-        if (isActive) {
-          setDuckState('walking');
-        }
-      }, 2000);
-    } else if (duckState === 'celebrating-return') {
-      // After celebrating return, go to walking
-      if (isActive) {
-        setDuckState('walking');
-      }
-    } else if (duckState === 'falling') {
-      // After falling, go to fallen state
-      setDuckState('fallen');
-    }
-  }, [duckState, isActive]);
-
-  // Separate effect to handle fallen -> ghostly-jumping transition
-  useEffect(() => {
-    if (duckState === 'fallen' && isActive) {
-      const timeout = setTimeout(() => {
-        setDuckState('ghostly-jumping');
-        playRandomAttentionSound(0.3);
-      }, 10000);
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [duckState, isActive]);
-
-  const handleDuckStateChange = useCallback((newState: string) => {
-    console.log('🦆 Duck internal state changed to:', newState);
-  }, []);
-
   const handleStart = () => {
     if (!goal.trim()) return;
     
@@ -250,7 +173,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     }
     
     setIsActive(true);
-    setDuckState('walking'); // Start with walking animation
+    setDuckState('climbing');
     
     // Start accountability check cycle if enabled
     if (accountabilityEnabled) {
@@ -268,7 +191,6 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     setTimeLeft(duration * 60);
     setDuckState('idle');
     setShowAccountabilityCheck(false);
-    setGapStartTime(null);
     
     // Clear accountability timer
     if (accountabilityTimerId) {
@@ -303,9 +225,9 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
             }}
           >
             <FocusJourneyDuck
-              animationState={duckState}
-              onAnimationComplete={handleDuckAnimationComplete}
-              onStateChange={handleDuckStateChange}
+              animationState={isActive ? 'climbing' : 'idle'}
+              onAnimationComplete={() => {}}
+              onStateChange={(state) => setDuckState(state as any)}
             />
           </div>
           <div className="pt-12">
@@ -396,9 +318,9 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
               }}
             >
               <FocusJourneyDuck
-                animationState={duckState}
-                onAnimationComplete={handleDuckAnimationComplete}
-                onStateChange={handleDuckStateChange}
+                animationState={duckState === 'celebrating' ? 'celebrating' : isActive ? 'climbing' : 'idle'}
+                onAnimationComplete={() => {}}
+                onStateChange={(state) => setDuckState(state as any)}
               />
             </div>
             <div className="pt-12 space-y-3">
