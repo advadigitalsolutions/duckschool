@@ -2608,6 +2608,10 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      is_chore_parent: {
+        Args: { _chore_id: string; _user_id: string }
+        Returns: boolean
+      }
       ivfflat_bit_support: {
         Args: { "": unknown }
         Returns: unknown
