@@ -687,9 +687,9 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       aria-label={`Focus journey progress: ${Math.round(progress)}%`}
     >
       <div className="max-w-7xl mx-auto">
-        <div className="relative h-10 rounded-full border border-border/30" style={{ 
+        <div className="relative h-10 rounded-full border-2 border-gray-300/40 dark:border-gray-600/40" style={{ 
           overflow: 'visible',
-          background: 'linear-gradient(90deg, hsl(var(--success) / 0.2) 0%, hsl(var(--muted) / 0.3) 35%, hsl(var(--warning) / 0.2) 65%, hsl(var(--warning) / 0.3) 100%)'
+          background: 'transparent'
         }}>
           {/* Completed focus segments */}
           {focusSegments.map((segment, index) => {
@@ -697,15 +697,16 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
             return (
               <div
                 key={`focus-${index}`}
-                className="absolute inset-y-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-[10px] font-semibold text-white shadow-md mx-1 transition-all duration-200 cursor-pointer"
+                className="absolute inset-y-1 rounded-full flex items-center justify-center text-[10px] font-semibold text-white shadow-md mx-1 transition-all duration-200 cursor-pointer"
                 style={{ 
                   left: `${segment.startPercent}%`, 
                   width: `${segment.widthPercent}%`,
                   minWidth: '40px',
                   zIndex: isHovered ? 50 : 10,
                   transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                  background: 'linear-gradient(90deg, #5FD39E 0%, #4BC187 100%)',
                   boxShadow: isHovered 
-                    ? '0 0 0 2px rgba(59, 130, 246, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3)'
+                    ? '0 0 0 2px rgba(95, 211, 158, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3)'
                     : undefined
                 }}
                 onMouseEnter={() => setHoveredSegmentIndex(index)}
@@ -730,30 +731,25 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
             return (
               <div
                 key={`gap-${index}`}
-                className={`absolute inset-y-0 flex items-center justify-center ${
-                  isBreak 
-                    ? isShortBreak
-                      ? 'bg-amber-500/10 border border-amber-500/20 rounded-full'
-                      : 'bg-amber-500/20 border-2 border-amber-500/40 rounded-full'
-                    : isReading
-                    ? isShortReading
-                      ? 'bg-blue-400/15 border border-blue-400/25 rounded-full'
-                      : 'bg-blue-400/25 border-2 border-blue-400/50 rounded-full'
-                    : 'bg-transparent'
-                }`}
+                className="absolute inset-y-1 flex items-center justify-center rounded-full mx-1"
                 style={{ 
                   left: `${segment.startPercent}%`, 
                   width: `${segment.widthPercent}%`,
-                  minWidth: (isBreak || isReading) ? ((isShortBreak || isShortReading) ? '12px' : '30px') : '8px'
+                  minWidth: (isBreak || isReading) ? ((isShortBreak || isShortReading) ? '12px' : '30px') : '8px',
+                  background: isBreak 
+                    ? 'linear-gradient(90deg, #F4C2B0 0%, #F4B5A0 100%)'
+                    : isReading
+                    ? 'linear-gradient(90deg, #93C5FD 0%, #7FB8F9 100%)'
+                    : '#F4A261'
                 }}
               >
                 {isBreak && !isShortBreak && segment.widthPercent > 2 && (
-                  <span className="text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                  <span className="text-[10px] font-medium text-red-900/70">
                     ☕ {formatDuration(segment.duration)}
                   </span>
                 )}
                 {isReading && !isShortReading && segment.widthPercent > 2 && (
-                  <span className="text-[10px] font-medium text-blue-700 dark:text-blue-300">
+                  <span className="text-[10px] font-medium text-blue-900/70">
                     📚 {formatDuration(segment.duration)}
                   </span>
                 )}
@@ -764,10 +760,11 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           {/* Current active segment */}
           {gapStartTime === null && !isOnBreak && !isReading && (
             <div 
-              className={`absolute inset-y-1 left-0 bg-gradient-to-r ${getProgressColor()} transition-all duration-500 ease-out opacity-40 rounded-full mx-1`}
+              className="absolute inset-y-1 left-0 transition-all duration-500 ease-out rounded-full mx-1"
               style={{ 
                 left: `${(currentSegmentStart / goalSeconds) * 100}%`,
-                width: `${((sessionData.activeSeconds - currentSegmentStart) / goalSeconds) * 100}%` 
+                width: `${((sessionData.activeSeconds - currentSegmentStart) / goalSeconds) * 100}%`,
+                background: 'linear-gradient(90deg, rgba(95, 211, 158, 0.6) 0%, rgba(75, 193, 135, 0.6) 100%)'
               }}
             />
           )}
@@ -775,10 +772,11 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           {/* Current reading segment */}
           {isReading && readingStartTime !== null && (
             <div 
-              className="absolute inset-y-1 left-0 bg-gradient-to-r from-blue-300/40 to-blue-400/40 transition-all duration-500 ease-out rounded-full mx-1"
+              className="absolute inset-y-1 left-0 transition-all duration-500 ease-out rounded-full mx-1"
               style={{ 
                 left: `${(readingStartTime / goalSeconds) * 100}%`,
-                width: `${((sessionData.activeSeconds - readingStartTime) / goalSeconds) * 100}%` 
+                width: `${((sessionData.activeSeconds - readingStartTime) / goalSeconds) * 100}%`,
+                background: 'linear-gradient(90deg, rgba(147, 197, 253, 0.6) 0%, rgba(127, 184, 249, 0.6) 100%)'
               }}
             />
           )}
