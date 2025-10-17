@@ -96,16 +96,39 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
 
   if (compact) {
     return (
-      <div className="flex flex-col items-center gap-4">
-        <FocusJourneyDuck
-          animationState={duckState}
-          onAnimationComplete={() => {}}
-          onStateChange={(state) => setDuckState(state as any)}
-        />
-        <div className="w-full max-w-xs">
-          <Progress value={progress} className="h-2" />
+      <div className="flex flex-col items-center justify-center min-h-[80vh] gap-8">
+        {/* Duck walking along progress */}
+        <div className="relative w-full max-w-md">
+          <div 
+            className="absolute transition-all duration-1000 ease-out"
+            style={{ 
+              left: `${Math.min(progress, 95)}%`,
+              transform: 'translateX(-50%)',
+              top: '-60px'
+            }}
+          >
+            <FocusJourneyDuck
+              animationState={duckState}
+              onAnimationComplete={() => {}}
+              onStateChange={(state) => setDuckState(state as any)}
+            />
+          </div>
+          <div className="pt-12">
+            <Progress value={progress} className="h-3" />
+          </div>
         </div>
-        <div className="text-sm font-mono">{formatTime(timeLeft)}</div>
+
+        {/* Timer Display */}
+        <div className="text-center">
+          <div className="text-5xl font-mono font-bold tabular-nums">
+            {formatTime(timeLeft)}
+          </div>
+          {goal && (
+            <div className="text-sm text-muted-foreground mt-2">
+              {goal}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -195,24 +218,6 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
           )}
         </div>
 
-        {/* Status Indicators */}
-        {isActive && (
-          <div className="flex gap-4 text-sm">
-            <div className={cn(
-              "px-4 py-2 rounded-full",
-              isIdle ? "bg-destructive/10 text-destructive" :
-              isWarning ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400" :
-              "bg-green-500/10 text-green-600 dark:text-green-400"
-            )}>
-              {isIdle ? '⚠️ Away' : isWarning ? '⏰ Stay Focused' : '✅ Active'}
-            </div>
-            {!isVisible && (
-              <div className="px-4 py-2 rounded-full bg-muted text-muted-foreground">
-                👁️ Tab Hidden
-              </div>
-            )}
-          </div>
-        )}
       </div>
     );
   }
