@@ -1,10 +1,9 @@
 import { StudentChoreList } from '@/components/StudentChoreList';
-import { StudentLayout } from '@/components/StudentLayout';
 
 export default function StudentChores() {
   return (
-    <StudentLayout>
+    <div className="container mx-auto p-6">
       <StudentChoreList />
-    </StudentLayout>
+    </div>
   );
 }

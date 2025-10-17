@@ -2,11 +2,18 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { CustomizableHeader } from "@/components/CustomizableHeader";
+import { ConfettiCelebration } from "@/components/ConfettiCelebration";
+import { FocusJourneyBar } from "@/components/FocusJourneyBar";
+import { FocusJourneyProvider } from "@/contexts/FocusJourneyContext";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import Marketing from "./pages/Marketing";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
@@ -49,25 +56,133 @@ const queryClient = new QueryClient();
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = window.location;
+  const [student, setStudent] = useState<any>(null);
+  const [headerSettings, setHeaderSettings] = useState<any>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const navigate = useNavigate();
+  
   const isPublicRoute = ['/', '/pricing', '/about', '/blog', '/auth', '/dashboard'].some(route => 
     location.pathname === route || location.pathname.startsWith('/blog/')
   );
+  
+  const isStudentRoute = location.pathname.startsWith('/student') || location.pathname.startsWith('/assignment/');
+  
+  // Only show focus duck on learning pages
+  const showFocusDuck = isStudentRoute && 
+                        !location.pathname.includes('/profile') && 
+                        !location.pathname.includes('/chores');
+
+  useEffect(() => {
+    if (isStudentRoute) {
+      fetchStudent();
+    }
+  }, [isStudentRoute]);
+
+  const fetchStudent = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (studentData) {
+        setStudent(studentData);
+        setHeaderSettings(studentData.header_settings || getDefaultHeaderSettings());
+      }
+    } catch (error) {
+      console.error('Error fetching student:', error);
+    }
+  };
+
+  const getDefaultHeaderSettings = () => ({
+    showName: true,
+    customName: null,
+    showGrade: true,
+    customGrade: null,
+    greetingType: 'name' as const,
+    rotatingDisplay: 'quote' as const,
+    rotationFrequency: 'hour' as const,
+    funFactTopic: null,
+    locations: [],
+    showWeather: false,
+    weatherZipCode: null,
+    customReminders: [],
+    countdowns: [],
+    pomodoroEnabled: false,
+    pomodoroSettings: {
+      workMinutes: 25,
+      breakMinutes: 5,
+      longBreakMinutes: 15,
+      sessionsUntilLongBreak: 4,
+      visualTimer: true,
+      timerColor: 'hsl(var(--primary))',
+      numberColor: 'hsl(var(--foreground))',
+    },
+    celebrateWins: true,
+    show8BitStars: false,
+    starColor: '#fbbf24',
+    headerVisibility: 'sticky' as const,
+  });
+
+  const saveHeaderSettings = async (newSettings: any) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({ header_settings: newSettings })
+        .eq('id', student?.id);
+
+      if (error) throw error;
+      setHeaderSettings(newSettings);
+      toast.success('Header settings saved!');
+    } catch (error) {
+      toast.error('Failed to save header settings');
+    }
+  };
+
+  const handleSignOut = async () => {
+    localStorage.removeItem('supabase.auth.token');
+    sessionStorage.clear();
+    await supabase.auth.signOut();
+    navigate('/auth');
+  };
 
   return (
-    <div className="flex min-h-screen w-full">
-      {!isPublicRoute && <AppSidebar />}
-      <div className="flex-1 flex flex-col">
-        {!isPublicRoute && (
-          <header className="h-12 border-b flex items-center px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-            <SidebarTrigger className="-ml-1" />
-          </header>
-        )}
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+    <FocusJourneyProvider studentId={student?.id}>
+      <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
+      <div className="flex min-h-screen w-full">
+        {!isPublicRoute && <AppSidebar />}
+        <div className="flex-1 flex flex-col">
+          {!isPublicRoute && !isStudentRoute && (
+            <header className="h-12 border-b flex items-center px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+              <SidebarTrigger className="-ml-1" />
+            </header>
+          )}
+          
+          {isStudentRoute && headerSettings && student && (
+            <>
+              <CustomizableHeader
+                student={student}
+                settings={headerSettings}
+                onSaveSettings={saveHeaderSettings}
+                onSignOut={handleSignOut}
+                onDemoCelebration={() => setShowConfetti(true)}
+              />
+              {showFocusDuck && <FocusJourneyBar studentId={student.id} />}
+            </>
+          )}
+          
+          <main className="flex-1 overflow-auto">
+            {children}
+          </main>
+        </div>
+        {!isPublicRoute && <MobileBottomNav />}
       </div>
-      {!isPublicRoute && <MobileBottomNav />}
-    </div>
+    </FocusJourneyProvider>
   );
 };
 

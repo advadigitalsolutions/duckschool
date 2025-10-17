@@ -21,7 +21,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BionicText } from '@/components/BionicText';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { StudentLayout } from '@/components/StudentLayout';
 import avatarElephant from '@/assets/avatars/avatar-elephant.png';
 import avatarWolf from '@/assets/avatars/avatar-wolf.png';
 import avatarBeetle from '@/assets/avatars/avatar-beetle.png';
@@ -272,16 +271,15 @@ export default function StudentProfile() {
   }
 
   return (
-    <StudentLayout>
-      <div className="container mx-auto px-4 py-6">
-        {isAdmin && (
-          <div className="flex justify-end mb-4">
-            <Button variant="outline" onClick={() => navigate('/admin/seed-standards')}>
-              Admin Dashboard
-            </Button>
-          </div>
-        )}
-        <h1 className="text-2xl font-bold mb-6">My Profile</h1>
+    <div className="container mx-auto px-4 py-6">
+      {isAdmin && (
+        <div className="flex justify-end mb-4">
+          <Button variant="outline" onClick={() => navigate('/admin/seed-standards')}>
+            Admin Dashboard
+          </Button>
+        </div>
+      )}
+      <h1 className="text-2xl font-bold mb-6">My Profile</h1>
 
         <Tabs defaultValue="profile" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3">
@@ -728,6 +726,5 @@ export default function StudentProfile() {
           </TabsContent>
         </Tabs>
       </div>
-    </StudentLayout>
   );
 }
