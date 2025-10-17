@@ -41,7 +41,7 @@ export default function FocusTools() {
   }, []);
   const handlePopOut = () => {
     const url = activeTab === 'pomodoro' ? '/pomodoro-popup' : `/duck-popup?studentId=${studentId}`;
-    const features = 'width=400,height=500,resizable=yes,alwaysRaised=yes';
+    const features = 'width=400,height=500,resizable=yes,location=no,menubar=no,toolbar=no,status=no';
     window.open(url, 'focusTimer', features);
   };
   return <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">

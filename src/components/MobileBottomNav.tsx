@@ -5,6 +5,11 @@ import { cn } from '@/lib/utils';
 export function MobileBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Hide on popup routes
+  if (location.pathname === '/pomodoro-popup' || location.pathname === '/duck-popup') {
+    return null;
+  }
 
   const isActive = (path: string) => location.pathname === path;
 
