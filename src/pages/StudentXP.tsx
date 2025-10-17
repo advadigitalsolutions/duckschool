@@ -3,10 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { XPDisplay } from '@/components/XPDisplay';
 import { useXP } from '@/hooks/useXP';
-import { BarChart3, TrendingUp, Award } from 'lucide-react';
+import { BarChart3, TrendingUp, Award, TrendingDown } from 'lucide-react';
 import { format, subDays } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 export default function StudentXP() {
+  const navigate = useNavigate();
   const [studentId, setStudentId] = useState<string | null>(null);
   const { totalXP, availableXP, weeklyXP, xpEvents, loading } = useXP(studentId || undefined);
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
@@ -134,21 +136,44 @@ export default function StudentXP() {
       <Card>
         <CardHeader>
           <CardTitle>Recent XP Events</CardTitle>
-          <CardDescription>Your latest XP earning activities</CardDescription>
+          <CardDescription>Your latest XP gains and losses</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {xpEvents.slice(0, 10).map((event) => (
-              <div key={event.id} className="flex items-center justify-between border-b pb-3">
-                <div>
-                  <p className="font-medium">{event.description}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(event.created_at), 'MMM d, yyyy h:mm a')}
-                  </p>
+            {xpEvents.slice(0, 20).map((event) => {
+              const isLoss = event.amount < 0;
+              const isClickable = event.reference_id && event.event_type === 'overdue_penalty';
+              
+              return (
+                <div 
+                  key={event.id} 
+                  className={`flex items-center justify-between border-b pb-3 ${
+                    isClickable ? 'cursor-pointer hover:bg-accent/50 rounded-md p-2 transition-colors' : ''
+                  }`}
+                  onClick={() => isClickable && navigate(`/assignment/${event.reference_id}`)}
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    {isLoss ? (
+                      <TrendingDown className="h-5 w-5 text-destructive flex-shrink-0" />
+                    ) : (
+                      <TrendingUp className="h-5 w-5 text-primary flex-shrink-0" />
+                    )}
+                    <div className="flex-1">
+                      <p className={`font-medium ${isLoss ? 'text-destructive' : ''}`}>
+                        {event.description}
+                        {isClickable && ' →'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(event.created_at), 'MMM d, yyyy h:mm a')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`text-lg font-bold ${isLoss ? 'text-destructive' : 'text-primary'} whitespace-nowrap ml-4`}>
+                    {isLoss ? '' : '+'}{event.amount} XP
+                  </div>
                 </div>
-                <div className="text-lg font-bold text-primary">+{event.amount} XP</div>
-              </div>
-            ))}
+              );
+            })}
             {xpEvents.length === 0 && (
               <p className="text-center text-muted-foreground py-8">
                 No XP events yet. Complete assignments to start earning!
