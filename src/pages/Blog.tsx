@@ -55,7 +55,7 @@ export default function Blog() {
               >
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="secondary">{post.category}</Badge>
+                    <Badge variant="yellow">{post.category}</Badge>
                     <span className="text-sm text-muted-foreground flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       {post.date}
