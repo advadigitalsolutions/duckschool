@@ -57,6 +57,10 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
   const hasReadings = content.reading_materials?.length > 0 || embeddedPassages.length > 0;
   const hasActivities = content.activities?.length > 0;
   const hasInstructions = content.instructions;
+  const hasProgressTracker = content.progress_tracker?.steps?.length > 0;
+  const hasEditingChecklist = content.self_editing_checklist?.steps?.length > 0;
+  const hasSubmissionInstructions = content.submission_instructions;
+  const hasSampleResponse = content.sample_student_response;
 
   return (
     <div className="space-y-4">
@@ -236,6 +240,155 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
               </CardContent>
             </CollapsibleContent>
           </Collapsible>
+        </Card>
+      )}
+
+      {/* Progress Tracker */}
+      {hasProgressTracker && (
+        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckSquare className="h-5 w-5 text-purple-600" />
+              {content.progress_tracker.title || "Your Progress"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {content.progress_tracker.steps.map((step: any, idx: number) => (
+                <div key={idx} className="flex items-start gap-3 text-sm">
+                  <span className="text-xl" role="img" aria-label={step.label}>{step.emoji}</span>
+                  <div>
+                    <span className="font-medium">Step {step.number}:</span> {step.label}
+                  </div>
+                </div>
+              ))}
+              {content.progress_tracker.note && (
+                <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">
+                  {content.progress_tracker.note}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Self-Editing Checklist */}
+      {hasEditingChecklist && (
+        <Card className="border-l-4 border-l-orange-500">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckSquare className="h-5 w-5 text-orange-500" />
+              {content.self_editing_checklist.title || "Self-Editing Checklist"}
+            </CardTitle>
+            {content.self_editing_checklist.instructions && (
+              <p className="text-sm text-muted-foreground mt-2">
+                {content.self_editing_checklist.instructions}
+              </p>
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {content.self_editing_checklist.steps.map((step: any) => (
+                <div key={step.number} className="flex items-start gap-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">
+                    {step.number}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium">{step.task}</p>
+                    {step.example && (
+                      <p className="text-xs text-muted-foreground italic">
+                        Example: {step.example}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {content.self_editing_checklist.success_note && (
+                <p className="text-xs text-orange-600 dark:text-orange-400 font-medium mt-3 pt-3 border-t">
+                  ✓ {content.self_editing_checklist.success_note}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Sample Student Response */}
+      {hasSampleResponse && (
+        <Card className="border-l-4 border-l-teal-500">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-teal-500" />
+              {content.sample_student_response.title || "Example Response"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-teal-50 dark:bg-teal-950/20 p-4 rounded-lg border border-teal-200 dark:border-teal-800">
+              <AssignmentContentRenderer 
+                content={content.sample_student_response.content}
+                className="text-sm whitespace-pre-wrap"
+              />
+            </div>
+            {content.sample_student_response.annotations && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  Why This Works:
+                </p>
+                {content.sample_student_response.annotations.map((annotation: string, idx: number) => (
+                  <p key={idx} className="text-xs text-muted-foreground pl-4 border-l-2 border-teal-300">
+                    {annotation}
+                  </p>
+                ))}
+              </div>
+            )}
+            {content.sample_student_response.why_it_works && (
+              <p className="text-sm text-muted-foreground bg-teal-50/50 dark:bg-teal-950/10 p-3 rounded border-l-2 border-teal-400">
+                {content.sample_student_response.why_it_works}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Submission Instructions */}
+      {hasSubmissionInstructions && (
+        <Card className="border-l-4 border-l-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/10">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-5 w-5 text-indigo-500" />
+              Submission Instructions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {content.submission_instructions.format_requirements && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Requirements:</p>
+                <ul className="text-sm space-y-1 pl-4">
+                  {content.submission_instructions.format_requirements.word_count && (
+                    <li>• Word count: {content.submission_instructions.format_requirements.word_count}</li>
+                  )}
+                  {content.submission_instructions.format_requirements.must_include?.map((req: string, idx: number) => (
+                    <li key={idx}>• {req}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {content.submission_instructions.before_you_submit && (
+              <div className="space-y-2 p-3 bg-white dark:bg-slate-900 rounded border">
+                <p className="text-sm font-semibold">Before You Submit:</p>
+                <div className="space-y-1">
+                  {content.submission_instructions.before_you_submit.map((item: string, idx: number) => (
+                    <p key={idx} className="text-xs text-muted-foreground">{item}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+            {content.submission_instructions.submission_note && (
+              <p className="text-xs text-muted-foreground italic">
+                {content.submission_instructions.submission_note}
+              </p>
+            )}
+          </CardContent>
         </Card>
       )}
 
