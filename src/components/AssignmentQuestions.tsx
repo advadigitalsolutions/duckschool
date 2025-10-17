@@ -50,7 +50,10 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
   
   const { config: xpConfig } = useXPConfig();
 
-  const questions: Question[] = assignment?.curriculum_items?.body?.questions || [];
+  const assignmentBody = typeof assignment?.curriculum_items?.body === 'string'
+    ? JSON.parse(assignment.curriculum_items.body)
+    : assignment?.curriculum_items?.body || {};
+  const questions: Question[] = assignmentBody.questions || [];
   const maxAttempts = assignment?.max_attempts;
 
   useEffect(() => {

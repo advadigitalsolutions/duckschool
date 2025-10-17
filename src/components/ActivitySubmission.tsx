@@ -49,7 +49,9 @@ export function ActivitySubmission({ assignment, studentId }: ActivitySubmission
 
   const { config: xpConfig } = useXPConfig();
 
-  const activityDetails = assignment?.curriculum_items?.body || {};
+  const activityDetails = typeof assignment?.curriculum_items?.body === 'string'
+    ? JSON.parse(assignment.curriculum_items.body)
+    : assignment?.curriculum_items?.body || {};
   const activityGoals = activityDetails.goals || {};
 
   useEffect(() => {

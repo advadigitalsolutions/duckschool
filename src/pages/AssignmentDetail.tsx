@@ -51,7 +51,9 @@ export default function AssignmentDetail() {
   // Pre-generate study guide in background when assignment loads
   useEffect(() => {
     if (assignment && !isParent) {
-      const content = assignment.curriculum_items?.body || {};
+      const content = typeof assignment.curriculum_items?.body === 'string'
+        ? JSON.parse(assignment.curriculum_items.body)
+        : assignment.curriculum_items?.body || {};
       const questions = content.questions || [];
       
       if (questions.length > 0) {
@@ -274,7 +276,9 @@ export default function AssignmentDetail() {
     );
   }
 
-  const content = assignment.curriculum_items?.body || {};
+  const content = typeof assignment.curriculum_items?.body === 'string'
+    ? JSON.parse(assignment.curriculum_items.body)
+    : assignment.curriculum_items?.body || {};
   const studentId = assignment.curriculum_items?.courses?.student_id;
 
   const handleBackNavigation = () => {

@@ -49,7 +49,9 @@ export function EditAssignmentDialog({ assignment, onAssignmentUpdated, trigger 
 
     try {
       // Update curriculum_items
-      const curriculumBody = assignment.curriculum_items?.body || {};
+      const curriculumBody = typeof assignment.curriculum_items?.body === 'string'
+        ? JSON.parse(assignment.curriculum_items.body)
+        : assignment.curriculum_items?.body || {};
       const { error: curriculumError } = await supabase
         .from('curriculum_items')
         .update({

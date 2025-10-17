@@ -41,7 +41,9 @@ interface Artifact {
 }
 
 export function ProjectModuleSubmission({ assignment, studentId }: ProjectModuleSubmissionProps) {
-  const content = assignment?.curriculum_items?.body || {};
+  const content = typeof assignment?.curriculum_items?.body === 'string'
+    ? JSON.parse(assignment.curriculum_items.body)
+    : assignment?.curriculum_items?.body || {};
   const modules: ProjectModule[] = content.modules || [];
   const currentModuleIndex = 0; // TODO: Track which module student is on
   const currentModule = modules[currentModuleIndex];
