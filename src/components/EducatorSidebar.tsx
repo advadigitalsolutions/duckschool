@@ -7,7 +7,6 @@ import {
   BookOpen,
   Calendar,
   BarChart3,
-  Settings,
   ChevronDown,
   GraduationCap,
   Sparkles,
@@ -248,21 +247,6 @@ export function EducatorSidebar() {
               </SidebarGroupContent>
             </CollapsibleContent>
           </Collapsible>
-        </SidebarGroup>
-
-        {/* Settings */}
-        <SidebarGroup>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => navigate('/parent/profile')}
-                className={isActive('/parent/profile') ? 'bg-accent text-accent-foreground' : ''}
-              >
-                <Settings className="h-4 w-4" />
-                {state !== "collapsed" && <span>Settings</span>}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
         </SidebarGroup>
 
       </SidebarContent>

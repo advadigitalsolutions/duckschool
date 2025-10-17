@@ -8,7 +8,6 @@ import {
   Trophy,
   Target,
   Timer,
-  Settings,
   ChevronDown,
   Plus,
   GraduationCap,
@@ -266,35 +265,6 @@ export function StudentSidebar() {
                     >
                       <Activity className="h-4 w-4" />
                       {state !== "collapsed" && <span>Session Stats</span>}
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </SidebarGroup>
-
-        {/* Settings */}
-        <SidebarGroup>
-          <Collapsible>
-            <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="w-full flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  {state !== "collapsed" && <span>Settings</span>}
-                </div>
-                {state !== "collapsed" && <ChevronDown className="h-4 w-4" />}
-              </CollapsibleTrigger>
-            </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      onClick={() => navigate('/student/profile')}
-                      className={isActive('/student/profile') ? 'bg-accent text-accent-foreground' : ''}
-                    >
-                      {state !== "collapsed" && <span>Profile</span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                 </SidebarMenuSub>
