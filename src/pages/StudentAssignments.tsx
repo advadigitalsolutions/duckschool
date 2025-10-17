@@ -10,10 +10,12 @@ import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { useOverdueXPPenalty } from '@/hooks/useOverdueXPPenalty';
 
 export default function StudentAssignments() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [studentId, setStudentId] = useState<string | null>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [filteredAssignments, setFilteredAssignments] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,6 +27,17 @@ export default function StudentAssignments() {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+
+  // Get overdue assignments (assigned status, not submitted, past due date)
+  const overdueAssignments = assignments.filter(a => 
+    a.status === 'assigned' && 
+    (!a.submissions || a.submissions.length === 0) &&
+    a.due_at && 
+    new Date(a.due_at) < new Date()
+  );
+
+  // Apply XP penalties for overdue assignments
+  useOverdueXPPenalty(studentId, overdueAssignments);
 
   useEffect(() => {
     fetchAssignments();
@@ -66,6 +79,7 @@ export default function StudentAssignments() {
       }
 
       console.log('[StudentAssignments] Student ID:', studentData.id);
+      setStudentId(studentData.id);
 
       // Get all courses for this student
       const { data: coursesData, error: coursesError } = await supabase
