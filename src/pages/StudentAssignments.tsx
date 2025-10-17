@@ -17,7 +17,7 @@ export default function StudentAssignments() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [filteredAssignments, setFilteredAssignments] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'date_assigned' | 'due_date' | 'course' | 'grade' | 'status'>('due_date');
+  const [sortBy, setSortBy] = useState<'date_assigned' | 'due_date' | 'course' | 'grade'>('due_date');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterCourse, setFilterCourse] = useState<string>('all');
   const [courses, setCourses] = useState<any[]>([]);
@@ -200,6 +200,14 @@ export default function StudentAssignments() {
       filtered = filtered.filter(a => a.curriculum_items?.courses?.id === filterCourse);
     }
 
+    // For grade sorting, only show graded or submitted assignments
+    if (sortBy === 'grade') {
+      filtered = filtered.filter(a => 
+        (a.grades && a.grades.length > 0) || 
+        (a.submissions && a.submissions.length > 0)
+      );
+    }
+
     // Apply sorting
     filtered.sort((a, b) => {
       switch (sortBy) {
@@ -225,13 +233,18 @@ export default function StudentAssignments() {
           if (!b.due_at) return -1;
           return new Date(a.due_at).getTime() - new Date(b.due_at).getTime();
         case 'course':
-          return (a.curriculum_items?.courses?.title || '').localeCompare(b.curriculum_items?.courses?.title || '');
+          // Sort by course name alphabetically, then by due date within course
+          const courseCompare = (a.curriculum_items?.courses?.title || '').localeCompare(b.curriculum_items?.courses?.title || '');
+          if (courseCompare !== 0) return courseCompare;
+          
+          // Within same course, sort by due date (soonest first)
+          if (!a.due_at) return 1;
+          if (!b.due_at) return -1;
+          return new Date(a.due_at).getTime() - new Date(b.due_at).getTime();
         case 'grade':
           const gradeA = a.grades?.[0]?.score || 0;
           const gradeB = b.grades?.[0]?.score || 0;
           return gradeB - gradeA;
-        case 'status':
-          return a.status.localeCompare(b.status);
         default:
           return 0;
       }
@@ -397,7 +410,6 @@ export default function StudentAssignments() {
                 <SelectItem value="date_assigned">Date Assigned</SelectItem>
                 <SelectItem value="course">Course</SelectItem>
                 <SelectItem value="grade">Grade</SelectItem>
-                <SelectItem value="status">Status</SelectItem>
               </SelectContent>
             </Select>
 
@@ -439,7 +451,69 @@ export default function StudentAssignments() {
               <p className="text-muted-foreground">No assignments found matching your filters.</p>
             </CardContent>
           </Card>
+        ) : sortBy === 'course' ? (
+          // Group by course when sorting by course
+          (() => {
+            const courseGroups = filteredAssignments.reduce((groups: any, assignment) => {
+              const courseTitle = assignment.curriculum_items?.courses?.title || 'No Course';
+              if (!groups[courseTitle]) {
+                groups[courseTitle] = [];
+              }
+              groups[courseTitle].push(assignment);
+              return groups;
+            }, {});
+
+            return Object.keys(courseGroups).sort().map(courseTitle => (
+              <div key={courseTitle} className="space-y-3">
+                <div className="flex items-center gap-3 mt-6 mb-4">
+                  <GraduationCap className="h-6 w-6 text-primary" />
+                  <h2 className="text-2xl font-bold">{courseTitle}</h2>
+                </div>
+                
+                {courseGroups[courseTitle].map((assignment: any) => (
+                  <Card 
+                    key={assignment.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/assignment/${assignment.id}`)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-xl mb-2">
+                            {assignment.curriculum_items?.title}
+                          </CardTitle>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            {assignment.assigned_date && (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Assigned: {new Date(assignment.assigned_date).toLocaleDateString()}
+                              </div>
+                            )}
+                            {assignment.due_at && (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Due: {new Date(assignment.due_at).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          {getStatusBadge(assignment)}
+                          {assignment.grades?.[0] && (
+                            <div className="text-sm font-medium">
+                              {assignment.grades[0].score}/{assignment.grades[0].max_score}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            ));
+          })()
         ) : (
+          // Default rendering for other sort options
           filteredAssignments.map((assignment, index) => {
             // Determine if we need a separator (only when sorting by due_date)
             let showSeparator = false;
