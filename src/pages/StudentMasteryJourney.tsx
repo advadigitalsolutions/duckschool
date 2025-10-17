@@ -6,26 +6,23 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sparkles, TrendingUp, Target, Award, Brain, Zap } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-
 export default function StudentMasteryJourney() {
   const [studentId, setStudentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchStudentId();
   }, []);
-
   const fetchStudentId = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { data: studentData } = await supabase
-        .from('students')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: studentData
+      } = await supabase.from('students').select('id').eq('user_id', user.id).single();
       if (studentData) {
         setStudentId(studentData.id);
       }
@@ -37,80 +34,76 @@ export default function StudentMasteryJourney() {
   };
 
   // Fetch mastery data
-  const { data: masteryData } = useQuery({
+  const {
+    data: masteryData
+  } = useQuery({
     queryKey: ['mastery-summary', studentId],
     queryFn: async () => {
       if (!studentId) return null;
-      const { data } = await supabase
-        .from('course_mastery_summary')
-        .select(`
+      const {
+        data
+      } = await supabase.from('course_mastery_summary').select(`
           *,
           courses (
             title,
             subject
           )
-        `)
-        .eq('student_id', studentId);
+        `).eq('student_id', studentId);
       return data;
     },
-    enabled: !!studentId,
+    enabled: !!studentId
   });
 
   // Fetch growth opportunities (weak standards)
-  const { data: growthOpportunities } = useQuery({
+  const {
+    data: growthOpportunities
+  } = useQuery({
     queryKey: ['growth-opportunities', studentId],
     queryFn: async () => {
       if (!studentId) return null;
-      const { data } = await supabase
-        .from('standard_mastery')
-        .select('*')
-        .eq('student_id', studentId)
-        .lt('mastery_level', 60)
-        .order('last_attempted_at', { ascending: false })
-        .limit(8);
+      const {
+        data
+      } = await supabase.from('standard_mastery').select('*').eq('student_id', studentId).lt('mastery_level', 60).order('last_attempted_at', {
+        ascending: false
+      }).limit(8);
       return data;
     },
-    enabled: !!studentId,
+    enabled: !!studentId
   });
 
   // Fetch badges
-  const { data: badges } = useQuery({
+  const {
+    data: badges
+  } = useQuery({
     queryKey: ['badges', studentId],
     queryFn: async () => {
       if (!studentId) return null;
-      const { data } = await supabase
-        .from('student_badges')
-        .select('*')
-        .eq('student_id', studentId)
-        .order('earned_at', { ascending: false });
+      const {
+        data
+      } = await supabase.from('student_badges').select('*').eq('student_id', studentId).order('earned_at', {
+        ascending: false
+      });
       return data;
     },
-    enabled: !!studentId,
+    enabled: !!studentId
   });
 
   // Calculate overall progress
   const overallMastery = masteryData?.reduce((acc, course) => {
     return acc + (course.overall_mastery_percentage || 0);
   }, 0) / (masteryData?.length || 1);
-
   const totalStandardsMastered = masteryData?.reduce((acc, course) => {
     return acc + (course.standards_mastered || 0);
   }, 0) || 0;
-
   const totalStandards = masteryData?.reduce((acc, course) => {
     return acc + (course.total_standards || 0);
   }, 0) || 0;
-
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
+    return <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="container mx-auto p-4 md:p-8 space-y-8">
+  return <div className="container mx-auto p-4 md:p-8 space-y-8">
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-primary/20 via-accent/10 to-background border border-primary/20 p-8">
         <div className="relative z-10">
@@ -118,10 +111,7 @@ export default function StudentMasteryJourney() {
             <Sparkles className="h-10 w-10 text-primary" />
             <h1 className="text-4xl font-bold">Your Mastery Journey</h1>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Every challenge you take helps us understand how you learn best. The more gaps we discover, 
-            the better we can tailor your learning experience. You're not being tested—you're being understood.
-          </p>
+          <p className="text-lg text-muted-foreground max-w-2xl">Every challenge you take helps us understand how you learn best. The more gaps we discover, the better we can tailor your learning experience. You're not being tested. You're being understood.</p>
         </div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
       </div>
@@ -138,7 +128,7 @@ export default function StudentMasteryJourney() {
             <p className="text-xs text-muted-foreground mt-1">
               out of {totalStandards} total
             </p>
-            <Progress value={(totalStandardsMastered / totalStandards) * 100} className="mt-3" />
+            <Progress value={totalStandardsMastered / totalStandards * 100} className="mt-3" />
           </CardContent>
         </Card>
 
@@ -198,12 +188,7 @@ export default function StudentMasteryJourney() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {growthOpportunities && growthOpportunities.length > 0 ? (
-                growthOpportunities.map((opportunity) => (
-                  <div
-                    key={opportunity.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors"
-                  >
+              {growthOpportunities && growthOpportunities.length > 0 ? growthOpportunities.map(opportunity => <div key={opportunity.id} className="flex items-center justify-between p-4 rounded-lg border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors">
                     <div className="flex-1">
                       <div className="font-medium">{opportunity.standard_code}</div>
                       <div className="text-sm text-muted-foreground">
@@ -221,22 +206,16 @@ export default function StudentMasteryJourney() {
                         🌱 Growing
                       </Badge>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
+                  </div>) : <div className="text-center py-8 text-muted-foreground">
                   <Target className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>Great work! Take some assessments to discover new growth opportunities.</p>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="mastery" className="space-y-4">
-          {masteryData && masteryData.length > 0 ? (
-            masteryData.map((course) => (
-              <Card key={course.id}>
+          {masteryData && masteryData.length > 0 ? masteryData.map(course => <Card key={course.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
@@ -266,16 +245,12 @@ export default function StudentMasteryJourney() {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Card>
+              </Card>) : <Card>
               <CardContent className="text-center py-12">
                 <Zap className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p className="text-muted-foreground">Start your courses to see your mastery progress!</p>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </TabsContent>
 
         <TabsContent value="badges" className="space-y-4">
@@ -290,13 +265,8 @@ export default function StudentMasteryJourney() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {badges && badges.length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {badges.map((badge) => (
-                    <div
-                      key={badge.id}
-                      className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
-                    >
+              {badges && badges.length > 0 ? <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {badges.map(badge => <div key={badge.id} className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors">
                       <div className="text-3xl">{badge.icon}</div>
                       <div className="flex-1">
                         <div className="font-medium">{badge.badge_name}</div>
@@ -305,19 +275,14 @@ export default function StudentMasteryJourney() {
                           {new Date(badge.earned_at).toLocaleDateString()}
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
+                    </div>)}
+                </div> : <div className="text-center py-8 text-muted-foreground">
                   <Award className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>Complete assessments to earn your first achievement badge!</p>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 }
