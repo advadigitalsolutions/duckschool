@@ -202,12 +202,15 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
       <div className="flex flex-col items-center justify-center min-h-[80vh] gap-8">
         {/* Duck walking along progress */}
         <div className="relative w-full max-w-md">
+          <div className="pt-6">
+            <Progress value={progress} className="h-3" />
+          </div>
           <div 
             className="absolute transition-all duration-1000 ease-out"
             style={{ 
               left: `${Math.min(progress, 95)}%`,
               transform: 'translateX(-50%)',
-              top: '-40px'
+              bottom: '0px'
             }}
           >
             <FocusJourneyDuck
@@ -215,9 +218,6 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
               onAnimationComplete={() => {}}
               onStateChange={() => {}}
             />
-          </div>
-          <div className="pt-8">
-            <Progress value={progress} className="h-3" />
           </div>
         </div>
 
@@ -295,21 +295,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
         {/* Duck and Progress */}
         <div className="relative w-full max-w-2xl">
           <div className="relative">
-            <div 
-              className="absolute transition-all duration-1000 ease-out z-10"
-              style={{ 
-                left: `${Math.min(progress, 95)}%`,
-                transform: 'translateX(-50%)',
-                top: '-40px'
-              }}
-            >
-              <FocusJourneyDuck
-                animationState={duckState === 'celebrating' ? 'celebrating' : isActive ? 'walking' : 'idle'}
-                onAnimationComplete={() => {}}
-                onStateChange={() => {}}
-              />
-            </div>
-            <div className="pt-8 space-y-3">
+            <div className="pt-6 space-y-3">
               <Progress 
                 value={progress} 
                 className="h-4"
@@ -319,6 +305,20 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
                 <span className="text-muted-foreground">Progress</span>
                 <span className="font-mono font-semibold">{Math.round(progress)}%</span>
               </div>
+            </div>
+            <div 
+              className="absolute transition-all duration-1000 ease-out z-10"
+              style={{ 
+                left: `${Math.min(progress, 95)}%`,
+                transform: 'translateX(-50%)',
+                top: '0px'
+              }}
+            >
+              <FocusJourneyDuck
+                animationState={duckState === 'celebrating' ? 'celebrating' : isActive ? 'walking' : 'idle'}
+                onAnimationComplete={() => {}}
+                onStateChange={() => {}}
+              />
             </div>
           </div>
         </div>
