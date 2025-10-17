@@ -1550,6 +1550,7 @@ export type Database = {
           description: string | null
           emoji: string | null
           id: string
+          metadata: Json | null
           parent_id: string
           requires_approval: boolean | null
           title: string
@@ -1561,6 +1562,7 @@ export type Database = {
           description?: string | null
           emoji?: string | null
           id?: string
+          metadata?: Json | null
           parent_id: string
           requires_approval?: boolean | null
           title: string
@@ -1572,6 +1574,7 @@ export type Database = {
           description?: string | null
           emoji?: string | null
           id?: string
+          metadata?: Json | null
           parent_id?: string
           requires_approval?: boolean | null
           title?: string
@@ -1952,6 +1955,7 @@ export type Database = {
           display_name: string | null
           dob: string | null
           dyslexia_font_enabled: boolean | null
+          focus_duck_cosmetics: Json | null
           focus_mode_enabled: boolean | null
           focus_mode_glow_color: string | null
           focus_mode_glow_intensity: number | null
@@ -1987,6 +1991,7 @@ export type Database = {
           display_name?: string | null
           dob?: string | null
           dyslexia_font_enabled?: boolean | null
+          focus_duck_cosmetics?: Json | null
           focus_mode_enabled?: boolean | null
           focus_mode_glow_color?: string | null
           focus_mode_glow_intensity?: number | null
@@ -2022,6 +2027,7 @@ export type Database = {
           display_name?: string | null
           dob?: string | null
           dyslexia_font_enabled?: boolean | null
+          focus_duck_cosmetics?: Json | null
           focus_mode_enabled?: boolean | null
           focus_mode_glow_color?: string | null
           focus_mode_glow_intensity?: number | null

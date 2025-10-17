@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Gift } from 'lucide-react';
+import { Plus, Pencil, Trash2, Gift, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -31,6 +31,7 @@ interface Reward {
 export function RewardsManagement() {
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loading, setLoading] = useState(true);
+  const [setupLoading, setSetupLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReward, setEditingReward] = useState<Reward | null>(null);
   const [formData, setFormData] = useState({
@@ -64,6 +65,26 @@ export function RewardsManagement() {
       toast.error('Failed to load rewards');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const setupStarterRewards = async () => {
+    try {
+      setSetupLoading(true);
+      const { data, error } = await supabase.functions.invoke('setup-starter-rewards');
+
+      if (error) throw error;
+
+      toast.success('Starter rewards added!', {
+        description: `Added ${data.count} starter rewards to get you started`,
+      });
+
+      fetchRewards();
+    } catch (error) {
+      console.error('Error setting up starter rewards:', error);
+      toast.error('Failed to setup starter rewards');
+    } finally {
+      setSetupLoading(false);
     }
   };
 
@@ -154,8 +175,20 @@ export function RewardsManagement() {
             </CardTitle>
             <CardDescription>Create rewards students can redeem with their XP</CardDescription>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
+          <div className="flex gap-2">
+            {rewards.length === 0 && (
+              <Button 
+                variant="outline" 
+                className="gap-2" 
+                onClick={setupStarterRewards}
+                disabled={setupLoading}
+              >
+                <Sparkles className="h-4 w-4" />
+                Auto-Setup Starter Rewards
+              </Button>
+            )}
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+              <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
                 Add Reward
@@ -257,6 +290,7 @@ export function RewardsManagement() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

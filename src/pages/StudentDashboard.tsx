@@ -12,6 +12,7 @@ import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { PomodoroProvider } from '@/contexts/PomodoroContext';
 import { DemoWizard } from '@/components/DemoWizard';
 import { ProfileSettingsModal } from '@/components/ProfileSettingsModal';
+import { useAutoXPRewards } from '@/hooks/useAutoXPRewards';
 
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,9 @@ export default function StudentDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileModalTab, setProfileModalTab] = useState<'profile' | 'accessibility' | 'assessment'>('profile');
   const navigate = useNavigate();
+  
+  // Enable automatic XP rewards
+  useAutoXPRewards({ studentId: studentDbId, enabled: true });
   
   const getDefaultHeaderSettings = () => ({
     showName: true,

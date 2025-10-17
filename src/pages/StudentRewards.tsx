@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RewardsShop } from '@/components/RewardsShop';
+import { FocusDuckCosmetics } from '@/components/FocusDuckCosmetics';
 import { Gift, ShoppingBag } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -64,6 +65,9 @@ export default function StudentRewards() {
 
       {/* Rewards Shop */}
       <RewardsShop studentId={studentId || undefined} />
+
+      {/* Focus Duck Cosmetics */}
+      {studentId && <FocusDuckCosmetics studentId={studentId} />}
 
       {/* Redemption History */}
       <Card>
