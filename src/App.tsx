@@ -29,6 +29,16 @@ import BusyFamilies from "./pages/blog/BusyFamilies";
 import MostAutomated from "./pages/blog/MostAutomated";
 import StateStandards from "./pages/blog/StateStandards";
 import PublicSchoolSupplement from "./pages/blog/PublicSchoolSupplement";
+import DataDrivenCurriculum from "./pages/blog/DataDrivenCurriculum";
+import BridgingLearningGaps from "./pages/blog/BridgingLearningGaps";
+import MasteryBasedLearning from "./pages/blog/MasteryBasedLearning";
+import MultipleChildren from "./pages/blog/MultipleChildren";
+import LearningDifferences from "./pages/blog/LearningDifferences";
+import IndependentLearners from "./pages/blog/IndependentLearners";
+import AIPersonalization from "./pages/blog/AIPersonalization";
+import RigorAndWellBeing from "./pages/blog/RigorAndWellBeing";
+import PortfolioAssessment from "./pages/blog/PortfolioAssessment";
+import ProjectBasedLearning from "./pages/blog/ProjectBasedLearning";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Waitlist from "./pages/Waitlist";
@@ -225,6 +235,16 @@ const App = () => (
                       <Route path="/blog/most-automated" element={<MostAutomated />} />
                       <Route path="/blog/state-standards" element={<StateStandards />} />
                       <Route path="/blog/public-school-supplement" element={<PublicSchoolSupplement />} />
+                      <Route path="/blog/data-driven-curriculum" element={<DataDrivenCurriculum />} />
+                      <Route path="/blog/bridging-learning-gaps" element={<BridgingLearningGaps />} />
+                      <Route path="/blog/mastery-based-learning" element={<MasteryBasedLearning />} />
+                      <Route path="/blog/multiple-children" element={<MultipleChildren />} />
+                      <Route path="/blog/learning-differences" element={<LearningDifferences />} />
+                      <Route path="/blog/independent-learners" element={<IndependentLearners />} />
+                      <Route path="/blog/ai-personalization" element={<AIPersonalization />} />
+                      <Route path="/blog/rigor-and-wellbeing" element={<RigorAndWellBeing />} />
+                      <Route path="/blog/portfolio-assessment" element={<PortfolioAssessment />} />
+                      <Route path="/blog/project-based-learning" element={<ProjectBasedLearning />} />
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/waitlist" element={<Waitlist />} />
                       <Route path="/dashboard" element={<Index />} />
