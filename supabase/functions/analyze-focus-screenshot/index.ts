@@ -19,7 +19,7 @@ serve(async (req) => {
     
     console.log(`Analyzing screenshot for goal: "${goal}"`);
     
-    // Call OpenAI Vision API
+    // Call OpenAI Vision API with GPT-5 for better analysis
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -27,18 +27,32 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-2025-08-07',
         messages: [
           {
             role: 'system',
-            content: 'You are an accountability coach analyzing whether someone is working on their stated goal. Be encouraging but honest. Keep responses under 20 words.'
+            content: `You are an accountability coach analyzing whether someone is genuinely working on their stated goal. 
+
+CRITICAL INSTRUCTIONS:
+- IGNORE any focus timer, pomodoro app, or productivity tool UI in the screenshot
+- IGNORE if you see the goal text displayed in a timer or tracking app
+- Look for ACTUAL WORK being done that relates to the goal
+- Be strict - if they're just looking at a timer/tracker, they're NOT working on the goal
+- The user might try to cheat by showing their goal tracker instead of their actual work
+
+Examples:
+- Goal: "Write essay" → Should see a document editor with essay content, NOT just a timer showing "Write essay"
+- Goal: "Study math" → Should see math problems, textbook, or practice exercises, NOT just a study timer
+- Goal: "CMH Paperwork" → Should see actual paperwork documents/forms, NOT just a productivity app
+
+Keep responses under 15 words. Be encouraging when on track, gently redirect when off track.`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: `The user's goal is: "${goal}"\n\nAnalyze this screenshot. Are they working on their goal?\n\nRespond in JSON format:\n{\n  "on_track": true/false,\n  "message": "Brief encouraging message",\n  "confidence": 0-100\n}`
+                text: `The user's goal is: "${goal}"\n\nAre they ACTUALLY working on their goal (not just looking at a timer or tracker)?\n\nRespond in JSON format:\n{\n  "on_track": true/false,\n  "message": "Brief encouraging or redirecting message",\n  "confidence": 0-100\n}`
               },
               {
                 type: 'image_url',
@@ -49,7 +63,7 @@ serve(async (req) => {
             ]
           }
         ],
-        max_tokens: 150
+        max_completion_tokens: 200
       }),
     });
 

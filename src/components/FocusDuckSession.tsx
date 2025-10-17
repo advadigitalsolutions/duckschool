@@ -91,30 +91,13 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
 
   const captureAndAnalyze = async () => {
     try {
-      // If we don't have consent or stream yet, request it
+      // If we somehow still don't have the stream (shouldn't happen), throw error
       if (!hasScreenCaptureConsent || !screenCaptureStream) {
-        console.log('📸 Requesting screen capture consent...');
-        try {
-          const stream = await requestScreenCaptureStream();
-          setScreenCaptureStream(stream);
-          setHasScreenCaptureConsent(true);
-          
-          // Monitor if user stops sharing
-          stream.getVideoTracks()[0].addEventListener('ended', () => {
-            console.log('📸 User stopped screen sharing');
-            setScreenCaptureStream(null);
-            setHasScreenCaptureConsent(false);
-            toast.error('Screen sharing stopped. Accountability checks paused.');
-          });
-        } catch (error) {
-          console.error('❌ Failed to get screen capture consent:', error);
-          toast.error('Screen sharing permission denied. Accountability checks will not work.');
-          throw error;
-        }
+        throw new Error('Screen sharing not available');
       }
 
       console.log('📸 Capturing screenshot from stream...');
-      const screenshot = await captureFromStream(screenCaptureStream!);
+      const screenshot = await captureFromStream(screenCaptureStream);
       
       // Get penalty setting from localStorage
       const settings = JSON.parse(localStorage.getItem('focusDuckSettings') || '{}');
@@ -179,11 +162,35 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     return () => clearInterval(interval);
   }, [isActive, sessionId, endSession]);
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (!goal.trim()) return;
     
     if (!sessionId) {
       createSession();
+    }
+    
+    // Request screen capture consent BEFORE starting if accountability is enabled
+    if (accountabilityEnabled && !hasScreenCaptureConsent) {
+      console.log('🦆 Accountability mode enabled - requesting screen capture consent...');
+      try {
+        const stream = await requestScreenCaptureStream();
+        setScreenCaptureStream(stream);
+        setHasScreenCaptureConsent(true);
+        
+        // Monitor if user stops sharing
+        stream.getVideoTracks()[0].addEventListener('ended', () => {
+          console.log('📸 User stopped screen sharing');
+          setScreenCaptureStream(null);
+          setHasScreenCaptureConsent(false);
+          toast.error('Screen sharing stopped. Accountability checks paused.');
+        });
+        
+        toast.success('Screen sharing enabled for accountability checks');
+      } catch (error) {
+        console.error('❌ Failed to get screen capture consent:', error);
+        toast.error('Screen sharing permission denied. Accountability checks will not work.');
+        // Continue with session even if screen capture fails
+      }
     }
     
     setIsActive(true);
@@ -191,7 +198,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     
     // Start accountability check cycle if enabled
     if (accountabilityEnabled) {
-      console.log('🦆 Accountability mode enabled - starting check cycle');
+      console.log('🦆 Starting accountability check cycle');
       scheduleNextCheck();
     } else {
       console.log('🦆 Accountability mode disabled');
@@ -325,7 +332,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
                 </div>
                 
                 <p className="text-xs text-muted-foreground">
-                  Clicking "Yes" will share your screen once per session for accountability checks
+                  Screen sharing was enabled at session start. Clicking "Yes" will capture your screen for analysis.
                 </p>
               </div>
             </Card>
