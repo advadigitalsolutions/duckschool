@@ -15,7 +15,6 @@ import { ProfileSettingsModal } from '@/components/ProfileSettingsModal';
 import { useAutoXPRewards } from '@/hooks/useAutoXPRewards';
 import { ExcitingAgendaButton } from '@/components/ExcitingAgendaButton';
 import { DuckCatchingGame } from '@/components/DuckCatchingGame';
-
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<any>(null);
@@ -30,10 +29,12 @@ export default function StudentDashboard() {
   const [profileModalTab, setProfileModalTab] = useState<'profile' | 'accessibility' | 'assessment'>('profile');
   const [todaysChores, setTodaysChores] = useState<any[]>([]);
   const navigate = useNavigate();
-  
+
   // Enable automatic XP rewards
-  useAutoXPRewards({ studentId: studentDbId, enabled: true });
-  
+  useAutoXPRewards({
+    studentId: studentDbId,
+    enabled: true
+  });
   const getDefaultHeaderSettings = () => ({
     showName: true,
     customName: null,
@@ -71,7 +72,6 @@ export default function StudentDashboard() {
     cloudColor: 'rgba(255, 255, 255, 0.15)',
     headerVisibility: 'sticky' as const
   });
-
   const saveHeaderSettings = async (newSettings: any) => {
     try {
       const settingsToSave = {
@@ -81,7 +81,9 @@ export default function StudentDashboard() {
           date: countdown.date instanceof Date ? countdown.date.toISOString() : countdown.date
         })) || []
       };
-      const { error } = await supabase.from('students').update({
+      const {
+        error
+      } = await supabase.from('students').update({
         header_settings: settingsToSave
       }).eq('id', student?.id);
       if (error) throw error;
@@ -91,7 +93,6 @@ export default function StudentDashboard() {
       toast.error('Failed to save header settings');
     }
   };
-
   useEffect(() => {
     // Listen for profile modal open events
     const handleOpenProfileModal = (event: any) => {
@@ -99,25 +100,29 @@ export default function StudentDashboard() {
       setProfileModalTab(tab);
       setShowProfileModal(true);
     };
-    
     window.addEventListener('openProfileModal', handleOpenProfileModal);
     return () => window.removeEventListener('openProfileModal', handleOpenProfileModal);
   }, []);
-
   useEffect(() => {
     checkRoleAndFetch();
   }, []);
-
   const checkRoleAndFetch = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         return;
       }
-
-      const { data: roleData } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
+      const {
+        data: roleData
+      } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
       if (roleData?.role === 'parent') {
-        navigate('/parent', { replace: true });
+        navigate('/parent', {
+          replace: true
+        });
         return;
       }
       fetchStudentData();
@@ -126,22 +131,21 @@ export default function StudentDashboard() {
       fetchStudentData();
     }
   };
-
   const fetchStudentData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { data: studentData, error: studentError } = await supabase
-        .from('students')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
+      const {
+        data: studentData,
+        error: studentError
+      } = await supabase.from('students').select('*').eq('user_id', user.id).maybeSingle();
       if (studentData) {
         setStudent(studentData);
         setStudentDbId(studentData.id);
-
         const loadedSettings = studentData.header_settings && typeof studentData.header_settings === 'object' && !Array.isArray(studentData.header_settings) ? studentData.header_settings as any : getDefaultHeaderSettings();
         const finalSettings = {
           ...getDefaultHeaderSettings(),
@@ -155,17 +159,17 @@ export default function StudentDashboard() {
         };
         setHeaderSettings(finalSettings);
       } else {
-        navigate('/parent', { replace: true });
+        navigate('/parent', {
+          replace: true
+        });
         return;
       }
 
       // Calculate completed today
       const today = new Date().toISOString().split('T')[0];
-      const { data: completedData } = await supabase
-        .from('submissions')
-        .select('id')
-        .eq('student_id', studentData?.id)
-        .gte('submitted_at', new Date(today).toISOString());
+      const {
+        data: completedData
+      } = await supabase.from('submissions').select('id').eq('student_id', studentData?.id).gte('submitted_at', new Date(today).toISOString());
       setCompletedToday(completedData?.length || 0);
 
       // Calculate streak
@@ -173,7 +177,7 @@ export default function StudentDashboard() {
 
       // Fetch daily goals
       await fetchDailyGoals(studentData?.id);
-      
+
       // Fetch today's chores
       await fetchTodaysChores(studentData?.id);
     } catch (error: any) {
@@ -182,54 +186,43 @@ export default function StudentDashboard() {
       setLoading(false);
     }
   };
-
   const fetchTodaysChores = async (studentId: string) => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
-        .from('chore_assignments')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('chore_assignments').select(`
           *,
           chores (*)
-        `)
-        .eq('student_id', studentId)
-        .eq('assigned_date', today)
-        .eq('status', 'pending');
-      
+        `).eq('student_id', studentId).eq('assigned_date', today).eq('status', 'pending');
       if (error) throw error;
       setTodaysChores(data || []);
     } catch (error) {
       console.error('Error fetching todays chores:', error);
     }
   };
-
   const calculateStreak = async (studentId: string) => {
     try {
-      const { data: submissions } = await supabase
-        .from('submissions')
-        .select('submitted_at')
-        .eq('student_id', studentId)
-        .order('submitted_at', { ascending: false });
-
+      const {
+        data: submissions
+      } = await supabase.from('submissions').select('submitted_at').eq('student_id', studentId).order('submitted_at', {
+        ascending: false
+      });
       if (!submissions || submissions.length === 0) {
         setStreak(0);
         return;
       }
-
       const submissionDates = new Set(submissions.map(s => new Date(s.submitted_at).toISOString().split('T')[0]));
-
       let currentStreak = 0;
       let checkDate = new Date();
-
       const today = checkDate.toISOString().split('T')[0];
       checkDate.setDate(checkDate.getDate() - 1);
       const yesterday = checkDate.toISOString().split('T')[0];
-      
       if (!submissionDates.has(today) && !submissionDates.has(yesterday)) {
         setStreak(0);
         return;
       }
-
       checkDate = new Date();
       while (true) {
         const dateStr = checkDate.toISOString().split('T')[0];
@@ -248,27 +241,27 @@ export default function StudentDashboard() {
       setStreak(0);
     }
   };
-
   const fetchDailyGoals = async (studentId: string) => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
-        .from('daily_goals')
-        .select('*')
-        .eq('student_id', studentId)
-        .eq('date', today)
-        .order('created_at', { ascending: true });
+      const {
+        data,
+        error
+      } = await supabase.from('daily_goals').select('*').eq('student_id', studentId).eq('date', today).order('created_at', {
+        ascending: true
+      });
       if (error) throw error;
       setDailyGoals(data || []);
     } catch (error) {
       console.error('Error fetching daily goals:', error);
     }
   };
-
   const addDailyGoal = async () => {
     if (!newGoalText.trim()) return;
     try {
-      const { error } = await supabase.from('daily_goals').insert({
+      const {
+        error
+      } = await supabase.from('daily_goals').insert({
         student_id: student.id,
         goal_text: newGoalText.trim(),
         date: new Date().toISOString().split('T')[0]
@@ -282,10 +275,13 @@ export default function StudentDashboard() {
       toast.error('Failed to add goal');
     }
   };
-
   const toggleGoalComplete = async (goalId: string, completed: boolean) => {
     try {
-      const { error } = await supabase.from('daily_goals').update({ completed }).eq('id', goalId);
+      const {
+        error
+      } = await supabase.from('daily_goals').update({
+        completed
+      }).eq('id', goalId);
       if (error) throw error;
       await fetchDailyGoals(student.id);
     } catch (error) {
@@ -293,10 +289,11 @@ export default function StudentDashboard() {
       toast.error('Failed to update goal');
     }
   };
-
   const deleteGoal = async (goalId: string) => {
     try {
-      const { error } = await supabase.from('daily_goals').delete().eq('id', goalId);
+      const {
+        error
+      } = await supabase.from('daily_goals').delete().eq('id', goalId);
       if (error) throw error;
       await fetchDailyGoals(student.id);
       toast.success('Goal deleted');
@@ -305,25 +302,20 @@ export default function StudentDashboard() {
       toast.error('Failed to delete goal');
     }
   };
-
   const handleSignOut = async () => {
     localStorage.removeItem('supabase.auth.token');
     sessionStorage.clear();
     await supabase.auth.signOut();
     navigate('/auth');
   };
-
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">
       <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
     </div>;
   }
-
   const isDemoUser = localStorage.getItem('isDemoUser') === 'true';
   const demoRole = localStorage.getItem('demoRole');
-
-  return (
-    <PomodoroProvider studentId={studentDbId || undefined}>
+  return <PomodoroProvider studentId={studentDbId || undefined}>
       {isDemoUser && demoRole === 'student' && <DemoWizard role="student" />}
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
@@ -373,27 +365,17 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {dailyGoals.map(goal => (
-                  <div key={goal.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                    <Checkbox 
-                      checked={goal.completed} 
-                      onCheckedChange={(checked) => toggleGoalComplete(goal.id, checked as boolean)} 
-                    />
+                {dailyGoals.map(goal => <div key={goal.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                    <Checkbox checked={goal.completed} onCheckedChange={checked => toggleGoalComplete(goal.id, checked as boolean)} />
                     <span className={`flex-1 ${goal.completed ? 'line-through text-muted-foreground' : ''}`}>
                       {goal.goal_text}
                     </span>
                     <Button variant="ghost" size="icon" onClick={() => deleteGoal(goal.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </div>
-                ))}
+                  </div>)}
                 <div className="flex gap-2 mt-4">
-                  <Input 
-                    placeholder="Add a new goal..." 
-                    value={newGoalText} 
-                    onChange={(e) => setNewGoalText(e.target.value)} 
-                    onKeyPress={(e) => e.key === 'Enter' && addDailyGoal()} 
-                  />
+                  <Input placeholder="Add a new goal..." value={newGoalText} onChange={e => setNewGoalText(e.target.value)} onKeyPress={e => e.key === 'Enter' && addDailyGoal()} />
                   <Button onClick={addDailyGoal} disabled={!newGoalText.trim()}>
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -403,48 +385,7 @@ export default function StudentDashboard() {
           </Card>
 
           {/* Today's Chores */}
-          {todaysChores.length > 0 && (
-            <Card className="mb-6">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <ListChecks className="h-5 w-5" />
-                      Today's Chores
-                    </CardTitle>
-                    <CardDescription>Complete chores to earn XP</CardDescription>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/student/chores')}>
-                    View All
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {todaysChores.slice(0, 3).map((assignment) => (
-                    <div key={assignment.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                      <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="font-medium">{assignment.chores?.title}</p>
-                        <p className="text-sm text-muted-foreground">{assignment.chores?.xp_reward} XP</p>
-                      </div>
-                      <Button 
-                        size="sm" 
-                        onClick={() => navigate('/student/chores')}
-                      >
-                        Complete
-                      </Button>
-                    </div>
-                  ))}
-                  {todaysChores.length > 3 && (
-                    <p className="text-sm text-muted-foreground text-center">
-                      + {todaysChores.length - 3} more chores
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {todaysChores.length > 0}
 
           {/* Exciting Agenda Button */}
           <div className="mb-6">
@@ -456,13 +397,6 @@ export default function StudentDashboard() {
         {/* {studentDbId && <DuckCatchingGame studentId={studentDbId} />} */}
       </div>
       
-      <ProfileSettingsModal
-        open={showProfileModal}
-        onOpenChange={setShowProfileModal}
-        student={student}
-        onProfileUpdate={fetchStudentData}
-        initialTab={profileModalTab}
-      />
-    </PomodoroProvider>
-  );
+      <ProfileSettingsModal open={showProfileModal} onOpenChange={setShowProfileModal} student={student} onProfileUpdate={fetchStudentData} initialTab={profileModalTab} />
+    </PomodoroProvider>;
 }
