@@ -19,6 +19,7 @@ const Index = () => {
         console.log('[Index] No valid session');
         // Clear any stale localStorage data
         localStorage.removeItem('supabase.auth.token');
+        navigate('/');
         return;
       }
 
@@ -30,6 +31,7 @@ const Index = () => {
         // Session is invalid, clear it
         console.log('[Index] Invalid session, signing out');
         await supabase.auth.signOut();
+        navigate('/');
         return;
       }
 

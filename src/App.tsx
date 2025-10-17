@@ -7,6 +7,11 @@ import { ThemeProvider } from "next-themes";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import Marketing from "./pages/Marketing";
+import Pricing from "./pages/Pricing";
+import About from "./pages/About";
+import Blog from "./pages/Blog";
+import WhyDiagnosticsArentTests from "./pages/blog/WhyDiagnosticsArentTests";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ParentDashboard from "./pages/ParentDashboard";
@@ -61,8 +66,13 @@ const App = () => (
                       </header>
                       <main className="flex-1 overflow-auto">
                         <Routes>
-                          <Route path="/" element={<Index />} />
+                          <Route path="/" element={<Marketing />} />
+                          <Route path="/pricing" element={<Pricing />} />
+                          <Route path="/about" element={<About />} />
+                          <Route path="/blog" element={<Blog />} />
+                          <Route path="/blog/why-diagnostics-arent-tests" element={<WhyDiagnosticsArentTests />} />
                           <Route path="/auth" element={<Auth />} />
+                          <Route path="/dashboard" element={<Index />} />
                           <Route path="/parent" element={<AuthGuard><ParentDashboard /></AuthGuard>} />
                           <Route path="/parent/profile" element={<AuthGuard><ParentProfile /></AuthGuard>} />
                           <Route path="/student/:id" element={<AuthGuard><StudentDetail /></AuthGuard>} />
