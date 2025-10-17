@@ -37,7 +37,7 @@ export default function Auth() {
       localStorage.setItem('showDemoWizard', 'true');
       
       toast.success(`Welcome to the ${role === 'parent' ? 'Parent' : 'Student'} Demo!`);
-      navigate('/');
+      navigate('/dashboard');
     } catch (error: any) {
       console.error('Demo login error:', error);
       toast.error('Demo account not yet configured. Please use regular sign up.');
@@ -69,7 +69,7 @@ export default function Auth() {
       });
       if (error) throw error;
       toast.success('Account created successfully!');
-      setTimeout(() => navigate('/'), 1000);
+      setTimeout(() => navigate('/dashboard'), 1000);
     } catch (error: any) {
       toast.error(error.message || 'Failed to create account');
     } finally {
@@ -91,7 +91,7 @@ export default function Auth() {
       });
       if (error) throw error;
       toast.success('Welcome back!');
-      navigate('/');
+      navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in');
     } finally {
