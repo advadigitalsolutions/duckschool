@@ -132,6 +132,14 @@ export default function ParentDashboard() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Setup starter rewards if not already done
+      try {
+        await supabase.functions.invoke('setup-starter-rewards');
+      } catch (error) {
+        console.error('Error setting up starter rewards:', error);
+        // Don't fail the whole load if rewards setup fails
+      }
+
       // Check for demo names in localStorage
       const demoParent = localStorage.getItem('demo_parent_name');
       const demoStudent = localStorage.getItem('demo_student_name');

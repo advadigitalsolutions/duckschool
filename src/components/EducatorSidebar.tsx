@@ -59,9 +59,10 @@ export function EducatorSidebar() {
   };
 
   const isActive = (path: string) => location.pathname === path;
+  const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar className={state === "collapsed" ? "w-14" : "w-60"} collapsible="icon">
+    <Sidebar className={isCollapsed ? "w-16" : "w-60"} collapsible="icon">
       <SidebarContent>
         {/* Dashboard */}
         <SidebarGroup>
@@ -71,8 +72,8 @@ export function EducatorSidebar() {
                 onClick={() => navigate('/parent')}
                 className={isActive('/parent') ? 'bg-accent text-accent-foreground' : ''}
               >
-                <Home className="h-4 w-4" />
-                {state !== "collapsed" && <span>Dashboard</span>}
+                <Home className="h-5 w-5" />
+                {!isCollapsed && <span>Dashboard</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -80,182 +81,194 @@ export function EducatorSidebar() {
 
         {/* My Students */}
         <SidebarGroup>
-          <Collapsible defaultOpen>
+          <Collapsible defaultOpen={false}>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="w-full flex items-center justify-between">
+              <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  {state !== "collapsed" && <span>My Students</span>}
+                  <Users className="h-5 w-5" />
+                  {!isCollapsed && <span className="font-medium">My Students</span>}
                 </div>
-                {state !== "collapsed" && <ChevronDown className="h-4 w-4" />}
+                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {students.length > 0 ? (
-                    <div className="max-h-48 overflow-y-auto space-y-1">
-                      {students.map((student) => (
-                        <SidebarMenuItem key={student.id}>
-                          <SidebarMenuButton
-                            onClick={() => navigate(`/student/${student.id}`)}
-                            className={isActive(`/student/${student.id}`) ? 'bg-accent text-accent-foreground' : ''}
-                          >
-                            <GraduationCap className="h-4 w-4" />
-                            {state !== "collapsed" && <span className="truncate">{student.display_name || student.name}</span>}
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </div>
-                  ) : (
-                    state !== "collapsed" && (
-                      <div className="px-3 py-2 text-sm text-muted-foreground">
+            {!isCollapsed && (
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {students.length > 0 ? (
+                      <div className="max-h-48 overflow-y-auto space-y-0.5 py-1">
+                        {students.map((student) => (
+                          <SidebarMenuItem key={student.id}>
+                            <SidebarMenuButton
+                              onClick={() => navigate(`/student/${student.id}`)}
+                              className={`transition-all duration-200 ${
+                                isActive(`/student/${student.id}`)
+                                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                  : 'hover:bg-accent hover:text-accent-foreground'
+                              }`}
+                            >
+                              <GraduationCap className="h-4 w-4 flex-shrink-0" />
+                              <span className="truncate text-sm">{student.display_name || student.name}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-3 py-2 text-sm text-muted-foreground italic">
                         No students yet
                       </div>
-                    )
-                  )}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
+                    )}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            )}
           </Collapsible>
         </SidebarGroup>
 
         {/* Courses & Curriculum */}
         <SidebarGroup>
-          <Collapsible defaultOpen>
+          <Collapsible defaultOpen={false}>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="w-full flex items-center justify-between">
+              <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-[hsl(var(--chart-1))]" />
-                  {state !== "collapsed" && <span>Courses</span>}
+                  <BookOpen className="h-5 w-5 text-[hsl(var(--chart-1))]" />
+                  {!isCollapsed && <span className="font-medium">Courses</span>}
                 </div>
-                {state !== "collapsed" && <ChevronDown className="h-4 w-4" />}
+                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/parent')}>
-                      <BookOpen className="h-4 w-4" />
-                      {state !== "collapsed" && <span>All Courses</span>}
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/standards-frameworks')}>
-                      <Sparkles className="h-4 w-4" />
-                      {state !== "collapsed" && <span>Standards Browser</span>}
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </SidebarGroupContent>
-            </CollapsibleContent>
+            {!isCollapsed && (
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent')}>
+                        <BookOpen className="h-4 w-4" />
+                        <span>All Courses</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton onClick={() => navigate('/standards-frameworks')}>
+                        <Sparkles className="h-4 w-4" />
+                        <span>Standards Browser</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            )}
           </Collapsible>
         </SidebarGroup>
 
         {/* Analytics */}
         <SidebarGroup>
-          <Collapsible>
+          <Collapsible defaultOpen={false}>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="w-full flex items-center justify-between">
+              <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-[hsl(var(--chart-3))]" />
-                  {state !== "collapsed" && <span>Analytics</span>}
+                  <BarChart3 className="h-5 w-5 text-[hsl(var(--chart-3))]" />
+                  {!isCollapsed && <span className="font-medium">Analytics</span>}
                 </div>
-                {state !== "collapsed" && <ChevronDown className="h-4 w-4" />}
+                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/parent?tab=focus-intelligence')}>
-                      {state !== "collapsed" && <span>Focus Analytics</span>}
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/parent?tab=reports')}>
-                      {state !== "collapsed" && <span>Activity Feed</span>}
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton 
-                      onClick={() => navigate('/focus-tools')}
-                      className={isActive('/focus-tools') ? 'bg-accent text-accent-foreground' : ''}
-                    >
-                      <Timer className="h-4 w-4" />
-                      {state !== "collapsed" && <span>Focus Tools</span>}
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </SidebarGroupContent>
-            </CollapsibleContent>
+            {!isCollapsed && (
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=focus-intelligence')}>
+                        <span>Focus Analytics</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=reports')}>
+                        <span>Activity Feed</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton 
+                        onClick={() => navigate('/focus-tools')}
+                        className={isActive('/focus-tools') ? 'bg-accent text-accent-foreground' : ''}
+                      >
+                        <Timer className="h-4 w-4" />
+                        <span>Focus Tools</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            )}
           </Collapsible>
         </SidebarGroup>
 
         {/* Rewards System */}
         <SidebarGroup>
-          <Collapsible>
+          <Collapsible defaultOpen={false}>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="w-full flex items-center justify-between">
+              <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
-                  <Gift className="h-4 w-4 text-[hsl(var(--chart-2))]" />
-                  {state !== "collapsed" && <span>Rewards</span>}
+                  <Gift className="h-5 w-5 text-[hsl(var(--chart-2))]" />
+                  {!isCollapsed && <span className="font-medium">Rewards</span>}
                 </div>
-                {state !== "collapsed" && <ChevronDown className="h-4 w-4" />}
+                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/parent?tab=overview')}>
-                      <Award className="h-4 w-4" />
-                      {state !== "collapsed" && <span>XP Configuration</span>}
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/parent?tab=overview')}>
-                      <Gift className="h-4 w-4" />
-                      {state !== "collapsed" && <span>Manage Rewards</span>}
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </SidebarGroupContent>
-            </CollapsibleContent>
+            {!isCollapsed && (
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=overview')}>
+                        <Award className="h-4 w-4" />
+                        <span>XP Configuration</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=overview')}>
+                        <Gift className="h-4 w-4" />
+                        <span>Manage Rewards</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            )}
           </Collapsible>
         </SidebarGroup>
 
         {/* Scheduling */}
         <SidebarGroup>
-          <Collapsible>
+          <Collapsible defaultOpen={false}>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="w-full flex items-center justify-between">
+              <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {state !== "collapsed" && <span>Scheduling</span>}
+                  <Calendar className="h-5 w-5" />
+                  {!isCollapsed && <span className="font-medium">Scheduling</span>}
                 </div>
-                {state !== "collapsed" && <ChevronDown className="h-4 w-4" />}
+                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/parent?tab=smart-schedule')}>
-                      <Calendar className="h-4 w-4" />
-                      {state !== "collapsed" && <span>Smart Calendar</span>}
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/parent?tab=todo')}>
-                      <CheckSquare className="h-4 w-4" />
-                      {state !== "collapsed" && <span>Todo List</span>}
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </SidebarGroupContent>
-            </CollapsibleContent>
+            {!isCollapsed && (
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=smart-schedule')}>
+                        <Calendar className="h-4 w-4" />
+                        <span>Smart Calendar</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=todo')}>
+                        <CheckSquare className="h-4 w-4" />
+                        <span>Todo List</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            )}
           </Collapsible>
         </SidebarGroup>
 
