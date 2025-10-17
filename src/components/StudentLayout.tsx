@@ -19,9 +19,10 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   const location = useLocation();
 
   // Only show focus duck on learning pages (assignments, dashboard, courses)
-  // NOT on profile, settings, or admin pages
+  // NOT on profile, settings, chores, or admin pages
   const showFocusDuck = !location.pathname.includes('/profile') && 
                         !location.pathname.includes('/pomodoro-fullscreen') &&
+                        !location.pathname.includes('/chores') &&
                         !location.pathname.includes('/admin/');
 
   useEffect(() => {
