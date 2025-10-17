@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Target, TrendingUp, Award, Plus, Trash2 } from 'lucide-react';
+import { Target, TrendingUp, Award, Plus, Trash2, ListChecks, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
@@ -28,6 +28,7 @@ export default function StudentDashboard() {
   const [headerSettings, setHeaderSettings] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileModalTab, setProfileModalTab] = useState<'profile' | 'accessibility' | 'assessment'>('profile');
+  const [todaysChores, setTodaysChores] = useState<any[]>([]);
   const navigate = useNavigate();
   
   // Enable automatic XP rewards
@@ -172,10 +173,33 @@ export default function StudentDashboard() {
 
       // Fetch daily goals
       await fetchDailyGoals(studentData?.id);
+      
+      // Fetch today's chores
+      await fetchTodaysChores(studentData?.id);
     } catch (error: any) {
       toast.error('Failed to load student data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTodaysChores = async (studentId: string) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('chore_assignments')
+        .select(`
+          *,
+          chores (*)
+        `)
+        .eq('student_id', studentId)
+        .eq('assigned_date', today)
+        .eq('status', 'pending');
+      
+      if (error) throw error;
+      setTodaysChores(data || []);
+    } catch (error) {
+      console.error('Error fetching todays chores:', error);
     }
   };
 
@@ -387,6 +411,50 @@ export default function StudentDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Today's Chores */}
+          {todaysChores.length > 0 && (
+            <Card className="mb-6">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <ListChecks className="h-5 w-5" />
+                      Today's Chores
+                    </CardTitle>
+                    <CardDescription>Complete chores to earn XP</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/student/chores')}>
+                    View All
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {todaysChores.slice(0, 3).map((assignment) => (
+                    <div key={assignment.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                      <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="font-medium">{assignment.chores?.title}</p>
+                        <p className="text-sm text-muted-foreground">{assignment.chores?.xp_reward} XP</p>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        onClick={() => navigate('/student/chores')}
+                      >
+                        Complete
+                      </Button>
+                    </div>
+                  ))}
+                  {todaysChores.length > 3 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      + {todaysChores.length - 3} more chores
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Exciting Agenda Button */}
           <div className="mb-6">

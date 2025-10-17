@@ -579,6 +579,108 @@ export type Database = {
           },
         ]
       }
+      chore_assignments: {
+        Row: {
+          assigned_date: string
+          chore_id: string
+          completed_at: string | null
+          created_at: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          photo_proof_url: string | null
+          status: string | null
+          student_id: string
+          verified_at: string | null
+          verified_by: string | null
+          xp_awarded: number | null
+        }
+        Insert: {
+          assigned_date: string
+          chore_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          photo_proof_url?: string | null
+          status?: string | null
+          student_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+          xp_awarded?: number | null
+        }
+        Update: {
+          assigned_date?: string
+          chore_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          photo_proof_url?: string | null
+          status?: string | null
+          student_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          xp_awarded?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chore_assignments_chore_id_fkey"
+            columns: ["chore_id"]
+            isOneToOne: false
+            referencedRelation: "chores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chore_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chores: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          frequency: string | null
+          id: string
+          parent_id: string
+          priority: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          xp_reward: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          frequency?: string | null
+          id?: string
+          parent_id: string
+          priority?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          xp_reward?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          frequency?: string | null
+          id?: string
+          parent_id?: string
+          priority?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          xp_reward?: number | null
+        }
+        Relationships: []
+      }
       course_mastery_summary: {
         Row: {
           course_id: string

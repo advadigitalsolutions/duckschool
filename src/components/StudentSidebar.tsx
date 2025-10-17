@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Home, BookOpen, Calendar, Trophy, Timer, ChevronDown, GraduationCap, BarChart3, Award, ShoppingBag, Activity, ClipboardList, CalendarDays, ListTodo, Sparkles } from 'lucide-react';
+import { Home, BookOpen, Calendar, Trophy, Timer, ChevronDown, GraduationCap, BarChart3, Award, ShoppingBag, Activity, ClipboardList, CalendarDays, ListTodo, Sparkles, ListChecks } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton, useSidebar } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 export function StudentSidebar() {
@@ -134,6 +134,15 @@ export function StudentSidebar() {
                       >
                         <ClipboardList className="h-4 w-4" />
                         <span>Assignments</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton 
+                        onClick={() => navigate('/student/chores')} 
+                        className={isActive('/student/chores') ? 'bg-accent text-accent-foreground' : ''}
+                      >
+                        <ListChecks className="h-4 w-4" />
+                        <span>My Chores</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>

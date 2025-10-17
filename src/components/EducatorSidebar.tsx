@@ -13,7 +13,8 @@ import {
   Award,
   Gift,
   CheckSquare,
-  Timer
+  Timer,
+  ListChecks
 } from 'lucide-react';
 import {
   Sidebar,
@@ -235,6 +236,12 @@ export function EducatorSidebar() {
                       <SidebarMenuSubButton onClick={() => navigate('/parent?tab=overview')}>
                         <Gift className="h-4 w-4" />
                         <span>Manage Rewards</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=chores')}>
+                        <ListChecks className="h-4 w-4" />
+                        <span>Chores</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>

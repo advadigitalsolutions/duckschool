@@ -26,6 +26,7 @@ import { FocusAnalyticsDashboard } from '@/components/FocusAnalyticsDashboard';
 import { FocusPatternsDashboard } from '@/components/FocusPatternsDashboard';
 import { SmartScheduleCalendar } from '@/components/SmartScheduleCalendar';
 import { ParentTodoList } from '@/components/ParentTodoList';
+import { ParentChoreManagement } from '@/components/ParentChoreManagement';
 export default function ParentDashboard() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -401,6 +402,7 @@ export default function ParentDashboard() {
             <TabsTrigger value="time-tracking">Time Tracking</TabsTrigger>
             <TabsTrigger value="focus-intelligence">Focus Intelligence</TabsTrigger>
             <TabsTrigger value="smart-schedule">Schedule</TabsTrigger>
+            <TabsTrigger value="chores">Chores</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="pomodoro">Pomodoro Timers</TabsTrigger>
             <TabsTrigger value="weekly-plans">Weekly Plans</TabsTrigger>
@@ -512,6 +514,10 @@ export default function ParentDashboard() {
                     <SmartScheduleCalendar studentId={student.id} />
                   </div>)}
               </div>}
+          </TabsContent>
+
+          <TabsContent value="chores" className="space-y-4">
+            <ParentChoreManagement />
           </TabsContent>
 
           <TabsContent value="pomodoro" className="space-y-4">
