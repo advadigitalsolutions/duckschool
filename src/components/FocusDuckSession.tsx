@@ -93,12 +93,17 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     try {
       const screenshot = await captureCurrentWindow();
       
+      // Get penalty setting from localStorage
+      const settings = JSON.parse(localStorage.getItem('focusDuckSettings') || '{}');
+      const applyPenalties = settings.applyPenalties || false;
+      
       const { data, error } = await supabase.functions.invoke('analyze-focus-screenshot', {
         body: {
           screenshot,
           goal,
           student_id: studentId,
-          session_id: sessionId
+          session_id: sessionId,
+          apply_penalties: applyPenalties
         }
       });
       

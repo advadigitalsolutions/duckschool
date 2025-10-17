@@ -14,6 +14,7 @@ export function FocusDuckSettingsPanel({ isEducator }: FocusDuckSettingsPanelPro
   const [soundsEnabled, setSoundsEnabled] = useState(true);
   const [idleThreshold, setIdleThreshold] = useState(60);
   const [accountabilityEnabled, setAccountabilityEnabled] = useState(false);
+  const [applyPenalties, setApplyPenalties] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('focusDuckSettings');
@@ -23,6 +24,7 @@ export function FocusDuckSettingsPanel({ isEducator }: FocusDuckSettingsPanelPro
       setSoundsEnabled(settings.soundsEnabled ?? true);
       setIdleThreshold(settings.idleThreshold || 60);
       setAccountabilityEnabled(settings.accountabilityEnabled || false);
+      setApplyPenalties(settings.applyPenalties || false);
     }
   }, []);
 
@@ -134,19 +136,38 @@ export function FocusDuckSettingsPanel({ isEducator }: FocusDuckSettingsPanelPro
         </div>
 
         {accountabilityEnabled && (
-          <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg space-y-2">
-            <p className="text-sm font-semibold flex items-center gap-2">
-              <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
-              Privacy Notice
-            </p>
-            <ul className="text-xs space-y-1 text-muted-foreground">
-              <li>• Checks happen at RANDOM intervals (30s - 5min)</li>
-              <li>• You'll be prompted to share your screen</li>
-              <li>• AI analyzes if you're on-task</li>
-              <li>• Screenshots are immediately deleted (never stored)</li>
-              <li>• Click "No" anytime to pause without penalty</li>
-            </ul>
-          </div>
+          <>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="apply-penalties">Apply Penalties</Label>
+                <div className="text-sm text-muted-foreground">
+                  Lose -1 XP when screenshot doesn't match goal
+                </div>
+              </div>
+              <Switch
+                id="apply-penalties"
+                checked={applyPenalties}
+                onCheckedChange={(checked) => {
+                  setApplyPenalties(checked);
+                  saveSettings({ applyPenalties: checked });
+                }}
+              />
+            </div>
+
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg space-y-2">
+              <p className="text-sm font-semibold flex items-center gap-2">
+                <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                Privacy Notice
+              </p>
+              <ul className="text-xs space-y-1 text-muted-foreground">
+                <li>• Checks happen at RANDOM intervals (30s - 5min)</li>
+                <li>• You'll be prompted to share your screen</li>
+                <li>• AI analyzes if you're on-task</li>
+                <li>• Screenshots are immediately deleted (never stored)</li>
+                <li>• Click "No" anytime to pause with or without penalty</li>
+              </ul>
+            </div>
+          </>
         )}
       </div>
     </Card>

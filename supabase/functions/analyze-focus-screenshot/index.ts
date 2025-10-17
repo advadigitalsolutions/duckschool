@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { screenshot, goal, student_id, session_id } = await req.json();
+    const { screenshot, goal, student_id, session_id, apply_penalties = false } = await req.json();
     
     console.log(`Analyzing screenshot for goal: "${goal}"`);
     
@@ -57,8 +57,8 @@ serve(async (req) => {
     const content = aiData.choices[0].message.content;
     const analysis = JSON.parse(content);
     
-    // Calculate XP
-    const xp_awarded = analysis.on_track ? 15 : -10;
+    // Calculate XP (only apply penalties if enabled)
+    const xp_awarded = analysis.on_track ? 15 : (apply_penalties ? -1 : 0);
     
     // Log to database
     const supabase = createClient(
