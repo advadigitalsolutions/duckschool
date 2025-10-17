@@ -73,6 +73,7 @@ export default function StudentDashboard() {
     headerVisibility: 'sticky' as const
   });
   const saveHeaderSettings = async (newSettings: any) => {
+    if (!studentDbId) return;
     try {
       const settingsToSave = {
         ...newSettings,
@@ -85,7 +86,7 @@ export default function StudentDashboard() {
         error
       } = await supabase.from('students').update({
         header_settings: settingsToSave
-      }).eq('id', student?.id);
+      }).eq('id', studentDbId);
       if (error) throw error;
       setHeaderSettings(newSettings);
       toast.success('Header settings saved!');
@@ -257,18 +258,18 @@ export default function StudentDashboard() {
     }
   };
   const addDailyGoal = async () => {
-    if (!newGoalText.trim()) return;
+    if (!newGoalText.trim() || !studentDbId) return;
     try {
       const {
         error
       } = await supabase.from('daily_goals').insert({
-        student_id: student.id,
+        student_id: studentDbId,
         goal_text: newGoalText.trim(),
         date: new Date().toISOString().split('T')[0]
       });
       if (error) throw error;
       setNewGoalText('');
-      await fetchDailyGoals(student.id);
+      await fetchDailyGoals(studentDbId);
       toast.success('Goal added!');
     } catch (error) {
       console.error('Error adding goal:', error);
@@ -276,6 +277,7 @@ export default function StudentDashboard() {
     }
   };
   const toggleGoalComplete = async (goalId: string, completed: boolean) => {
+    if (!studentDbId) return;
     try {
       const {
         error
@@ -283,19 +285,20 @@ export default function StudentDashboard() {
         completed
       }).eq('id', goalId);
       if (error) throw error;
-      await fetchDailyGoals(student.id);
+      await fetchDailyGoals(studentDbId);
     } catch (error) {
       console.error('Error updating goal:', error);
       toast.error('Failed to update goal');
     }
   };
   const deleteGoal = async (goalId: string) => {
+    if (!studentDbId) return;
     try {
       const {
         error
       } = await supabase.from('daily_goals').delete().eq('id', goalId);
       if (error) throw error;
-      await fetchDailyGoals(student.id);
+      await fetchDailyGoals(studentDbId);
       toast.success('Goal deleted');
     } catch (error) {
       console.error('Error deleting goal:', error);
