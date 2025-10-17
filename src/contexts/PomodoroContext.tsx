@@ -11,7 +11,7 @@ interface PomodoroSettings {
   timerColor: string;
   numberColor: string;
   showMinutesInside: boolean;
-  timerStyle: 'doughnut' | 'traditional';
+  timerStyle: 'doughnut' | 'traditional' | 'wedge';
   soundEffect: 'beep' | 'chime' | 'bell' | 'gong' | 'airhorn' | 'duck' | 'none';
   timerForegroundColor: string;
   timerBackgroundColor: string;
@@ -40,13 +40,13 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   sessionsUntilLongBreak: 4,
   visualTimer: true,
   showTimeText: true,
-  timerColor: 'hsl(var(--primary))',
-  numberColor: 'hsl(var(--foreground))',
+  timerColor: '#FFD700',
+  numberColor: '#000000',
   showMinutesInside: true,
   timerStyle: 'doughnut',
   soundEffect: 'beep',
-  timerForegroundColor: 'hsl(var(--primary))',
-  timerBackgroundColor: 'hsl(var(--muted))',
+  timerForegroundColor: '#FFD700',
+  timerBackgroundColor: '#d4d4d8',
 };
 
 interface PomodoroProviderProps {

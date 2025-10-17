@@ -153,6 +153,7 @@ export function PomodoroSettingsPanel() {
                 <SelectContent>
                   <SelectItem value="doughnut">Doughnut</SelectItem>
                   <SelectItem value="traditional">Traditional (Clock)</SelectItem>
+                  <SelectItem value="wedge">Wedge (Kitchen Timer)</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -166,6 +167,68 @@ export function PomodoroSettingsPanel() {
               </div>
             </div>
           )}
+        </div>
+
+        <Separator />
+
+        {/* Color Settings */}
+        <div className="space-y-4">
+          <Label className="text-base">Timer Colors</Label>
+          
+          <div className="flex gap-2 mb-3">
+            <button
+              onClick={() => updateSettings({ 
+                ...settings, 
+                timerForegroundColor: '#FFD700',
+                timerBackgroundColor: '#d4d4d8'
+              })}
+              className="px-3 py-1 text-xs rounded-md bg-[#FFD700] text-black border border-border hover:opacity-80"
+            >
+              Gold
+            </button>
+            <button
+              onClick={() => updateSettings({ 
+                ...settings, 
+                timerForegroundColor: '#3b82f6',
+                timerBackgroundColor: '#e5e7eb'
+              })}
+              className="px-3 py-1 text-xs rounded-md bg-blue-500 text-white border border-border hover:opacity-80"
+            >
+              Blue
+            </button>
+            <button
+              onClick={() => updateSettings({ 
+                ...settings, 
+                timerForegroundColor: '#ef4444',
+                timerBackgroundColor: '#f3f4f6'
+              })}
+              className="px-3 py-1 text-xs rounded-md bg-red-500 text-white border border-border hover:opacity-80"
+            >
+              Red
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            <Label htmlFor="timer-fg" className="text-sm">Progress Color</Label>
+            <input
+              id="timer-fg"
+              type="color"
+              value={settings.timerForegroundColor}
+              onChange={(e) => updateSettings({ ...settings, timerForegroundColor: e.target.value })}
+              className="w-full h-10 rounded border cursor-pointer"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="timer-bg" className="text-sm">Background Color</Label>
+            <input
+              id="timer-bg"
+              type="color"
+              value={settings.timerBackgroundColor}
+              onChange={(e) => updateSettings({ ...settings, timerBackgroundColor: e.target.value })}
+              className="w-full h-10 rounded border cursor-pointer"
+            />
+          </div>
         </div>
       </div>
     </Card>
