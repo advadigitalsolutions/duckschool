@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,9 +8,22 @@ import {
   Zap, BookOpen, Users, CheckCircle2, ArrowRight, Star
 } from 'lucide-react';
 import { MarketingNav } from '@/components/MarketingNav';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Marketing() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is authenticated and redirect to dashboard
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        navigate('/dashboard', { replace: true });
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background">
