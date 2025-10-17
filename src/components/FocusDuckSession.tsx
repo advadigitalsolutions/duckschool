@@ -10,6 +10,9 @@ import { useActivitySession } from '@/hooks/useActivitySession';
 import { useWindowVisibility } from '@/hooks/useWindowVisibility';
 import { useIdleDetection } from '@/hooks/useIdleDetection';
 import { cn } from '@/lib/utils';
+import { captureCurrentWindow } from '@/utils/screenCapture';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface FocusDuckSessionProps {
   studentId: string | null;
@@ -22,6 +25,9 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(duration * 60); // seconds
   const [duckState, setDuckState] = useState<'idle' | 'climbing' | 'celebrating' | 'fallen'>('idle');
+  const [accountabilityEnabled, setAccountabilityEnabled] = useState(false);
+  const [showAccountabilityCheck, setShowAccountabilityCheck] = useState(false);
+  const [accountabilityTimerId, setAccountabilityTimerId] = useState<NodeJS.Timeout | null>(null);
   
   const { sessionId, createSession, endSession } = useActivitySession(studentId || undefined);
   const { isVisible } = useWindowVisibility();
@@ -40,6 +46,104 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
       }
     }
   });
+
+  // Load accountability setting
+  useEffect(() => {
+    const settings = JSON.parse(localStorage.getItem('focusDuckSettings') || '{}');
+    setAccountabilityEnabled(settings.accountabilityEnabled || false);
+  }, []);
+
+  // Schedule random accountability check
+  const scheduleNextCheck = () => {
+    if (accountabilityTimerId) {
+      clearTimeout(accountabilityTimerId);
+    }
+    
+    // Random delay between 30 seconds and 5 minutes (300 seconds)
+    const delaySeconds = Math.floor(Math.random() * 271) + 30;
+    const delayMs = delaySeconds * 1000;
+    
+    console.log(`Next accountability check in ${delaySeconds} seconds`);
+    
+    const timerId = setTimeout(() => {
+      if (isActive) {
+        triggerAccountabilityCheck();
+      }
+    }, delayMs);
+    
+    setAccountabilityTimerId(timerId);
+  };
+
+  const triggerAccountabilityCheck = () => {
+    setIsActive(false); // Auto-pause timer
+    setDuckState('idle');
+    setShowAccountabilityCheck(true);
+  };
+
+  const handleAccountabilityResponse = async (response: 'yes' | 'no') => {
+    setShowAccountabilityCheck(false);
+    
+    if (response === 'no') {
+      // User acknowledges they're taking a break
+      // Timer stays paused (already paused)
+      toast.info('Taking a break? Resume when ready! 🦆');
+      return;
+    }
+    
+    if (response === 'yes') {
+      // Resume timer first
+      setIsActive(true);
+      setDuckState('climbing');
+      
+      // Capture and analyze
+      try {
+        await captureAndAnalyze();
+      } catch (error) {
+        console.error('Screenshot capture failed:', error);
+        toast.error('Screenshot check failed. Continuing session...');
+      }
+      
+      // Schedule next random check
+      scheduleNextCheck();
+    }
+  };
+
+  const captureAndAnalyze = async () => {
+    try {
+      const screenshot = await captureCurrentWindow();
+      
+      const { data, error } = await supabase.functions.invoke('analyze-focus-screenshot', {
+        body: {
+          screenshot,
+          goal,
+          student_id: studentId,
+          session_id: sessionId
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Show feedback
+      if (data.on_track) {
+        toast.success(`${data.message} +${data.xp_awarded} XP ⭐`, { duration: 5000 });
+      } else {
+        toast.error(`${data.message} ${data.xp_awarded} XP ⚠️`, { duration: 5000 });
+      }
+      
+    } catch (error: any) {
+      console.error('Analysis failed:', error);
+      throw error;
+    }
+  };
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (accountabilityTimerId) {
+        clearTimeout(accountabilityTimerId);
+      }
+    };
+  }, [accountabilityTimerId]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -70,6 +174,11 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     
     setIsActive(true);
     setDuckState('climbing');
+    
+    // Start accountability check cycle if enabled
+    if (accountabilityEnabled) {
+      scheduleNextCheck();
+    }
   };
 
   const handlePause = () => {
@@ -81,6 +190,14 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     setIsActive(false);
     setTimeLeft(duration * 60);
     setDuckState('idle');
+    setShowAccountabilityCheck(false);
+    
+    // Clear accountability timer
+    if (accountabilityTimerId) {
+      clearTimeout(accountabilityTimerId);
+      setAccountabilityTimerId(null);
+    }
+    
     if (sessionId) {
       endSession('manual');
     }
@@ -135,7 +252,52 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
 
   if (isActive || duckState === 'celebrating') {
     return (
-      <div className="flex flex-col items-center gap-8">
+      <>
+        {/* Accountability Check Modal */}
+        {showAccountabilityCheck && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <Card className="p-8 max-w-md mx-auto shadow-2xl border-2 border-primary animate-in fade-in zoom-in duration-300">
+              <div className="text-center space-y-6">
+                <div className="text-6xl">🦆</div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold">Accountability Check!</h3>
+                  <p className="text-lg text-muted-foreground">
+                    Working on your goal?
+                  </p>
+                  <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+                    <p className="font-semibold text-primary">{goal}</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-4">
+                  <Button
+                    onClick={() => handleAccountabilityResponse('no')}
+                    variant="outline"
+                    size="lg"
+                    className="flex-1 text-lg h-14 flex-col gap-1"
+                  >
+                    <span>No</span>
+                    <span className="text-xs opacity-70">Taking a break</span>
+                  </Button>
+                  <Button
+                    onClick={() => handleAccountabilityResponse('yes')}
+                    size="lg"
+                    className="flex-1 text-lg h-14 flex-col gap-1"
+                  >
+                    <span>Yes</span>
+                    <span className="text-xs opacity-70">Check my screen</span>
+                  </Button>
+                </div>
+                
+                <p className="text-xs text-muted-foreground">
+                  Clicking "Yes" will capture your current window for AI analysis
+                </p>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        <div className="flex flex-col items-center gap-8">
         {/* Goal Display */}
         <Card className="p-4 bg-primary/5 border-primary/20 w-full max-w-2xl">
           <div className="text-center">
@@ -228,7 +390,8 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
           )}
         </div>
 
-      </div>
+        </div>
+      </>
     );
   }
 

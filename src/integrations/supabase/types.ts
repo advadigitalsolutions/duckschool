@@ -1096,6 +1096,63 @@ export type Database = {
         }
         Relationships: []
       }
+      focus_accountability_checks: {
+        Row: {
+          ai_feedback: string | null
+          checked_at: string | null
+          confidence: number | null
+          created_at: string | null
+          goal_text: string
+          id: string
+          session_id: string | null
+          student_id: string | null
+          user_response: string
+          was_on_track: boolean | null
+          xp_awarded: number | null
+        }
+        Insert: {
+          ai_feedback?: string | null
+          checked_at?: string | null
+          confidence?: number | null
+          created_at?: string | null
+          goal_text: string
+          id?: string
+          session_id?: string | null
+          student_id?: string | null
+          user_response: string
+          was_on_track?: boolean | null
+          xp_awarded?: number | null
+        }
+        Update: {
+          ai_feedback?: string | null
+          checked_at?: string | null
+          confidence?: number | null
+          created_at?: string | null
+          goal_text?: string
+          id?: string
+          session_id?: string | null
+          student_id?: string | null
+          user_response?: string
+          was_on_track?: boolean | null
+          xp_awarded?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "focus_accountability_checks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "learning_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "focus_accountability_checks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grades: {
         Row: {
           assignment_id: string | null
@@ -1152,6 +1209,9 @@ export type Database = {
       }
       learning_sessions: {
         Row: {
+          accountability_checks_passed: number | null
+          accountability_checks_performed: number | null
+          accountability_mode_enabled: boolean | null
           browser: string | null
           created_at: string
           device_type: string | null
@@ -1168,6 +1228,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accountability_checks_passed?: number | null
+          accountability_checks_performed?: number | null
+          accountability_mode_enabled?: boolean | null
           browser?: string | null
           created_at?: string
           device_type?: string | null
@@ -1184,6 +1247,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accountability_checks_passed?: number | null
+          accountability_checks_performed?: number | null
+          accountability_mode_enabled?: boolean | null
           browser?: string | null
           created_at?: string
           device_type?: string | null

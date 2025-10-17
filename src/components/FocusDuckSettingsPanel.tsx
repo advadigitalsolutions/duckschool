@@ -13,15 +13,16 @@ export function FocusDuckSettingsPanel({ isEducator }: FocusDuckSettingsPanelPro
   const [defaultDuration, setDefaultDuration] = useState(45);
   const [soundsEnabled, setSoundsEnabled] = useState(true);
   const [idleThreshold, setIdleThreshold] = useState(60);
+  const [accountabilityEnabled, setAccountabilityEnabled] = useState(false);
 
   useEffect(() => {
-    // Load settings from localStorage
     const saved = localStorage.getItem('focusDuckSettings');
     if (saved) {
       const settings = JSON.parse(saved);
       setDefaultDuration(settings.defaultDuration || 45);
       setSoundsEnabled(settings.soundsEnabled ?? true);
       setIdleThreshold(settings.idleThreshold || 60);
+      setAccountabilityEnabled(settings.accountabilityEnabled || false);
     }
   }, []);
 
@@ -29,6 +30,9 @@ export function FocusDuckSettingsPanel({ isEducator }: FocusDuckSettingsPanelPro
     const current = JSON.parse(localStorage.getItem('focusDuckSettings') || '{}');
     const newSettings = { ...current, ...updates };
     localStorage.setItem('focusDuckSettings', JSON.stringify(newSettings));
+    
+    // Trigger a custom event to notify other components
+    window.dispatchEvent(new CustomEvent('focusDuckSettingsChanged', { detail: newSettings }));
   };
 
   return (
@@ -107,6 +111,42 @@ export function FocusDuckSettingsPanel({ isEducator }: FocusDuckSettingsPanelPro
               />
             </div>
           </>
+        )}
+
+        <Separator />
+
+        {/* Screenshot Accountability */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="accountability-mode">Screenshot Accountability</Label>
+            <div className="text-sm text-muted-foreground">
+              Random checks every 30 seconds to 5 minutes
+            </div>
+          </div>
+          <Switch
+            id="accountability-mode"
+            checked={accountabilityEnabled}
+            onCheckedChange={(checked) => {
+              setAccountabilityEnabled(checked);
+              saveSettings({ accountabilityEnabled: checked });
+            }}
+          />
+        </div>
+
+        {accountabilityEnabled && (
+          <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg space-y-2">
+            <p className="text-sm font-semibold flex items-center gap-2">
+              <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+              Privacy Notice
+            </p>
+            <ul className="text-xs space-y-1 text-muted-foreground">
+              <li>• Checks happen at RANDOM intervals (30s - 5min)</li>
+              <li>• You'll be prompted to share your screen</li>
+              <li>• AI analyzes if you're on-task</li>
+              <li>• Screenshots are immediately deleted (never stored)</li>
+              <li>• Click "No" anytime to pause without penalty</li>
+            </ul>
+          </div>
         )}
       </div>
     </Card>

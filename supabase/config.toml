@@ -1,5 +1,8 @@
 project_id = "tzqxdsxjmpscotdcevdh"
 
+[functions.analyze-focus-screenshot]
+verify_jwt = false
+
 [functions.setup-starter-rewards]
 verify_jwt = true
 
