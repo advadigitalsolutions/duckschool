@@ -111,7 +111,7 @@ export function StudentSidebar() {
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton onClick={() => navigate('/student/agenda')} className={isActive('/student/agenda') ? 'bg-accent text-accent-foreground' : ''}>
                         <ListTodo className="h-4 w-4" />
-                        <span>Agenda</span>
+                        <span>Guide</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>

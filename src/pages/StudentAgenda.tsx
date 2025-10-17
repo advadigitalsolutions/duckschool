@@ -133,7 +133,7 @@ export default function StudentAgenda() {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">My Agenda</h1>
+      <h1 className="text-3xl font-bold mb-6">My Guide</h1>
       
       {/* Up Next Box */}
       {upNextAssignment && (
