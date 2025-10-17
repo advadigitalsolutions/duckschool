@@ -61,11 +61,42 @@ export default function StudentAssignments() {
 
       console.log('Student ID:', studentData.id);
 
-      // First get the curriculum items for this student's courses
-      const { data: curriculumData } = await supabase
+      // Get all courses for this student
+      const { data: coursesData, error: coursesError } = await supabase
+        .from('courses')
+        .select('id, title')
+        .eq('student_id', studentData.id);
+
+      if (coursesError) {
+        console.error('Courses fetch error:', coursesError);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Courses:', coursesData);
+
+      if (!coursesData || coursesData.length === 0) {
+        console.log('No courses found');
+        setAssignments([]);
+        setCourses([]);
+        setLoading(false);
+        return;
+      }
+
+      const courseIds = coursesData.map(c => c.id);
+      setCourses(coursesData);
+
+      // Get curriculum items for these courses
+      const { data: curriculumData, error: curriculumError } = await supabase
         .from('curriculum_items')
         .select('id')
-        .eq('courses.student_id', studentData.id);
+        .in('course_id', courseIds);
+
+      if (curriculumError) {
+        console.error('Curriculum fetch error:', curriculumError);
+        setLoading(false);
+        return;
+      }
 
       console.log('Curriculum items:', curriculumData);
 
@@ -78,7 +109,7 @@ export default function StudentAssignments() {
 
       const curriculumIds = curriculumData.map(c => c.id);
 
-      // Now get assignments for these curriculum items
+      // Get assignments for these curriculum items
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('assignments')
         .select(`
@@ -91,8 +122,7 @@ export default function StudentAssignments() {
             courses (
               id,
               title,
-              subject,
-              student_id
+              subject
             )
           ),
           submissions (
@@ -114,13 +144,7 @@ export default function StudentAssignments() {
       console.log('Assignments data:', assignmentsData);
       console.log('Number of assignments:', assignmentsData?.length || 0);
 
-      const { data: coursesData } = await supabase
-        .from('courses')
-        .select('id, title')
-        .eq('student_id', studentData.id);
-
       setAssignments(assignmentsData || []);
-      setCourses(coursesData || []);
     } catch (error) {
       console.error('Error fetching assignments:', error);
     } finally {
