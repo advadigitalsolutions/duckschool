@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { StudentSidebar } from './StudentSidebar';
 import { EducatorSidebar } from './EducatorSidebar';
 import { HybridSidebar } from './HybridSidebar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent } from '@/components/ui/sidebar';
 
 export function AppSidebar() {
   const [userRole, setUserRole] = useState<'parent' | 'student' | 'self_directed' | null>(null);
@@ -25,25 +27,32 @@ export function AppSidebar() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('[AppSidebar] Current user:', user?.id);
+      
       if (!user) {
+        console.log('[AppSidebar] No user found');
         setUserRole(null);
         setLoading(false);
         return;
       }
 
-      const { data: roleData } = await supabase
+      const { data: roleData, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
         .single();
 
+      console.log('[AppSidebar] Role data:', roleData, 'Error:', error);
+
       if (roleData) {
         setUserRole(roleData.role as 'parent' | 'student' | 'self_directed');
+        console.log('[AppSidebar] User role set to:', roleData.role);
       } else {
         setUserRole(null);
+        console.log('[AppSidebar] No role found for user');
       }
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      console.error('[AppSidebar] Error fetching user role:', error);
       setUserRole(null);
     } finally {
       setLoading(false);
@@ -51,7 +60,20 @@ export function AppSidebar() {
   };
 
   if (loading) {
-    return null;
+    return (
+      <Sidebar>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupContent className="space-y-2 p-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+    );
   }
 
   if (userRole === 'self_directed') {
@@ -66,5 +88,15 @@ export function AppSidebar() {
     return <EducatorSidebar />;
   }
 
-  return null;
+  return (
+    <Sidebar>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent className="p-4 text-muted-foreground text-sm">
+            No role assigned. Please contact support.
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  );
 }
