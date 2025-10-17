@@ -7,9 +7,6 @@ import { Play, Pause, RotateCcw, CheckCircle2 } from 'lucide-react';
 import { FocusJourneyDuck } from '@/components/FocusJourneyDuck';
 import { Progress } from '@/components/ui/progress';
 import { useActivitySession } from '@/hooks/useActivitySession';
-import { useWindowVisibility } from '@/hooks/useWindowVisibility';
-import { useIdleDetection } from '@/hooks/useIdleDetection';
-import { cn } from '@/lib/utils';
 import { captureCurrentWindow } from '@/utils/screenCapture';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -24,28 +21,12 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
   const [duration, setDuration] = useState(45); // minutes
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(duration * 60); // seconds
-  const [duckState, setDuckState] = useState<'idle' | 'climbing' | 'celebrating' | 'fallen'>('idle');
+  const [duckState, setDuckState] = useState<'idle' | 'walking' | 'celebrating'>('idle');
   const [accountabilityEnabled, setAccountabilityEnabled] = useState(false);
   const [showAccountabilityCheck, setShowAccountabilityCheck] = useState(false);
   const [accountabilityTimerId, setAccountabilityTimerId] = useState<NodeJS.Timeout | null>(null);
   
   const { sessionId, createSession, endSession } = useActivitySession(studentId || undefined);
-  const { isVisible } = useWindowVisibility();
-  
-  const { isIdle, isWarning } = useIdleDetection({
-    warningThreshold: 45, // 45 seconds warning
-    idleThreshold: 60, // 1 minute until idle
-    onIdle: () => {
-      if (isActive && duckState === 'climbing') {
-        setDuckState('fallen');
-      }
-    },
-    onActive: () => {
-      if (duckState === 'fallen') {
-        setDuckState('climbing');
-      }
-    }
-  });
 
   // Load accountability setting
   useEffect(() => {
@@ -93,7 +74,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     if (response === 'yes') {
       // Resume timer first
       setIsActive(true);
-      setDuckState('climbing');
+      setDuckState('walking');
       
       // Capture and analyze
       try {
@@ -173,7 +154,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     }
     
     setIsActive(true);
-    setDuckState('climbing');
+    setDuckState('walking');
     
     // Start accountability check cycle if enabled
     if (accountabilityEnabled) {
@@ -225,9 +206,9 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
             }}
           >
             <FocusJourneyDuck
-              animationState={isActive ? 'climbing' : 'idle'}
+              animationState={duckState === 'celebrating' ? 'celebrating' : isActive ? 'walking' : 'idle'}
               onAnimationComplete={() => {}}
-              onStateChange={(state) => setDuckState(state as any)}
+              onStateChange={() => {}}
             />
           </div>
           <div className="pt-12">
@@ -318,9 +299,9 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
               }}
             >
               <FocusJourneyDuck
-                animationState={duckState === 'celebrating' ? 'celebrating' : isActive ? 'climbing' : 'idle'}
+                animationState={duckState === 'celebrating' ? 'celebrating' : isActive ? 'walking' : 'idle'}
                 onAnimationComplete={() => {}}
-                onStateChange={(state) => setDuckState(state as any)}
+                onStateChange={() => {}}
               />
             </div>
             <div className="pt-12 space-y-3">
