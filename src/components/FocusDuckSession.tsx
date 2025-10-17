@@ -108,7 +108,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
             }}
           >
             <FocusJourneyDuck
-              animationState={duckState}
+              animationState={isActive ? 'climbing' : 'idle'}
               onAnimationComplete={() => {}}
               onStateChange={(state) => setDuckState(state as any)}
             />
@@ -146,21 +146,31 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
 
         {/* Duck and Progress */}
         <div className="relative w-full max-w-2xl">
-          <FocusJourneyDuck
-            animationState={duckState}
-            onAnimationComplete={() => {}}
-            onStateChange={(state) => setDuckState(state as any)}
-          />
-          
-          <div className="mt-8 space-y-3">
-            <Progress 
-              value={progress} 
-              className="h-4"
-              variant={duckState === 'celebrating' ? 'success' : 'default'}
-            />
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Progress</span>
-              <span className="font-mono font-semibold">{Math.round(progress)}%</span>
+          <div className="relative">
+            <div 
+              className="absolute transition-all duration-1000 ease-out z-10"
+              style={{ 
+                left: `${Math.min(progress, 95)}%`,
+                transform: 'translateX(-50%)',
+                top: '-60px'
+              }}
+            >
+              <FocusJourneyDuck
+                animationState={duckState === 'celebrating' ? 'celebrating' : isActive ? 'climbing' : 'idle'}
+                onAnimationComplete={() => {}}
+                onStateChange={(state) => setDuckState(state as any)}
+              />
+            </div>
+            <div className="pt-12 space-y-3">
+              <Progress 
+                value={progress} 
+                className="h-4"
+                variant={duckState === 'celebrating' ? 'success' : 'default'}
+              />
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Progress</span>
+                <span className="font-mono font-semibold">{Math.round(progress)}%</span>
+              </div>
             </div>
           </div>
         </div>
