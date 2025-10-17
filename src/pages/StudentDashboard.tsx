@@ -394,8 +394,8 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Duck Catching Game */}
-        {studentDbId && <DuckCatchingGame studentId={studentDbId} />}
+        {/* Duck Catching Game - Hidden for now */}
+        {/* {studentDbId && <DuckCatchingGame studentId={studentDbId} />} */}
       </div>
       
       <ProfileSettingsModal
