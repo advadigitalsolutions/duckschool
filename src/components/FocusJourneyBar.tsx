@@ -48,6 +48,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [breakStartTime, setBreakStartTime] = useState<number | null>(null);
   const [isReading, setIsReading] = useState(false);
   const [readingStartTime, setReadingStartTime] = useState<number | null>(null);
+  const [readingStartTimestamp, setReadingStartTimestamp] = useState<number | null>(null);
   const [hoveredSegmentIndex, setHoveredSegmentIndex] = useState<number | null>(null);
   const [celebrationProgress, setCelebrationProgress] = useState<number | null>(null);
   const [celebrationStartSeconds, setCelebrationStartSeconds] = useState<number | null>(null);
@@ -547,6 +548,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setCurrentSegmentStart(sessionData.activeSeconds);
       setIsReading(false);
       setReadingStartTime(null);
+      setReadingStartTimestamp(null);
       setDuckState('walking');
       toast.success('Back to active learning! 🦆');
     } else {
@@ -572,6 +574,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
       setIsReading(true);
       setReadingStartTime(currentSeconds);
+      setReadingStartTimestamp(Date.now());
       setDuckState('idle');
       toast.info('Deep reading mode... Duck is focused and hard at work! 📚🦆', {
         description: 'Stay focused on your reading!'
@@ -836,7 +839,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
                 >
                   {isReading ? (
                     <span className="text-xs font-mono text-blue-700 dark:text-blue-300">
-                      {formatDuration(sessionData.activeSeconds - (readingStartTime || 0))}
+                      {formatDuration(Math.floor((Date.now() - (readingStartTimestamp || Date.now())) / 1000))}
                     </span>
                   ) : (
                     <BookOpen className="w-4 h-4" />
