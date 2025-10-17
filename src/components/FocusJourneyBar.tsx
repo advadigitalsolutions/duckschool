@@ -721,14 +721,19 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       {/* Full-screen overlay when in break or reading mode - excludes progress bar area */}
       {(isOnBreak || isReading) && (
         <div 
-          className="fixed bg-white/10 dark:bg-white/5 backdrop-blur-[1px] cursor-not-allowed"
+          className="fixed cursor-not-allowed"
           style={{ 
             top: '88px', // Start below the progress bar
             left: 0,
             right: 0,
             bottom: 0,
             zIndex: 50,
-            pointerEvents: 'auto'
+            pointerEvents: 'auto',
+            backgroundColor: isOnBreak 
+              ? 'rgba(244, 194, 176, 0.1)' 
+              : 'rgba(147, 197, 253, 0.1)',
+            backdropFilter: 'blur(1px)',
+            cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='${isOnBreak ? '%23F4B5A0' : '%237FB8F9'}' stroke='white' stroke-width='2'/%3E%3C/svg%3E") 16 16, not-allowed`
           }}
           onClick={handleOverlayClick}
         />
