@@ -27,7 +27,7 @@ export default function PomodoroPopup() {
 
   return (
     <PomodoroProvider studentId={studentId || undefined}>
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
+      <div className="h-screen w-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden">
         <SimplePomodoroTimer studentId={studentId} compact />
       </div>
     </PomodoroProvider>

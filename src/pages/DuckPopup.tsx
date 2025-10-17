@@ -12,7 +12,7 @@ export default function DuckPopup() {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent/5 via-background to-primary/5 p-4">
+    <div className="h-screen w-screen bg-gradient-to-br from-accent/5 via-background to-primary/5 overflow-hidden">
       <FocusDuckSession studentId={studentId} compact />
     </div>
   );

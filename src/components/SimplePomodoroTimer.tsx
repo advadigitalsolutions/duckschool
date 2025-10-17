@@ -24,34 +24,61 @@ export function SimplePomodoroTimer({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
   const progress = (totalDuration - timeLeft) / totalDuration * 100;
+  
+  // Make timer responsive in compact mode
+  const baseSize = compact ? 'min(60vw, 60vh, 400px)' : '320px';
   const radius = compact ? 45 : 120;
   const strokeWidth = compact ? 6 : 12;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - progress / 100 * circumference;
-  const containerSize = compact ? 'w-32 h-32' : 'w-80 h-80';
-  const timeSize = compact ? 'text-2xl' : 'text-6xl';
-  const labelSize = compact ? 'text-xs' : 'text-base';
-  return <div className={cn("flex flex-col items-center justify-center gap-8", compact && "gap-4")}>
+  
+  return <div className={cn("flex flex-col items-center justify-center min-h-screen gap-8", compact && "gap-4")}>
       {/* Visual Timer */}
-      <div className="relative">
-        <svg className={containerSize} style={{
-        transform: 'rotate(-90deg)'
-      }}>
+      <div className="relative" style={{ width: baseSize, height: baseSize }}>
+        <svg 
+          className="w-full h-full" 
+          viewBox={compact ? "0 0 128 128" : "0 0 320 320"}
+          style={{ transform: 'rotate(-90deg)' }}
+        >
           {/* Background circle */}
-          <circle cx={compact ? 64 : 160} cy={compact ? 64 : 160} r={radius} stroke="currentColor" strokeWidth={strokeWidth} fill="none" className="text-muted/20" />
+          <circle 
+            cx={compact ? 64 : 160} 
+            cy={compact ? 64 : 160} 
+            r={radius} 
+            stroke="currentColor" 
+            strokeWidth={strokeWidth} 
+            fill="none" 
+            className="text-muted/20" 
+          />
           {/* Progress circle */}
-          <circle cx={compact ? 64 : 160} cy={compact ? 64 : 160} r={radius} stroke="currentColor" strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className={cn("transition-all duration-1000", isBreak ? "text-green-500 drop-shadow-[0_0_12px_rgba(34,197,94,0.5)]" : "text-primary drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)]")} style={{
-          strokeLinecap: 'round'
-        }} />
+          <circle 
+            cx={compact ? 64 : 160} 
+            cy={compact ? 64 : 160} 
+            r={radius} 
+            stroke="currentColor" 
+            strokeWidth={strokeWidth} 
+            fill="none" 
+            strokeDasharray={circumference} 
+            strokeDashoffset={strokeDashoffset} 
+            className={cn(
+              "transition-all duration-1000", 
+              isBreak 
+                ? "text-green-500 drop-shadow-[0_0_12px_rgba(34,197,94,0.5)]" 
+                : "text-primary drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)]"
+            )} 
+            style={{ strokeLinecap: 'round' }} 
+          />
         </svg>
         
         {/* Time Display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className={cn("font-mono font-bold tabular-nums", timeSize, isBreak ? "text-green-600 dark:text-green-400" : "text-foreground")}>
+          <div className={cn(
+            "font-mono font-bold tabular-nums",
+            compact ? "text-[clamp(2rem,8vw,4rem)]" : "text-6xl",
+            isBreak ? "text-green-600 dark:text-green-400" : "text-foreground"
+          )}>
             {formatTime(timeLeft)}
           </div>
-          
-          
         </div>
       </div>
 
