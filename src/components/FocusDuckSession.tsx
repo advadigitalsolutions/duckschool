@@ -44,12 +44,11 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     const delaySeconds = Math.floor(Math.random() * 271) + 30;
     const delayMs = delaySeconds * 1000;
     
-    console.log(`Next accountability check in ${delaySeconds} seconds`);
+    console.log(`🦆 Next accountability check scheduled in ${delaySeconds} seconds (${Math.round(delaySeconds/60)} minutes)`);
     
     const timerId = setTimeout(() => {
-      if (isActive) {
-        triggerAccountabilityCheck();
-      }
+      console.log('🦆 Accountability check triggered!');
+      triggerAccountabilityCheck();
     }, delayMs);
     
     setAccountabilityTimerId(timerId);
@@ -163,7 +162,10 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     
     // Start accountability check cycle if enabled
     if (accountabilityEnabled) {
+      console.log('🦆 Accountability mode enabled - starting check cycle');
       scheduleNextCheck();
+    } else {
+      console.log('🦆 Accountability mode disabled');
     }
   };
 
