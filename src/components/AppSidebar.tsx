@@ -10,12 +10,26 @@ export function AppSidebar() {
 
   useEffect(() => {
     fetchUserRole();
+    
+    // Listen for auth state changes to update sidebar when user logs in/out
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        fetchUserRole();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const fetchUserRole = async () => {
+    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setUserRole(null);
+        setLoading(false);
+        return;
+      }
 
       const { data: roleData } = await supabase
         .from('user_roles')
@@ -25,9 +39,12 @@ export function AppSidebar() {
 
       if (roleData) {
         setUserRole(roleData.role as 'parent' | 'student' | 'self_directed');
+      } else {
+        setUserRole(null);
       }
     } catch (error) {
       console.error('Error fetching user role:', error);
+      setUserRole(null);
     } finally {
       setLoading(false);
     }

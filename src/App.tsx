@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import Index from "./pages/Index";
@@ -54,35 +54,40 @@ const App = () => (
                 <SidebarProvider>
                   <div className="flex min-h-screen w-full">
                     <AppSidebar />
-                    <main className="flex-1 overflow-auto">
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/auth" element={<Auth />} />
-                        <Route path="/parent" element={<AuthGuard><ParentDashboard /></AuthGuard>} />
-                        <Route path="/parent/profile" element={<AuthGuard><ParentProfile /></AuthGuard>} />
-                        <Route path="/student/:id" element={<AuthGuard><StudentDetail /></AuthGuard>} />
-                        <Route path="/assignment/:id" element={<AuthGuard><AssignmentDetail /></AuthGuard>} />
-                        <Route path="/student" element={<AuthGuard><StudentDashboard /></AuthGuard>} />
-                        <Route path="/student/profile" element={<AuthGuard><StudentProfile /></AuthGuard>} />
-                        <Route path="/student/assignments" element={<AuthGuard><StudentAssignments /></AuthGuard>} />
-                        <Route path="/student/agenda" element={<AuthGuard><StudentAgenda /></AuthGuard>} />
-                        <Route path="/student/calendar" element={<AuthGuard><StudentCalendar /></AuthGuard>} />
-                        <Route path="/student/xp" element={<AuthGuard><StudentXP /></AuthGuard>} />
-                        <Route path="/student/rewards" element={<AuthGuard><StudentRewards /></AuthGuard>} />
-                        <Route path="/student/mastery" element={<AuthGuard><StudentMastery /></AuthGuard>} />
-                        <Route path="/student/focus-stats" element={<AuthGuard><StudentFocusStats /></AuthGuard>} />
-                        <Route path="/student/grades" element={<AuthGuard><StudentGradesPage /></AuthGuard>} />
-                        <Route path="/course/:courseId" element={<AuthGuard><CourseDashboard /></AuthGuard>} />
-                        <Route path="/pomodoro-fullscreen" element={<PomodoroFullscreen />} />
-                        <Route path="/focus-tools" element={<AuthGuard><FocusTools /></AuthGuard>} />
-                        <Route path="/pomodoro-popup" element={<PomodoroPopup />} />
-                        <Route path="/duck-popup" element={<DuckPopup />} />
-                        <Route path="/standards-frameworks" element={<AuthGuard><StandardsFrameworks /></AuthGuard>} />
-                        <Route path="/learning-window" element={<LearningWindow />} />
-                        <Route path="/admin/seed-standards" element={<AuthGuard><AdminSeedStandards /></AuthGuard>} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </main>
+                    <div className="flex-1 flex flex-col">
+                      <header className="h-12 border-b flex items-center px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+                        <SidebarTrigger className="-ml-1" />
+                      </header>
+                      <main className="flex-1 overflow-auto">
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/auth" element={<Auth />} />
+                          <Route path="/parent" element={<AuthGuard><ParentDashboard /></AuthGuard>} />
+                          <Route path="/parent/profile" element={<AuthGuard><ParentProfile /></AuthGuard>} />
+                          <Route path="/student/:id" element={<AuthGuard><StudentDetail /></AuthGuard>} />
+                          <Route path="/assignment/:id" element={<AuthGuard><AssignmentDetail /></AuthGuard>} />
+                          <Route path="/student" element={<AuthGuard><StudentDashboard /></AuthGuard>} />
+                          <Route path="/student/profile" element={<AuthGuard><StudentProfile /></AuthGuard>} />
+                          <Route path="/student/assignments" element={<AuthGuard><StudentAssignments /></AuthGuard>} />
+                          <Route path="/student/agenda" element={<AuthGuard><StudentAgenda /></AuthGuard>} />
+                          <Route path="/student/calendar" element={<AuthGuard><StudentCalendar /></AuthGuard>} />
+                          <Route path="/student/xp" element={<AuthGuard><StudentXP /></AuthGuard>} />
+                          <Route path="/student/rewards" element={<AuthGuard><StudentRewards /></AuthGuard>} />
+                          <Route path="/student/mastery" element={<AuthGuard><StudentMastery /></AuthGuard>} />
+                          <Route path="/student/focus-stats" element={<AuthGuard><StudentFocusStats /></AuthGuard>} />
+                          <Route path="/student/grades" element={<AuthGuard><StudentGradesPage /></AuthGuard>} />
+                          <Route path="/course/:courseId" element={<AuthGuard><CourseDashboard /></AuthGuard>} />
+                          <Route path="/pomodoro-fullscreen" element={<PomodoroFullscreen />} />
+                          <Route path="/focus-tools" element={<AuthGuard><FocusTools /></AuthGuard>} />
+                          <Route path="/pomodoro-popup" element={<PomodoroPopup />} />
+                          <Route path="/duck-popup" element={<DuckPopup />} />
+                          <Route path="/standards-frameworks" element={<AuthGuard><StandardsFrameworks /></AuthGuard>} />
+                          <Route path="/learning-window" element={<LearningWindow />} />
+                          <Route path="/admin/seed-standards" element={<AuthGuard><AdminSeedStandards /></AuthGuard>} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </main>
+                    </div>
                     <MobileBottomNav />
                   </div>
                 </SidebarProvider>
