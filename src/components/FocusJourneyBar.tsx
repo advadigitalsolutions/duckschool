@@ -49,6 +49,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [isReading, setIsReading] = useState(false);
   const [readingStartTime, setReadingStartTime] = useState<number | null>(null);
   const [readingStartTimestamp, setReadingStartTimestamp] = useState<number | null>(null);
+  const [buttonFlash, setButtonFlash] = useState(false);
   const [celebrationProgress, setCelebrationProgress] = useState<number | null>(null);
   const [celebrationStartSeconds, setCelebrationStartSeconds] = useState<number | null>(null);
   const lastBlurTime = useRef<number>(0);
@@ -709,15 +710,31 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     return 'from-blue-400 to-emerald-500';
   };
 
+  const handleOverlayClick = () => {
+    // Flash the active button
+    setButtonFlash(true);
+    setTimeout(() => setButtonFlash(false), 400);
+  };
+
   return (
-    <div 
-      className="w-full bg-card border-b border-border sticky top-0 z-40 pt-12 pb-2 px-4"
-      role="progressbar"
-      aria-valuenow={Math.round(progress)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label={`Focus journey progress: ${Math.round(progress)}%`}
-    >
+    <>
+      {/* Full-screen overlay when in break or reading mode */}
+      {(isOnBreak || isReading) && (
+        <div 
+          className="fixed inset-0 bg-white/10 dark:bg-white/5 backdrop-blur-[1px] z-[100] cursor-not-allowed"
+          onClick={handleOverlayClick}
+          style={{ pointerEvents: 'auto' }}
+        />
+      )}
+      
+      <div 
+        className="w-full bg-card border-b border-border sticky top-0 z-40 pt-12 pb-2 px-4"
+        role="progressbar"
+        aria-valuenow={Math.round(progress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Focus journey progress: ${Math.round(progress)}%`}
+      >
       <div className="max-w-7xl mx-auto">
         <div className="relative h-10 rounded-full border-2 border-gray-300/40 dark:border-gray-600/40" style={{ 
           overflow: 'visible',
@@ -788,7 +805,10 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleReading}
-                  className="absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-blue-400/20 hover:bg-blue-400/30 text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-200 transition-colors pointer-events-auto"
+                  className={`absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-blue-400/20 hover:bg-blue-400/30 text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-200 transition-colors z-[101] ${
+                    buttonFlash && isReading ? 'animate-flash-warning' : ''
+                  }`}
+                  style={{ pointerEvents: 'auto' }}
                   aria-label={isReading ? 'Resume active learning' : 'Reading mode'}
                 >
                   {isReading ? (
@@ -800,7 +820,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="z-[102]">
                 <p>{isReading ? 'Resume active learning' : 'Reading/Research mode'}</p>
               </TooltipContent>
             </Tooltip>
@@ -810,7 +830,10 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleTakeBreak}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-sm pointer-events-auto"
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-sm z-[101] ${
+                    buttonFlash && isOnBreak ? 'animate-flash-warning' : ''
+                  }`}
+                  style={{ pointerEvents: 'auto' }}
                   aria-label={isOnBreak ? 'Resume focus' : 'Take a break'}
                 >
                   {isOnBreak ? (
@@ -822,7 +845,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="z-[102]">
                 <p>{isOnBreak ? 'Resume focus' : 'Take a quick break!'}</p>
               </TooltipContent>
             </Tooltip>
@@ -839,5 +862,6 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }

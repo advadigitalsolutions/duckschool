@@ -653,3 +653,23 @@ All colors MUST be HSL.
   background: hsl(var(--background));
   z-index: -1;
 }
+
+/* Flash warning animation for buttons */
+@keyframes flash-warning {
+  0%, 100% {
+    background-color: inherit;
+  }
+  25% {
+    background-color: rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    background-color: rgba(251, 146, 60, 0.5);
+  }
+  75% {
+    background-color: rgba(239, 68, 68, 0.5);
+  }
+}
+
+.animate-flash-warning {
+  animation: flash-warning 0.4s ease-in-out;
+}
