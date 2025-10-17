@@ -718,17 +718,25 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   return (
     <>
-      {/* Full-screen overlay when in break or reading mode */}
+      {/* Full-screen overlay when in break or reading mode - excludes progress bar area */}
       {(isOnBreak || isReading) && (
         <div 
-          className="fixed inset-0 bg-white/10 dark:bg-white/5 backdrop-blur-[1px] z-[100] cursor-not-allowed"
+          className="fixed bg-white/10 dark:bg-white/5 backdrop-blur-[1px] cursor-not-allowed"
+          style={{ 
+            top: '88px', // Start below the progress bar
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 50,
+            pointerEvents: 'auto'
+          }}
           onClick={handleOverlayClick}
-          style={{ pointerEvents: 'auto' }}
         />
       )}
       
       <div 
         className="w-full bg-card border-b border-border sticky top-0 z-40 pt-12 pb-2 px-4"
+        style={{ position: 'sticky', zIndex: 100 }}
         role="progressbar"
         aria-valuenow={Math.round(progress)}
         aria-valuemin={0}
@@ -805,14 +813,13 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleReading}
-                  className={`absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-colors z-[150] ${
+                  className={`absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
                     buttonFlash && isReading ? 'animate-flash-warning' : ''
                   } ${
                     isReading 
-                      ? 'bg-blue-400 text-white shadow-lg' 
+                      ? 'bg-blue-400 hover:bg-blue-500 text-white shadow-lg' 
                       : 'bg-blue-400/20 hover:bg-blue-400/30 text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-200'
                   }`}
-                  style={{ pointerEvents: 'auto' }}
                   aria-label={isReading ? 'Resume active learning' : 'Reading mode'}
                 >
                   {isReading ? (
@@ -824,7 +831,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="z-[151]">
+              <TooltipContent>
                 <p>{isReading ? 'Resume active learning' : 'Reading/Research mode'}</p>
               </TooltipContent>
             </Tooltip>
@@ -834,14 +841,13 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleTakeBreak}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-colors text-sm z-[150] ${
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-colors text-sm ${
                     buttonFlash && isOnBreak ? 'animate-flash-warning' : ''
                   } ${
                     isOnBreak
-                      ? 'bg-amber-500 text-white shadow-lg'
+                      ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg'
                       : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
                   }`}
-                  style={{ pointerEvents: 'auto' }}
                   aria-label={isOnBreak ? 'Resume focus' : 'Take a break'}
                 >
                   {isOnBreak ? (
@@ -853,7 +859,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
                   )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="z-[151]">
+              <TooltipContent>
                 <p>{isOnBreak ? 'Resume focus' : 'Take a quick break!'}</p>
               </TooltipContent>
             </Tooltip>
