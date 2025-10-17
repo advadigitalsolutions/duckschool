@@ -1,90 +1,54 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Home,
-  BookOpen,
-  Calendar,
-  Trophy,
-  Timer,
-  ChevronDown,
-  GraduationCap,
-  BarChart3,
-  Award,
-  ShoppingBag,
-  Activity,
-  ClipboardList,
-  CalendarDays,
-  ListTodo
-} from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
-  useSidebar
-} from '@/components/ui/sidebar';
+import { Home, BookOpen, Calendar, Trophy, Timer, ChevronDown, GraduationCap, BarChart3, Award, ShoppingBag, Activity, ClipboardList, CalendarDays, ListTodo } from 'lucide-react';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton, useSidebar } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
 export function StudentSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { state } = useSidebar();
+  const {
+    state
+  } = useSidebar();
   const [student, setStudent] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
-
   useEffect(() => {
     fetchData();
   }, []);
-
   const fetchData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // Fetch student data
-      const { data: studentData } = await supabase
-        .from('students')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: studentData
+      } = await supabase.from('students').select('*').eq('user_id', user.id).single();
       if (studentData) {
         setStudent(studentData);
 
         // Fetch courses
-        const { data: coursesData } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('student_id', studentData.id)
-          .order('title');
+        const {
+          data: coursesData
+        } = await supabase.from('courses').select('*').eq('student_id', studentData.id).order('title');
         setCourses(coursesData || []);
       }
     } catch (error) {
       console.error('Error fetching sidebar data:', error);
     }
   };
-
   const isActive = (path: string) => location.pathname === path;
-
-  return (
-    <Sidebar className={state === "collapsed" ? "w-14" : "w-60"} collapsible="icon">
+  return <Sidebar className={state === "collapsed" ? "w-14" : "w-60"} collapsible="icon">
       <SidebarContent>
         {/* Dashboard */}
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => navigate('/student')}
-                className={isActive('/student') ? 'bg-accent text-accent-foreground' : ''}
-              >
+              <SidebarMenuButton onClick={() => navigate('/student')} className={isActive('/student') ? 'bg-accent text-accent-foreground' : ''}>
                 <Home className="h-4 w-4" />
                 {state !== "collapsed" && <span>Dashboard</span>}
               </SidebarMenuButton>
@@ -107,33 +71,19 @@ export function StudentSidebar() {
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {courses.length > 0 ? (
-                    <div className="max-h-48 overflow-y-auto space-y-0.5 py-1">
-                      {courses.map((course) => (
-                        <SidebarMenuItem key={course.id}>
-                          <SidebarMenuButton
-                            onClick={() => navigate(`/course/${course.id}`)}
-                            className={`
+                  {courses.length > 0 ? <div className="max-h-48 overflow-y-auto space-y-0.5 py-1">
+                      {courses.map(course => <SidebarMenuItem key={course.id}>
+                          <SidebarMenuButton onClick={() => navigate(`/course/${course.id}`)} className={`
                               transition-all duration-200 
-                              ${isActive(`/course/${course.id}`) 
-                                ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                                : 'hover:bg-accent hover:text-accent-foreground'
-                              }
-                            `}
-                          >
+                              ${isActive(`/course/${course.id}`) ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-accent hover:text-accent-foreground'}
+                            `}>
                             <GraduationCap className="h-4 w-4 flex-shrink-0" />
                             {state !== "collapsed" && <span className="truncate text-sm">{course.title}</span>}
                           </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </div>
-                  ) : (
-                    state !== "collapsed" && (
-                      <div className="px-3 py-2 text-sm text-muted-foreground italic">
+                        </SidebarMenuItem>)}
+                    </div> : state !== "collapsed" && <div className="px-3 py-2 text-sm text-muted-foreground italic">
                         No courses yet
-                      </div>
-                    )
-                  )}
+                      </div>}
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>
@@ -156,28 +106,19 @@ export function StudentSidebar() {
               <SidebarGroupContent>
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton 
-                      onClick={() => navigate('/student/assignments')}
-                      className={isActive('/student/assignments') ? 'bg-accent text-accent-foreground' : ''}
-                    >
+                    <SidebarMenuSubButton onClick={() => navigate('/student/assignments')} className={isActive('/student/assignments') ? 'bg-accent text-accent-foreground' : ''}>
                       <ClipboardList className="h-4 w-4" />
                       {state !== "collapsed" && <span>Assignments</span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton 
-                      onClick={() => navigate('/student/agenda')}
-                      className={isActive('/student/agenda') ? 'bg-accent text-accent-foreground' : ''}
-                    >
+                    <SidebarMenuSubButton onClick={() => navigate('/student/agenda')} className={isActive('/student/agenda') ? 'bg-accent text-accent-foreground' : ''}>
                       <ListTodo className="h-4 w-4" />
                       {state !== "collapsed" && <span>Agenda</span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton 
-                      onClick={() => navigate('/student/calendar')}
-                      className={isActive('/student/calendar') ? 'bg-accent text-accent-foreground' : ''}
-                    >
+                    <SidebarMenuSubButton onClick={() => navigate('/student/calendar')} className={isActive('/student/calendar') ? 'bg-accent text-accent-foreground' : ''}>
                       <CalendarDays className="h-4 w-4" />
                       {state !== "collapsed" && <span>Calendar</span>}
                     </SidebarMenuSubButton>
@@ -204,37 +145,26 @@ export function StudentSidebar() {
               <SidebarGroupContent>
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      onClick={() => navigate('/student/xp')}
-                      className={isActive('/student/xp') ? 'bg-accent text-accent-foreground' : ''}
-                    >
+                    <SidebarMenuSubButton onClick={() => navigate('/student/xp')} className={isActive('/student/xp') ? 'bg-accent text-accent-foreground' : ''}>
                       <Trophy className="h-4 w-4" />
                       {state !== "collapsed" && <span>My XP</span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      onClick={() => navigate('/student/rewards')}
-                      className={isActive('/student/rewards') ? 'bg-accent text-accent-foreground' : ''}
-                    >
+                    <SidebarMenuSubButton onClick={() => navigate('/student/rewards')} className={isActive('/student/rewards') ? 'bg-accent text-accent-foreground' : ''}>
                       <ShoppingBag className="h-4 w-4" />
                       {state !== "collapsed" && <span>Rewards Shop</span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      onClick={() => navigate('/student/mastery')}
-                      className={isActive('/student/mastery') ? 'bg-accent text-accent-foreground' : ''}
-                    >
+                    <SidebarMenuSubButton onClick={() => navigate('/student/mastery')} className={isActive('/student/mastery') ? 'bg-accent text-accent-foreground' : ''}>
                       <BarChart3 className="h-4 w-4" />
-                      {state !== "collapsed" && <span>Mastery Dashboard</span>}
+                      {state !== "collapsed" && <span>Progress
+                    </span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      onClick={() => navigate('/student/grades')}
-                      className={isActive('/student/grades') ? 'bg-accent text-accent-foreground' : ''}
-                    >
+                    <SidebarMenuSubButton onClick={() => navigate('/student/grades')} className={isActive('/student/grades') ? 'bg-accent text-accent-foreground' : ''}>
                       <Award className="h-4 w-4" />
                       {state !== "collapsed" && <span>Grades</span>}
                     </SidebarMenuSubButton>
@@ -261,19 +191,13 @@ export function StudentSidebar() {
               <SidebarGroupContent>
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton 
-                      onClick={() => navigate('/focus-tools')}
-                      className={isActive('/focus-tools') ? 'bg-accent text-accent-foreground' : ''}
-                    >
+                    <SidebarMenuSubButton onClick={() => navigate('/focus-tools')} className={isActive('/focus-tools') ? 'bg-accent text-accent-foreground' : ''}>
                       <Timer className="h-4 w-4" />
                       {state !== "collapsed" && <span>Focus Tools</span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton
-                      onClick={() => navigate('/student/focus-stats')}
-                      className={isActive('/student/focus-stats') ? 'bg-accent text-accent-foreground' : ''}
-                    >
+                    <SidebarMenuSubButton onClick={() => navigate('/student/focus-stats')} className={isActive('/student/focus-stats') ? 'bg-accent text-accent-foreground' : ''}>
                       <Activity className="h-4 w-4" />
                       {state !== "collapsed" && <span>Session Stats</span>}
                     </SidebarMenuSubButton>
@@ -285,6 +209,5 @@ export function StudentSidebar() {
         </SidebarGroup>
 
       </SidebarContent>
-    </Sidebar>
-  );
+    </Sidebar>;
 }
