@@ -54,7 +54,11 @@ serve(async (req) => {
     });
 
     const aiData = await response.json();
-    const content = aiData.choices[0].message.content;
+    let content = aiData.choices[0].message.content;
+    
+    // Strip markdown code blocks if present
+    content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
     const analysis = JSON.parse(content);
     
     // Calculate XP (only apply penalties if enabled)
