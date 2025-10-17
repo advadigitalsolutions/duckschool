@@ -127,6 +127,44 @@ export function WeeklyView({
   const progress = calculateProgress();
   const todayDate = new Date();
   return <div className="space-y-6">
+      {/* This Week's Progress - Now at top */}
+      <Card>
+        <CardHeader>
+          <CardTitle>This Week's Progress</CardTitle>
+          <CardDescription>Keep up the momentum!</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium">Completed</span>
+                <span className="text-lg font-bold">{Math.round(progress)}%</span>
+              </div>
+              <div className="relative h-4 w-full overflow-hidden rounded-full bg-muted">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-green-400 via-emerald-400 to-cyan-400 transition-all duration-500 ease-out relative overflow-hidden"
+                  style={{ width: `${progress}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" 
+                       style={{ backgroundSize: '200% 100%' }} 
+                  />
+                </div>
+              </div>
+            </div>
+
+            {weeklyData?.focus_areas && weeklyData.focus_areas.length > 0 && <div>
+                <p className="text-sm font-medium mb-2">Focus Areas:</p>
+                <div className="flex flex-wrap gap-2">
+                  {weeklyData.focus_areas.map((area: string, idx: number) => <Badge key={idx} variant="secondary">
+                      <Target className="h-3 w-3 mr-1" />
+                      {area}
+                    </Badge>)}
+                </div>
+              </div>}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Overdue Assignments */}
       {overdueAssignments.length > 0 && (
         <Card className="border-purple-600 bg-purple-50/50 dark:bg-purple-950/20">
@@ -174,39 +212,6 @@ export function WeeklyView({
           </CardContent>
         </Card>
       )}
-
-      {/* Week Overview Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            
-            <Badge variant="outline" className="text-lg">
-              Week {weeklyData?.week_number || '—'}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Weekly Progress</span>
-                <span className="text-sm font-medium">{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-
-            {weeklyData?.focus_areas && weeklyData.focus_areas.length > 0 && <div>
-                <p className="text-sm font-medium mb-2">Focus Areas:</p>
-                <div className="flex flex-wrap gap-2">
-                  {weeklyData.focus_areas.map((area: string, idx: number) => <Badge key={idx} variant="secondary">
-                      <Target className="h-3 w-3 mr-1" />
-                      {area}
-                    </Badge>)}
-                </div>
-              </div>}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Daily Breakdown */}
       <div className="space-y-4">
