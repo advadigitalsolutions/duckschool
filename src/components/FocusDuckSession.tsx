@@ -57,8 +57,7 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
   };
 
   const triggerAccountabilityCheck = () => {
-    setIsActive(false); // Auto-pause timer
-    setDuckState('idle');
+    setIsActive(false); // Pause timer but don't reset duck state
     setShowAccountabilityCheck(true);
   };
 
@@ -67,15 +66,15 @@ export function FocusDuckSession({ studentId, compact = false }: FocusDuckSessio
     
     if (response === 'no') {
       // User acknowledges they're taking a break
-      // Timer stays paused (already paused)
+      // Timer stays paused, but duck stays at current position
+      setDuckState('idle');
       toast.info('Taking a break? Resume when ready! 🦆');
       return;
     }
     
     if (response === 'yes') {
-      // Resume timer first
+      // Resume timer (duck already in walking state)
       setIsActive(true);
-      setDuckState('walking');
       
       // Capture and analyze
       try {
