@@ -109,7 +109,7 @@ export function StudentSidebar() {
               <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
-                  {!isCollapsed && <span className="font-medium">Learning</span>}
+                  {!isCollapsed && <span className="font-medium">My Work</span>}
                 </div>
                 {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
               </CollapsibleTrigger>
