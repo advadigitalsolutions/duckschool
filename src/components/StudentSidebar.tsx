@@ -33,9 +33,6 @@ import {
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function StudentSidebar() {
   const navigate = useNavigate();
@@ -88,13 +85,6 @@ export function StudentSidebar() {
   };
 
   const isActive = (path: string) => location.pathname === path;
-
-  const handleSignOut = async () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    await supabase.auth.signOut();
-    navigate('/auth');
-  };
 
   return (
     <Sidebar className={state === "collapsed" ? "w-14" : "w-60"} collapsible="icon">
@@ -313,33 +303,6 @@ export function StudentSidebar() {
           </Collapsible>
         </SidebarGroup>
 
-        {/* User Profile at Bottom */}
-        {student && (
-          <div className="mt-auto border-t pt-4 px-3">
-            <div className="flex items-center gap-3 mb-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={student.avatar_url} />
-                <AvatarFallback>{student.name?.[0]}</AvatarFallback>
-              </Avatar>
-              {state !== "collapsed" && (
-                <div className="flex-1 overflow-hidden">
-                  <p className="text-sm font-medium truncate">{student.display_name || student.name}</p>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="flex-1"
-              >
-                {state !== "collapsed" && <span>Sign Out</span>}
-              </Button>
-            </div>
-          </div>
-        )}
       </SidebarContent>
     </Sidebar>
   );

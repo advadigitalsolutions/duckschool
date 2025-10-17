@@ -30,15 +30,11 @@ import {
   useSidebar
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function EducatorSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = useSidebar();
-  const [profile, setProfile] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
 
   useEffect(() => {
@@ -49,14 +45,6 @@ export function EducatorSidebar() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      // Fetch profile
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      setProfile(profileData);
 
       // Fetch students
       const { data: studentsData } = await supabase
@@ -71,13 +59,6 @@ export function EducatorSidebar() {
   };
 
   const isActive = (path: string) => location.pathname === path;
-
-  const handleSignOut = async () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    await supabase.auth.signOut();
-    navigate('/auth');
-  };
 
   return (
     <Sidebar className={state === "collapsed" ? "w-14" : "w-60"} collapsible="icon">
@@ -284,33 +265,6 @@ export function EducatorSidebar() {
           </SidebarMenu>
         </SidebarGroup>
 
-        {/* User Profile at Bottom */}
-        {profile && (
-          <div className="mt-auto border-t pt-4 px-3">
-            <div className="flex items-center gap-3 mb-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={profile.avatar_url} />
-                <AvatarFallback>{profile.name?.[0]}</AvatarFallback>
-              </Avatar>
-              {state !== "collapsed" && (
-                <div className="flex-1 overflow-hidden">
-                  <p className="text-sm font-medium truncate">{profile.name || 'Educator'}</p>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="flex-1"
-              >
-                {state !== "collapsed" && <span>Sign Out</span>}
-              </Button>
-            </div>
-          </div>
-        )}
       </SidebarContent>
     </Sidebar>
   );
