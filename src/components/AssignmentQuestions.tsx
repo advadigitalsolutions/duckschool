@@ -895,7 +895,7 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
           <CardContent className="pt-6">
             <Button 
               onClick={handleSubmit} 
-              disabled={submitting || Object.keys(answers).length !== questions.length}
+              disabled={submitting || questions.some(q => answers[q.id] === undefined || answers[q.id] === '' || answers[q.id] === null)}
               className="w-full"
               size="lg"
             >
