@@ -6,15 +6,16 @@ import {
   BookOpen,
   Calendar,
   Trophy,
-  Target,
   Timer,
   ChevronDown,
-  Plus,
   GraduationCap,
   BarChart3,
   Award,
   ShoppingBag,
-  Activity
+  Activity,
+  ClipboardList,
+  CalendarDays,
+  ListTodo
 } from 'lucide-react';
 import {
   Sidebar,
@@ -145,14 +146,14 @@ export function StudentSidebar() {
           </Collapsible>
         </SidebarGroup>
 
-        {/* Assignments */}
+        {/* Learning */}
         <SidebarGroup>
           <Collapsible defaultOpen>
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="w-full flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {state !== "collapsed" && <span>Assignments</span>}
+                  <BookOpen className="h-4 w-4" />
+                  {state !== "collapsed" && <span>Learning</span>}
                 </div>
                 {state !== "collapsed" && overdueCount > 0 && (
                   <Badge variant="destructive" className="ml-auto">
@@ -165,12 +166,29 @@ export function StudentSidebar() {
               <SidebarGroupContent>
                 <SidebarMenuSub>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/student')}>
-                      {state !== "collapsed" && <span>This Week</span>}
+                    <SidebarMenuSubButton 
+                      onClick={() => navigate('/student/assignments')}
+                      className={isActive('/student/assignments') ? 'bg-accent text-accent-foreground' : ''}
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      {state !== "collapsed" && <span>Assignments</span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
-                    <SidebarMenuSubButton onClick={() => navigate('/student')}>
+                    <SidebarMenuSubButton 
+                      onClick={() => navigate('/student/agenda')}
+                      className={isActive('/student/agenda') ? 'bg-accent text-accent-foreground' : ''}
+                    >
+                      <ListTodo className="h-4 w-4" />
+                      {state !== "collapsed" && <span>Agenda</span>}
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton 
+                      onClick={() => navigate('/student/calendar')}
+                      className={isActive('/student/calendar') ? 'bg-accent text-accent-foreground' : ''}
+                    >
+                      <CalendarDays className="h-4 w-4" />
                       {state !== "collapsed" && <span>Calendar</span>}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>

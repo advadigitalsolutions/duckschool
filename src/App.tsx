@@ -18,6 +18,9 @@ import StudentRewards from "./pages/StudentRewards";
 import StudentMastery from "./pages/StudentMastery";
 import StudentFocusStats from "./pages/StudentFocusStats";
 import StudentGradesPage from "./pages/StudentGradesPage";
+import StudentAssignments from "./pages/StudentAssignments";
+import StudentAgenda from "./pages/StudentAgenda";
+import StudentCalendar from "./pages/StudentCalendar";
 import StandardsFrameworks from "./pages/StandardsFrameworks";
 import AssignmentDetail from "./pages/AssignmentDetail";
 import StudentProfile from "./pages/StudentProfile";
@@ -61,6 +64,9 @@ const App = () => (
                         <Route path="/assignment/:id" element={<AuthGuard><AssignmentDetail /></AuthGuard>} />
                         <Route path="/student" element={<AuthGuard><StudentDashboard /></AuthGuard>} />
                         <Route path="/student/profile" element={<AuthGuard><StudentProfile /></AuthGuard>} />
+                        <Route path="/student/assignments" element={<AuthGuard><StudentAssignments /></AuthGuard>} />
+                        <Route path="/student/agenda" element={<AuthGuard><StudentAgenda /></AuthGuard>} />
+                        <Route path="/student/calendar" element={<AuthGuard><StudentCalendar /></AuthGuard>} />
                         <Route path="/student/xp" element={<AuthGuard><StudentXP /></AuthGuard>} />
                         <Route path="/student/rewards" element={<AuthGuard><StudentRewards /></AuthGuard>} />
                         <Route path="/student/mastery" element={<AuthGuard><StudentMastery /></AuthGuard>} />
