@@ -36,6 +36,11 @@ export function EducatorSidebar() {
   const location = useLocation();
   const { state } = useSidebar();
   const [students, setStudents] = useState<any[]>([]);
+  const [studentsOpen, setStudentsOpen] = useState(false);
+  const [coursesOpen, setCoursesOpen] = useState(false);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [rewardsOpen, setRewardsOpen] = useState(false);
+  const [schedulingOpen, setSchedulingOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -81,14 +86,14 @@ export function EducatorSidebar() {
 
         {/* My Students */}
         <SidebarGroup>
-          <Collapsible defaultOpen={false}>
+          <Collapsible open={studentsOpen} onOpenChange={setStudentsOpen}>
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   {!isCollapsed && <span className="font-medium">My Students</span>}
                 </div>
-                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
+                {!isCollapsed && <ChevronDown className={`h-4 w-4 transition-transform ${studentsOpen ? 'rotate-180' : ''}`} />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             {!isCollapsed && (
@@ -129,14 +134,14 @@ export function EducatorSidebar() {
 
         {/* Courses & Curriculum */}
         <SidebarGroup>
-          <Collapsible defaultOpen={false}>
+          <Collapsible open={coursesOpen} onOpenChange={setCoursesOpen}>
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-[hsl(var(--chart-1))]" />
                   {!isCollapsed && <span className="font-medium">Courses</span>}
                 </div>
-                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
+                {!isCollapsed && <ChevronDown className={`h-4 w-4 transition-transform ${coursesOpen ? 'rotate-180' : ''}`} />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             {!isCollapsed && (
@@ -164,14 +169,14 @@ export function EducatorSidebar() {
 
         {/* Analytics */}
         <SidebarGroup>
-          <Collapsible defaultOpen={false}>
+          <Collapsible open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-[hsl(var(--chart-3))]" />
                   {!isCollapsed && <span className="font-medium">Analytics</span>}
                 </div>
-                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
+                {!isCollapsed && <ChevronDown className={`h-4 w-4 transition-transform ${analyticsOpen ? 'rotate-180' : ''}`} />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             {!isCollapsed && (
@@ -206,14 +211,14 @@ export function EducatorSidebar() {
 
         {/* Rewards System */}
         <SidebarGroup>
-          <Collapsible defaultOpen={false}>
+          <Collapsible open={rewardsOpen} onOpenChange={setRewardsOpen}>
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
                   <Gift className="h-5 w-5 text-[hsl(var(--chart-2))]" />
                   {!isCollapsed && <span className="font-medium">Rewards</span>}
                 </div>
-                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
+                {!isCollapsed && <ChevronDown className={`h-4 w-4 transition-transform ${rewardsOpen ? 'rotate-180' : ''}`} />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             {!isCollapsed && (
@@ -241,14 +246,14 @@ export function EducatorSidebar() {
 
         {/* Scheduling */}
         <SidebarGroup>
-          <Collapsible defaultOpen={false}>
+          <Collapsible open={schedulingOpen} onOpenChange={setSchedulingOpen}>
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
                   {!isCollapsed && <span className="font-medium">Scheduling</span>}
                 </div>
-                {!isCollapsed && <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />}
+                {!isCollapsed && <ChevronDown className={`h-4 w-4 transition-transform ${schedulingOpen ? 'rotate-180' : ''}`} />}
               </CollapsibleTrigger>
             </SidebarGroupLabel>
             {!isCollapsed && (
