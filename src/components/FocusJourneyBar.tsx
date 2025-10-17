@@ -379,22 +379,26 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   }, [sessionId, createSession, studentId]);
 
   // Update active time counter - only when session is active, user is present, and not idle
+  // BUT continue counting during intentional breaks and reading mode
   useEffect(() => {
     // Log state changes
     console.log('⏱️ Timer state:', { 
       sessionId: !!sessionId, 
       isIdle, 
       isVisible,
-      shouldRun: !!(sessionId && !isIdle && isVisible)
+      isOnBreak,
+      isReading,
+      shouldRun: !!(sessionId && (isOnBreak || isReading || (!isIdle && isVisible)))
     });
     
-    // Don't count if any of these conditions are true
-    if (!sessionId || isIdle || !isVisible) {
-      console.log('⏸️ Timer paused:', { sessionId: !!sessionId, isIdle, isVisible });
+    // Continue timer during breaks/reading even if idle or window not focused
+    // Only pause if truly idle (not on break/reading) or window not visible
+    if (!sessionId || (!isOnBreak && !isReading && (isIdle || !isVisible))) {
+      console.log('⏸️ Timer paused:', { sessionId: !!sessionId, isIdle, isVisible, isOnBreak, isReading });
       return;
     }
 
-    console.log('▶️ Timer STARTING - incrementing every second');
+    console.log('▶️ Timer RUNNING - incrementing every second');
     const interval = setInterval(() => {
       updateActiveTime(1);
     }, 1000);
@@ -404,7 +408,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       console.log('🛑 Clearing timer interval');
       clearInterval(interval);
     };
-  }, [sessionId, isIdle, isVisible, updateActiveTime]);
+  }, [sessionId, isIdle, isVisible, isOnBreak, isReading, updateActiveTime]);
 
   // Update idle time counter
   useEffect(() => {
@@ -780,6 +784,18 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
                 left: `${(readingStartTime / goalSeconds) * 100}%`,
                 width: `${((sessionData.activeSeconds - readingStartTime) / goalSeconds) * 100}%`,
                 background: 'linear-gradient(90deg, rgba(147, 197, 253, 0.6) 0%, rgba(127, 184, 249, 0.6) 100%)'
+              }}
+            />
+          )}
+          
+          {/* Current break segment */}
+          {isOnBreak && breakStartTime !== null && (
+            <div 
+              className="absolute inset-y-1 left-0 transition-all duration-500 ease-out rounded-full mx-1"
+              style={{ 
+                left: `${(breakStartTime / goalSeconds) * 100}%`,
+                width: `${((sessionData.activeSeconds - breakStartTime) / goalSeconds) * 100}%`,
+                background: 'linear-gradient(90deg, rgba(244, 194, 176, 0.8) 0%, rgba(244, 181, 160, 0.8) 100%)'
               }}
             />
           )}
