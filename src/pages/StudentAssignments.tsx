@@ -41,6 +41,18 @@ export default function StudentAssignments() {
 
   useEffect(() => {
     fetchAssignments();
+    
+    // Read URL parameters to pre-filter
+    const params = new URLSearchParams(window.location.search);
+    const courseParam = params.get('course');
+    const sortByParam = params.get('sortBy');
+    
+    if (courseParam) {
+      setFilterCourse(courseParam);
+    }
+    if (sortByParam === 'due_date' || sortByParam === 'date_assigned' || sortByParam === 'course' || sortByParam === 'grade') {
+      setSortBy(sortByParam);
+    }
   }, []);
 
   useEffect(() => {

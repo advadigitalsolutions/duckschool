@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -28,6 +29,7 @@ interface CoursePacingDashboardProps {
 }
 
 export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, studentId, gradeLevel }: CoursePacingDashboardProps) {
+  const navigate = useNavigate();
   const [targetDate, setTargetDate] = useState<Date | undefined>();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [generationOpen, setGenerationOpen] = useState(false);
@@ -167,9 +169,18 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setGenerationOpen(true)}>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(`/student/assignments?course=${courseId}&sortBy=due_date`)}
+          >
+            View Assignments
+          </Button>
+          <Button 
+            className="bg-gradient-to-r from-primary via-accent to-secondary hover:opacity-90 transition-opacity text-primary-foreground shadow-lg"
+            onClick={() => setGenerationOpen(true)}
+          >
             <Sparkles className="mr-2 h-4 w-4" />
-            AI Generate
+            ✨ Create New Assignments
           </Button>
           <Button variant="outline" onClick={() => setSettingsOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
