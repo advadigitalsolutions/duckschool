@@ -430,6 +430,7 @@ export type Database = {
       }
       assignments: {
         Row: {
+          assessment_type: string | null
           assigned_date: string | null
           auto_scheduled_time: string | null
           created_at: string | null
@@ -450,6 +451,7 @@ export type Database = {
           weight: number | null
         }
         Insert: {
+          assessment_type?: string | null
           assigned_date?: string | null
           auto_scheduled_time?: string | null
           created_at?: string | null
@@ -470,6 +472,7 @@ export type Database = {
           weight?: number | null
         }
         Update: {
+          assessment_type?: string | null
           assigned_date?: string | null
           auto_scheduled_time?: string | null
           created_at?: string | null
@@ -755,6 +758,7 @@ export type Database = {
       }
       curriculum_items: {
         Row: {
+          assessment_type: string | null
           body: Json
           course_id: string | null
           created_at: string | null
@@ -768,6 +772,7 @@ export type Database = {
           validation_metadata: Json | null
         }
         Insert: {
+          assessment_type?: string | null
           body: Json
           course_id?: string | null
           created_at?: string | null
@@ -781,6 +786,7 @@ export type Database = {
           validation_metadata?: Json | null
         }
         Update: {
+          assessment_type?: string | null
           body?: Json
           course_id?: string | null
           created_at?: string | null
@@ -1886,6 +1892,47 @@ export type Database = {
           },
           {
             foreignKeyName: "standards_priority_queue_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_badges: {
+        Row: {
+          badge_name: string
+          badge_type: string
+          description: string | null
+          earned_at: string | null
+          icon: string | null
+          id: string
+          metadata: Json | null
+          student_id: string
+        }
+        Insert: {
+          badge_name: string
+          badge_type: string
+          description?: string | null
+          earned_at?: string | null
+          icon?: string | null
+          id?: string
+          metadata?: Json | null
+          student_id: string
+        }
+        Update: {
+          badge_name?: string
+          badge_type?: string
+          description?: string | null
+          earned_at?: string | null
+          icon?: string | null
+          id?: string
+          metadata?: Json | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_badges_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"

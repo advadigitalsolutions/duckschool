@@ -42,12 +42,15 @@ export default function StudentGradesPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold flex items-center gap-2">
           <Award className="h-8 w-8" />
-          My Grades
+          Academic Record
         </h1>
-        <p className="text-muted-foreground">View your assignment grades and performance</p>
+        <p className="text-muted-foreground">
+          Official transcript grades for mastery demonstrations. For your learning journey and growth, 
+          visit the <span className="text-primary font-medium">Mastery Journey</span> page.
+        </p>
       </div>
 
       {studentId && <StudentGrades studentId={studentId} />}
