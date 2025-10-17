@@ -36,12 +36,16 @@ export default function StudentAssignments() {
 
   const fetchAssignments = async () => {
     try {
-      console.log('Fetching assignments...');
+      console.log('[StudentAssignments] Starting fetch...');
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user) {
-        console.log('No user found');
+        console.log('[StudentAssignments] No user found');
+        setLoading(false);
         return;
       }
+
+      console.log('[StudentAssignments] User ID:', user.id);
 
       const { data: studentData, error: studentError } = await supabase
         .from('students')
@@ -50,16 +54,18 @@ export default function StudentAssignments() {
         .single();
 
       if (studentError) {
-        console.error('Student fetch error:', studentError);
+        console.error('[StudentAssignments] Student fetch error:', studentError);
+        setLoading(false);
         return;
       }
 
       if (!studentData) {
-        console.log('No student data found');
+        console.log('[StudentAssignments] No student data found');
+        setLoading(false);
         return;
       }
 
-      console.log('Student ID:', studentData.id);
+      console.log('[StudentAssignments] Student ID:', studentData.id);
 
       // Get all courses for this student
       const { data: coursesData, error: coursesError } = await supabase
@@ -68,15 +74,15 @@ export default function StudentAssignments() {
         .eq('student_id', studentData.id);
 
       if (coursesError) {
-        console.error('Courses fetch error:', coursesError);
+        console.error('[StudentAssignments] Courses fetch error:', coursesError);
         setLoading(false);
         return;
       }
 
-      console.log('Courses:', coursesData);
+      console.log('[StudentAssignments] Courses found:', coursesData?.length || 0);
 
       if (!coursesData || coursesData.length === 0) {
-        console.log('No courses found');
+        console.log('[StudentAssignments] No courses - setting empty assignments');
         setAssignments([]);
         setCourses([]);
         setLoading(false);
@@ -93,15 +99,15 @@ export default function StudentAssignments() {
         .in('course_id', courseIds);
 
       if (curriculumError) {
-        console.error('Curriculum fetch error:', curriculumError);
+        console.error('[StudentAssignments] Curriculum fetch error:', curriculumError);
         setLoading(false);
         return;
       }
 
-      console.log('Curriculum items:', curriculumData);
+      console.log('[StudentAssignments] Curriculum items found:', curriculumData?.length || 0);
 
       if (!curriculumData || curriculumData.length === 0) {
-        console.log('No curriculum items found');
+        console.log('[StudentAssignments] No curriculum items - setting empty assignments');
         setAssignments([]);
         setLoading(false);
         return;
@@ -138,15 +144,15 @@ export default function StudentAssignments() {
         .order('created_at', { ascending: false });
 
       if (assignmentsError) {
-        console.error('Assignments fetch error:', assignmentsError);
+        console.error('[StudentAssignments] Assignments fetch error:', assignmentsError);
+        setLoading(false);
+        return;
       }
 
-      console.log('Assignments data:', assignmentsData);
-      console.log('Number of assignments:', assignmentsData?.length || 0);
-
+      console.log('[StudentAssignments] Final assignments:', assignmentsData?.length || 0);
       setAssignments(assignmentsData || []);
     } catch (error) {
-      console.error('Error fetching assignments:', error);
+      console.error('[StudentAssignments] Unexpected error:', error);
     } finally {
       setLoading(false);
     }
