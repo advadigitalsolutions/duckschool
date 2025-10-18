@@ -120,10 +120,9 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
   const awayPercent = totalSeconds > 0 ? ((stats.totalAway / totalSeconds) * 100).toFixed(1) : 0;
   const focusQualityPercent = totalSeconds > 0 ? (((stats.totalActive + stats.totalResearch) / totalSeconds) * 100).toFixed(1) : 0;
 
-  const focusTime = stats.totalActive + stats.totalResearch;
-  
   const chartData = [
-    { name: 'Focus Time', value: focusTime, color: 'hsl(210, 100%, 60%)' },
+    { name: 'Active Work', value: stats.totalActive, color: '#00CC6C' },
+    { name: 'Focus Time', value: stats.totalResearch, color: 'hsl(210, 100%, 60%)' },
     { name: 'Idle', value: stats.totalIdle, color: '#EEBAB2' },
     { name: 'Away', value: stats.totalAway, color: '#FF8F57' }
   ].filter(item => item.value > 0);
@@ -183,12 +182,23 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Activity className="h-4 w-4" style={{ color: 'hsl(210, 100%, 60%)' }} />
+                  <Activity className="h-4 w-4" style={{ color: '#00CC6C' }} />
+                  <span className="text-sm font-medium">Active Work</span>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold">{formatTime(stats.totalActive)}</div>
+                  <div className="text-xs text-muted-foreground">{activePercent}%</div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" style={{ color: 'hsl(210, 100%, 60%)' }} />
                   <span className="text-sm font-medium">Focus Time</span>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold">{formatTime(focusTime)}</div>
-                  <div className="text-xs text-muted-foreground">{focusQualityPercent}%</div>
+                  <div className="font-semibold">{formatTime(stats.totalResearch)}</div>
+                  <div className="text-xs text-muted-foreground">{researchPercent}%</div>
                 </div>
               </div>
 
@@ -214,10 +224,14 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
                 </div>
               </div>
 
-              <div className="pt-2 border-t text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <span>Includes: Active Work ({formatTime(stats.totalActive)}) + Research ({formatTime(stats.totalResearch)})</span>
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-primary">Focus Quality Score</span>
+                  <span className="text-lg font-bold text-primary">{focusQualityPercent}%</span>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Active work + focus time
+                </p>
               </div>
             </div>
           </div>
