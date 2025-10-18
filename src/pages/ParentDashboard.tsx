@@ -190,12 +190,12 @@ export default function ParentDashboard() {
         const {
           data: todaySessions,
           error: todayError
-        } = await supabase.from('learning_sessions').select('total_active_seconds, total_idle_seconds, total_away_seconds, session_start, session_end, updated_at').in('student_id', studentIds).or(`session_start.gte.${todayStart.toISOString()},and(session_start.lt.${todayStart.toISOString()},or(session_end.gte.${todayStart.toISOString()},session_end.is.null))`);
+        } = await supabase.from('learning_sessions').select('total_active_seconds, total_idle_seconds, total_away_seconds, total_research_seconds, session_start, session_end, updated_at').in('student_id', studentIds).or(`session_start.gte.${todayStart.toISOString()},and(session_start.lt.${todayStart.toISOString()},or(session_end.gte.${todayStart.toISOString()},session_end.is.null))`);
         if (todayError) {
           console.error('[ParentDashboard] Error fetching today sessions:', todayError);
         }
         const todayMinutesCalc = todaySessions?.reduce((sum, session) => {
-          const totalSeconds = (session.total_active_seconds || 0) + (session.total_idle_seconds || 0) + (session.total_away_seconds || 0);
+          const totalSeconds = (session.total_active_seconds || 0) + (session.total_idle_seconds || 0) + (session.total_away_seconds || 0) + (session.total_research_seconds || 0);
           return sum + totalSeconds / 60;
         }, 0) || 0;
         setTodayMinutes(Math.round(todayMinutesCalc));
@@ -204,12 +204,12 @@ export default function ParentDashboard() {
         const {
           data: weekSessions,
           error: weekError
-        } = await supabase.from('learning_sessions').select('total_active_seconds, total_idle_seconds, total_away_seconds').in('student_id', studentIds).gte('session_start', weekAgo.toISOString());
+        } = await supabase.from('learning_sessions').select('total_active_seconds, total_idle_seconds, total_away_seconds, total_research_seconds').in('student_id', studentIds).gte('session_start', weekAgo.toISOString());
         if (weekError) {
           console.error('[ParentDashboard] Error fetching week sessions:', weekError);
         }
         const weekMinutesCalc = weekSessions?.reduce((sum, session) => {
-          const totalSeconds = (session.total_active_seconds || 0) + (session.total_idle_seconds || 0) + (session.total_away_seconds || 0);
+          const totalSeconds = (session.total_active_seconds || 0) + (session.total_idle_seconds || 0) + (session.total_away_seconds || 0) + (session.total_research_seconds || 0);
           return sum + totalSeconds / 60;
         }, 0) || 0;
         setWeekMinutes(Math.round(weekMinutesCalc));
@@ -218,12 +218,12 @@ export default function ParentDashboard() {
         const {
           data: allTimeSessions,
           error: allTimeError
-        } = await supabase.from('learning_sessions').select('total_active_seconds, total_idle_seconds, total_away_seconds').in('student_id', studentIds);
+        } = await supabase.from('learning_sessions').select('total_active_seconds, total_idle_seconds, total_away_seconds, total_research_seconds').in('student_id', studentIds);
         if (allTimeError) {
           console.error('[ParentDashboard] Error fetching all time sessions:', allTimeError);
         }
         const allTimeMinutesCalc = allTimeSessions?.reduce((sum, session) => {
-          const totalSeconds = (session.total_active_seconds || 0) + (session.total_idle_seconds || 0) + (session.total_away_seconds || 0);
+          const totalSeconds = (session.total_active_seconds || 0) + (session.total_idle_seconds || 0) + (session.total_away_seconds || 0) + (session.total_research_seconds || 0);
           return sum + totalSeconds / 60;
         }, 0) || 0;
         setAllTimeMinutes(Math.round(allTimeMinutesCalc));
