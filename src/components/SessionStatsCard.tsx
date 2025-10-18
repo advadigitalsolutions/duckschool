@@ -191,16 +191,18 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4" style={{ color: 'hsl(210, 100%, 60%)' }} />
-                  <span className="text-sm font-medium">Focused Research</span>
+              {stats.totalResearch > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-4 w-4" style={{ color: 'hsl(210, 100%, 60%)' }} />
+                    <span className="text-sm font-medium">Focused Research</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold">{formatTime(stats.totalResearch)}</div>
+                    <div className="text-xs text-muted-foreground">{researchPercent}%</div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-semibold">{formatTime(stats.totalResearch)}</div>
-                  <div className="text-xs text-muted-foreground">{researchPercent}%</div>
-                </div>
-              </div>
+              )}
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
