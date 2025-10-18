@@ -848,10 +848,13 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
           <TooltipProvider>
             {/* Reading button */}
             <Tooltip>
-            <TooltipTrigger asChild>
+              <TooltipTrigger asChild>
                 <button
-                  onClick={handleReading}
-                  className={`absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                  onClick={(e) => {
+                    console.log('🔵🔵🔵 BUTTON CLICKED! Event:', e);
+                    handleReading();
+                  }}
+                  className={`absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-colors pointer-events-auto z-50 ${
                     buttonFlash && isReading ? 'animate-flash-warning' : ''
                   } ${
                     isReading 
