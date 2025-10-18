@@ -102,16 +102,26 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   const { pageContext, courseId, assignmentId } = usePageContext();
 
+  // Log component mount
+  useEffect(() => {
+    console.log('🎯 FocusJourneyBar mounted');
+    return () => console.log('🎯 FocusJourneyBar unmounting');
+  }, []);
+
   // Save research time on unmount if still in reading mode
   useEffect(() => {
     return () => {
       if (isReading && readingStartTimestamp) {
         const elapsedSeconds = Math.floor((Date.now() - readingStartTimestamp) / 1000);
-        console.log('💾 Saving research time on unmount:', elapsedSeconds);
+        console.log('💾 Saving research time on unmount - elapsed:', elapsedSeconds, 'seconds');
+        console.log('💾 Current sessionData before save:', sessionData);
         updateResearchTime(elapsedSeconds);
+        console.log('💾 Called updateResearchTime');
+      } else {
+        console.log('💾 Not saving on unmount - isReading:', isReading, 'readingStartTimestamp:', readingStartTimestamp);
       }
     };
-  }, [isReading, readingStartTimestamp, updateResearchTime]);
+  }, [isReading, readingStartTimestamp, updateResearchTime, sessionData]);
 
   const handleWarning = useCallback(() => {
     console.log('⚠️ Duck warning - user idle for 30s');
@@ -552,6 +562,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   };
 
   const handleReading = () => {
+    console.log('🔵 handleReading called, isReading:', isReading);
     if (isReading) {
       // Resuming from reading
       const readingDuration = sessionData.activeSeconds - (readingStartTime || 0);
