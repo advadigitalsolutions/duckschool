@@ -39,14 +39,25 @@ export function AppSidebar() {
       const { data: roleData, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', user.id);
 
       console.log('[AppSidebar] Role data:', roleData, 'Error:', error);
 
-      if (roleData) {
-        setUserRole(roleData.role as 'parent' | 'student' | 'self_directed');
-        console.log('[AppSidebar] User role set to:', roleData.role);
+      if (roleData && roleData.length > 0) {
+        const roles = roleData.map(r => r.role);
+        
+        // Priority: parent > self_directed > student
+        if (roles.includes('parent')) {
+          setUserRole('parent');
+        } else if (roles.includes('self_directed')) {
+          setUserRole('self_directed');
+        } else if (roles.includes('student')) {
+          setUserRole('student');
+        } else {
+          setUserRole(null);
+        }
+        
+        console.log('[AppSidebar] All roles:', roles, 'Selected:', userRole);
       } else {
         setUserRole(null);
         console.log('[AppSidebar] No role found for user');

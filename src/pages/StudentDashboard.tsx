@@ -120,8 +120,10 @@ export default function StudentDashboard() {
       }
       const {
         data: roleData
-      } = await supabase.from('user_roles').select('role').eq('user_id', user.id).single();
-      if (roleData?.role === 'parent') {
+      } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
+      
+      // Check if user has parent role - redirect if so
+      if (roleData && roleData.some(r => r.role === 'parent')) {
         navigate('/parent', {
           replace: true
         });
