@@ -102,24 +102,25 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
     const activeSeconds = session.total_active_seconds || 0;
     const idleSeconds = session.total_idle_seconds || 0;
     const awaySeconds = session.total_away_seconds || 0;
-    const totalSeconds = activeSeconds + idleSeconds + awaySeconds;
+    const researchSeconds = session.total_research_seconds || 0;
+    const totalSeconds = activeSeconds + idleSeconds + awaySeconds + researchSeconds;
     const isComplete = session.is_block_complete;
     
     const POMODORO_DURATION = 25 * 60; // 25 minutes in seconds
     
     if (totalSeconds === 0) return null;
 
-    // Calculate percentages out of 25 minutes (not out of total time)
+    // Calculate percentages out of 25 minutes
     const activePercent = (activeSeconds / POMODORO_DURATION) * 100;
+    const researchPercent = (researchSeconds / POMODORO_DURATION) * 100;
     const idlePercent = (idleSeconds / POMODORO_DURATION) * 100;
     const awayPercent = (awaySeconds / POMODORO_DURATION) * 100;
-    const usedPercent = (totalSeconds / POMODORO_DURATION) * 100;
 
-    // Pastel color palette from the provided image
-    const activeColor = '#00CC6C'; // Dark Pastel Green
-    const idleColor = '#EEBAB2';   // Soft peachy pink (idle/pause)
-    const awayColor = '#FF8F57';   // Mango Tango (bright orange for away)
-    const unusedColor = '#FEF5E7'; // Eggwhite
+    const activeColor = '#00CC6C';   // Dark Pastel Green
+    const researchColor = '#5FB8F9'; // Sky Blue - NEW
+    const idleColor = '#EEBAB2';     // Soft peachy pink
+    const awayColor = '#FF8F57';     // Mango Tango
+    const unusedColor = '#FEF5E7';   // Eggwhite
 
     return (
       <TooltipProvider>
@@ -130,7 +131,6 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
                 className="relative flex h-6 flex-1 rounded-md overflow-hidden border border-border cursor-help"
                 style={{ backgroundColor: unusedColor }}
               >
-                {/* Active time */}
                 {activePercent > 0 && (
                   <div 
                     className="transition-all" 
@@ -140,7 +140,15 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
                     }}
                   />
                 )}
-                {/* Idle time */}
+                {researchPercent > 0 && (
+                  <div 
+                    className="transition-all" 
+                    style={{ 
+                      width: `${researchPercent}%`,
+                      backgroundColor: researchColor
+                    }}
+                  />
+                )}
                 {idlePercent > 0 && (
                   <div 
                     className="transition-all" 
@@ -150,7 +158,6 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
                     }}
                   />
                 )}
-                {/* Away time */}
                 {awayPercent > 0 && (
                   <div 
                     className="transition-all" 
@@ -169,7 +176,11 @@ export function SessionHistoryTable({ studentId, dateRange }: SessionHistoryTabl
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded" style={{ backgroundColor: activeColor }} />
-                  <span>Active: {formatTime(activeSeconds)}</span>
+                  <span>Active Work: {formatTime(activeSeconds)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: researchColor }} />
+                  <span>Focused Research: {formatTime(researchSeconds)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded" style={{ backgroundColor: idleColor }} />

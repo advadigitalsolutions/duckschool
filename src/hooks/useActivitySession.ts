@@ -6,6 +6,7 @@ interface SessionData {
   activeSeconds: number;
   idleSeconds: number;
   awaySeconds: number;
+  researchSeconds: number;
 }
 
 export const useActivitySession = (studentId?: string) => {
@@ -13,7 +14,8 @@ export const useActivitySession = (studentId?: string) => {
     sessionId: null,
     activeSeconds: 0,
     idleSeconds: 0,
-    awaySeconds: 0
+    awaySeconds: 0,
+    researchSeconds: 0
   });
 
   const getDeviceInfo = () => {
@@ -48,7 +50,7 @@ export const useActivitySession = (studentId?: string) => {
       const twentyFiveMinutesAgo = new Date(now.getTime() - POMODORO_DURATION).toISOString();
       const { data: activeBlock } = await supabase
         .from('learning_sessions')
-        .select('id, pomodoro_block_start, total_active_seconds, total_idle_seconds, total_away_seconds')
+        .select('id, pomodoro_block_start, total_active_seconds, total_idle_seconds, total_away_seconds, total_research_seconds')
         .eq('student_id', studentId)
         .is('session_end', null)
         .gte('pomodoro_block_start', twentyFiveMinutesAgo)
@@ -62,7 +64,8 @@ export const useActivitySession = (studentId?: string) => {
           sessionId: activeBlock.id,
           activeSeconds: activeBlock.total_active_seconds || 0,
           idleSeconds: activeBlock.total_idle_seconds || 0,
-          awaySeconds: activeBlock.total_away_seconds || 0
+          awaySeconds: activeBlock.total_away_seconds || 0,
+          researchSeconds: activeBlock.total_research_seconds || 0
         });
         
         // Store in localStorage for crash recovery
@@ -118,7 +121,7 @@ export const useActivitySession = (studentId?: string) => {
           if (now.getTime() - blockStart.getTime() < POMODORO_DURATION) {
             const { data: existingSession } = await supabase
               .from('learning_sessions')
-              .select('id, total_active_seconds, total_idle_seconds, total_away_seconds')
+              .select('id, total_active_seconds, total_idle_seconds, total_away_seconds, total_research_seconds')
               .eq('id', parsed.sessionId)
               .is('session_end', null)
               .maybeSingle();
@@ -129,7 +132,8 @@ export const useActivitySession = (studentId?: string) => {
                 sessionId: existingSession.id,
                 activeSeconds: existingSession.total_active_seconds || 0,
                 idleSeconds: existingSession.total_idle_seconds || 0,
-                awaySeconds: existingSession.total_away_seconds || 0
+                awaySeconds: existingSession.total_away_seconds || 0,
+                researchSeconds: existingSession.total_research_seconds || 0
               });
               return;
             }
@@ -158,6 +162,7 @@ export const useActivitySession = (studentId?: string) => {
         total_active_seconds: 0,
         total_idle_seconds: 0,
         total_away_seconds: 0,
+        total_research_seconds: 0,
         is_block_complete: false
       })
       .select()
@@ -191,7 +196,7 @@ export const useActivitySession = (studentId?: string) => {
   const endSession = useCallback(async (endedBy: 'logout' | 'browser_close' | 'timeout' | 'manual' | 'block_complete' = 'manual') => {
     if (!sessionData.sessionId || !studentId) return;
     
-    const totalSeconds = sessionData.activeSeconds + sessionData.idleSeconds + sessionData.awaySeconds;
+    const totalSeconds = sessionData.activeSeconds + sessionData.idleSeconds + sessionData.awaySeconds + sessionData.researchSeconds;
     const POMODORO_DURATION_SECONDS = 25 * 60; // 25 minutes in seconds
     const isComplete = totalSeconds >= POMODORO_DURATION_SECONDS;
     
@@ -203,6 +208,7 @@ export const useActivitySession = (studentId?: string) => {
         total_active_seconds: sessionData.activeSeconds,
         total_idle_seconds: sessionData.idleSeconds,
         total_away_seconds: sessionData.awaySeconds,
+        total_research_seconds: sessionData.researchSeconds,
         is_block_complete: isComplete
       })
       .eq('id', sessionData.sessionId);
@@ -215,23 +221,25 @@ export const useActivitySession = (studentId?: string) => {
         total_active_seconds: sessionData.activeSeconds,
         total_idle_seconds: sessionData.idleSeconds,
         total_away_seconds: sessionData.awaySeconds,
+        total_research_seconds: sessionData.researchSeconds,
         ended_by: endedBy,
         is_block_complete: isComplete
       }
     });
     
     localStorage.removeItem('focus_journey_session');
-    setSessionData({ sessionId: null, activeSeconds: 0, idleSeconds: 0, awaySeconds: 0 });
+    setSessionData({ sessionId: null, activeSeconds: 0, idleSeconds: 0, awaySeconds: 0, researchSeconds: 0 });
   }, [sessionData, studentId]);
 
   const syncSession = useCallback(async () => {
     if (!sessionData.sessionId) return;
     
-    const totalSeconds = sessionData.activeSeconds + sessionData.idleSeconds + sessionData.awaySeconds;
+    const totalSeconds = sessionData.activeSeconds + sessionData.idleSeconds + sessionData.awaySeconds + sessionData.researchSeconds;
     console.log(`🔄 Syncing session ${sessionData.sessionId}:`, {
       active: sessionData.activeSeconds,
       idle: sessionData.idleSeconds,
       away: sessionData.awaySeconds,
+      research: sessionData.researchSeconds,
       total: totalSeconds
     });
     
@@ -240,7 +248,8 @@ export const useActivitySession = (studentId?: string) => {
       .update({
         total_active_seconds: sessionData.activeSeconds,
         total_idle_seconds: sessionData.idleSeconds,
-        total_away_seconds: sessionData.awaySeconds
+        total_away_seconds: sessionData.awaySeconds,
+        total_research_seconds: sessionData.researchSeconds
       })
       .eq('id', sessionData.sessionId);
       
@@ -278,6 +287,13 @@ export const useActivitySession = (studentId?: string) => {
     }));
   }, []);
 
+  const updateResearchTime = useCallback((seconds: number) => {
+    setSessionData(prev => ({
+      ...prev,
+      researchSeconds: prev.researchSeconds + seconds
+    }));
+  }, []);
+
   // Periodic sync to DB - every 10 seconds for more frequent updates
   useEffect(() => {
     if (!sessionData.sessionId) return;
@@ -295,7 +311,7 @@ export const useActivitySession = (studentId?: string) => {
     }, 2000); // Sync 2 seconds after last time update
     
     return () => clearTimeout(timeout);
-  }, [sessionData.activeSeconds, sessionData.idleSeconds, sessionData.awaySeconds, syncSession]);
+  }, [sessionData.activeSeconds, sessionData.idleSeconds, sessionData.awaySeconds, sessionData.researchSeconds, syncSession]);
 
   // Handle browser close/refresh
   useEffect(() => {
@@ -307,7 +323,8 @@ export const useActivitySession = (studentId?: string) => {
           ended_by: 'browser_close',
           total_active_seconds: sessionData.activeSeconds,
           total_idle_seconds: sessionData.idleSeconds,
-          total_away_seconds: sessionData.awaySeconds
+          total_away_seconds: sessionData.awaySeconds,
+          total_research_seconds: sessionData.researchSeconds
         };
         
         // Fallback to synchronous update
@@ -340,6 +357,7 @@ export const useActivitySession = (studentId?: string) => {
     updateActiveTime,
     updateIdleTime,
     updateAwayTime,
+    updateResearchTime,
     sessionData
   };
 };

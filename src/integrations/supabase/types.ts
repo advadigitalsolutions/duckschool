@@ -1327,6 +1327,7 @@ export type Database = {
           total_active_seconds: number
           total_away_seconds: number
           total_idle_seconds: number
+          total_research_seconds: number | null
           updated_at: string
         }
         Insert: {
@@ -1346,6 +1347,7 @@ export type Database = {
           total_active_seconds?: number
           total_away_seconds?: number
           total_idle_seconds?: number
+          total_research_seconds?: number | null
           updated_at?: string
         }
         Update: {
@@ -1365,6 +1367,7 @@ export type Database = {
           total_active_seconds?: number
           total_away_seconds?: number
           total_idle_seconds?: number
+          total_research_seconds?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -1376,6 +1379,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          skipped: boolean | null
+          user_id: string | null
+          wizard_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          skipped?: boolean | null
+          user_id?: string | null
+          wizard_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          skipped?: boolean | null
+          user_id?: string | null
+          wizard_type?: string
+        }
+        Relationships: []
       }
       parent_todo_items: {
         Row: {
