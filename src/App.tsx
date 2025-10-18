@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { CommandPalette } from "@/components/CommandPalette";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
@@ -17,7 +18,17 @@ import { LearningWizardTutorial } from "@/components/LearningWizardTutorial";
 import { SmartCalendarWizard } from "@/components/SmartCalendarWizard";
 import { XPSystemWizard } from "@/components/XPSystemWizard";
 import { MasteryTrackingWizard } from "@/components/MasteryTrackingWizard";
-import { ContactSupportButton } from "@/components/help/ContactSupportButton";
+import Settings from "./pages/Settings";
+import Account from "./pages/settings/Account";
+import Appearance from "./pages/settings/Appearance";
+import AccessibilitySettings from "./pages/settings/AccessibilitySettings";
+import LearningProfile from "./pages/settings/LearningProfile";
+import Notifications from "./pages/settings/Notifications";
+import Billing from "./pages/settings/Billing";
+import Help from "./pages/settings/Help";
+import FeedbackSettings from "./pages/settings/Feedback";
+import FeatureRequests from "./pages/FeatureRequests";
+import Roadmap from "./pages/Roadmap";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -258,6 +269,22 @@ const App = () => (
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/waitlist" element={<Waitlist />} />
                       <Route path="/dashboard" element={<Index />} />
+                      
+                      {/* Settings Routes */}
+                      <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>}>
+                        <Route path="account" element={<Account />} />
+                        <Route path="appearance" element={<Appearance />} />
+                        <Route path="accessibility" element={<AccessibilitySettings />} />
+                        <Route path="learning-profile" element={<LearningProfile />} />
+                        <Route path="notifications" element={<Notifications />} />
+                        <Route path="billing" element={<Billing />} />
+                        <Route path="help" element={<Help />} />
+                        <Route path="feedback" element={<FeedbackSettings />} />
+                      </Route>
+
+                      {/* Feedback Routes */}
+                      <Route path="/feature-requests" element={<AuthGuard><FeatureRequests /></AuthGuard>} />
+                      <Route path="/roadmap" element={<AuthGuard><Roadmap /></AuthGuard>} />
                       <Route path="/parent" element={<AuthGuard><ParentDashboard /></AuthGuard>} />
                       <Route path="/parent/profile" element={<AuthGuard><ParentProfile /></AuthGuard>} />
                       <Route path="/student/:id" element={<AuthGuard><StudentDetail /></AuthGuard>} />
@@ -287,12 +314,13 @@ const App = () => (
                   </AppLayout>
                 </SidebarProvider>
                 <FloatingHelpButton />
-                <ContactSupportButton />
                 <FocusDuckWizard />
                 <LearningWizardTutorial />
                 <SmartCalendarWizard />
                 <XPSystemWizard />
                 <MasteryTrackingWizard />
+                <CommandPalette />
+                <CommandPalette />
               </BrowserRouter>
             </TooltipProvider>
           </AccessibilityProvider>

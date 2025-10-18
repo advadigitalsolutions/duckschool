@@ -1198,6 +1198,126 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_request_comments: {
+        Row: {
+          comment: string
+          created_at: string | null
+          feature_request_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          comment: string
+          created_at?: string | null
+          feature_request_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string
+          created_at?: string | null
+          feature_request_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_request_comments_feature_request_id_fkey"
+            columns: ["feature_request_id"]
+            isOneToOne: false
+            referencedRelation: "feature_request_vote_counts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feature_request_comments_feature_request_id_fkey"
+            columns: ["feature_request_id"]
+            isOneToOne: false
+            referencedRelation: "feature_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_request_votes: {
+        Row: {
+          created_at: string | null
+          feature_request_id: string | null
+          id: string
+          user_id: string | null
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          feature_request_id?: string | null
+          id?: string
+          user_id?: string | null
+          vote_type: string
+        }
+        Update: {
+          created_at?: string | null
+          feature_request_id?: string | null
+          id?: string
+          user_id?: string | null
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_request_votes_feature_request_id_fkey"
+            columns: ["feature_request_id"]
+            isOneToOne: false
+            referencedRelation: "feature_request_vote_counts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feature_request_votes_feature_request_id_fkey"
+            columns: ["feature_request_id"]
+            isOneToOne: false
+            referencedRelation: "feature_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_requests: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string
+          id: string
+          priority: string | null
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          id?: string
+          priority?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          id?: string
+          priority?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       focus_accountability_checks: {
         Row: {
           ai_feedback: string | null
@@ -1379,6 +1499,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string | null
+          email_assignments: boolean | null
+          email_grades: boolean | null
+          email_reminders: boolean | null
+          email_weekly_summary: boolean | null
+          id: string
+          push_enabled: boolean | null
+          sms_enabled: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_assignments?: boolean | null
+          email_grades?: boolean | null
+          email_reminders?: boolean | null
+          email_weekly_summary?: boolean | null
+          id?: string
+          push_enabled?: boolean | null
+          sms_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_assignments?: boolean | null
+          email_grades?: boolean | null
+          email_reminders?: boolean | null
+          email_weekly_summary?: boolean | null
+          id?: string
+          push_enabled?: boolean | null
+          sms_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       onboarding_progress: {
         Row: {
@@ -2607,7 +2766,15 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      feature_request_vote_counts: {
+        Row: {
+          downvotes: number | null
+          id: string | null
+          net_votes: number | null
+          upvotes: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       binary_quantize: {
