@@ -846,36 +846,30 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
           {/* Control buttons */}
           <TooltipProvider>
-            {/* Reading button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={(e) => {
-                    console.log('🔵🔵🔵 BUTTON CLICKED! Event:', e);
-                    handleReading();
-                  }}
-                  className={`absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-colors pointer-events-auto z-50 ${
-                    buttonFlash && isReading ? 'animate-flash-warning' : ''
-                  } ${
-                    isReading 
-                      ? 'bg-blue-400 hover:bg-blue-500 text-white shadow-lg' 
-                      : 'bg-blue-400/20 hover:bg-blue-400/30 text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-200'
-                  }`}
-                  aria-label={isReading ? 'Resume active work' : 'Focused research mode'}
-                >
-                  {isReading ? (
-                    <span className="text-xs font-mono font-semibold">
-                      {formatDuration(Math.floor((Date.now() - (readingStartTimestamp || Date.now())) / 1000))}
-                    </span>
-                  ) : (
-                    <BookOpen className="w-4 h-4" />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isReading ? 'Resume active work' : 'Focused Research Mode 📚'}</p>
-              </TooltipContent>
-            </Tooltip>
+            {/* Reading button - NO TOOLTIP WRAPPER FOR TESTING */}
+            <button
+              onClick={(e) => {
+                console.log('🔵🔵🔵 BUTTON CLICKED! Event:', e);
+                handleReading();
+              }}
+              title={isReading ? 'Resume active work' : 'Focused Research Mode 📚'}
+              className={`absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full transition-colors pointer-events-auto z-[9999] cursor-pointer ${
+                buttonFlash && isReading ? 'animate-flash-warning' : ''
+              } ${
+                isReading 
+                  ? 'bg-blue-400 hover:bg-blue-500 text-white shadow-lg' 
+                  : 'bg-blue-400/20 hover:bg-blue-400/30 text-blue-600 dark:text-blue-300 hover:text-blue-700 dark:hover:text-blue-200'
+              }`}
+              aria-label={isReading ? 'Resume active work' : 'Focused research mode'}
+            >
+              {isReading ? (
+                <span className="text-xs font-mono font-semibold">
+                  {formatDuration(Math.floor((Date.now() - (readingStartTimestamp || Date.now())) / 1000))}
+                </span>
+              ) : (
+                <BookOpen className="w-4 h-4" />
+              )}
+            </button>
             
             {/* Break button */}
             <Tooltip>
