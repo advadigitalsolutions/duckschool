@@ -102,6 +102,17 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
 
   const { pageContext, courseId, assignmentId } = usePageContext();
 
+  // Save research time on unmount if still in reading mode
+  useEffect(() => {
+    return () => {
+      if (isReading && readingStartTimestamp) {
+        const elapsedSeconds = Math.floor((Date.now() - readingStartTimestamp) / 1000);
+        console.log('💾 Saving research time on unmount:', elapsedSeconds);
+        updateResearchTime(elapsedSeconds);
+      }
+    };
+  }, [isReading, readingStartTimestamp, updateResearchTime]);
+
   const handleWarning = useCallback(() => {
     console.log('⚠️ Duck warning - user idle for 30s');
     // Don't show warning if duck is fallen, ghostly, on break, or reading
@@ -546,6 +557,12 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       const readingDuration = sessionData.activeSeconds - (readingStartTime || 0);
       const startPercent = ((readingStartTime || 0) / goalSeconds) * 100;
       const widthPercent = (readingDuration / goalSeconds) * 100;
+
+      // Save research time to database
+      if (readingStartTimestamp) {
+        const elapsedSeconds = Math.floor((Date.now() - readingStartTimestamp) / 1000);
+        updateResearchTime(elapsedSeconds);
+      }
 
       // Add reading segment
       setGapSegments(prev => [...prev, {
