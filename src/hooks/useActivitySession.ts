@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SessionData {
@@ -17,19 +17,6 @@ export const useActivitySession = (studentId?: string) => {
     awaySeconds: 0,
     researchSeconds: 0
   });
-
-  // Use refs to prevent stale closures in intervals
-  const sessionDataRef = useRef(sessionData);
-  const studentIdRef = useRef(studentId);
-
-  // Keep refs in sync with state
-  useEffect(() => {
-    sessionDataRef.current = sessionData;
-  }, [sessionData]);
-
-  useEffect(() => {
-    studentIdRef.current = studentId;
-  }, [studentId]);
 
   const getDeviceInfo = () => {
     const ua = navigator.userAgent;
@@ -244,45 +231,34 @@ export const useActivitySession = (studentId?: string) => {
     setSessionData({ sessionId: null, activeSeconds: 0, idleSeconds: 0, awaySeconds: 0, researchSeconds: 0 });
   }, [sessionData, studentId]);
 
-  // Sync session to database using refs to prevent stale closures
   const syncSession = useCallback(async () => {
-    const currentSessionData = sessionDataRef.current;
+    if (!sessionData.sessionId) return;
     
-    if (!currentSessionData.sessionId) {
-      console.log('⚠️ No session to sync');
-      return;
-    }
-
-    try {
-      const totalSeconds = currentSessionData.activeSeconds + currentSessionData.idleSeconds + 
-                          currentSessionData.awaySeconds + currentSessionData.researchSeconds;
+    const totalSeconds = sessionData.activeSeconds + sessionData.idleSeconds + sessionData.awaySeconds + sessionData.researchSeconds;
+    console.log(`🔄 Syncing session ${sessionData.sessionId}:`, {
+      active: sessionData.activeSeconds,
+      idle: sessionData.idleSeconds,
+      away: sessionData.awaySeconds,
+      research: sessionData.researchSeconds,
+      total: totalSeconds
+    });
+    
+    const { error } = await supabase
+      .from('learning_sessions')
+      .update({
+        total_active_seconds: sessionData.activeSeconds,
+        total_idle_seconds: sessionData.idleSeconds,
+        total_away_seconds: sessionData.awaySeconds,
+        total_research_seconds: sessionData.researchSeconds
+      })
+      .eq('id', sessionData.sessionId);
       
-      console.log(`💾 Syncing session to database:`, {
-        sessionId: currentSessionData.sessionId,
-        active: currentSessionData.activeSeconds,
-        idle: currentSessionData.idleSeconds,
-        away: currentSessionData.awaySeconds,
-        research: currentSessionData.researchSeconds,
-        total: totalSeconds
-      });
-
-      const { error } = await supabase
-        .from('learning_sessions')
-        .update({
-          total_active_seconds: currentSessionData.activeSeconds,
-          total_idle_seconds: currentSessionData.idleSeconds,
-          total_away_seconds: currentSessionData.awaySeconds,
-          total_research_seconds: currentSessionData.researchSeconds,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentSessionData.sessionId);
-
-      if (error) throw error;
-      console.log('✅ Session synced successfully');
-    } catch (error) {
+    if (error) {
       console.error('❌ Error syncing session:', error);
+    } else {
+      console.log('✅ Session synced successfully');
     }
-  }, []); // No dependencies - uses refs
+  }, [sessionData]);
 
   const updateActiveTime = useCallback((seconds: number) => {
     setSessionData(prev => {
@@ -325,21 +301,24 @@ export const useActivitySession = (studentId?: string) => {
     });
   }, []);
 
-  // Single periodic sync - simpler and no stale closure issues
+  // Periodic sync to DB - every 10 seconds for more frequent updates
   useEffect(() => {
     if (!sessionData.sessionId) return;
-
-    console.log('⏰ Setting up periodic sync every 5 seconds');
-    const syncInterval = setInterval(() => {
-      console.log('⏰ Periodic sync triggered');
+    
+    const interval = setInterval(syncSession, 10000); // Sync every 10 seconds
+    return () => clearInterval(interval);
+  }, [sessionData.sessionId, syncSession]);
+  
+  // Debounced sync after time updates
+  useEffect(() => {
+    if (!sessionData.sessionId) return;
+    
+    const timeout = setTimeout(() => {
       syncSession();
-    }, 5000); // Sync every 5 seconds
-
-    return () => {
-      console.log('🧹 Clearing periodic sync interval');
-      clearInterval(syncInterval);
-    };
-  }, [sessionData.sessionId, syncSession]); // Only depend on sessionId changing
+    }, 2000); // Sync 2 seconds after last time update
+    
+    return () => clearTimeout(timeout);
+  }, [sessionData.activeSeconds, sessionData.idleSeconds, sessionData.awaySeconds, sessionData.researchSeconds, syncSession]);
 
   // Handle browser close/refresh
   useEffect(() => {

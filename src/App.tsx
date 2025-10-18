@@ -46,7 +46,6 @@ import Auth from "./pages/Auth";
 import Waitlist from "./pages/Waitlist";
 import ParentDashboard from "./pages/ParentDashboard";
 import ParentProfile from "./pages/ParentProfile";
-import ParentAllCourses from "./pages/ParentAllCourses";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentDetail from "./pages/StudentDetail";
 import StudentXP from "./pages/StudentXP";
@@ -255,7 +254,6 @@ const App = () => (
                       <Route path="/waitlist" element={<Waitlist />} />
                       <Route path="/dashboard" element={<Index />} />
                       <Route path="/parent" element={<AuthGuard><ParentDashboard /></AuthGuard>} />
-                      <Route path="/parent/courses" element={<AuthGuard><ParentAllCourses /></AuthGuard>} />
                       <Route path="/parent/profile" element={<AuthGuard><ParentProfile /></AuthGuard>} />
                       <Route path="/student/:id" element={<AuthGuard><StudentDetail /></AuthGuard>} />
                       <Route path="/assignment/:id" element={<AuthGuard><AssignmentDetail /></AuthGuard>} />
