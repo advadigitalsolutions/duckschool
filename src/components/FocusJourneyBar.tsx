@@ -27,6 +27,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   const [buttonFlash, setButtonFlash] = useState(false);
   const [celebrationProgress, setCelebrationProgress] = useState<number | null>(null);
   const [celebrationStartSeconds, setCelebrationStartSeconds] = useState<number | null>(null);
+  const previousDuckStateRef = useRef<typeof duckState>('walking');
 
   // Track learning windows to prevent false idle penalties
   const [activeLearningWindows, setActiveLearningWindows] = useState<Set<string>>(new Set());
@@ -188,22 +189,61 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       return;
     }
     
-    console.log('🟢 User became active');
-    goActive();
-    setDuckState('climbing');
-    playRandomReturnSound(0.6);
-    
-    if (sessionId) {
-      await supabase.from('activity_events').insert({
-        student_id: studentId,
-        session_id: sessionId,
-        event_type: 'resumed_activity',
-        page_context: pageContext,
-        course_id: courseId,
-        assignment_id: assignmentId
-      });
+    // Only trigger return if duck is actually fallen or ghostly
+    if (duckState === 'fallen' || duckState === 'ghostly-jumping') {
+      console.log('🟢 User became active from fallen/ghostly state');
+      goActive();
+      setDuckState('celebrating-return');
+      playRandomReturnSound(0.6);
+      
+      if (sessionId) {
+        await supabase.from('activity_events').insert({
+          student_id: studentId,
+          session_id: sessionId,
+          event_type: 'resumed_activity',
+          page_context: pageContext,
+          course_id: courseId,
+          assignment_id: assignmentId
+        });
+      }
     }
-  }, [sessionId, studentId, pageContext, courseId, assignmentId, isOnBreak, isReading, goActive]);
+  }, [sessionId, studentId, pageContext, courseId, assignmentId, isOnBreak, isReading, duckState, goActive]);
+
+  // Handle duck click (when ghostly or fallen)
+  const handleDuckClick = useCallback(async () => {
+    if (duckState === 'ghostly-jumping' || duckState === 'fallen') {
+      console.log('🦆 Duck clicked while ghostly - climbing back up!');
+      goActive();
+      setDuckState('celebrating-return');
+      playRandomReturnSound(0.6);
+      
+      if (sessionId) {
+        await supabase.from('activity_events').insert({
+          student_id: studentId,
+          session_id: sessionId,
+          event_type: 'duck_clicked',
+          page_context: pageContext
+        });
+      }
+    }
+  }, [duckState, sessionId, studentId, pageContext, goActive]);
+
+  // Handle duck internal state changes (fallen, ghostly-jumping)
+  const handleDuckStateChange = useCallback((newState: typeof duckState) => {
+    console.log('🦆 Duck internal state changed to:', newState);
+    setDuckState(newState);
+  }, []);
+
+  // Handle duck animation complete (climbing, celebrating, celebrating-return)
+  const handleDuckAnimationComplete = useCallback(() => {
+    console.log('🦆 Duck animation complete for state:', duckState);
+    
+    if (duckState === 'climbing' || duckState === 'celebrating-return') {
+      setDuckState('walking');
+    } else if (duckState === 'celebrating') {
+      setDuckState('walking');
+    }
+  }, [duckState]);
 
   // Idle detection
   useIdleDetection({
@@ -388,8 +428,13 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
         <div
           className="absolute bottom-12 transition-all duration-500 ease-out"
           style={{ left: `${Math.min(progress, 100)}%`, transform: 'translateX(-50%)' }}
+          onClick={handleDuckClick}
         >
-          <FocusJourneyDuck animationState={duckState} />
+          <FocusJourneyDuck 
+            animationState={duckState}
+            onAnimationComplete={handleDuckAnimationComplete}
+            onStateChange={handleDuckStateChange}
+          />
         </div>
 
         {/* Controls */}
