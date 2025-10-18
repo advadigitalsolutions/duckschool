@@ -288,16 +288,19 @@ export const useActivitySession = (studentId?: string) => {
   }, []);
 
   const updateResearchTime = useCallback((seconds: number) => {
-    console.log(`📚 updateResearchTime called with ${seconds} seconds`);
+    console.log(`📚📚📚 updateResearchTime called with ${seconds} seconds`);
+    console.log(`📚 sessionData BEFORE setState:`, sessionData);
     setSessionData(prev => {
       const newResearch = prev.researchSeconds + seconds;
-      console.log(`📚 Research time updated: ${prev.researchSeconds}s -> ${newResearch}s`);
-      return {
+      console.log(`📚 Inside setState - OLD researchSeconds: ${prev.researchSeconds}s, NEW: ${newResearch}s`);
+      const newState = {
         ...prev,
         researchSeconds: newResearch
       };
+      console.log(`📚 Returning new state:`, newState);
+      return newState;
     });
-  }, []);
+  }, [sessionData]);
 
   // Periodic sync to DB - every 10 seconds for more frequent updates
   useEffect(() => {

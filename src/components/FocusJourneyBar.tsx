@@ -562,7 +562,8 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
   };
 
   const handleReading = () => {
-    console.log('🔵 handleReading called, isReading:', isReading);
+    console.log('🔵📖 handleReading called, isReading:', isReading);
+    console.log('📖 Current timestamps - readingStartTimestamp:', readingStartTimestamp, 'Now:', Date.now());
     if (isReading) {
       // Resuming from reading
       const readingDuration = sessionData.activeSeconds - (readingStartTime || 0);
@@ -572,10 +573,13 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       // Save research time to database
       if (readingStartTimestamp) {
         const elapsedSeconds = Math.floor((Date.now() - readingStartTimestamp) / 1000);
-        console.log('📚 Ending research mode - elapsed seconds:', elapsedSeconds);
+        console.log('📚📚 Ending research mode - elapsed seconds:', elapsedSeconds);
         console.log('📚 Current sessionData:', sessionData);
+        console.log('📚 About to call updateResearchTime with', elapsedSeconds, 'seconds');
         updateResearchTime(elapsedSeconds);
-        console.log('📚 Called updateResearchTime with', elapsedSeconds, 'seconds');
+        console.log('📚 Called updateResearchTime');
+      } else {
+        console.log('⚠️ No readingStartTimestamp set!');
       }
 
       // Add reading segment
