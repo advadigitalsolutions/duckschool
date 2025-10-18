@@ -561,7 +561,10 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       // Save research time to database
       if (readingStartTimestamp) {
         const elapsedSeconds = Math.floor((Date.now() - readingStartTimestamp) / 1000);
+        console.log('📚 Ending research mode - elapsed seconds:', elapsedSeconds);
+        console.log('📚 Current sessionData:', sessionData);
         updateResearchTime(elapsedSeconds);
+        console.log('📚 Called updateResearchTime with', elapsedSeconds, 'seconds');
       }
 
       // Add reading segment
@@ -626,6 +629,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setIsReading(true);
       setReadingStartTime(currentSeconds);
       setReadingStartTimestamp(Date.now());
+      console.log('📚 Starting research mode at timestamp:', Date.now());
       setDuckState('walking');
       toast.success('Focused research mode activated! 📚🦆', {
         description: 'Duck stays happy while you read and learn!'

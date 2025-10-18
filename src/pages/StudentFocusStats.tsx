@@ -33,7 +33,7 @@ export default function StudentFocusStats() {
         // Fetch session stats
         const { data: sessions } = await supabase
           .from('learning_sessions')
-          .select('total_active_seconds, total_idle_seconds, total_away_seconds')
+          .select('total_active_seconds, total_idle_seconds, total_away_seconds, total_research_seconds')
           .eq('student_id', studentData.id);
 
         if (sessions) {
@@ -42,17 +42,20 @@ export default function StudentFocusStats() {
           const minutes = sessions.reduce((sum, s) => {
             const totalSeconds = (s.total_active_seconds || 0) + 
                                 (s.total_idle_seconds || 0) + 
-                                (s.total_away_seconds || 0);
+                                (s.total_away_seconds || 0) +
+                                (s.total_research_seconds || 0);
             return sum + totalSeconds / 60;
           }, 0);
           setTotalMinutes(Math.round(minutes));
 
-          // Calculate average focus score
+          // Calculate average focus score (active + research / total)
           const avgScore = sessions.reduce((sum, s) => {
             const total = (s.total_active_seconds || 0) + 
                          (s.total_idle_seconds || 0) + 
-                         (s.total_away_seconds || 0);
-            const score = total > 0 ? (s.total_active_seconds || 0) / total * 100 : 0;
+                         (s.total_away_seconds || 0) +
+                         (s.total_research_seconds || 0);
+            const focusTime = (s.total_active_seconds || 0) + (s.total_research_seconds || 0);
+            const score = total > 0 ? focusTime / total * 100 : 0;
             return sum + score;
           }, 0) / (sessions.length || 1);
           setAvgFocusScore(Math.round(avgScore));
