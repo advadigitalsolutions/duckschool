@@ -24,7 +24,7 @@ export function ActivityTimelineChart({ studentId, days = 7 }: ActivityTimelineC
 
       const { data, error } = await supabase
         .from('learning_sessions')
-        .select('session_start, total_active_seconds, total_idle_seconds, total_away_seconds')
+        .select('session_start, total_active_seconds, total_idle_seconds, total_away_seconds, total_research_seconds')
         .eq('student_id', studentId)
         .gte('session_start', startDate.toISOString())
         .order('session_start', { ascending: true });
@@ -32,23 +32,24 @@ export function ActivityTimelineChart({ studentId, days = 7 }: ActivityTimelineC
       if (error) throw error;
 
       // Group by day
-      const dailyData = new Map<string, { active: number; idle: number; away: number }>();
+      const dailyData = new Map<string, { active: number; idle: number; away: number; research: number }>();
 
       // Initialize all days in range
       for (let i = 0; i < days; i++) {
         const date = subDays(new Date(), days - 1 - i);
         const dateKey = format(date, 'MMM d');
-        dailyData.set(dateKey, { active: 0, idle: 0, away: 0 });
+        dailyData.set(dateKey, { active: 0, idle: 0, away: 0, research: 0 });
       }
 
       // Aggregate session data
       data?.forEach((session) => {
         const dateKey = format(new Date(session.session_start), 'MMM d');
-        const existing = dailyData.get(dateKey) || { active: 0, idle: 0, away: 0 };
+        const existing = dailyData.get(dateKey) || { active: 0, idle: 0, away: 0, research: 0 };
         dailyData.set(dateKey, {
           active: existing.active + (session.total_active_seconds || 0),
           idle: existing.idle + (session.total_idle_seconds || 0),
-          away: existing.away + (session.total_away_seconds || 0)
+          away: existing.away + (session.total_away_seconds || 0),
+          research: existing.research + (session.total_research_seconds || 0)
         });
       });
 
@@ -56,6 +57,7 @@ export function ActivityTimelineChart({ studentId, days = 7 }: ActivityTimelineC
       const chartArray = Array.from(dailyData.entries()).map(([date, stats]) => ({
         date,
         Active: Math.round(stats.active / 60),
+        'Focused Research': Math.round(stats.research / 60),
         Idle: Math.round(stats.idle / 60),
         Away: Math.round(stats.away / 60)
       }));
@@ -94,6 +96,7 @@ export function ActivityTimelineChart({ studentId, days = 7 }: ActivityTimelineC
             <Tooltip />
             <Legend />
             <Bar dataKey="Active" stackId="a" fill="#00CC6C" />
+            <Bar dataKey="Focused Research" stackId="a" fill="hsl(210, 100%, 60%)" />
             <Bar dataKey="Idle" stackId="a" fill="#EEBAB2" />
             <Bar dataKey="Away" stackId="a" fill="#FF8F57" />
           </BarChart>

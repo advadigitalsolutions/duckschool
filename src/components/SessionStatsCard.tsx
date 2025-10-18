@@ -122,7 +122,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
 
   const chartData = [
     { name: 'Active Work', value: stats.totalActive, color: '#00CC6C' },
-    { name: 'Research', value: stats.totalResearch, color: '#5FB8F9' },
+    { name: 'Focused Research', value: stats.totalResearch, color: 'hsl(210, 100%, 60%)' },
     { name: 'Idle', value: stats.totalIdle, color: '#EEBAB2' },
     { name: 'Away', value: stats.totalAway, color: '#FF8F57' }
   ].filter(item => item.value > 0);
@@ -193,7 +193,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4" style={{ color: '#5FB8F9' }} />
+                  <Eye className="h-4 w-4" style={{ color: 'hsl(210, 100%, 60%)' }} />
                   <span className="text-sm font-medium">Focused Research</span>
                 </div>
                 <div className="text-right">
