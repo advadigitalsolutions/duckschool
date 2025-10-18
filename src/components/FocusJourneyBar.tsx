@@ -108,21 +108,6 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     return () => console.log('🎯 FocusJourneyBar unmounting');
   }, []);
 
-  // Save research time on unmount if still in reading mode
-  useEffect(() => {
-    return () => {
-      if (isReading && readingStartTimestamp) {
-        const elapsedSeconds = Math.floor((Date.now() - readingStartTimestamp) / 1000);
-        console.log('💾 Saving research time on unmount - elapsed:', elapsedSeconds, 'seconds');
-        console.log('💾 Current sessionData before save:', sessionData);
-        updateResearchTime(elapsedSeconds);
-        console.log('💾 Called updateResearchTime');
-      } else {
-        console.log('💾 Not saving on unmount - isReading:', isReading, 'readingStartTimestamp:', readingStartTimestamp);
-      }
-    };
-  }, [isReading, readingStartTimestamp, updateResearchTime, sessionData]);
-
   const handleWarning = useCallback(() => {
     console.log('⚠️ Duck warning - user idle for 30s');
     // Don't show warning if duck is fallen, ghostly, on break, or reading
@@ -451,6 +436,21 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
     return () => clearInterval(interval);
   }, [sessionId, isVisible, updateAwayTime]);
 
+  // Update research time counter - real-time tracking
+  useEffect(() => {
+    if (!sessionId || !isReading) return;
+
+    console.log('📚 Starting research time interval');
+    const interval = setInterval(() => {
+      updateResearchTime(1); // Increment by 1 second
+    }, 1000);
+
+    return () => {
+      console.log('📚 Clearing research time interval');
+      clearInterval(interval);
+    };
+  }, [sessionId, isReading, updateResearchTime]);
+
   // Calculate progress based on total elapsed time
   useEffect(() => {
     // During celebration, use the preserved progress to prevent jumping
@@ -570,17 +570,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       const startPercent = ((readingStartTime || 0) / goalSeconds) * 100;
       const widthPercent = (readingDuration / goalSeconds) * 100;
 
-      // Save research time to database
-      if (readingStartTimestamp) {
-        const elapsedSeconds = Math.floor((Date.now() - readingStartTimestamp) / 1000);
-        console.log('📚📚 Ending research mode - elapsed seconds:', elapsedSeconds);
-        console.log('📚 Current sessionData:', sessionData);
-        console.log('📚 About to call updateResearchTime with', elapsedSeconds, 'seconds');
-        updateResearchTime(elapsedSeconds);
-        console.log('📚 Called updateResearchTime');
-      } else {
-        console.log('⚠️ No readingStartTimestamp set!');
-      }
+      console.log('📚 Ending research mode - research time tracked in real-time');
 
       // Add reading segment
       setGapSegments(prev => [...prev, {
