@@ -1492,6 +1492,7 @@ export type Database = {
           created_at: string | null
           dyslexia_font_enabled: boolean | null
           email: string | null
+          first_login: boolean | null
           focus_mode_enabled: boolean | null
           focus_mode_glow_color: string | null
           focus_mode_glow_intensity: number | null
@@ -1517,6 +1518,7 @@ export type Database = {
           created_at?: string | null
           dyslexia_font_enabled?: boolean | null
           email?: string | null
+          first_login?: boolean | null
           focus_mode_enabled?: boolean | null
           focus_mode_glow_color?: string | null
           focus_mode_glow_intensity?: number | null
@@ -1542,6 +1544,7 @@ export type Database = {
           created_at?: string | null
           dyslexia_font_enabled?: boolean | null
           email?: string | null
+          first_login?: boolean | null
           focus_mode_enabled?: boolean | null
           focus_mode_glow_color?: string | null
           focus_mode_glow_intensity?: number | null

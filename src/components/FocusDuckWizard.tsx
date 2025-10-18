@@ -2,18 +2,58 @@ import { useState, useEffect } from 'react';
 import { Target, Clock, Eye, Zap, CheckCircle2, PauseCircle, BookOpen, Ghost, Heart } from 'lucide-react';
 import { OnboardingWizard, WizardStep } from './onboarding/OnboardingWizard';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { useTutorial } from '@/contexts/TutorialContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export function FocusDuckWizard() {
   const [open, setOpen] = useState(false);
   const { hasSeenWizard, markWizardComplete } = useOnboarding();
+  const { activeTutorial, closeTutorial } = useTutorial();
 
   useEffect(() => {
-    if (!hasSeenWizard('focus_duck_wizard')) {
-      // Small delay to let page load first
-      const timer = setTimeout(() => setOpen(true), 500);
-      return () => clearTimeout(timer);
+    // Check if triggered by tutorial menu
+    if (activeTutorial === 'focus_duck_wizard') {
+      setOpen(true);
+      return;
     }
-  }, [hasSeenWizard]);
+
+    // Only auto-show once on first login
+    const checkFirstLogin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_login')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.first_login && !hasSeenWizard('focus_duck_wizard')) {
+        const timer = setTimeout(() => setOpen(true), 500);
+        return () => clearTimeout(timer);
+      }
+    };
+
+    checkFirstLogin();
+  }, [hasSeenWizard, activeTutorial]);
+
+  const handleClose = async (completed: boolean) => {
+    setOpen(false);
+    closeTutorial();
+    
+    if (completed) {
+      markWizardComplete('focus_duck_wizard');
+      
+      // Mark first_login as false
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ first_login: false })
+          .eq('id', user.id);
+      }
+    }
+  };
 
   const steps: WizardStep[] = [
     {
@@ -300,10 +340,20 @@ export function FocusDuckWizard() {
   return (
     <OnboardingWizard
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={(isOpen) => !isOpen && handleClose(false)}
       steps={steps}
-      onComplete={() => markWizardComplete('focus_duck_wizard')}
-      onSkip={() => markWizardComplete('focus_duck_wizard', true)}
+      onComplete={() => handleClose(true)}
+      onSkip={async () => {
+        await markWizardComplete('focus_duck_wizard', true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from('profiles')
+            .update({ first_login: false })
+            .eq('id', user.id);
+        }
+        handleClose(false);
+      }}
       title="Focus Duck Tutorial"
     />
   );

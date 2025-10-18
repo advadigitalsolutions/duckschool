@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { usePageContext } from '@/hooks/usePageContext';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { useTutorial } from '@/contexts/TutorialContext';
 import { Target, BookOpen, Calendar, TrendingUp, Sparkles, RotateCcw } from 'lucide-react';
 
 interface HelpMenuProps {
@@ -51,6 +52,7 @@ const TUTORIALS = [
 export function HelpMenu({ open, onOpenChange }: HelpMenuProps) {
   const { pageContext } = usePageContext();
   const { resetWizard, resetAllWizards } = useOnboarding();
+  const { openTutorial } = useTutorial();
 
   const getContextualTutorial = () => {
     const tutorial = TUTORIALS.find(t => t.contexts.includes(pageContext));
@@ -74,8 +76,8 @@ export function HelpMenu({ open, onOpenChange }: HelpMenuProps) {
   const handleReplayTutorial = (tutorialId: string) => {
     resetWizard(tutorialId);
     onOpenChange(false);
-    // Tutorial will auto-trigger when the component remounts
-    window.location.reload();
+    // Trigger the tutorial directly through context
+    openTutorial(tutorialId as any);
   };
 
   return (

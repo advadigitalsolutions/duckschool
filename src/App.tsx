@@ -13,6 +13,11 @@ import { FocusJourneyBar } from "@/components/FocusJourneyBar";
 import { FocusJourneyProvider } from "@/contexts/FocusJourneyContext";
 import { FloatingHelpButton } from "@/components/help/FloatingHelpButton";
 import { FocusDuckWizard } from "@/components/FocusDuckWizard";
+import { LearningWizardTutorial } from "@/components/LearningWizardTutorial";
+import { SmartCalendarWizard } from "@/components/SmartCalendarWizard";
+import { XPSystemWizard } from "@/components/XPSystemWizard";
+import { MasteryTrackingWizard } from "@/components/MasteryTrackingWizard";
+import { ContactSupportButton } from "@/components/help/ContactSupportButton";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -281,6 +286,13 @@ const App = () => (
                     </Routes>
                   </AppLayout>
                 </SidebarProvider>
+                <FloatingHelpButton />
+                <ContactSupportButton />
+                <FocusDuckWizard />
+                <LearningWizardTutorial />
+                <SmartCalendarWizard />
+                <XPSystemWizard />
+                <MasteryTrackingWizard />
               </BrowserRouter>
             </TooltipProvider>
           </AccessibilityProvider>
