@@ -900,14 +900,13 @@ function ProfileAvatarMenu({ student, onSignOut, onOpenProfileSettings, onOpenHe
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => {
-          window.dispatchEvent(new CustomEvent('openProfileModal', { detail: { tab: 'profile' } }));
+          const navigate = window.location.pathname.startsWith('/student') 
+            ? (path: string) => window.location.href = path
+            : (path: string) => window.location.href = path;
+          window.location.href = '/settings';
         }}>
-          <User className="mr-2 h-4 w-4" />
-          Profile Settings
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onOpenHeaderSettings}>
           <Settings className="mr-2 h-4 w-4" />
-          Header Settings
+          Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {showDemoSwitch && onDemoSwitch && (

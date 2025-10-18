@@ -14,7 +14,8 @@ import {
   Gift,
   CheckSquare,
   Timer,
-  ListChecks
+  ListChecks,
+  Settings
 } from 'lucide-react';
 import {
   Sidebar,
@@ -287,6 +288,21 @@ export function EducatorSidebar() {
               </CollapsibleContent>
             )}
           </Collapsible>
+        </SidebarGroup>
+
+        {/* Settings */}
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => navigate('/settings')}
+                className={isActive('/settings') ? 'bg-accent text-accent-foreground' : ''}
+              >
+                <Settings className="h-5 w-5" />
+                {!isCollapsed && <span>Settings</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarGroup>
 
       </SidebarContent>

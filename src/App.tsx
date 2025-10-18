@@ -12,7 +12,6 @@ import { CustomizableHeader } from "@/components/CustomizableHeader";
 import { ConfettiCelebration } from "@/components/ConfettiCelebration";
 import { FocusJourneyBar } from "@/components/FocusJourneyBar";
 import { FocusJourneyProvider } from "@/contexts/FocusJourneyContext";
-import { FloatingHelpButton } from "@/components/help/FloatingHelpButton";
 import { FocusDuckWizard } from "@/components/FocusDuckWizard";
 import { LearningWizardTutorial } from "@/components/LearningWizardTutorial";
 import { SmartCalendarWizard } from "@/components/SmartCalendarWizard";
@@ -239,7 +238,11 @@ const App = () => (
                 <SidebarProvider>
                   <AppLayout>
                     <FocusDuckWizard />
-                    <FloatingHelpButton />
+                    <LearningWizardTutorial />
+                    <SmartCalendarWizard />
+                    <XPSystemWizard />
+                    <MasteryTrackingWizard />
+                    <CommandPalette />
                     <Routes>
                       <Route path="/" element={<Marketing />} />
                       <Route path="/pricing" element={<Pricing />} />
@@ -313,14 +316,6 @@ const App = () => (
                     </Routes>
                   </AppLayout>
                 </SidebarProvider>
-                <FloatingHelpButton />
-                <FocusDuckWizard />
-                <LearningWizardTutorial />
-                <SmartCalendarWizard />
-                <XPSystemWizard />
-                <MasteryTrackingWizard />
-                <CommandPalette />
-                <CommandPalette />
               </BrowserRouter>
             </TooltipProvider>
           </AccessibilityProvider>
