@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 interface FocusDuckSettingsPanelProps {
@@ -39,7 +40,19 @@ export function FocusDuckSettingsPanel({ isEducator }: FocusDuckSettingsPanelPro
 
   return (
     <Card className="p-6 bg-muted/30 border-muted-foreground/20">
-      <h3 className="text-lg font-semibold mb-4">Focus Duck Settings</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Focus Duck Settings</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            localStorage.removeItem('focus_duck_wizard_completed');
+            window.location.reload();
+          }}
+        >
+          🦆 Replay Tutorial
+        </Button>
+      </div>
       
       <div className="space-y-6">
         {/* Default Duration */}

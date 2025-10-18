@@ -282,7 +282,7 @@ export default function StudentProfile() {
       <h1 className="text-2xl font-bold mb-6">My Profile</h1>
 
         <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="interests">Special Interests</TabsTrigger>
             <TabsTrigger value="assessment" className="transition-all hover:scale-105 hover:shadow-md">
@@ -290,6 +290,9 @@ export default function StudentProfile() {
               {!student?.profile_assessment_completed && (
                 <span className="ml-2 h-2 w-2 rounded-full bg-primary animate-pulse" />
               )}
+            </TabsTrigger>
+            <TabsTrigger value="tutorials">
+              Help & Tutorials
             </TabsTrigger>
           </TabsList>
 
@@ -723,6 +726,75 @@ export default function StudentProfile() {
               studentId={student?.id} 
               onComplete={fetchStudentProfile}
             />
+          </TabsContent>
+
+          <TabsContent value="tutorials">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="text-2xl">✨</span>
+                  Help & Tutorials
+                </CardTitle>
+                <CardDescription>
+                  Replay any tutorial anytime to refresh your memory
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">🦆</span>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-sm mb-1">Focus Duck Timer</h3>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Learn how the duck helps you stay focused, what makes it upset, and how to use the research button effectively
+                      </p>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          localStorage.removeItem('focus_duck_wizard_completed');
+                          window.location.reload();
+                        }}
+                      >
+                        Start Tutorial
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Coming Soon</h4>
+                  <div className="p-3 rounded-lg border bg-muted/30 opacity-50">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">📚</span>
+                      <span className="text-sm font-medium">Learning Wizard</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Step-by-step guide through research, notes, discussion, and assessment
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-lg border bg-muted/30 opacity-50">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">⭐</span>
+                      <span className="text-sm font-medium">XP & Rewards System</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      How to earn XP, spend it in the rewards shop, and level up
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-lg border bg-muted/30 opacity-50">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">📅</span>
+                      <span className="text-sm font-medium">Smart Calendar</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      AI-powered scheduling assistant and calendar management
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

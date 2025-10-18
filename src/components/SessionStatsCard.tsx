@@ -12,6 +12,7 @@ interface SessionStatsCardProps {
 export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps) {
   const [stats, setStats] = useState({
     totalActive: 0,
+    totalResearch: 0,
     totalIdle: 0,
     totalAway: 0,
     sessionCount: 0
@@ -27,7 +28,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
     try {
       let query = supabase
         .from('learning_sessions')
-        .select('total_active_seconds, total_idle_seconds, total_away_seconds, session_start')
+        .select('total_active_seconds, total_idle_seconds, total_away_seconds, total_research_seconds, session_start')
         .eq('student_id', studentId);
 
       if (dateRange) {
@@ -42,17 +43,19 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
 
       if (data) {
         const totalActive = data.reduce((sum, s) => sum + (s.total_active_seconds || 0), 0);
+        const totalResearch = data.reduce((sum, s) => sum + (s.total_research_seconds || 0), 0);
         const totalIdle = data.reduce((sum, s) => sum + (s.total_idle_seconds || 0), 0);
         const totalAway = data.reduce((sum, s) => sum + (s.total_away_seconds || 0), 0);
 
         setStats({
           totalActive,
+          totalResearch,
           totalIdle,
           totalAway,
           sessionCount: data.length
         });
 
-        // Calculate hourly focus scores
+        // Calculate hourly focus scores (include research as quality focus time)
         const hourlyScores: { [key: string]: { active: number; total: number } } = {};
         
         data.forEach(session => {
@@ -64,7 +67,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
               hourlyScores[hourKey] = { active: 0, total: 0 };
             }
             
-            const active = session.total_active_seconds || 0;
+            const active = (session.total_active_seconds || 0) + (session.total_research_seconds || 0); // Research counts as quality focus
             const total = active + (session.total_idle_seconds || 0) + (session.total_away_seconds || 0);
             
             hourlyScores[hourKey].active += active;
@@ -110,13 +113,16 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
     return `${minutes}m`;
   };
 
-  const totalSeconds = stats.totalActive + stats.totalIdle + stats.totalAway;
+  const totalSeconds = stats.totalActive + stats.totalResearch + stats.totalIdle + stats.totalAway;
   const activePercent = totalSeconds > 0 ? ((stats.totalActive / totalSeconds) * 100).toFixed(1) : 0;
+  const researchPercent = totalSeconds > 0 ? ((stats.totalResearch / totalSeconds) * 100).toFixed(1) : 0;
   const idlePercent = totalSeconds > 0 ? ((stats.totalIdle / totalSeconds) * 100).toFixed(1) : 0;
   const awayPercent = totalSeconds > 0 ? ((stats.totalAway / totalSeconds) * 100).toFixed(1) : 0;
+  const focusQualityPercent = totalSeconds > 0 ? (((stats.totalActive + stats.totalResearch) / totalSeconds) * 100).toFixed(1) : 0;
 
   const chartData = [
-    { name: 'Active', value: stats.totalActive, color: '#00CC6C' },
+    { name: 'Active Work', value: stats.totalActive, color: '#00CC6C' },
+    { name: 'Research', value: stats.totalResearch, color: '#5FB8F9' },
     { name: 'Idle', value: stats.totalIdle, color: '#EEBAB2' },
     { name: 'Away', value: stats.totalAway, color: '#FF8F57' }
   ].filter(item => item.value > 0);
@@ -177,11 +183,22 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4" style={{ color: '#00CC6C' }} />
-                  <span className="text-sm font-medium">Active Time</span>
+                  <span className="text-sm font-medium">Active Work</span>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold">{formatTime(stats.totalActive)}</div>
                   <div className="text-xs text-muted-foreground">{activePercent}%</div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" style={{ color: '#5FB8F9' }} />
+                  <span className="text-sm font-medium">Focused Research</span>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold">{formatTime(stats.totalResearch)}</div>
+                  <div className="text-xs text-muted-foreground">{researchPercent}%</div>
                 </div>
               </div>
 
@@ -198,7 +215,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4" style={{ color: '#FF8F57' }} />
+                  <Coffee className="h-4 w-4" style={{ color: '#FF8F57' }} />
                   <span className="text-sm font-medium">Away Time</span>
                 </div>
                 <div className="text-right">
@@ -209,14 +226,12 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
 
               <div className="pt-2 border-t">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Coffee className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">Focus Efficiency</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-primary">{activePercent}%</div>
-                  </div>
+                  <span className="text-sm font-medium text-primary">Focus Quality Score</span>
+                  <span className="text-lg font-bold text-primary">{focusQualityPercent}%</span>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Active work + research time
+                </p>
               </div>
             </div>
           </div>

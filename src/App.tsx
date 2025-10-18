@@ -11,6 +11,8 @@ import { CustomizableHeader } from "@/components/CustomizableHeader";
 import { ConfettiCelebration } from "@/components/ConfettiCelebration";
 import { FocusJourneyBar } from "@/components/FocusJourneyBar";
 import { FocusJourneyProvider } from "@/contexts/FocusJourneyContext";
+import { FloatingHelpButton } from "@/components/help/FloatingHelpButton";
+import { FocusDuckWizard } from "@/components/FocusDuckWizard";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -220,6 +222,8 @@ const App = () => (
               <BrowserRouter>
                 <SidebarProvider>
                   <AppLayout>
+                    <FocusDuckWizard />
+                    <FloatingHelpButton />
                     <Routes>
                       <Route path="/" element={<Marketing />} />
                       <Route path="/pricing" element={<Pricing />} />

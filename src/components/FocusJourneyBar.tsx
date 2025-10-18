@@ -563,7 +563,7 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setReadingStartTime(null);
       setReadingStartTimestamp(null);
       setDuckState('walking');
-      toast.success('Back to active learning! 🦆');
+      toast.success('Research complete! Back to active work! 🦆');
     } else {
       // Starting reading - clear any idle gap first
       if (gapStartTime !== null) {
@@ -610,8 +610,8 @@ export function FocusJourneyBar({ studentId }: FocusJourneyBarProps) {
       setReadingStartTime(currentSeconds);
       setReadingStartTimestamp(Date.now());
       setDuckState('walking');
-      toast.info('Deep reading mode... Duck is focused and hard at work! 📚🦆', {
-        description: 'Stay focused on your reading!'
+      toast.success('Focused research mode activated! 📚🦆', {
+        description: 'Duck stays happy while you read and learn!'
       });
     }
   };
