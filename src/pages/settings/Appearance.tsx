@@ -1,10 +1,5 @@
-import { ComingSoon } from '@/components/ComingSoon';
+import { HeaderCustomizationForm } from '@/components/settings/HeaderCustomizationForm';
 
 export default function Appearance() {
-  return (
-    <ComingSoon 
-      feature="Appearance Settings"
-      description="Customize your theme, header, color schemes, and visual preferences."
-    />
-  );
+  return <HeaderCustomizationForm />;
 }

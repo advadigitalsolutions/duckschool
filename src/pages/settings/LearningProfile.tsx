@@ -1,10 +1,5 @@
-import { ComingSoon } from '@/components/ComingSoon';
+import { LearningProfileForm } from '@/components/settings/LearningProfileForm';
 
 export default function LearningProfile() {
-  return (
-    <ComingSoon 
-      feature="Learning Profile"
-      description="View your learning style assessment, strengths & challenges, and AI coaching preferences."
-    />
-  );
+  return <LearningProfileForm />;
 }

@@ -1,10 +1,5 @@
-import { ComingSoon } from '@/components/ComingSoon';
+import { HelpCenter } from '@/components/settings/HelpCenter';
 
 export default function Help() {
-  return (
-    <ComingSoon 
-      feature="Help Center"
-      description="Browse help articles, tutorials, contact support, and view system status."
-    />
-  );
+  return <HelpCenter />;
 }
