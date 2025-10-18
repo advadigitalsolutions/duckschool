@@ -122,7 +122,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
 
   const chartData = [
     { name: 'Active Work', value: stats.totalActive, color: '#00CC6C' },
-    { name: 'Focus Time', value: stats.totalResearch, color: 'hsl(210, 100%, 60%)' },
+    { name: 'Research', value: stats.totalResearch, color: '#5FB8F9' },
     { name: 'Idle', value: stats.totalIdle, color: '#EEBAB2' },
     { name: 'Away', value: stats.totalAway, color: '#FF8F57' }
   ].filter(item => item.value > 0);
@@ -193,8 +193,8 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4" style={{ color: 'hsl(210, 100%, 60%)' }} />
-                  <span className="text-sm font-medium">Focus Time</span>
+                  <Eye className="h-4 w-4" style={{ color: '#5FB8F9' }} />
+                  <span className="text-sm font-medium">Focused Research</span>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold">{formatTime(stats.totalResearch)}</div>
@@ -230,7 +230,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
                   <span className="text-lg font-bold text-primary">{focusQualityPercent}%</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Active work + focus time
+                  Active work + research time
                 </p>
               </div>
             </div>
@@ -255,11 +255,11 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
               >
                 <defs>
                   <linearGradient id="focusGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(210, 100%, 60%)" stopOpacity={0.8} />
-                    <stop offset="25%" stopColor="hsl(210, 100%, 55%)" stopOpacity={0.6} />
-                    <stop offset="50%" stopColor="hsl(210, 100%, 50%)" stopOpacity={0.5} />
-                    <stop offset="75%" stopColor="hsl(210, 90%, 45%)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="hsl(210, 80%, 40%)" stopOpacity={0.3} />
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
+                    <stop offset="25%" stopColor="#84cc16" stopOpacity={0.6} />
+                    <stop offset="50%" stopColor="#eab308" stopOpacity={0.5} />
+                    <stop offset="75%" stopColor="#f97316" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0.3} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -284,7 +284,7 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
                 <Area
                   type="monotone"
                   dataKey="focus"
-                  stroke="hsl(210, 100%, 60%)"
+                  stroke="#22c55e"
                   strokeWidth={2}
                   fill="url(#focusGradient)"
                 />
@@ -293,11 +293,11 @@ export function SessionStatsCard({ studentId, dateRange }: SessionStatsCardProps
             <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
               <span>Lower Focus</span>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(210, 80%, 40%)' }} />
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(210, 90%, 45%)' }} />
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(210, 100%, 50%)' }} />
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(210, 100%, 55%)' }} />
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(210, 100%, 60%)' }} />
+                <div className="w-4 h-4 bg-red-500 rounded" />
+                <div className="w-4 h-4 bg-orange-500 rounded" />
+                <div className="w-4 h-4 bg-yellow-500 rounded" />
+                <div className="w-4 h-4 bg-lime-500 rounded" />
+                <div className="w-4 h-4 bg-green-500 rounded" />
               </div>
               <span>Higher Focus</span>
             </div>
