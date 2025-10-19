@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Clock, CheckCircle2, AlertCircle, TrendingUp, FileText, Settings, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { XPConfigDialog } from '@/components/XPConfigDialog';
@@ -45,6 +45,8 @@ export default function ParentDashboard() {
   const [demoParentName, setDemoParentName] = useState<string | null>(null);
   const [demoStudentName, setDemoStudentName] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'overview';
   
   // Helper function to get display name for student
   const getStudentDisplayName = (student: any) => {
@@ -396,7 +398,7 @@ export default function ParentDashboard() {
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="overview" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={(value) => setSearchParams({ tab: value })} className="space-y-4">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="time-tracking">Time Tracking</TabsTrigger>
