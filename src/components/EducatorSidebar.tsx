@@ -195,7 +195,7 @@ export function EducatorSidebar() {
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton onClick={() => navigate('/parent?tab=reports')}>
-                        <span>Activity Feed</span>
+                        <span>Reports</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
