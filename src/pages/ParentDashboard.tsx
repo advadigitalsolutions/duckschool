@@ -404,6 +404,7 @@ export default function ParentDashboard() {
             <TabsTrigger value="smart-schedule">Schedule</TabsTrigger>
             <TabsTrigger value="chores">Chores</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="xp">XP & Rewards</TabsTrigger>
             <TabsTrigger value="pomodoro">Pomodoro Timers</TabsTrigger>
             <TabsTrigger value="weekly-plans">Weekly Plans</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
