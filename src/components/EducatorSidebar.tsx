@@ -231,13 +231,13 @@ export function EducatorSidebar() {
                 <SidebarGroupContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=overview')}>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=xp')}>
                         <Award className="h-4 w-4" />
                         <span>XP Configuration</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=overview')}>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=xp')}>
                         <Gift className="h-4 w-4" />
                         <span>Manage Rewards</span>
                       </SidebarMenuSubButton>
