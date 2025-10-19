@@ -154,7 +154,7 @@ export function EducatorSidebar() {
                 <SidebarGroupContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton onClick={() => navigate('/parent')}>
+                      <SidebarMenuSubButton onClick={() => navigate('/parent?tab=students')}>
                         <BookOpen className="h-4 w-4" />
                         <span>All Courses</span>
                       </SidebarMenuSubButton>

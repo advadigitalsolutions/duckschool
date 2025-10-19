@@ -48,27 +48,54 @@ export function ProfileSettingsForm() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data } = await supabase
+    // Check if user is a student
+    const { data: studentData } = await supabase
       .from('students')
       .select('*')
       .eq('user_id', user.id)
       .single();
 
-    if (data) {
-      setStudent(data);
-      setDisplayName(data.display_name || data.name);
-      setSelectedAvatar(data.avatar_url || defaultAvatars[0]);
-      setSpecialInterests((data.special_interests as string[]) || []);
+    if (studentData) {
+      setStudent(studentData);
+      setDisplayName(studentData.display_name || studentData.name);
+      setSelectedAvatar(studentData.avatar_url || defaultAvatars[0]);
+      setSpecialInterests((studentData.special_interests as string[]) || []);
       
-      if (data.pronouns) {
+      if (studentData.pronouns) {
         const commonPronouns = ['she/her', 'he/him', 'they/them', 'ze/hir', 'xe/xem'];
-        if (commonPronouns.includes(data.pronouns)) {
-          setPronouns(data.pronouns);
+        if (commonPronouns.includes(studentData.pronouns)) {
+          setPronouns(studentData.pronouns);
         } else {
           setPronouns('custom');
-          setCustomPronouns(data.pronouns);
+          setCustomPronouns(studentData.pronouns);
         }
       }
+      return;
+    }
+
+    // If not a student, load profile data for parent
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (profileData) {
+      // Create a mock student object for parents using their profile data
+      const mockStudent = {
+        id: profileData.id,
+        user_id: user.id,
+        parent_id: user.id,
+        name: profileData.name || user.email?.split('@')[0] || 'User',
+        display_name: profileData.name || user.email?.split('@')[0] || 'User',
+        avatar_url: profileData.avatar_url || defaultAvatars[0],
+        special_interests: [],
+        pronouns: profileData.pronouns,
+      };
+      setStudent(mockStudent);
+      setDisplayName(mockStudent.display_name);
+      setSelectedAvatar(mockStudent.avatar_url);
+      setPronouns(profileData.pronouns || '');
     }
   };
 
@@ -127,17 +154,33 @@ export function ProfileSettingsForm() {
           ? `${selectedAvatar}?t=${Date.now()}` 
           : selectedAvatar;
       
-      const { error } = await supabase
-        .from('students')
-        .update({
-          display_name: displayName,
-          avatar_url: avatarWithTimestamp,
-          special_interests: specialInterests,
-          pronouns: finalPronouns || null,
-        })
-        .eq('id', student.id);
+      // Check if saving student or parent profile
+      if (student.parent_id === student.user_id) {
+        // Parent - update profiles table
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            name: displayName,
+            avatar_url: avatarWithTimestamp,
+            pronouns: finalPronouns || null,
+          })
+          .eq('id', student.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Student - update students table
+        const { error } = await supabase
+          .from('students')
+          .update({
+            display_name: displayName,
+            avatar_url: avatarWithTimestamp,
+            special_interests: specialInterests,
+            pronouns: finalPronouns || null,
+          })
+          .eq('id', student.id);
+
+        if (error) throw error;
+      }
       
       toast.success('Profile updated!');
       fetchStudent();
