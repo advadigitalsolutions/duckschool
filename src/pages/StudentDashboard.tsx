@@ -15,7 +15,6 @@ import { ProfileSettingsModal } from '@/components/ProfileSettingsModal';
 import { useAutoXPRewards } from '@/hooks/useAutoXPRewards';
 import { ExcitingAgendaButton } from '@/components/ExcitingAgendaButton';
 import { DuckCatchingGame } from '@/components/DuckCatchingGame';
-import { DiagnosticAssessmentLauncher } from '@/components/DiagnosticAssessmentLauncher';
 export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<any>(null);
@@ -408,23 +407,6 @@ export default function StudentDashboard() {
           <div className="mb-6">
             <ExcitingAgendaButton />
           </div>
-
-          {/* Diagnostic Assessment Launcher */}
-          {studentDbId && (
-            <div className="mb-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Personalized Learning</CardTitle>
-                  <CardDescription>
-                    Take a diagnostic assessment to create a custom course just for you
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <DiagnosticAssessmentLauncher studentId={studentDbId} />
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
 
         {/* Duck Catching Game - Hidden for now */}

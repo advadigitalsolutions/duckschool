@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { WeeklyView } from '@/components/WeeklyView';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, BookOpen } from 'lucide-react';
+import { DiagnosticAssessmentLauncher } from '@/components/DiagnosticAssessmentLauncher';
 
 export default function StudentAgenda() {
   const navigate = useNavigate();
@@ -133,7 +134,34 @@ export default function StudentAgenda() {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">My Guide</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">My Guide</h1>
+        {student.id && (
+          <DiagnosticAssessmentLauncher 
+            studentId={student.id} 
+            buttonText="Skills Check-In"
+            variant="outline"
+          />
+        )}
+      </div>
+      
+      {/* Personalized Learning Card */}
+      {student.id && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Personalized Learning</CardTitle>
+            <CardDescription>
+              Take a quick skills check-in to create a custom course just for you
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DiagnosticAssessmentLauncher 
+              studentId={student.id}
+              buttonText="Start Skills Check-In"
+            />
+          </CardContent>
+        </Card>
+      )}
       
       {/* Up Next Box */}
       {upNextAssignment && (

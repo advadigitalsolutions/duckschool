@@ -11,9 +11,15 @@ import { toast } from "@/hooks/use-toast";
 
 interface DiagnosticAssessmentLauncherProps {
   studentId: string;
+  buttonText?: string;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
 }
 
-export function DiagnosticAssessmentLauncher({ studentId }: DiagnosticAssessmentLauncherProps) {
+export function DiagnosticAssessmentLauncher({ 
+  studentId, 
+  buttonText = "Take Diagnostic Assessment",
+  variant = "default"
+}: DiagnosticAssessmentLauncherProps) {
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
   const [framework, setFramework] = useState("");
@@ -86,9 +92,10 @@ export function DiagnosticAssessmentLauncher({ studentId }: DiagnosticAssessment
         onClick={() => setOpen(true)}
         className="gap-2"
         size="lg"
+        variant={variant}
       >
         <Brain className="h-5 w-5" />
-        Take Diagnostic Assessment
+        {buttonText}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -96,10 +103,10 @@ export function DiagnosticAssessmentLauncher({ studentId }: DiagnosticAssessment
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
-              Diagnostic Assessment
+              Skills Check-In
             </DialogTitle>
             <DialogDescription>
-              This assessment will help us understand what you know and create a personalized learning path just for you.
+              This quick check-in will help us understand what you know and create a personalized learning path just for you.
               It's completely stress-free - there are no grades!
             </DialogDescription>
           </DialogHeader>
