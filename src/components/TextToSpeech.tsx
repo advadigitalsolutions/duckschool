@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Pause, Play, VolumeX, Loader2 } from 'lucide-react';
+import { Pause, Play, VolumeX, Volume2 } from 'lucide-react';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { cleanMarkdown } from '@/utils/textFormatting';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface TextToSpeechProps {
@@ -13,15 +12,13 @@ interface TextToSpeechProps {
 }
 
 export function TextToSpeech({ text, children, className = '' }: TextToSpeechProps) {
-  const { textToSpeechEnabled, textToSpeechVoice } = useAccessibility();
+  const { textToSpeechEnabled, textToSpeechVoice, availableVoices } = useAccessibility();
   const { toast } = useToast();
   const [speaking, setSpeaking] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [paused, setPaused] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [words, setWords] = useState<string[]>([]);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     const cleanText = cleanMarkdown(text);
@@ -31,161 +28,107 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
 
   useEffect(() => {
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      if (timeUpdateIntervalRef.current) {
-        clearInterval(timeUpdateIntervalRef.current);
+      if (utteranceRef.current) {
+        window.speechSynthesis.cancel();
+        utteranceRef.current = null;
       }
     };
   }, []);
 
   if (!textToSpeechEnabled) return <>{children}</> || null;
 
-  const handleSpeak = async () => {
-    if (speaking && !paused) {
-      audioRef.current?.pause();
-      setPaused(true);
-      if (timeUpdateIntervalRef.current) {
-        clearInterval(timeUpdateIntervalRef.current);
+  const handleSpeak = () => {
+    if (!('speechSynthesis' in window)) {
+      toast({
+        title: "Not Supported",
+        description: "Text-to-speech is not supported in your browser.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // If already speaking, toggle pause/resume
+    if (speaking) {
+      if (paused) {
+        window.speechSynthesis.resume();
+        setPaused(false);
+      } else {
+        window.speechSynthesis.pause();
+        setPaused(true);
       }
-    } else if (paused && audioRef.current) {
-      audioRef.current.play();
-      setPaused(false);
-      startWordTracking();
-    } else {
-      try {
-        setLoading(true);
-        toast({
-          title: "Generating audio...",
-          description: "Please wait while we prepare the audio.",
-        });
-        
-        console.log('Calling text-to-speech edge function...');
-        
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/text-to-speech`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({ 
-              text: cleanMarkdown(text),
-              voice: textToSpeechVoice 
-            }),
-          }
-        );
+      return;
+    }
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Text-to-speech API error:', errorData);
-          throw new Error(errorData.error || 'Failed to generate speech');
+    try {
+      // Clean text for speech
+      const cleanText = text.replace(/<[^>]*>/g, '').trim();
+      if (!cleanText) return;
+
+      // Create utterance
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utteranceRef.current = utterance;
+
+      // Find and set the selected voice
+      if (textToSpeechVoice && availableVoices.length > 0) {
+        const selectedVoice = availableVoices.find(v => v.name === textToSpeechVoice);
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
         }
+      }
 
-        console.log('Audio received, creating blob...');
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        
-        console.log('Creating audio element with URL:', audioUrl);
-        const audio = new Audio();
-        audio.src = audioUrl;
-        audioRef.current = audio;
+      // Track word boundaries for highlighting
+      let wordIndex = 0;
+      utterance.onboundary = (event) => {
+        if (event.name === 'word') {
+          setCurrentWordIndex(wordIndex);
+          wordIndex++;
+        }
+      };
 
-        audio.onended = () => {
-          console.log('Audio playback ended');
-          setSpeaking(false);
-          setPaused(false);
-          setCurrentWordIndex(-1);
-          if (timeUpdateIntervalRef.current) {
-            clearInterval(timeUpdateIntervalRef.current);
-          }
-          URL.revokeObjectURL(audioUrl);
-        };
-
-        audio.onerror = (e) => {
-          console.error('Audio playback error:', e);
-          setSpeaking(false);
-          setPaused(false);
-          setCurrentWordIndex(-1);
-          if (timeUpdateIntervalRef.current) {
-            clearInterval(timeUpdateIntervalRef.current);
-          }
-        };
-
-        console.log('Starting audio playback...');
-        setLoading(false);
+      utterance.onstart = () => {
         setSpeaking(true);
+        setPaused(false);
         setCurrentWordIndex(0);
-        await audio.play();
-        startWordTracking();
-        
-        toast({
-          title: "Playing audio",
-          description: "Audio is now playing with word highlighting.",
-        });
-      } catch (error) {
-        console.error('Error playing text-to-speech:', error);
-        setLoading(false);
+      };
+
+      utterance.onend = () => {
         setSpeaking(false);
         setPaused(false);
         setCurrentWordIndex(-1);
-        
-        const errorMessage = error instanceof Error ? error.message : 'Failed to generate or play audio';
-        const isQuotaError = errorMessage.includes('quota') || errorMessage.includes('exceeded');
-        
+        utteranceRef.current = null;
+      };
+
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        setSpeaking(false);
+        setPaused(false);
+        setCurrentWordIndex(-1);
         toast({
-          title: "Text-to-Speech Error",
-          description: isQuotaError 
-            ? "OpenAI API quota exceeded. Please add credits to your OpenAI account or contact support."
-            : errorMessage,
+          title: "Playback Error",
+          description: "Failed to play audio. Please try again.",
           variant: "destructive",
         });
-      }
-    }
-  };
+      };
 
-  const startWordTracking = () => {
-    if (!audioRef.current) return;
-    
-    const audio = audioRef.current;
-    const wordList = words.filter(w => !/^\s+$/.test(w));
-    
-    // Wait for metadata to load to get accurate duration
-    const startTracking = () => {
-      if (audio.duration && audio.duration > 0) {
-        timeUpdateIntervalRef.current = setInterval(() => {
-          if (!audio || audio.paused) return;
-          
-          const progress = audio.currentTime / audio.duration;
-          const estimatedIndex = Math.floor(progress * wordList.length);
-          
-          // Clamp to valid range
-          const clampedIndex = Math.max(0, Math.min(estimatedIndex, wordList.length - 1));
-          setCurrentWordIndex(clampedIndex);
-        }, 100);
-      }
-    };
-    
-    if (audio.duration) {
-      startTracking();
-    } else {
-      audio.addEventListener('loadedmetadata', startTracking, { once: true });
+      // Start speaking
+      window.speechSynthesis.speak(utterance);
+
+    } catch (error) {
+      console.error('Text-to-speech error:', error);
+      setSpeaking(false);
+      setPaused(false);
+      setCurrentWordIndex(-1);
+      toast({
+        title: "Error",
+        description: "Failed to start text-to-speech.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleStop = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current = null;
-    }
-    if (timeUpdateIntervalRef.current) {
-      clearInterval(timeUpdateIntervalRef.current);
-    }
+    window.speechSynthesis.cancel();
+    utteranceRef.current = null;
     setSpeaking(false);
     setPaused(false);
     setCurrentWordIndex(-1);
@@ -234,15 +177,9 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
           variant="outline"
           size="sm"
           onClick={handleSpeak}
-          disabled={loading}
           className="gap-2 hover-scale"
         >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : speaking && !paused ? (
+          {speaking && !paused ? (
             <>
               <Pause className="h-4 w-4" />
               Pause
@@ -254,7 +191,7 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
             </>
           ) : (
             <>
-              <Play className="h-4 w-4" />
+              <Volume2 className="h-4 w-4" />
               Read Aloud
             </>
           )}

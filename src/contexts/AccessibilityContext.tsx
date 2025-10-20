@@ -13,7 +13,7 @@ interface AccessibilitySettings {
   focusModeGlowIntensity: number;
   readingRulerEnabled: boolean;
   textToSpeechEnabled: boolean;
-  textToSpeechVoice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+  textToSpeechVoice: string;
   highContrastEnabled: boolean;
 }
 
@@ -28,10 +28,11 @@ interface AccessibilityContextType extends AccessibilitySettings {
   setFocusModeGlowIntensity: (intensity: number) => Promise<void>;
   setReadingRuler: (enabled: boolean) => Promise<void>;
   setTextToSpeech: (enabled: boolean) => Promise<void>;
-  setTextToSpeechVoice: (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => Promise<void>;
+  setTextToSpeechVoice: (voice: string) => Promise<void>;
   setHighContrast: (enabled: boolean) => Promise<void>;
   hotkeys: Record<string, string>;
   loadHotkeys: () => Promise<void>;
+  availableVoices: SpeechSynthesisVoice[];
 }
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -48,11 +49,39 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     focusModeGlowIntensity: 100,
     readingRulerEnabled: false,
     textToSpeechEnabled: false,
-    textToSpeechVoice: 'alloy',
+    textToSpeechVoice: '',
     highContrastEnabled: false,
   });
   const [hotkeys, setHotkeys] = useState<Record<string, string>>({});
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const { toast } = useToast();
+
+  // Load available system voices
+  useEffect(() => {
+    const loadVoices = () => {
+      const voices = window.speechSynthesis?.getVoices() || [];
+      setAvailableVoices(voices);
+      
+      // Set default voice to first English voice if none selected
+      if (!settings.textToSpeechVoice && voices.length > 0) {
+        const defaultVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+        if (defaultVoice) {
+          setSettings(prev => ({ ...prev, textToSpeechVoice: defaultVoice.name }));
+        }
+      }
+    };
+
+    if (window.speechSynthesis) {
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Load settings on mount
@@ -74,7 +103,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
           focusModeGlowIntensity: 100,
           readingRulerEnabled: false,
           textToSpeechEnabled: false,
-          textToSpeechVoice: 'alloy',
+          textToSpeechVoice: '',
           highContrastEnabled: false,
         });
         setHotkeys({});
@@ -115,7 +144,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         focusModeGlowIntensity: student.focus_mode_glow_intensity || 100,
         readingRulerEnabled: student.reading_ruler_enabled || false,
         textToSpeechEnabled: student.text_to_speech_enabled || false,
-        textToSpeechVoice: student.text_to_speech_voice as any || 'alloy',
+        textToSpeechVoice: student.text_to_speech_voice as string || '',
         highContrastEnabled: student.high_contrast_enabled || false,
       });
       return;
@@ -140,7 +169,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         focusModeGlowIntensity: profile.focus_mode_glow_intensity || 100,
         readingRulerEnabled: profile.reading_ruler_enabled || false,
         textToSpeechEnabled: profile.text_to_speech_enabled || false,
-        textToSpeechVoice: profile.text_to_speech_voice as any || 'alloy',
+        textToSpeechVoice: profile.text_to_speech_voice as string || '',
         highContrastEnabled: profile.high_contrast_enabled || false,
       });
     }
@@ -282,7 +311,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     await updateSetting('text_to_speech_enabled', enabled);
   };
 
-  const setTextToSpeechVoice = async (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => {
+  const setTextToSpeechVoice = async (voice: string) => {
     setSettings(prev => ({ ...prev, textToSpeechVoice: voice }));
     await updateSetting('text_to_speech_voice', voice);
   };
@@ -418,6 +447,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         setHighContrast,
         hotkeys,
         loadHotkeys,
+        availableVoices,
       }}
     >
       {children}

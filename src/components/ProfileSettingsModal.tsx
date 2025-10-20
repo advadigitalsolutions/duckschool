@@ -89,6 +89,7 @@ export function ProfileSettingsModal({
     textToSpeechEnabled,
     textToSpeechVoice,
     highContrastEnabled,
+    availableVoices,
     setDyslexiaFont,
     setLineSpacing,
     setLetterSpacing,
@@ -443,17 +444,19 @@ export function ProfileSettingsModal({
                       />
                     </div>
 
-                    {textToSpeechEnabled && (
+                    {textToSpeechEnabled && availableVoices.length > 0 && (
                       <div className="pl-4 space-y-2">
                         <Label htmlFor="tts-voice"><BionicText>Voice Selection</BionicText></Label>
-                        <Select value={textToSpeechVoice || 'default'} onValueChange={setTextToSpeechVoice}>
+                        <Select value={textToSpeechVoice} onValueChange={setTextToSpeechVoice}>
                           <SelectTrigger id="tts-voice">
                             <SelectValue placeholder="Select a voice" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="default">Default Voice</SelectItem>
-                            <SelectItem value="male">Male Voice</SelectItem>
-                            <SelectItem value="female">Female Voice</SelectItem>
+                            {availableVoices.map((voice) => (
+                              <SelectItem key={voice.name} value={voice.name}>
+                                {voice.name} ({voice.lang})
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>

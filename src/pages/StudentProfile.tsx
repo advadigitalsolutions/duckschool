@@ -79,6 +79,7 @@ export default function StudentProfile() {
     textToSpeechEnabled,
     textToSpeechVoice,
     highContrastEnabled,
+    availableVoices,
     setDyslexiaFont,
     setLineSpacing,
     setLetterSpacing,
@@ -476,23 +477,22 @@ export default function StudentProfile() {
                     />
                   </div>
 
-                  {textToSpeechEnabled && (
+                  {textToSpeechEnabled && availableVoices.length > 0 && (
                     <div className="p-4 border rounded-lg space-y-2 animate-fade-in">
                       <Label htmlFor="tts-voice"><BionicText>Voice Selection</BionicText></Label>
                       <p className="text-xs text-muted-foreground mb-2">
                         <BionicText>Choose your preferred reading voice</BionicText>
                       </p>
-                      <Select value={textToSpeechVoice} onValueChange={(value: any) => setTextToSpeechVoice(value)}>
+                      <Select value={textToSpeechVoice} onValueChange={(value: string) => setTextToSpeechVoice(value)}>
                         <SelectTrigger id="tts-voice">
-                          <SelectValue />
+                          <SelectValue placeholder="Select a voice" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="alloy">Alloy (Neutral)</SelectItem>
-                          <SelectItem value="echo">Echo (Male)</SelectItem>
-                          <SelectItem value="fable">Fable (British Male)</SelectItem>
-                          <SelectItem value="onyx">Onyx (Deep Male)</SelectItem>
-                          <SelectItem value="nova">Nova (Female)</SelectItem>
-                          <SelectItem value="shimmer">Shimmer (Soft Female)</SelectItem>
+                          {availableVoices.map((voice) => (
+                            <SelectItem key={voice.name} value={voice.name}>
+                              {voice.name} ({voice.lang})
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
