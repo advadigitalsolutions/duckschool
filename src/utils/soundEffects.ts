@@ -3,7 +3,9 @@ const sounds = {
   walk: '/sounds/duck-walk.mp3',
   climb: '/sounds/duck-climb.mp3',
   milestone: '/sounds/milestone-chime.mp3',
-  complete: '/sounds/duck-celebrate.mp3'
+  complete: '/sounds/duck-celebrate.mp3',
+  xpChaChing: '/sounds/xp-cha-ching.mp3',
+  xpCountdown: '/sounds/xp-countdown.mp3',
 };
 
 // Array of fall sounds to randomly cycle through

@@ -83,6 +83,16 @@ export function RewardsShop({ studentId }: RewardsShopProps) {
     if (!selectedReward) return;
 
     try {
+      // Play cha-ching sound
+      const audio = new Audio('/sounds/xp-cha-ching.mp3');
+      audio.volume = 0.5;
+      audio.play().catch(console.error);
+
+      // Play countdown ticker sound
+      const tickerAudio = new Audio('/sounds/xp-countdown.mp3');
+      tickerAudio.volume = 0.3;
+      tickerAudio.play().catch(console.error);
+
       const { error } = await supabase
         .from('reward_redemptions')
         .insert({
