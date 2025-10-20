@@ -19,17 +19,15 @@ export default function Auth() {
     const email = formData.get('email') as string;
     const name = formData.get('name') as string;
     const role = formData.get('role') as string;
-    
     try {
       // Store waitlist info in database
-      const { error } = await supabase
-        .from('waitlist')
-        .insert({
-          email,
-          name,
-          role: role || 'parent'
-        });
-      
+      const {
+        error
+      } = await supabase.from('waitlist').insert({
+        email,
+        name,
+        role: role || 'parent'
+      });
       if (error) {
         // If duplicate email, still redirect to waitlist page
         if (error.code === '23505') {
@@ -38,7 +36,7 @@ export default function Auth() {
         }
         throw error;
       }
-      
+
       // Redirect to waitlist confirmation page
       navigate('/waitlist');
     } catch (error: any) {
@@ -78,7 +76,7 @@ export default function Auth() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_0_40px_hsl(var(--primary)/0.6)]">
             <img src={duckGraduation} alt="Duck with graduation cap" className="h-10 w-10" />
           </div>
-          <CardTitle className="text-2xl">Masterymode.ai</CardTitle>
+          <CardTitle className="text-2xl">Duck School</CardTitle>
           <CardDescription>Innovation in Education</CardDescription>
         </CardHeader>
         <CardContent>
