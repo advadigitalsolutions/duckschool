@@ -242,6 +242,7 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
           <AssignmentQuestions
             assignment={assignment}
             studentId={studentId}
+            onBack={() => handleStepBack('practice')}
           />
         )}
       </div>

@@ -29,9 +29,10 @@ interface Question {
 interface AssignmentQuestionsProps {
   assignment: any;
   studentId: string;
+  onBack?: () => void;
 }
 
-export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestionsProps) {
+export function AssignmentQuestions({ assignment, studentId, onBack }: AssignmentQuestionsProps) {
   const [answers, setAnswers] = useState<Record<string, string | number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -900,6 +901,17 @@ export function AssignmentQuestions({ assignment, studentId }: AssignmentQuestio
       {!submitted && (
         <Card>
           <CardContent className="pt-6">
+            {onBack && (
+              <Button
+                onClick={onBack}
+                variant="outline"
+                className="w-full mb-3"
+                size="lg"
+              >
+                <ChevronLeft className="h-5 w-5 mr-2" />
+                Back to Practice
+              </Button>
+            )}
             <Button 
               onClick={handleSubmit} 
               disabled={submitting || questions.some(q => !isAnswerValid(answers[q.id]))}
