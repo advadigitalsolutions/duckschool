@@ -27,6 +27,7 @@ interface RichTextEditorProps {
 
 export function RichTextEditor({ content, onChange, placeholder, debounceMs = 2000 }: RichTextEditorProps) {
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const pendingContent = useRef<string | null>(null);
   
   const editor = useEditor({
     extensions: [
@@ -41,6 +42,7 @@ export function RichTextEditor({ content, onChange, placeholder, debounceMs = 20
     content,
     onUpdate: ({ editor }) => {
       const newContent = editor.getHTML();
+      pendingContent.current = newContent;
       
       // Clear existing timer
       if (debounceTimer.current) {
@@ -50,6 +52,7 @@ export function RichTextEditor({ content, onChange, placeholder, debounceMs = 20
       // Set new timer for debounced onChange
       debounceTimer.current = setTimeout(() => {
         onChange(newContent);
+        pendingContent.current = null;
       }, debounceMs);
     },
     editorProps: {
@@ -112,6 +115,19 @@ export function RichTextEditor({ content, onChange, placeholder, debounceMs = 20
       return () => dom.removeEventListener('paste', handlePaste as any);
     }
   }, [editor, handlePaste]);
+
+  // Cleanup and save on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+      // Save any pending changes immediately when unmounting
+      if (pendingContent.current) {
+        onChange(pendingContent.current);
+      }
+    };
+  }, [onChange]);
 
   if (!editor) {
     return null;
