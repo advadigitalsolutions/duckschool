@@ -181,50 +181,64 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({
             <CollapsibleContent>
               <CardContent>
                 <div className="space-y-6">
-                  {/* Reading materials from safeContent.reading_materials */}
-                  {safeContent.reading_materials?.map((material: any, idx: number) => (
-                    <div key={`rm-${idx}`} className="space-y-3">
-                      {material.title && (
-                        <div className="flex items-start gap-2">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-semibold text-blue-600 dark:text-blue-300 mt-0.5">
-                            {idx + 1}
+                  {/* Reading materials - handle both string and array formats */}
+                  {typeof safeContent.reading_materials === 'string' ? (
+                    // Simple string format
+                    <TextToSpeech text={cleanMarkdown(safeContent.reading_materials)}>
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <AssignmentContentRenderer 
+                          content={safeContent.reading_materials}
+                          className="text-sm"
+                          enableReadAloud={false}
+                        />
+                      </div>
+                    </TextToSpeech>
+                  ) : Array.isArray(safeContent.reading_materials) ? (
+                    // Array format with multiple readings
+                    safeContent.reading_materials.map((material: any, idx: number) => (
+                      <div key={`rm-${idx}`} className="space-y-3">
+                        {material.title && (
+                          <div className="flex items-start gap-2">
+                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-semibold text-blue-600 dark:text-blue-300 mt-0.5">
+                              {idx + 1}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-base mb-2">{material.title}</h4>
+                              {material.content && (
+                                <TextToSpeech text={cleanMarkdown(material.content)}>
+                                  <div className="bg-muted/50 rounded-lg p-4">
+                                    <AssignmentContentRenderer 
+                                      content={material.content}
+                                      className="text-sm"
+                                      enableReadAloud={false}
+                                    />
+                                  </div>
+                                </TextToSpeech>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-base mb-2">{material.title}</h4>
-                            {material.content && (
-                              <TextToSpeech text={cleanMarkdown(material.content)}>
-                                <div className="bg-muted/50 rounded-lg p-4">
-                                  <AssignmentContentRenderer 
-                                    content={material.content}
-                                    className="text-sm"
-                                    enableReadAloud={false}
-                                  />
-                                </div>
-                              </TextToSpeech>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {!material.title && material.content && (
-                        <TextToSpeech text={cleanMarkdown(material.content)}>
-                          <div className="bg-muted/50 rounded-lg p-4">
-                            <AssignmentContentRenderer 
-                              content={material.content}
-                              className="text-sm"
-                              enableReadAloud={false}
-                            />
-                          </div>
-                        </TextToSpeech>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                        {!material.title && material.content && (
+                          <TextToSpeech text={cleanMarkdown(material.content)}>
+                            <div className="bg-muted/50 rounded-lg p-4">
+                              <AssignmentContentRenderer 
+                                content={material.content}
+                                className="text-sm"
+                                enableReadAloud={false}
+                              />
+                            </div>
+                          </TextToSpeech>
+                        )}
+                      </div>
+                    ))
+                  ) : null}
                   
                   {/* Embedded passages from questions */}
                   {embeddedPassages.map((passage, idx) => (
                     <div key={`ep-${idx}`} className="space-y-3">
                       <div className="flex items-start gap-2">
                         <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-semibold text-blue-600 dark:text-blue-300 mt-0.5">
-                          {(safeContent.reading_materials?.length || 0) + idx + 1}
+                          {(typeof safeContent.reading_materials === 'string' ? 1 : Array.isArray(safeContent.reading_materials) ? safeContent.reading_materials.length : 0) + idx + 1}
                         </div>
                         <div className="flex-1">
                           <h4 className="font-semibold text-base mb-2">{passage.title}</h4>
