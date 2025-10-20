@@ -4,13 +4,22 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 import { BookOpen, CheckSquare, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import { AssignmentContentRenderer } from './AssignmentContentRenderer';
 import { TextToSpeech } from './TextToSpeech';
+import { TaskChecklistCard } from './TaskChecklistCard';
 import { cleanMarkdown } from '@/utils/textFormatting';
 
 interface InstructionsPanelProps {
   content: any;
+  assignmentId?: string;
+  studentId?: string;
+  onStartTimer?: (minutes: number) => void;
 }
 
-export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content }) => {
+export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ 
+  content,
+  assignmentId,
+  studentId,
+  onStartTimer
+}) => {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     instructions: true,
     readings: true, // Open by default since it's critical
@@ -115,6 +124,16 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
             </CollapsibleContent>
           </Collapsible>
         </Card>
+      )}
+
+      {/* Task Checklist - Interactive breakdown */}
+      {hasInstructions && assignmentId && studentId && (
+        <TaskChecklistCard
+          assignmentId={assignmentId}
+          studentId={studentId}
+          content={safeContent.instructions || ''}
+          onStartTimer={onStartTimer}
+        />
       )}
 
       {/* Reading Materials */}

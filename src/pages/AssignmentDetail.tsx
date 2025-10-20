@@ -763,7 +763,16 @@ export default function AssignmentDetail() {
           </TabsContent>
 
           <TabsContent value="instructions" className="space-y-4">
-            <InstructionsPanel content={content} />
+            <InstructionsPanel 
+              content={content} 
+              assignmentId={id}
+              studentId={currentStudentId || undefined}
+              onStartTimer={(minutes) => {
+                // Phase 5: Integrate with FocusDuck
+                console.log('Start timer for', minutes, 'minutes');
+                toast.info(`Timer feature coming soon! (${minutes} min task)`);
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="rubric" className="space-y-4">

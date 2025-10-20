@@ -209,6 +209,7 @@ export type Database = {
           ai_coaching_history: Json | null
           assignment_id: string
           current_step: string | null
+          current_subtask: number | null
           discussion_completed: boolean | null
           id: string
           notes_completed: boolean | null
@@ -217,12 +218,15 @@ export type Database = {
           started_at: string | null
           steps_completed: Json | null
           student_id: string
+          subtasks_completed: number | null
+          task_checklist_state: Json | null
           updated_at: string | null
         }
         Insert: {
           ai_coaching_history?: Json | null
           assignment_id: string
           current_step?: string | null
+          current_subtask?: number | null
           discussion_completed?: boolean | null
           id?: string
           notes_completed?: boolean | null
@@ -231,12 +235,15 @@ export type Database = {
           started_at?: string | null
           steps_completed?: Json | null
           student_id: string
+          subtasks_completed?: number | null
+          task_checklist_state?: Json | null
           updated_at?: string | null
         }
         Update: {
           ai_coaching_history?: Json | null
           assignment_id?: string
           current_step?: string | null
+          current_subtask?: number | null
           discussion_completed?: boolean | null
           id?: string
           notes_completed?: boolean | null
@@ -245,6 +252,8 @@ export type Database = {
           started_at?: string | null
           steps_completed?: Json | null
           student_id?: string
+          subtasks_completed?: number | null
+          task_checklist_state?: Json | null
           updated_at?: string | null
         }
         Relationships: [
