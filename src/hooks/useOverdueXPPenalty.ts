@@ -71,7 +71,7 @@ export function useOverdueXPPenalty(studentId: string | null, overdueAssignments
               .maybeSingle();
             
             if (!existingPenalty) {
-              // Apply penalty
+              // Apply penalty - DB constraint prevents duplicates
               const { error } = await supabase
                 .from('xp_events')
                 .insert({
@@ -82,11 +82,15 @@ export function useOverdueXPPenalty(studentId: string | null, overdueAssignments
                   reference_id: assignment.id,
                 });
               
-              if (!error) {
+              // Ignore duplicate key errors (23505) - means another process already inserted
+              if (!error || (error.code === '23505')) {
                 saveAppliedPenaltyToStorage(penaltyKey);
-                toast.error(`-10 XP: Assignment is ${totalDaysLate} day${totalDaysLate > 1 ? 's' : ''} overdue`, {
-                  icon: '⏰',
-                });
+                // Only show toast if not a duplicate error
+                if (!error) {
+                  toast.error(`-10 XP: Assignment is ${totalDaysLate} day${totalDaysLate > 1 ? 's' : ''} overdue`, {
+                    icon: '⏰',
+                  });
+                }
               }
             } else {
               // Already exists in DB, mark as applied in session
