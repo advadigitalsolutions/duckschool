@@ -158,6 +158,13 @@ export function DiagnosticAssessmentLauncher({
                   <SelectItem value="English Language Arts">English Language Arts</SelectItem>
                   <SelectItem value="Science">Science</SelectItem>
                   <SelectItem value="Social Studies">Social Studies</SelectItem>
+                  <SelectItem value="Home Economics">Home Economics</SelectItem>
+                  <SelectItem value="Life Skills">Life Skills</SelectItem>
+                  <SelectItem value="Physical Education">Physical Education</SelectItem>
+                  <SelectItem value="Arts & Music">Arts & Music</SelectItem>
+                  <SelectItem value="Foreign Language">Foreign Language</SelectItem>
+                  <SelectItem value="Computer Science">Computer Science</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

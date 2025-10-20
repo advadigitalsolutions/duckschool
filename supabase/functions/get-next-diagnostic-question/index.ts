@@ -89,14 +89,20 @@ serve(async (req) => {
 
     const currentMastery = (masteryEstimates[targetTopic] as number) || 0.5;
     
-    const prompt = `Generate a ${assessment.subject} question for topic "${targetTopic}" at difficulty level ${currentMastery.toFixed(2)}.
+    const subjectContext = assessment.subject === 'Home Economics' || assessment.subject === 'Life Skills'
+      ? 'real-world practical life skills like cooking, budgeting, household management, nutrition, sewing, cleaning, time management, etc.'
+      : assessment.subject;
+
+    const prompt = `Generate a ${subjectContext} question for topic "${targetTopic}" at difficulty level ${currentMastery.toFixed(2)}.
 
 The question should:
-- Test understanding of ${targetTopic}
+- Test understanding of ${targetTopic} in the context of ${assessment.subject}
 - Be appropriate for ${assessment.grade_level || 'middle school'} level
+- Be practical and relatable to real-life situations
 - Have a clear correct answer
 - Include 4 multiple choice options (A, B, C, D)
-- Be engaging and non-intimidating
+- Be engaging, friendly, and non-intimidating
+- Focus on practical knowledge students would actually use in daily life
 
 Return ONLY the question data, no other text.`;
 
