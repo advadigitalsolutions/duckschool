@@ -1207,6 +1207,137 @@ export type Database = {
         }
         Relationships: []
       }
+      diagnostic_assessments: {
+        Row: {
+          completed_at: string | null
+          confidence_threshold: number | null
+          created_at: string | null
+          current_phase: string
+          framework: string | null
+          grade_level: string | null
+          id: string
+          mastery_estimates: Json | null
+          questions_asked: number | null
+          results: Json | null
+          started_at: string | null
+          status: string
+          student_id: string
+          subject: string
+          updated_at: string | null
+          warmup_data: Json | null
+        }
+        Insert: {
+          completed_at?: string | null
+          confidence_threshold?: number | null
+          created_at?: string | null
+          current_phase?: string
+          framework?: string | null
+          grade_level?: string | null
+          id?: string
+          mastery_estimates?: Json | null
+          questions_asked?: number | null
+          results?: Json | null
+          started_at?: string | null
+          status?: string
+          student_id: string
+          subject: string
+          updated_at?: string | null
+          warmup_data?: Json | null
+        }
+        Update: {
+          completed_at?: string | null
+          confidence_threshold?: number | null
+          created_at?: string | null
+          current_phase?: string
+          framework?: string | null
+          grade_level?: string | null
+          id?: string
+          mastery_estimates?: Json | null
+          questions_asked?: number | null
+          results?: Json | null
+          started_at?: string | null
+          status?: string
+          student_id?: string
+          subject?: string
+          updated_at?: string | null
+          warmup_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_assessments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diagnostic_question_responses: {
+        Row: {
+          ai_feedback: string | null
+          assessment_id: string
+          created_at: string | null
+          difficulty_level: number | null
+          id: string
+          is_correct: boolean | null
+          mastery_delta: number | null
+          phase: string
+          question_data: Json
+          question_number: number
+          standard_code: string | null
+          student_id: string
+          student_response: Json
+          time_spent_seconds: number | null
+        }
+        Insert: {
+          ai_feedback?: string | null
+          assessment_id: string
+          created_at?: string | null
+          difficulty_level?: number | null
+          id?: string
+          is_correct?: boolean | null
+          mastery_delta?: number | null
+          phase: string
+          question_data: Json
+          question_number: number
+          standard_code?: string | null
+          student_id: string
+          student_response: Json
+          time_spent_seconds?: number | null
+        }
+        Update: {
+          ai_feedback?: string | null
+          assessment_id?: string
+          created_at?: string | null
+          difficulty_level?: number | null
+          id?: string
+          is_correct?: boolean | null
+          mastery_delta?: number | null
+          phase?: string
+          question_data?: Json
+          question_number?: number
+          standard_code?: string | null
+          student_id?: string
+          student_response?: Json
+          time_spent_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_question_responses_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostic_question_responses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_request_comments: {
         Row: {
           comment: string

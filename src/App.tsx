@@ -84,6 +84,7 @@ import DuckPopup from "./pages/DuckPopup";
 import NotFound from "./pages/NotFound";
 import LearningWindow from "./pages/LearningWindow";
 import AdminSeedStandards from "./pages/AdminSeedStandards";
+import DiagnosticAssessment from "./pages/DiagnosticAssessment";
 import { AuthGuard } from "./components/AuthGuard";
 import { BionicReadingProvider } from "./contexts/BionicReadingContext";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
