@@ -394,22 +394,21 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
       try {
         console.log('[GRADING] Starting AI grading for question:', question.id);
         
-        // Create timeout promise that rejects after 30 seconds
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('AI grading timeout after 30 seconds')), 30000);
-        });
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
         
-        // Race between grading and timeout
-        const gradingPromise = supabase.functions.invoke('grade-open-response', {
+        const { data, error } = await supabase.functions.invoke('grade-open-response', {
           body: {
             question: question.question,
             studentAnswer: answer,
             correctAnswer: question.correct_answer,
             maxPoints: question.points || 1
-          }
+          },
+          signal: controller.signal
         });
         
-        const { data, error } = await Promise.race([gradingPromise, timeoutPromise]) as any;
+        clearTimeout(timeoutId);
 
         if (error) {
           console.error('[GRADING] Edge function error:', error);
@@ -426,7 +425,9 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
         };
       } catch (error) {
         console.error('[GRADING] Error grading with AI, using fallback:', error);
-        toast.warning('AI grading unavailable, using basic text matching');
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('[GRADING] Request timed out after 30 seconds');
+        }
         
         // Fallback to simple string matching if AI grading fails
         const answerStr = (answer as string).toLowerCase().trim();
@@ -534,21 +535,46 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
         submissionData = data;
       }
 
-      // Create question responses
-      const responses = questions.map(question => ({
-        submission_id: submissionData.id,
-        question_id: question.id,
-        answer: { value: answers[question.id] },
-        is_correct: gradedResults[question.id],
-        time_spent_seconds: questionTimes[question.id] || 0,
-        attempt_number: attemptNumber
-      }));
+      // Update or create question responses
+      for (const question of questions) {
+        // Check if response already exists (from auto-save)
+        const { data: existing } = await supabase
+          .from('question_responses')
+          .select('id')
+          .eq('submission_id', submissionData.id)
+          .eq('question_id', question.id)
+          .eq('attempt_number', attemptNumber)
+          .maybeSingle();
 
-      const { error: responsesError } = await supabase
-        .from('question_responses')
-        .insert(responses);
+        const responseData = {
+          submission_id: submissionData.id,
+          question_id: question.id,
+          answer: { value: answers[question.id] },
+          is_correct: gradedResults[question.id],
+          time_spent_seconds: questionTimes[question.id] || 0,
+          attempt_number: attemptNumber
+        };
 
-      if (responsesError) throw responsesError;
+        if (existing) {
+          // Update existing response with grading results
+          const { error: updateError } = await supabase
+            .from('question_responses')
+            .update({
+              is_correct: gradedResults[question.id],
+              time_spent_seconds: questionTimes[question.id] || 0
+            })
+            .eq('id', existing.id);
+          
+          if (updateError) throw updateError;
+        } else {
+          // Insert new response
+          const { error: insertError } = await supabase
+            .from('question_responses')
+            .insert(responseData);
+          
+          if (insertError) throw insertError;
+        }
+      }
 
       // Create grade
       const { error: gradeError } = await supabase
