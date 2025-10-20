@@ -592,6 +592,9 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
           .update({ content: { currentQuestionIndex: newIndex } })
           .eq('id', draftSubmissionId);
       }
+    } else if (currentQuestionIndex === 0 && onBack) {
+      // On first question, go back to previous phase
+      onBack();
     }
   };
 
@@ -857,11 +860,11 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
             <Button
               variant="outline"
               onClick={handlePrevious}
-              disabled={currentQuestionIndex === 0 || isSaving}
+              disabled={isSaving || (!onBack && currentQuestionIndex === 0)}
               className="flex-1"
             >
               <ChevronLeft className="h-4 w-4 mr-2" />
-              Previous
+              {currentQuestionIndex === 0 ? 'Back to Practice' : 'Previous'}
             </Button>
             <Button
               variant="outline"
@@ -901,17 +904,6 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
       {!submitted && (
         <Card>
           <CardContent className="pt-6">
-            {onBack && (
-              <Button
-                onClick={onBack}
-                variant="outline"
-                className="w-full mb-3"
-                size="lg"
-              >
-                <ChevronLeft className="h-5 w-5 mr-2" />
-                Back to Practice
-              </Button>
-            )}
             <Button 
               onClick={handleSubmit} 
               disabled={submitting || questions.some(q => !isAnswerValid(answers[q.id]))}
