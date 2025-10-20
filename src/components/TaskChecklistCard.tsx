@@ -113,6 +113,8 @@ export function TaskChecklistCard({
 
   const loadChecklistState = async () => {
     try {
+      console.log('Loading checklist state for:', { assignmentId, studentId });
+
       const { data, error } = await supabase
         .from('assignment_learning_progress')
         .select('task_checklist_state')
@@ -120,7 +122,12 @@ export function TaskChecklistCard({
         .eq('student_id', studentId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Failed to load checklist state:', error);
+        throw error;
+      }
+
+      console.log('Loaded checklist state:', data);
 
       if (data?.task_checklist_state) {
         const checkedIds = new Set<string>(data.task_checklist_state as string[]);
@@ -139,6 +146,14 @@ export function TaskChecklistCard({
       const completedCount = checkedArray.length;
       const currentTask = tasks.findIndex(t => !t.isHeader && !newCheckedTasks.has(t.id));
 
+      console.log('Saving checklist state:', {
+        assignment_id: assignmentId,
+        student_id: studentId,
+        task_checklist_state: checkedArray,
+        subtasks_completed: completedCount,
+        current_subtask: currentTask >= 0 ? currentTask : tasks.filter(t => !t.isHeader).length
+      });
+
       const { error } = await supabase
         .from('assignment_learning_progress')
         .upsert({
@@ -149,7 +164,10 @@ export function TaskChecklistCard({
           current_subtask: currentTask >= 0 ? currentTask : tasks.filter(t => !t.isHeader).length
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Failed to save checklist state:', error);
+        throw error;
+      }
     } catch (error) {
       console.error('Error saving checklist state:', error);
       toast.error('Failed to save progress');
