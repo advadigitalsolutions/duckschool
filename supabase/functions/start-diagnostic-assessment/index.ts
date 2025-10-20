@@ -7,9 +7,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  console.log('🎯 start-diagnostic-assessment called');
 
   try {
     const supabaseClient = createClient(
@@ -18,11 +21,15 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
 
-    const { studentId, subject, framework, gradeLevel } = await req.json();
+    const body = await req.json();
+    console.log('📥 Request body:', body);
+    
+    const { studentId, subject, framework, gradeLevel } = body;
 
     console.log('Starting diagnostic assessment:', { studentId, subject, framework, gradeLevel });
 
     if (!studentId || !subject) {
+      console.error('❌ Missing required fields');
       throw new Error('Student ID and subject are required');
     }
 
