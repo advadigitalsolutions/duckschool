@@ -172,6 +172,9 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
   };
 
   const handleNext = () => {
+    setShowFeedback(false);
+    setSelectedAnswer(null);
+    setCurrentQuestion(null); // Clear current question to show loading state
     fetchNextQuestion();
   };
 
@@ -225,8 +228,8 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
                     selectedAnswer === letter && "border-primary bg-primary/5"
                   )}
                 >
-                  <span className="font-medium mr-3">{letter}.</span>
-                  <span className="flex-1">{text}</span>
+                  <span className="font-medium mr-3 flex-shrink-0">{letter}.</span>
+                  <span className="flex-1 whitespace-normal break-words">{text}</span>
                 </Button>
               ))}
               
@@ -239,8 +242,8 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
                   selectedAnswer === "IDK" && "border-primary bg-primary/5"
                 )}
               >
-                <span className="font-medium mr-3">?</span>
-                <span className="flex-1 italic">I don't know</span>
+                <span className="font-medium mr-3 flex-shrink-0">?</span>
+                <span className="flex-1 italic whitespace-normal break-words">I don't know</span>
               </Button>
             </div>
           )}
