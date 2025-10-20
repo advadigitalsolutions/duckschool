@@ -25,6 +25,7 @@ import { RegradeButton } from '@/components/RegradeButton';
 import { LearningWizard } from '@/components/LearningWizard';
 import { EditAssignmentDatesDialog } from '@/components/EditAssignmentDatesDialog';
 import { InstructionsPanel } from '@/components/InstructionsPanel';
+import { AssignmentContentRenderer } from '@/components/AssignmentContentRenderer';
 
 
 export default function AssignmentDetail() {
@@ -805,6 +806,21 @@ export default function AssignmentDetail() {
           <TabsContent value="resources" className="space-y-4">
             <div className={openResource ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : ""}>
               <div className="space-y-4">
+                {/* Reading Passage */}
+                {content.reading_materials && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <BookOpen className="h-5 w-5" />
+                        Reading Passage
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <AssignmentContentRenderer content={content.reading_materials} enableReadAloud />
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Study Guide Panel - AI-generated question-specific learning resources */}
                 {content.questions?.length > 0 && (
                   <StudyGuidePanel
