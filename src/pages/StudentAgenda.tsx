@@ -116,9 +116,6 @@ export default function StudentAgenda() {
         {student.id && <DiagnosticAssessmentLauncher studentId={student.id} buttonText="Skills Check-In" variant="outline" />}
       </div>
       
-      {/* Personalized Learning Card */}
-      {student.id}
-      
       {/* Up Next Box */}
       {upNextAssignment && <Card className="mb-6 border-2 border-yellow-500 shadow-lg">
           <CardHeader className="pb-3">
