@@ -38,23 +38,23 @@ serve(async (req) => {
     console.log('Processing response:', { assessmentId, questionNumber, isCorrect });
 
     // Generate encouraging AI feedback
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     let aiFeedback = '';
     
-    if (LOVABLE_API_KEY) {
+    if (OPENAI_API_KEY) {
       try {
         const feedbackPrompt = isCorrect 
           ? `Generate brief, encouraging feedback for a student who answered correctly. Keep it under 20 words and celebrate their success without being patronizing.`
           : `Generate brief, supportive feedback for a student who answered incorrectly. Focus on learning opportunity, not failure. Keep it under 30 words and include the explanation: ${explanation}`;
 
-        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            model: 'gpt-5-mini-2025-08-07',
             messages: [
               { role: 'system', content: 'You are an encouraging tutor providing brief, positive feedback.' },
               { role: 'user', content: feedbackPrompt }
