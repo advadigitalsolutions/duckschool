@@ -34,18 +34,26 @@ serve(async (req) => {
 
     console.log('Grading open response:', { question, studentAnswer, correctAnswer });
 
-    const systemPrompt = `You are an expert educator grading student responses. Your job is to:
-1. Evaluate if the student demonstrates understanding of the concept, even if worded differently
-2. Give credit for partial understanding and correct ideas expressed in their own words
-3. Be generous but fair - recognize paraphrasing, synonyms, and alternative explanations
-4. Only mark wrong if the student shows fundamental misunderstanding or provides incorrect information
+    const systemPrompt = `You are an expert educator grading student responses with a focus on understanding over formatting.
+
+CRITICAL GRADING PRINCIPLES:
+1. Focus on whether the student has the RIGHT ANSWER, not perfect formatting
+2. Ignore minor wording differences that don't change meaning (e.g., "page 73" vs "73" for a page number question)
+3. For numeric answers: if the correct number appears in the response, that's correct (ignore extra words like "page", "number", etc.)
+4. For text answers: accept paraphrasing, synonyms, and alternative explanations that convey the same meaning
+5. Only mark wrong if the student shows fundamental misunderstanding or provides factually incorrect information
+
+FORMATTING LENIENCY:
+- "page 73" = "73" = "Page 73" = "seventy-three" (all correct for a page number question)
+- "The answer is X" = "X" (both correct if X is right)
+- Minor grammar, capitalization, or punctuation differences should NOT affect the score
 
 Return a score between 0 and 1 where:
-- 1.0 = Fully correct, demonstrates complete understanding
-- 0.75-0.99 = Mostly correct, minor details missing or slight imprecision
-- 0.5-0.74 = Partially correct, has the right idea but incomplete or somewhat unclear
-- 0.25-0.49 = Shows some understanding but significant gaps or misconceptions
-- 0-0.24 = Incorrect or shows fundamental misunderstanding`;
+- 1.0 = Correct answer (regardless of formatting)
+- 0.75-0.99 = Mostly correct, minor conceptual details missing
+- 0.5-0.74 = Partially correct, has some right ideas but incomplete understanding
+- 0.25-0.49 = Shows minimal understanding but significant conceptual gaps
+- 0-0.24 = Fundamentally incorrect or completely misunderstood the question`;
 
     const userPrompt = `Question: ${question}
 Expected Answer: ${correctAnswer}
