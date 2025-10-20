@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ExternalLink, ChevronDown, Lightbulb, BookOpen, Video, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { TextToSpeech } from './TextToSpeech';
 
 interface StudyGuideHint {
   type: 'context' | 'resource_link' | 'reading_reference' | 'concept_explanation';
@@ -295,7 +296,9 @@ export function StudyGuidePanel({
                       <div key={hintIndex} className="border-l-4 border-primary pl-4 py-2">
                         {hint.type === 'resource_link' && (
                           <div className="space-y-2">
-                            <p className="text-sm text-muted-foreground">{hint.text}</p>
+                            <TextToSpeech text={hint.text}>
+                              <p className="text-sm text-muted-foreground">{hint.text}</p>
+                            </TextToSpeech>
                             {hint.links?.map((link, linkIndex) => (
                               <button
                                 key={linkIndex}
@@ -315,16 +318,20 @@ export function StudyGuidePanel({
                         )}
 
                         {hint.type === 'reading_reference' && (
-                          <div className="flex items-start gap-2">
-                            <BookOpen className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
-                            <p className="text-sm">
-                              <span className="font-medium">Check your reading:</span> {hint.page_reference}
-                            </p>
-                          </div>
+                          <TextToSpeech text={`Check your reading: ${hint.page_reference}`}>
+                            <div className="flex items-start gap-2">
+                              <BookOpen className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
+                              <p className="text-sm">
+                                <span className="font-medium">Check your reading:</span> {hint.page_reference}
+                              </p>
+                            </div>
+                          </TextToSpeech>
                         )}
 
                         {(hint.type === 'concept_explanation' || hint.type === 'context') && (
-                          <p className="text-sm text-muted-foreground">{hint.text}</p>
+                          <TextToSpeech text={hint.text}>
+                            <p className="text-sm text-muted-foreground">{hint.text}</p>
+                          </TextToSpeech>
                         )}
                       </div>
                     ))}

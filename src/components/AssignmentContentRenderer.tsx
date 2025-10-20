@@ -1,14 +1,18 @@
 import React from 'react';
 import { BionicText } from './BionicText';
+import { TextToSpeech } from './TextToSpeech';
+import { cleanMarkdown } from '@/utils/textFormatting';
 
 interface AssignmentContentRendererProps {
   content: string;
   className?: string;
+  enableReadAloud?: boolean;
 }
 
 export const AssignmentContentRenderer: React.FC<AssignmentContentRendererProps> = ({
   content,
-  className = ''
+  className = '',
+  enableReadAloud = true
 }) => {
   // Convert markdown to structured HTML
   const renderMarkdown = (text: string) => {
@@ -97,9 +101,19 @@ export const AssignmentContentRenderer: React.FC<AssignmentContentRendererProps>
     return text;
   };
   
-  return (
+  const renderedContent = (
     <div className={`prose prose-sm max-w-none ${className}`}>
       {renderMarkdown(content)}
     </div>
   );
+
+  if (enableReadAloud) {
+    return (
+      <TextToSpeech text={cleanMarkdown(content)}>
+        {renderedContent}
+      </TextToSpeech>
+    );
+  }
+
+  return renderedContent;
 };

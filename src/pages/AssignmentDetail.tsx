@@ -403,50 +403,60 @@ export default function AssignmentDetail() {
                 <CardContent className="space-y-4">
                   <div>
                     <h4 className="font-semibold mb-2">About This Lesson</h4>
-                    <p className="text-muted-foreground">
-                      <BionicText>
-                        {content.teacher_guide?.lesson_overview || content.description || 'This assignment helps students practice and demonstrate their understanding of the topic.'}
-                      </BionicText>
-                    </p>
+                    <TextToSpeech text={content.teacher_guide?.lesson_overview || content.description || 'This assignment helps students practice and demonstrate their understanding of the topic.'}>
+                      <p className="text-muted-foreground">
+                        <BionicText>
+                          {content.teacher_guide?.lesson_overview || content.description || 'This assignment helps students practice and demonstrate their understanding of the topic.'}
+                        </BionicText>
+                      </p>
+                    </TextToSpeech>
                   </div>
 
                   <div>
                     <h4 className="font-semibold mb-2">How It Fits With Course Goals</h4>
-                    <p className="text-muted-foreground">
-                      <BionicText>
-                        {content.teacher_guide?.course_alignment || `This lesson aligns with the ${assignment.curriculum_items?.courses?.subject} curriculum and builds toward mastery of key concepts. It scaffolds student learning by connecting prior knowledge with new material, reinforcing fundamental skills while introducing advanced applications.`}
-                      </BionicText>
-                    </p>
+                    <TextToSpeech text={content.teacher_guide?.course_alignment || `This lesson aligns with the ${assignment.curriculum_items?.courses?.subject} curriculum and builds toward mastery of key concepts. It scaffolds student learning by connecting prior knowledge with new material, reinforcing fundamental skills while introducing advanced applications.`}>
+                      <p className="text-muted-foreground">
+                        <BionicText>
+                          {content.teacher_guide?.course_alignment || `This lesson aligns with the ${assignment.curriculum_items?.courses?.subject} curriculum and builds toward mastery of key concepts. It scaffolds student learning by connecting prior knowledge with new material, reinforcing fundamental skills while introducing advanced applications.`}
+                        </BionicText>
+                      </p>
+                    </TextToSpeech>
                   </div>
 
                   <div>
                     <h4 className="font-semibold mb-2">Introducing to Students</h4>
-                    <p className="text-muted-foreground">
-                      <BionicText>
-                        {content.teacher_guide?.introduction_strategy || 'Begin by reviewing the learning objectives with your student. Help them understand why this topic matters and how it connects to what they\'ve learned before. Encourage questions and check for understanding before they start. Remind them to read carefully and take their time with each question.'}
-                      </BionicText>
-                    </p>
+                    <TextToSpeech text={content.teacher_guide?.introduction_strategy || 'Begin by reviewing the learning objectives with your student. Help them understand why this topic matters and how it connects to what they\'ve learned before. Encourage questions and check for understanding before they start. Remind them to read carefully and take their time with each question.'}>
+                      <p className="text-muted-foreground">
+                        <BionicText>
+                          {content.teacher_guide?.introduction_strategy || 'Begin by reviewing the learning objectives with your student. Help them understand why this topic matters and how it connects to what they\'ve learned before. Encourage questions and check for understanding before they start. Remind them to read carefully and take their time with each question.'}
+                        </BionicText>
+                      </p>
+                    </TextToSpeech>
                   </div>
 
                   {content.teacher_guide?.discussion_prompts && content.teacher_guide.discussion_prompts.length > 0 && (
                     <div>
                       <h4 className="font-semibold mb-2">Discussion Prompts</h4>
-                      <ul className="space-y-2">
-                        {content.teacher_guide.discussion_prompts.map((prompt: string, idx: number) => (
-                          <li key={idx} className="text-sm text-muted-foreground pl-4 border-l-2 border-primary">
-                            <BionicText>{prompt}</BionicText>
-                          </li>
-                        ))}
-                      </ul>
+                      <TextToSpeech text={content.teacher_guide.discussion_prompts.join('. ')}>
+                        <ul className="space-y-2">
+                          {content.teacher_guide.discussion_prompts.map((prompt: string, idx: number) => (
+                            <li key={idx} className="text-sm text-muted-foreground pl-4 border-l-2 border-primary">
+                              <BionicText>{prompt}</BionicText>
+                            </li>
+                          ))}
+                        </ul>
+                      </TextToSpeech>
                     </div>
                   )}
 
                   {content.teacher_guide?.assessment_guidance && (
                     <div>
                       <h4 className="font-semibold mb-2">Assessment Guidance</h4>
-                      <p className="text-muted-foreground">
-                        <BionicText>{content.teacher_guide.assessment_guidance}</BionicText>
-                      </p>
+                      <TextToSpeech text={content.teacher_guide.assessment_guidance}>
+                        <p className="text-muted-foreground">
+                          <BionicText>{content.teacher_guide.assessment_guidance}</BionicText>
+                        </p>
+                      </TextToSpeech>
                     </div>
                   )}
                 </CardContent>
@@ -466,9 +476,11 @@ export default function AssignmentDetail() {
                       content.teacher_guide.beyond_screen_activities.map((activity: any, idx: number) => (
                         <div key={idx} className="border-l-4 border-primary pl-4 py-2">
                           <h4 className="font-semibold mb-2">{activity.title}</h4>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            <BionicText>{activity.description}</BionicText>
-                          </p>
+                          <TextToSpeech text={activity.description}>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              <BionicText>{activity.description}</BionicText>
+                            </p>
+                          </TextToSpeech>
                           {activity.materials && activity.materials.length > 0 && (
                             <div className="text-xs text-muted-foreground mb-1">
                               <span className="font-medium">Materials:</span> {activity.materials.join(', ')}
@@ -485,20 +497,24 @@ export default function AssignmentDetail() {
                       <>
                         <div className="border-l-4 border-primary pl-4 py-2">
                           <h4 className="font-semibold mb-2">Activity 1: Creative Expression</h4>
-                          <p className="text-sm text-muted-foreground">
-                            <BionicText>
-                              Have your student create a visual representation of what they learned using art supplies, building materials, or even a nature walk. This could be a poster, diagram, comic strip, or 3D model that explains the key concepts in their own way.
-                            </BionicText>
-                          </p>
+                          <TextToSpeech text="Have your student create a visual representation of what they learned using art supplies, building materials, or even a nature walk. This could be a poster, diagram, comic strip, or 3D model that explains the key concepts in their own way.">
+                            <p className="text-sm text-muted-foreground">
+                              <BionicText>
+                                Have your student create a visual representation of what they learned using art supplies, building materials, or even a nature walk. This could be a poster, diagram, comic strip, or 3D model that explains the key concepts in their own way.
+                              </BionicText>
+                            </p>
+                          </TextToSpeech>
                         </div>
 
                         <div className="border-l-4 border-primary pl-4 py-2">
                           <h4 className="font-semibold mb-2">Activity 2: Real-World Connection</h4>
-                          <p className="text-sm text-muted-foreground">
-                            <BionicText>
-                              Encourage your student to find real-world examples of the concepts they're learning. This could involve conducting simple experiments, interviewing family members, taking photos of examples in their environment, or writing about how they see these ideas in daily life.
-                            </BionicText>
-                          </p>
+                          <TextToSpeech text="Encourage your student to find real-world examples of the concepts they're learning. This could involve conducting simple experiments, interviewing family members, taking photos of examples in their environment, or writing about how they see these ideas in daily life.">
+                            <p className="text-sm text-muted-foreground">
+                              <BionicText>
+                                Encourage your student to find real-world examples of the concepts they're learning. This could involve conducting simple experiments, interviewing family members, taking photos of examples in their environment, or writing about how they see these ideas in daily life.
+                              </BionicText>
+                            </p>
+                          </TextToSpeech>
                         </div>
                       </>
                     )}
@@ -764,7 +780,9 @@ export default function AssignmentDetail() {
                           <h4 className="font-medium"><BionicText>{cleanMarkdown(item.criteria)}</BionicText></h4>
                           <Badge variant="outline">{item.points} points</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground"><BionicText>{cleanMarkdown(item.description)}</BionicText></p>
+                        <TextToSpeech text={cleanMarkdown(item.description)}>
+                          <p className="text-sm text-muted-foreground"><BionicText>{cleanMarkdown(item.description)}</BionicText></p>
+                        </TextToSpeech>
                       </div>
                     ))}
                   </div>

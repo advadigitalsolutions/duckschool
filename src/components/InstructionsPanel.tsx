@@ -108,6 +108,7 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
                   <AssignmentContentRenderer 
                     content={safeContent.instructions} 
                     className="space-y-4"
+                    enableReadAloud={false}
                   />
                 </TextToSpeech>
               </CardContent>
@@ -155,6 +156,7 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
                                   <AssignmentContentRenderer 
                                     content={material.content}
                                     className="text-sm"
+                                    enableReadAloud={false}
                                   />
                                 </div>
                               </TextToSpeech>
@@ -168,6 +170,7 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
                             <AssignmentContentRenderer 
                               content={material.content}
                               className="text-sm"
+                              enableReadAloud={false}
                             />
                           </div>
                         </TextToSpeech>
@@ -241,10 +244,13 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
                       </div>
                       
                       <div className="space-y-2">
-                        <AssignmentContentRenderer 
-                          content={activity.description}
-                          className="text-sm"
-                        />
+                        <TextToSpeech text={cleanMarkdown(activity.description)}>
+                          <AssignmentContentRenderer 
+                            content={activity.description}
+                            className="text-sm"
+                            enableReadAloud={false}
+                          />
+                        </TextToSpeech>
                         {activity.duration_minutes && (
                           <p className="text-xs text-muted-foreground flex items-center gap-1">
                             <span className="inline-block w-1 h-1 rounded-full bg-muted-foreground" />
@@ -341,12 +347,15 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ content })
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-teal-50 dark:bg-teal-950/20 p-4 rounded-lg border border-teal-200 dark:border-teal-800">
-              <AssignmentContentRenderer 
-                content={safeContent.sample_student_response.content}
-                className="text-sm whitespace-pre-wrap"
-              />
-            </div>
+            <TextToSpeech text={safeContent.sample_student_response.content}>
+              <div className="bg-teal-50 dark:bg-teal-950/20 p-4 rounded-lg border border-teal-200 dark:border-teal-800">
+                <AssignmentContentRenderer 
+                  content={safeContent.sample_student_response.content}
+                  className="text-sm whitespace-pre-wrap"
+                  enableReadAloud={false}
+                />
+              </div>
+            </TextToSpeech>
             {safeContent.sample_student_response.annotations && (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase">
