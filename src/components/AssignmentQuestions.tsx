@@ -8,12 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { cleanMarkdown } from '@/utils/textFormatting';
 import { useXPConfig } from '@/hooks/useXP';
 import { BionicText } from './BionicText';
 import { TextToSpeech } from './TextToSpeech';
 import { MathText } from './MathText';
+import { AssignmentContentRenderer } from './AssignmentContentRenderer';
 
 interface Question {
   id: string;
@@ -730,10 +731,27 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
   const currentQuestion = questions[currentQuestionIndex];
   const isCurrentQuestionAnswered = isAnswerValid(answers[currentQuestion?.id]);
 
+  const readingMaterials = assignmentBody.reading_materials;
+
   return (
     <>
       <SaveStatus />
       <div className="space-y-6">
+      {/* Reading Materials Section */}
+      {readingMaterials && (
+        <Card className="border-primary/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Reading Passage
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AssignmentContentRenderer content={readingMaterials} enableReadAloud />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Progress Bar */}
       <Card>
         <CardHeader>
