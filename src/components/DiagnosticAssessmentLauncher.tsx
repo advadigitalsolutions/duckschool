@@ -44,6 +44,8 @@ export function DiagnosticAssessmentLauncher({
   });
 
   const handleStartAssessment = async () => {
+    console.log('🎯 Begin Assessment clicked:', { subject, framework, gradeLevel, studentId });
+    
     if (!subject) {
       toast({
         title: "Subject Required",
@@ -56,6 +58,7 @@ export function DiagnosticAssessmentLauncher({
     setIsStarting(true);
 
     try {
+      console.log('🔄 Invoking start-diagnostic-assessment function...');
       const { data, error } = await supabase.functions.invoke('start-diagnostic-assessment', {
         body: {
           studentId,
@@ -65,20 +68,31 @@ export function DiagnosticAssessmentLauncher({
         }
       });
 
-      if (error) throw error;
+      console.log('📥 Function response:', { data, error });
+
+      if (error) {
+        console.error('❌ Function returned error:', error);
+        throw error;
+      }
+
+      if (!data || !data.assessmentId) {
+        console.error('❌ Invalid response data:', data);
+        throw new Error('Invalid response from server');
+      }
 
       toast({
         title: data.resuming ? "Resuming Assessment" : "Assessment Started",
         description: "Let's discover what you know!"
       });
 
+      console.log('✅ Navigating to assessment:', data.assessmentId);
       // Navigate to the assessment interface
       navigate(`/student/diagnostic/${data.assessmentId}`);
     } catch (error) {
-      console.error('Error starting assessment:', error);
+      console.error('💥 Error starting assessment:', error);
       toast({
         title: "Error",
-        description: "Could not start assessment. Please try again.",
+        description: error instanceof Error ? error.message : "Could not start assessment. Please try again.",
         variant: "destructive"
       });
     } finally {
