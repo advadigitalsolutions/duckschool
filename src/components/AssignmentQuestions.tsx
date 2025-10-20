@@ -48,6 +48,7 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
   const [loadingDraft, setLoadingDraft] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   
   const { config: xpConfig } = useXPConfig();
 
@@ -78,22 +79,40 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
     }
   }, [loadingDraft]);
 
+  // Save to localStorage as backup
+  useEffect(() => {
+    if (!assignment?.id || !studentId) return;
+    
+    const backupKey = `assignment_backup_${assignment.id}_${studentId}`;
+    const backup = {
+      answers,
+      questionTimes,
+      currentQuestionIndex,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(backupKey, JSON.stringify(backup));
+  }, [answers, questionTimes, currentQuestionIndex, assignment?.id, studentId]);
+
   // Debounced auto-save when answers change
   useEffect(() => {
     if (!draftSubmissionId || submitted) return;
 
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
       const currentQuestionId = questions[currentQuestionIndex]?.id;
       const currentAnswer = answers[currentQuestionId];
       
-      if (currentAnswer !== undefined) {
+      if (currentAnswer !== undefined && currentAnswer !== '') {
         const timeSpent = questionTimes[currentQuestionId] || 0;
-        saveAnswer(currentQuestionId, currentAnswer, timeSpent);
+        console.log('[AUTO-SAVE] Triggering save for question:', currentQuestionId, 'Answer:', currentAnswer);
+        const success = await saveAnswer(currentQuestionId, currentAnswer, timeSpent);
+        if (success) {
+          setLastSaved(new Date());
+        }
       }
-    }, 1000); // 1 second debounce
+    }, 2000); // 2 second debounce for better UX
 
     return () => clearTimeout(timeoutId);
-  }, [answers, draftSubmissionId, submitted]);
+  }, [answers, draftSubmissionId, submitted, currentQuestionIndex]);
 
   // Log button states for debugging
   useEffect(() => {
@@ -113,6 +132,25 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
     try {
       setLoadingDraft(true);
       
+      // Try to restore from localStorage first
+      const backupKey = `assignment_backup_${assignment.id}_${studentId}`;
+      const backupData = localStorage.getItem(backupKey);
+      if (backupData) {
+        try {
+          const backup = JSON.parse(backupData);
+          // Only restore if backup is less than 1 hour old
+          if (Date.now() - backup.timestamp < 3600000) {
+            console.log('[RESTORE] Found localStorage backup:', backup);
+            setAnswers(backup.answers || {});
+            setQuestionTimes(backup.questionTimes || {});
+            setCurrentQuestionIndex(backup.currentQuestionIndex || 0);
+            toast.info('Restored your previous answers from backup');
+          }
+        } catch (e) {
+          console.error('[RESTORE] Failed to parse backup:', e);
+        }
+      }
+
       // Check for draft submission
       const { data: draftData, error: draftError } = await supabase
         .from('submissions')
@@ -206,11 +244,14 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
   };
 
   const saveAnswer = async (questionId: string, answer: any, timeSpent: number, retryCount = 0): Promise<boolean> => {
-    if (!draftSubmissionId) return false;
+    if (!draftSubmissionId) {
+      console.error('[SAVE] No draft submission ID available');
+      return false;
+    }
 
     setIsSaving(true);
     setSaveError(null);
-    console.log('[AssignmentQuestions] Saving answer for question:', questionId);
+    console.log('[SAVE] Saving answer for question:', questionId, 'Draft ID:', draftSubmissionId);
 
     try {
       // Upsert answer to question_responses
@@ -222,6 +263,8 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
         .eq('attempt_number', attemptNumber)
         .maybeSingle();
 
+      console.log('[SAVE] Existing response:', existing);
+
       if (existing) {
         const { error } = await supabase
           .from('question_responses')
@@ -231,7 +274,11 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
           })
           .eq('id', existing.id);
         
-        if (error) throw error;
+        if (error) {
+          console.error('[SAVE] Update error:', error);
+          throw error;
+        }
+        console.log('[SAVE] ✓ Updated existing response');
       } else {
         const { error } = await supabase
           .from('question_responses')
@@ -243,33 +290,39 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
             attempt_number: attemptNumber
           });
         
-        if (error) throw error;
+        if (error) {
+          console.error('[SAVE] Insert error:', error);
+          throw error;
+        }
+        console.log('[SAVE] ✓ Created new response');
       }
 
       // Also update the draft submission to save current question index
       await supabase
         .from('submissions')
         .update({
-          content: { currentQuestionIndex }
+          content: { currentQuestionIndex, lastAnswerSaved: questionId }
         })
         .eq('id', draftSubmissionId);
 
-      console.log('[AssignmentQuestions] ✓ Answer saved successfully');
+      console.log('[SAVE] ✓ Answer saved successfully');
       setIsSaving(false);
       return true;
     } catch (error) {
-      console.error('[AssignmentQuestions] ✗ Error saving answer:', error);
-      
-      // Retry logic (max 3 attempts)
-      if (retryCount < 2) {
-        console.log(`[AssignmentQuestions] Retrying save (attempt ${retryCount + 2}/3)...`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      console.error('[SAVE] Error saving answer:', error);
+      setSaveError('Failed to save answer');
+      setIsSaving(false);
+
+      // Show user-friendly error
+      toast.error('Failed to save your answer. Please check your connection.');
+
+      // Retry up to 3 times with exponential backoff
+      if (retryCount < 3) {
+        console.log(`[SAVE] Retrying save (${retryCount + 1}/3)...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
         return saveAnswer(questionId, answer, timeSpent, retryCount + 1);
       }
       
-      setSaveError('Failed to save answer. Please try again.');
-      setIsSaving(false);
-      toast.error('Failed to save your answer. Please try again.');
       return false;
     }
   };
@@ -622,6 +675,36 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
     );
   }
 
+  // Auto-save status indicator
+  const SaveStatus = () => {
+    if (submitted) return null;
+    
+    return (
+      <div className="fixed bottom-4 right-4 bg-background/95 backdrop-blur border rounded-lg px-3 py-2 shadow-lg text-sm flex items-center gap-2 z-50">
+        {isSaving && (
+          <>
+            <Clock className="w-4 h-4 animate-spin text-muted-foreground" />
+            <span className="text-muted-foreground">Saving...</span>
+          </>
+        )}
+        {!isSaving && lastSaved && (
+          <>
+            <CheckCircle2 className="w-4 h-4 text-green-500" />
+            <span className="text-muted-foreground">
+              Saved {new Date(lastSaved).toLocaleTimeString()}
+            </span>
+          </>
+        )}
+        {saveError && (
+          <>
+            <XCircle className="w-4 h-4 text-destructive" />
+            <span className="text-destructive">{saveError}</span>
+          </>
+        )}
+      </div>
+    );
+  };
+
   // Block access if max attempts exceeded
   if (maxAttempts && attemptNumber > maxAttempts && !submitted) {
     return (
@@ -648,7 +731,9 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
   const isCurrentQuestionAnswered = isAnswerValid(answers[currentQuestion?.id]);
 
   return (
-    <div className="space-y-6">
+    <>
+      <SaveStatus />
+      <div className="space-y-6">
       {/* Progress Bar */}
       <Card>
         <CardHeader>
@@ -922,9 +1007,10 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
                 Attempt {attemptNumber} of {maxAttempts}
               </p>
             )}
-          </CardContent>
-        </Card>
+        </CardContent>
+      </Card>
       )}
-    </div>
+      </div>
+    </>
   );
 }
