@@ -20,11 +20,11 @@ serve(async (req) => {
 
     const { studentId, subject, framework, gradeLevel } = await req.json();
 
+    console.log('Starting diagnostic assessment:', { studentId, subject, framework, gradeLevel });
+
     if (!studentId || !subject) {
       throw new Error('Student ID and subject are required');
     }
-
-    console.log('Starting diagnostic assessment for:', { studentId, subject, framework, gradeLevel });
 
     // Check if student has an active assessment
     const { data: activeAssessment } = await supabaseClient
@@ -36,6 +36,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (activeAssessment) {
+      console.log('Resuming existing assessment:', activeAssessment.id);
       return new Response(
         JSON.stringify({ 
           assessmentId: activeAssessment.id,
