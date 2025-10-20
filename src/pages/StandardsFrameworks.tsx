@@ -401,14 +401,14 @@ export default function StandardsFrameworks() {
                   <div>
                     <Label>Framework</Label>
                     <Select
-                      value={selectedFilters.framework}
-                      onValueChange={(value) => setSelectedFilters({...selectedFilters, framework: value})}
+                      value={selectedFilters.framework || "all"}
+                      onValueChange={(value) => setSelectedFilters({...selectedFilters, framework: value === "all" ? "" : value})}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="All Frameworks" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Frameworks</SelectItem>
+                        <SelectItem value="all">All Frameworks</SelectItem>
                         {frameworkOptions.map((option) => (
                           <SelectItem key={option} value={option}>{option}</SelectItem>
                         ))}
@@ -418,14 +418,14 @@ export default function StandardsFrameworks() {
                   <div>
                     <Label>Subject</Label>
                     <Select
-                      value={selectedFilters.subject}
-                      onValueChange={(value) => setSelectedFilters({...selectedFilters, subject: value})}
+                      value={selectedFilters.subject || "all"}
+                      onValueChange={(value) => setSelectedFilters({...selectedFilters, subject: value === "all" ? "" : value})}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="All Subjects" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Subjects</SelectItem>
+                        <SelectItem value="all">All Subjects</SelectItem>
                         {subjectOptions.map((option) => (
                           <SelectItem key={option} value={option}>{option}</SelectItem>
                         ))}
@@ -435,14 +435,14 @@ export default function StandardsFrameworks() {
                   <div>
                     <Label>Grade</Label>
                     <Select
-                      value={selectedFilters.grade}
-                      onValueChange={(value) => setSelectedFilters({...selectedFilters, grade: value})}
+                      value={selectedFilters.grade || "all"}
+                      onValueChange={(value) => setSelectedFilters({...selectedFilters, grade: value === "all" ? "" : value})}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="All Grades" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Grades</SelectItem>
+                        <SelectItem value="all">All Grades</SelectItem>
                         {gradeOptions.map((option) => (
                           <SelectItem key={option} value={option}>{option}</SelectItem>
                         ))}
