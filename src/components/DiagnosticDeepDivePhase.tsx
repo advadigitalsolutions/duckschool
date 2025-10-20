@@ -61,15 +61,10 @@ const TOPIC_EXAMPLES: Record<string, string> = {
 };
 
 const LOADING_MESSAGES = [
-  "Selecting the perfect question for you",
-  "Analyzing your progress",
-  "Finding questions at just the right level",
-  "Tailoring the next challenge",
-  "Computing your mastery path",
-  "Preparing your personalized question",
-  "Crafting the ideal assessment item",
-  "Fine-tuning difficulty level",
-  "Building your learning journey"
+  "Preparing your next questions",
+  "Analyzing your learning progress",
+  "Creating personalized questions",
+  "Getting everything ready for you"
 ];
 
 export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }: DiagnosticDeepDivePhaseProps) {
@@ -217,68 +212,37 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
           <CardDescription>Choose the best answer</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            {Object.entries(currentQuestion.options).map(([letter, text]) => (
+          {!showFeedback && (
+            <div className="space-y-2">
+              {Object.entries(currentQuestion.options).map(([letter, text]) => (
+                <Button
+                  key={letter}
+                  onClick={() => setSelectedAnswer(letter)}
+                  variant="outline"
+                  size="lg"
+                  className={cn(
+                    "w-full justify-start text-left h-auto py-4 px-4 border-2 transition-all",
+                    selectedAnswer === letter && "border-primary bg-primary/5"
+                  )}
+                >
+                  <span className="font-medium mr-3">{letter}.</span>
+                  <span className="flex-1">{text}</span>
+                </Button>
+              ))}
+              
               <Button
-                key={letter}
-                onClick={() => !showFeedback && setSelectedAnswer(letter)}
-                disabled={showFeedback}
+                onClick={() => setSelectedAnswer("IDK")}
                 variant="outline"
                 size="lg"
                 className={cn(
-                  "w-full justify-start text-left h-auto py-4 px-4 border-2 transition-all",
-                  selectedAnswer === letter && !showFeedback && "border-primary bg-primary/5",
-                  showFeedback && letter === currentQuestion.correctAnswer && "border-green-500 bg-green-50 dark:bg-green-950",
-                  showFeedback && selectedAnswer === letter && letter !== currentQuestion.correctAnswer && "border-red-500 bg-red-50 dark:bg-red-950"
+                  "w-full justify-start text-left h-auto py-4 px-4 border-2 transition-all border-dashed",
+                  selectedAnswer === "IDK" && "border-primary bg-primary/5"
                 )}
               >
-                <span className="font-medium mr-3">{letter}.</span>
-                <span className="flex-1">{text}</span>
-                {showFeedback && letter === currentQuestion.correctAnswer && (
-                  <CheckCircle className="h-5 w-5 text-green-600 ml-2" />
-                )}
-                {showFeedback && selectedAnswer === letter && letter !== currentQuestion.correctAnswer && (
-                  <XCircle className="h-5 w-5 text-red-600 ml-2" />
-                )}
+                <span className="font-medium mr-3">?</span>
+                <span className="flex-1 italic">I don't know</span>
               </Button>
-            ))}
-            
-            <Button
-              onClick={() => !showFeedback && setSelectedAnswer("IDK")}
-              disabled={showFeedback}
-              variant="outline"
-              size="lg"
-              className={cn(
-                "w-full justify-start text-left h-auto py-4 px-4 border-2 transition-all border-dashed",
-                selectedAnswer === "IDK" && !showFeedback && "border-primary bg-primary/5",
-                showFeedback && selectedAnswer === "IDK" && "border-blue-500 bg-blue-50 dark:bg-blue-950"
-              )}
-            >
-              <span className="font-medium mr-3">?</span>
-              <span className="flex-1 italic">I don't know</span>
-            </Button>
-          </div>
-
-          {showFeedback && feedback && (
-            <Card className={cn(
-              "border-2",
-              feedback.isCorrect ? "border-green-500 bg-green-50 dark:bg-green-950" : "border-blue-500 bg-blue-50 dark:bg-blue-950"
-            )}>
-              <CardContent className="pt-6">
-                <p className={cn(
-                  "font-medium mb-2",
-                  feedback.isCorrect ? "text-green-900 dark:text-green-100" : "text-blue-900 dark:text-blue-100"
-                )}>
-                  {feedback.isCorrect ? "✨ Correct!" : "💡 Learning Moment"}
-                </p>
-                <p className={cn(
-                  "text-sm",
-                  feedback.isCorrect ? "text-green-800 dark:text-green-200" : "text-blue-800 dark:text-blue-200"
-                )}>
-                  {feedback.message}
-                </p>
-              </CardContent>
-            </Card>
+            </div>
           )}
 
           {!showFeedback ? (
@@ -298,13 +262,50 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
               )}
             </Button>
           ) : (
-            <Button
-              onClick={handleNext}
-              className="w-full"
-              size="lg"
-            >
-              Next Question
-            </Button>
+            <>
+              <Card className={cn(
+                "border-2",
+                feedback?.isCorrect ? "border-green-500 bg-green-50 dark:bg-green-950" : "border-blue-500 bg-blue-50 dark:bg-blue-950"
+              )}>
+                <CardContent className="pt-6 space-y-3">
+                  <div className="flex items-start gap-3">
+                    {feedback?.isCorrect ? (
+                      <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <div className="text-2xl flex-shrink-0">💡</div>
+                    )}
+                    <div className="flex-1">
+                      <p className={cn(
+                        "font-semibold text-base mb-2",
+                        feedback?.isCorrect ? "text-green-900 dark:text-green-100" : "text-blue-900 dark:text-blue-100"
+                      )}>
+                        {feedback?.isCorrect ? "Great job!" : "Learning Moment"}
+                      </p>
+                      <p className={cn(
+                        "text-sm leading-relaxed",
+                        feedback?.isCorrect ? "text-green-800 dark:text-green-200" : "text-blue-800 dark:text-blue-200"
+                      )}>
+                        {feedback?.message}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Button
+                onClick={handleNext}
+                className="w-full"
+                size="lg"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading next question...
+                  </>
+                ) : (
+                  "Continue →"
+                )}
+              </Button>
+            </>
           )}
         </CardContent>
       </Card>

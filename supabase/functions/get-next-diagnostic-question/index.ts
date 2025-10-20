@@ -34,6 +34,26 @@ serve(async (req) => {
 
     if (fetchError) throw fetchError;
 
+    // Check if we have a question batch cached
+    const questionBatch = assessment.question_batch || [];
+    if (questionBatch.length > 0) {
+      // Return the next question from the batch
+      const nextQuestion = questionBatch[0];
+      const remainingBatch = questionBatch.slice(1);
+      
+      // Update the batch
+      await supabaseClient
+        .from('diagnostic_assessments')
+        .update({ question_batch: remainingBatch })
+        .eq('id', assessmentId);
+
+      console.log('Returning cached question, remaining in batch:', remainingBatch.length);
+      return new Response(
+        JSON.stringify(nextQuestion),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get previous responses
     const { data: responses } = await supabaseClient
       .from('diagnostic_question_responses')
@@ -63,40 +83,49 @@ serve(async (req) => {
       );
     }
 
-    // Find topic with lowest confidence (closest to 0.5)
-    let targetTopic = null;
-    let lowestConfidence = 1;
-    
-    for (const [topic, mastery] of Object.entries(masteryEstimates)) {
-      const confidence = Math.abs((mastery as number) - 0.5);
-      if (confidence < lowestConfidence) {
-        lowestConfidence = confidence;
-        targetTopic = topic;
-      }
-    }
+    console.log('Generating new batch of questions...');
 
-    // If no target topic, pick one from warmup data
-    if (!targetTopic) {
-      const warmupTopics = Object.keys(assessment.warmup_data || {});
-      targetTopic = warmupTopics[Math.floor(Math.random() * warmupTopics.length)] || 'General';
-    }
-
-    // Generate question using OpenAI
+    // Generate a batch of 4 questions (targeting different topics for variety)
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY not configured');
     }
 
-    const currentMastery = (masteryEstimates[targetTopic] as number) || 0.5;
+    // Find topics sorted by confidence (lowest confidence = most uncertainty = need more questions)
+    const topicsByConfidence = Object.entries(masteryEstimates)
+      .map(([topic, mastery]) => ({
+        topic,
+        mastery: mastery as number,
+        confidence: Math.abs((mastery as number) - 0.5)
+      }))
+      .sort((a, b) => a.confidence - b.confidence);
+
+    // If no topics yet, use warmup data
+    if (topicsByConfidence.length === 0) {
+      const warmupTopics = Object.keys(assessment.warmup_data || {});
+      warmupTopics.forEach(topic => {
+        topicsByConfidence.push({
+          topic,
+          mastery: 0.5,
+          confidence: 0
+        });
+      });
+    }
+
+    // Select 4 topics to generate questions for (or fewer if we don't have enough)
+    const targetTopics = topicsByConfidence.slice(0, Math.min(4, topicsByConfidence.length));
     
     const subjectContext = assessment.subject === 'Home Economics' || assessment.subject === 'Life Skills'
       ? 'real-world practical life skills like cooking, budgeting, household management, nutrition, sewing, cleaning, time management, etc.'
       : assessment.subject;
 
-    const prompt = `Generate a ${subjectContext} question for topic "${targetTopic}" at difficulty level ${currentMastery.toFixed(2)}.
+    const batchPrompt = `Generate ${targetTopics.length} ${subjectContext} questions for a diagnostic assessment. 
 
-The question should:
-- Test understanding of ${targetTopic} in the context of ${assessment.subject}
+For each question, target these topics and difficulty levels:
+${targetTopics.map((t, i) => `${i + 1}. Topic: "${t.topic}", Difficulty: ${t.mastery.toFixed(2)}`).join('\n')}
+
+Each question should:
+- Test understanding of the specified topic in the context of ${assessment.subject}
 - Be appropriate for ${assessment.grade_level || 'middle school'} level
 - Be practical and relatable to real-life situations
 - Have a clear correct answer
@@ -104,7 +133,7 @@ The question should:
 - Be engaging, friendly, and non-intimidating
 - Focus on practical knowledge students would actually use in daily life
 
-Return ONLY the question data, no other text.`;
+Return ${targetTopics.length} questions.`;
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -116,35 +145,44 @@ Return ONLY the question data, no other text.`;
         model: 'gpt-5-mini-2025-08-07',
         messages: [
           { role: 'system', content: 'You are an educational assessment expert. Generate clear, appropriate questions.' },
-          { role: 'user', content: prompt }
+          { role: 'user', content: batchPrompt }
         ],
         tools: [{
           type: 'function',
           function: {
-            name: 'generate_question',
-            description: 'Generate a diagnostic question',
+            name: 'generate_questions',
+            description: 'Generate multiple diagnostic questions',
             parameters: {
               type: 'object',
               properties: {
-                question: { type: 'string' },
-                options: {
-                  type: 'object',
-                  properties: {
-                    A: { type: 'string' },
-                    B: { type: 'string' },
-                    C: { type: 'string' },
-                    D: { type: 'string' }
-                  },
-                  required: ['A', 'B', 'C', 'D']
-                },
-                correct_answer: { type: 'string', enum: ['A', 'B', 'C', 'D'] },
-                explanation: { type: 'string' }
+                questions: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      question: { type: 'string' },
+                      options: {
+                        type: 'object',
+                        properties: {
+                          A: { type: 'string' },
+                          B: { type: 'string' },
+                          C: { type: 'string' },
+                          D: { type: 'string' }
+                        },
+                        required: ['A', 'B', 'C', 'D']
+                      },
+                      correct_answer: { type: 'string', enum: ['A', 'B', 'C', 'D'] },
+                      explanation: { type: 'string' }
+                    },
+                    required: ['question', 'options', 'correct_answer', 'explanation']
+                  }
+                }
               },
-              required: ['question', 'options', 'correct_answer', 'explanation']
+              required: ['questions']
             }
           }
         }],
-        tool_choice: { type: 'function', function: { name: 'generate_question' } }
+        tool_choice: { type: 'function', function: { name: 'generate_questions' } }
       }),
     });
 
@@ -154,23 +192,37 @@ Return ONLY the question data, no other text.`;
 
     const aiData = await aiResponse.json();
     const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
-    const questionData = toolCall ? JSON.parse(toolCall.function.arguments) : null;
+    const batchData = toolCall ? JSON.parse(toolCall.function.arguments) : null;
 
-    if (!questionData) {
-      throw new Error('Failed to generate question');
+    if (!batchData || !batchData.questions || batchData.questions.length === 0) {
+      throw new Error('Failed to generate question batch');
     }
 
+    // Format the questions with metadata
+    const formattedBatch = batchData.questions.map((q: any, index: number) => ({
+      complete: false,
+      questionNumber: questionsAsked + index + 1,
+      topic: targetTopics[index]?.topic || 'General',
+      difficulty: targetTopics[index]?.mastery || 0.5,
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correct_answer,
+      explanation: q.explanation
+    }));
+
+    // Return first question, cache the rest
+    const firstQuestion = formattedBatch[0];
+    const remainingBatch = formattedBatch.slice(1);
+
+    await supabaseClient
+      .from('diagnostic_assessments')
+      .update({ question_batch: remainingBatch })
+      .eq('id', assessmentId);
+
+    console.log('Generated batch of', formattedBatch.length, 'questions, cached', remainingBatch.length);
+
     return new Response(
-      JSON.stringify({ 
-        complete: false,
-        questionNumber: questionsAsked + 1,
-        topic: targetTopic,
-        difficulty: currentMastery,
-        question: questionData.question,
-        options: questionData.options,
-        correctAnswer: questionData.correct_answer,
-        explanation: questionData.explanation
-      }),
+      JSON.stringify(firstQuestion),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

@@ -1217,6 +1217,7 @@ export type Database = {
           grade_level: string | null
           id: string
           mastery_estimates: Json | null
+          question_batch: Json | null
           questions_asked: number | null
           results: Json | null
           started_at: string | null
@@ -1235,6 +1236,7 @@ export type Database = {
           grade_level?: string | null
           id?: string
           mastery_estimates?: Json | null
+          question_batch?: Json | null
           questions_asked?: number | null
           results?: Json | null
           started_at?: string | null
@@ -1253,6 +1255,7 @@ export type Database = {
           grade_level?: string | null
           id?: string
           mastery_estimates?: Json | null
+          question_batch?: Json | null
           questions_asked?: number | null
           results?: Json | null
           started_at?: string | null
