@@ -6,31 +6,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Clock, BookOpen } from 'lucide-react';
 import { DiagnosticAssessmentLauncher } from '@/components/DiagnosticAssessmentLauncher';
-
 export default function StudentAgenda() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<any>(null);
   const [upNextAssignment, setUpNextAssignment] = useState<any>(null);
-
   useEffect(() => {
     fetchStudentData();
   }, []);
-
   const fetchStudentData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         navigate('/auth');
         return;
       }
-
-      const { data: studentData } = await supabase
-        .from('students')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: studentData
+      } = await supabase.from('students').select('*').eq('user_id', user.id).single();
       if (studentData) {
         setStudent(studentData);
         await fetchUpNextAssignment(studentData.id);
@@ -43,24 +40,19 @@ export default function StudentAgenda() {
       setLoading(false);
     }
   };
-
   const fetchUpNextAssignment = async (studentId: string) => {
     try {
       // First, check for incomplete assignments that were started (has activity events)
-      const { data: recentActivity } = await supabase
-        .from('activity_events')
-        .select('assignment_id')
-        .eq('student_id', studentId)
-        .not('assignment_id', 'is', null)
-        .order('timestamp', { ascending: false })
-        .limit(1)
-        .single();
-
+      const {
+        data: recentActivity
+      } = await supabase.from('activity_events').select('assignment_id').eq('student_id', studentId).not('assignment_id', 'is', null).order('timestamp', {
+        ascending: false
+      }).limit(1).single();
       if (recentActivity?.assignment_id) {
         // Check if this assignment is incomplete
-        const { data: assignment } = await supabase
-          .from('assignments')
-          .select(`
+        const {
+          data: assignment
+        } = await supabase.from('assignments').select(`
             *,
             curriculum_items (
               title,
@@ -74,10 +66,7 @@ export default function StudentAgenda() {
             submissions (
               id
             )
-          `)
-          .eq('id', recentActivity.assignment_id)
-          .single();
-
+          `).eq('id', recentActivity.assignment_id).single();
         if (assignment && (!assignment.submissions || assignment.submissions.length === 0)) {
           setUpNextAssignment(assignment);
           return;
@@ -86,9 +75,9 @@ export default function StudentAgenda() {
 
       // If no incomplete recent assignment, get next due assignment
       const now = new Date();
-      const { data: nextAssignment } = await supabase
-        .from('assignments')
-        .select(`
+      const {
+        data: nextAssignment
+      } = await supabase.from('assignments').select(`
           *,
           curriculum_items!inner (
             title,
@@ -103,15 +92,9 @@ export default function StudentAgenda() {
           submissions (
             id
           )
-        `)
-        .eq('curriculum_items.courses.student_id', studentId)
-        .eq('status', 'assigned')
-        .is('submissions.id', null)
-        .gte('due_at', now.toISOString())
-        .order('due_at', { ascending: true })
-        .limit(1)
-        .single();
-
+        `).eq('curriculum_items.courses.student_id', studentId).eq('status', 'assigned').is('submissions.id', null).gte('due_at', now.toISOString()).order('due_at', {
+        ascending: true
+      }).limit(1).single();
       if (nextAssignment) {
         setUpNextAssignment(nextAssignment);
       }
@@ -119,53 +102,25 @@ export default function StudentAgenda() {
       console.error('Error fetching up next assignment:', error);
     }
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
+    return <div className="flex items-center justify-center min-h-screen">
         <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+      </div>;
   }
-
   if (!student) {
     return null;
   }
-
-  return (
-    <div className="container mx-auto p-6">
+  return <div className="container mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">My Guide</h1>
-        {student.id && (
-          <DiagnosticAssessmentLauncher 
-            studentId={student.id} 
-            buttonText="Skills Check-In"
-            variant="outline"
-          />
-        )}
+        {student.id && <DiagnosticAssessmentLauncher studentId={student.id} buttonText="Skills Check-In" variant="outline" />}
       </div>
       
       {/* Personalized Learning Card */}
-      {student.id && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Personalized Learning</CardTitle>
-            <CardDescription>
-              Take a quick skills check-in to create a custom course just for you
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DiagnosticAssessmentLauncher 
-              studentId={student.id}
-              buttonText="Start Skills Check-In"
-            />
-          </CardContent>
-        </Card>
-      )}
+      {student.id}
       
       {/* Up Next Box */}
-      {upNextAssignment && (
-        <Card className="mb-6 border-2 border-yellow-500 shadow-lg">
+      {upNextAssignment && <Card className="mb-6 border-2 border-yellow-500 shadow-lg">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <span>📍</span> Up Next
@@ -185,11 +140,9 @@ export default function StudentAgenda() {
                     <Clock className="h-4 w-4" />
                     {upNextAssignment.curriculum_items?.est_minutes || 30} minutes
                   </div>
-                  {upNextAssignment.due_at && (
-                    <div>
+                  {upNextAssignment.due_at && <div>
                       Due: {new Date(upNextAssignment.due_at).toLocaleDateString()}
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </div>
               <Button onClick={() => navigate(`/assignment/${upNextAssignment.id}`)}>
@@ -197,10 +150,8 @@ export default function StudentAgenda() {
               </Button>
             </div>
           </CardContent>
-        </Card>
-      )}
+        </Card>}
 
       <WeeklyView studentId={student.id} />
-    </div>
-  );
+    </div>;
 }
