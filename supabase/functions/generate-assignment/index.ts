@@ -384,7 +384,12 @@ Return a JSON object with this structure:
 {
   "title": "Assignment title",
   "objectives": ["objective 1", "objective 2"],
-  "instructions": "Detailed instructions for students",
+  "student_instructions": [
+    "**Step 1: [Action]** (5-10 min) - Clear, specific micro-task",
+    "**Step 2: [Action]** (5-10 min) - Next concrete step",
+    "**Step 3: [Action]** (10 min) - Another specific task",
+    "Continue with 5-15 numbered, time-estimated micro-tasks total"
+  ],
   "materials": ["material 1", "material 2"],
   "research_guidance": {
     "suggested_sites": [

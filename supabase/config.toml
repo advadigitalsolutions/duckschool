@@ -4,7 +4,10 @@ project_id = "tzqxdsxjmpscotdcevdh"
 verify_jwt = false
 
 [functions.regenerate-assignment-with-passage]
-verify_jwt = true
+verify_jwt = false
+
+[functions.enrich-legacy-content]
+verify_jwt = false
 
 [functions.setup-starter-rewards]
 verify_jwt = true

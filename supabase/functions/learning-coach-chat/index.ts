@@ -25,7 +25,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory, currentStep, studentContext, assignment, assignmentBody, exchangeCount = 0 } = await req.json();
+    const { message, conversationHistory, currentStep, studentContext, assignment, assignmentBody, exchangeCount = 0, studentProfile, taskBreakdownMode = false, currentTask } = await req.json();
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
@@ -33,7 +33,7 @@ serve(async (req) => {
     }
 
     // Build context-aware system prompt based on current step
-    const systemPrompt = buildSystemPrompt(currentStep, studentContext, assignment, assignmentBody, exchangeCount);
+    const systemPrompt = buildSystemPrompt(currentStep, studentContext, assignment, assignmentBody, exchangeCount, studentProfile, taskBreakdownMode, currentTask);
 
     // Prepare messages for OpenAI
     const messages = [
@@ -83,7 +83,7 @@ serve(async (req) => {
   }
 });
 
-function buildSystemPrompt(currentStep: string, studentContext: any, assignment: any, assignmentBody: any, exchangeCount: number = 0): string {
+function buildSystemPrompt(currentStep: string, studentContext: any, assignment: any, assignmentBody: any, exchangeCount: number = 0, studentProfile?: any, taskBreakdownMode: boolean = false, currentTask?: string): string {
   const assignmentContext = assignment 
     ? `\n\nASSIGNMENT CONTEXT:
 Title: ${assignment.title}
@@ -92,13 +92,36 @@ Due: ${assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : 'N
 Status: ${assignment.status || 'In progress'}`
     : '';
 
+  // Enhanced student profile context
+  const studentProfileContext = studentProfile ? `\n\nSTUDENT PROFILE:
+Name: ${studentProfile.name || 'Student'}
+Grade Level: ${studentProfile.grade_level || 'Not specified'}
+Learning Style: ${studentProfile.personality_type || 'Not assessed'}
+Academic Strengths: ${studentProfile.strengths?.join(', ') || 'Not specified'}
+Areas for Growth: ${studentProfile.weaknesses?.join(', ') || 'Not specified'}
+Learning Profile: ${JSON.stringify(studentProfile.learning_profile || {})}` : '';
+
+  // Include ALL reading materials
+  const readingMaterials = assignmentBody?.reading_materials 
+    ? `\n\nREADING MATERIALS:\n${typeof assignmentBody.reading_materials === 'string' 
+        ? assignmentBody.reading_materials 
+        : Array.isArray(assignmentBody.reading_materials) 
+          ? assignmentBody.reading_materials.join('\n\n') 
+          : ''}`
+    : '';
+
+  // Include ALL discussion prompts
+  const allDiscussionPrompts = assignmentBody?.discussion_prompts 
+    ? `\n\nAVAILABLE DISCUSSION PROMPTS:\n${assignmentBody.discussion_prompts.map((p: string, i: number) => `${i+1}. ${p}`).join('\n')}`
+    : '';
+
   const basePrompt = `You are an AI learning coach helping a student work through an educational assignment. Be encouraging, supportive, and use Socratic questioning to guide learning rather than giving direct answers.
 
 CRITICAL - ADHD-FRIENDLY COMMUNICATION:
 - Keep ALL responses to 2-3 sentences maximum
 - Ask ONE question at a time - never multiple questions
 - Be concise and direct - avoid lengthy explanations
-- Use simple, clear language${assignmentContext}`;
+- Use simple, clear language${assignmentContext}${studentProfileContext}`;
 
   const studentInfo = studentContext.personalityType 
     ? `\n\nStudent's learning style: ${studentContext.personalityType}`
@@ -107,6 +130,29 @@ CRITICAL - ADHD-FRIENDLY COMMUNICATION:
   const objectives = assignmentBody?.objectives 
     ? `\n\nLearning objectives: ${assignmentBody.objectives.join(', ')}`
     : '';
+
+  // Task breakdown mode - special handling
+  if (taskBreakdownMode && currentTask) {
+    return `${basePrompt}${studentInfo}${objectives}${readingMaterials}
+
+TASK BREAKDOWN MODE - CRITICAL:
+
+Current task the student needs help with: "${currentTask}"
+
+Your role:
+1. Break this task down into 3-5 tiny micro-steps (5-10 minutes each)
+2. Make each step concrete and actionable
+3. Include time estimates for each step
+4. Provide clear success criteria
+5. Use ADHD-friendly language: "Let's chunk this", "Baby steps", "Quick win"
+
+Format your response as a numbered list with time estimates:
+1. [Step name] (5 min) - [what to do]
+2. [Step name] (10 min) - [what to do]
+etc.
+
+Be encouraging and momentum-building!`;
+  }
 
   switch (currentStep) {
     case 'research':
@@ -118,7 +164,7 @@ CRITICAL - ADHD-FRIENDLY COMMUNICATION:
         ? `\n\nStudent's resources so far:\n${studentContext.resources.map((r: any) => `- ${r.resource_title || r.resource_url} (${r.resource_type})`).join('\n')}`
         : '\n\nStudent has not added any resources yet.';
 
-      return `${basePrompt}${studentInfo}${objectives}
+      return `${basePrompt}${studentInfo}${objectives}${readingMaterials}
 
 Current phase: RESEARCH & RESOURCE DISCOVERY
 
@@ -129,6 +175,7 @@ Your role:
 - Encourage critical thinking about why certain resources are more helpful than others
 - Don't give direct resource links; guide them to discover on their own
 - Be encouraging and supportive of their research efforts
+- Detect signs of overwhelm and offer to break tasks into smaller steps
 
 ${researchGuidance}${resourcesList}
 
@@ -143,7 +190,7 @@ Ask questions to guide their research and help them think critically about resou
         ? `\n\nStudent's notes so far:\n${studentContext.notes}`
         : '\n\nStudent has not taken notes yet.';
 
-      return `${basePrompt}${studentInfo}${objectives}${keyConcepts}
+      return `${basePrompt}${studentInfo}${objectives}${keyConcepts}${readingMaterials}
 
 Current phase: NOTE-TAKING & UNDERSTANDING
 
@@ -154,16 +201,13 @@ Your role:
 - Encourage them to elaborate on points that seem unclear
 - Don't spoon-feed information; guide discovery through questions
 - Help them organize their thoughts
+- Notice if they seem stuck and offer task breakdown help
 
 ${studentNotes}
 
 Review their understanding and ask thoughtful questions to deepen their learning.`;
 
     case 'discussion':
-      const discussionPrompts = assignmentBody?.discussion_prompts 
-        ? `\n\nDiscussion prompts you can use:\n${assignmentBody.discussion_prompts.map((p: string, i: number) => `${i+1}. ${p}`).join('\n')}`
-        : '';
-      
       const conceptsCovered = studentContext.conceptsCovered && studentContext.conceptsCovered.length > 0
         ? `\n\nConcepts already discussed: ${studentContext.conceptsCovered.join(', ')}`
         : '';
@@ -178,7 +222,7 @@ You should now begin naturally wrapping up the discussion. Use this pattern:
 Example: "You've shown solid understanding of [concept]! It sounds like you've got the key ideas down. Do you feel ready to try applying this in the practice section?"`
         : '';
 
-      return `${basePrompt}${studentInfo}${objectives}
+      return `${basePrompt}${studentInfo}${objectives}${readingMaterials}${allDiscussionPrompts}
 
 Current phase: COMPREHENSION DISCUSSION (Exchange #${exchangeCount})
 
@@ -188,8 +232,9 @@ Your role:
 - Gently correct misconceptions with follow-up questions
 - Celebrate correct reasoning briefly
 - Use discussion prompts as guides but adapt to responses
+- Detect frustration or overwhelm - offer task breakdown if needed
 
-${discussionPrompts}${conceptsCovered}${wrapUpGuidance}
+${conceptsCovered}${wrapUpGuidance}
 
 Student context:
 - Notes: ${studentContext.notes || 'No notes yet'}

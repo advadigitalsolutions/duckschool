@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from './ui/card';
 import { Progress } from './ui/progress';
 import { AILearningCoach } from './AILearningCoach';
@@ -9,6 +9,7 @@ import { PracticePhase } from './wizard/PracticePhase';
 import { AssignmentQuestions } from './AssignmentQuestions';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface LearningWizardProps {
   assignment: any;
@@ -256,6 +257,7 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
         studentContext={studentContext}
         assignmentBody={assignmentBody}
         onSidebarModeChange={setIsSidebarMode}
+        onRequestTaskHelp={(taskText: string) => toast.success('Task help requested')}
       />
     </div>
   );

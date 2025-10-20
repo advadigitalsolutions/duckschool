@@ -12,13 +12,15 @@ interface InstructionsPanelProps {
   assignmentId?: string;
   studentId?: string;
   onStartTimer?: (minutes: number) => void;
+  onRequestHelp?: (taskText: string) => void;
 }
 
 export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({ 
-  content,
-  assignmentId,
+  content, 
+  assignmentId, 
   studentId,
-  onStartTimer
+  onStartTimer,
+  onRequestHelp
 }) => {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     instructions: true,
@@ -155,6 +157,7 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({
           studentId={studentId}
           content={safeContent.instructions || ''}
           onStartTimer={onStartTimer}
+          onRequestHelp={onRequestHelp}
         />
       )}
 

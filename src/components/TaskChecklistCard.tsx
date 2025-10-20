@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Checkbox } from './ui/checkbox';
 import { Progress } from './ui/progress';
 import { TimeEstimateBadge } from './TimeEstimateBadge';
+import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ConfettiCelebration } from './ConfettiCelebration';
+import { HelpCircle } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -20,13 +22,15 @@ interface TaskChecklistCardProps {
   studentId: string;
   content: string;
   onStartTimer?: (minutes: number) => void;
+  onRequestHelp?: (taskText: string) => void;
 }
 
 export function TaskChecklistCard({
   assignmentId,
   studentId,
   content,
-  onStartTimer
+  onStartTimer,
+  onRequestHelp
 }: TaskChecklistCardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [checkedTasks, setCheckedTasks] = useState<Set<string>>(new Set());
@@ -265,14 +269,27 @@ export function TaskChecklistCard({
                   onCheckedChange={() => handleTaskToggle(task.id)}
                   className="mt-1"
                 />
-                <label
-                  htmlFor={task.id}
-                  className={`flex-1 cursor-pointer select-none ${
-                    isChecked ? 'line-through text-muted-foreground' : ''
-                  }`}
-                >
-                  {task.text.replace(/[(\[]?~?\d+\s*(min|minute|minutes)[)\]]?/gi, '').trim()}
-                </label>
+                <div className="flex-1 flex items-center gap-2">
+                  <label
+                    htmlFor={task.id}
+                    className={`flex-1 cursor-pointer select-none ${
+                      isChecked ? 'line-through text-muted-foreground' : ''
+                    }`}
+                  >
+                    {task.text.replace(/[(\[]?~?\d+\s*(min|minute|minutes)[)\]]?/gi, '').trim()}
+                  </label>
+                  {!isChecked && onRequestHelp && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 shrink-0"
+                      onClick={() => onRequestHelp(task.text)}
+                      title="Get help breaking this down"
+                    >
+                      <HelpCircle className="h-4 w-4 text-orange-500" />
+                    </Button>
+                  )}
+                </div>
                 {task.estimatedMinutes && onStartTimer && (
                   <TimeEstimateBadge
                     estimatedMinutes={task.estimatedMinutes}

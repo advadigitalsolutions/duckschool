@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MessageSquare, Send, Loader2, ChevronRight, Maximize2, PanelRightOpen, Mic, MicOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RealtimeChat } from '@/utils/RealtimeAudio';
+import { useKnowledgeProfile } from '@/hooks/useKnowledgeProfile';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -46,6 +47,7 @@ interface AILearningCoachProps {
   assignmentBody: any;
   onHistoryUpdate?: (history: Message[]) => void;
   onSidebarModeChange?: (isSidebar: boolean) => void;
+  onRequestTaskHelp?: (taskText: string) => void;
 }
 
 export const AILearningCoach: React.FC<AILearningCoachProps> = ({
@@ -56,7 +58,8 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
   studentContext,
   assignmentBody,
   onHistoryUpdate,
-  onSidebarModeChange
+  onSidebarModeChange,
+  onRequestTaskHelp
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSidebarMode, setIsSidebarMode] = useState(false);
@@ -66,9 +69,27 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentStreamedMessage, setCurrentStreamedMessage] = useState('');
+  const [taskBreakdownMode, setTaskBreakdownMode] = useState(false);
+  const [currentTask, setCurrentTask] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const realtimeChatRef = useRef<RealtimeChat | null>(null);
   const { toast } = useToast();
+  
+  // Fetch full student knowledge profile
+  const { data: knowledgeProfile } = useKnowledgeProfile(studentId);
+
+  // Handle request for task help
+  useEffect(() => {
+    if (onRequestTaskHelp && taskBreakdownMode && currentTask) {
+      setIsOpen(true);
+      if (isSidebarMode === false) {
+        setIsSidebarMode(true);
+        if (onSidebarModeChange) {
+          onSidebarModeChange(true);
+        }
+      }
+    }
+  }, [taskBreakdownMode, currentTask]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -150,6 +171,27 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
       // Count user messages for discussion phase
       const userMessageCount = newMessages.filter(m => m.role === 'user').length;
 
+      // Get student profile for AI context
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('*, courses(*)')
+        .eq('id', studentId)
+        .single();
+
+      const studentProfile = studentData ? {
+        name: studentData.name,
+        grade_level: studentData.grade_level,
+        personality_type: studentData.personality_type,
+        learning_profile: studentData.learning_profile,
+        strengths: knowledgeProfile?.mastery
+          ?.filter(m => m.mastery_level >= 80)
+          .map(m => m.standard_code)
+          .slice(0, 5),
+        weaknesses: knowledgeProfile?.weakAreas
+          ?.slice(0, 5)
+          .map(w => w.standard_code)
+      } : null;
+
       // ⚠️ CRITICAL: This calls learning-coach-chat which uses OpenAI.
       // NEVER replace this with Lovable AI gateway. User mandate.
       const response = await supabase.functions.invoke('learning-coach-chat', {
@@ -166,7 +208,10 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
             subject: assignment.curriculum_items?.courses?.subject
           },
           assignmentBody,
-          exchangeCount: userMessageCount // Pass exchange count for wrap-up logic
+          exchangeCount: userMessageCount, // Pass exchange count for wrap-up logic
+          studentProfile, // Full student profile with knowledge data
+          taskBreakdownMode,
+          currentTask
         }
       });
 
@@ -274,6 +319,16 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
   }, []);
 
   if (!isOpen) {
+    // Add useImperativeHandle to expose openTaskHelp method
+    React.useImperativeHandle(React.useRef(null), () => ({
+      openTaskHelp: (taskText: string) => {
+        setTaskBreakdownMode(true);
+        setCurrentTask(taskText);
+        setIsOpen(true);
+        setInput(`Can you help me break down this task: "${taskText}"`);
+      }
+    }));
+
     return (
       <Button
         onClick={() => setIsOpen(true)}
