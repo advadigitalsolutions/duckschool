@@ -15,6 +15,7 @@ interface AccessibilitySettings {
   textToSpeechEnabled: boolean;
   textToSpeechVoice: string;
   highContrastEnabled: boolean;
+  showTimeEstimates: boolean;
 }
 
 interface AccessibilityContextType extends AccessibilitySettings {
@@ -30,6 +31,7 @@ interface AccessibilityContextType extends AccessibilitySettings {
   setTextToSpeech: (enabled: boolean) => Promise<void>;
   setTextToSpeechVoice: (voice: string) => Promise<void>;
   setHighContrast: (enabled: boolean) => Promise<void>;
+  setShowTimeEstimates: (enabled: boolean) => Promise<void>;
   hotkeys: Record<string, string>;
   loadHotkeys: () => Promise<void>;
   availableVoices: SpeechSynthesisVoice[];
@@ -51,6 +53,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     textToSpeechEnabled: false,
     textToSpeechVoice: '',
     highContrastEnabled: false,
+    showTimeEstimates: true,
   });
   const [hotkeys, setHotkeys] = useState<Record<string, string>>({});
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -105,6 +108,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
           textToSpeechEnabled: false,
           textToSpeechVoice: '',
           highContrastEnabled: false,
+          showTimeEstimates: true,
         });
         setHotkeys({});
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -128,7 +132,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // Try student table first
     const { data: student } = await supabase
       .from('students')
-      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, focus_mode_overlay_opacity, focus_mode_glow_color, focus_mode_glow_intensity, reading_ruler_enabled, text_to_speech_enabled, text_to_speech_voice, high_contrast_enabled')
+      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, focus_mode_overlay_opacity, focus_mode_glow_color, focus_mode_glow_intensity, reading_ruler_enabled, text_to_speech_enabled, text_to_speech_voice, high_contrast_enabled, show_time_estimates')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -146,6 +150,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         textToSpeechEnabled: student.text_to_speech_enabled || false,
         textToSpeechVoice: student.text_to_speech_voice as string || '',
         highContrastEnabled: student.high_contrast_enabled || false,
+        showTimeEstimates: student.show_time_estimates ?? true,
       });
       return;
     }
@@ -153,7 +158,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     // If not a student, try profiles table
     const { data: profile } = await supabase
       .from('profiles')
-      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, focus_mode_overlay_opacity, focus_mode_glow_color, focus_mode_glow_intensity, reading_ruler_enabled, text_to_speech_enabled, text_to_speech_voice, high_contrast_enabled')
+      .select('dyslexia_font_enabled, line_spacing, letter_spacing, color_overlay, focus_mode_enabled, focus_mode_overlay_opacity, focus_mode_glow_color, focus_mode_glow_intensity, reading_ruler_enabled, text_to_speech_enabled, text_to_speech_voice, high_contrast_enabled, show_time_estimates')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -171,6 +176,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         textToSpeechEnabled: profile.text_to_speech_enabled || false,
         textToSpeechVoice: profile.text_to_speech_voice as string || '',
         highContrastEnabled: profile.high_contrast_enabled || false,
+        showTimeEstimates: profile.show_time_estimates ?? true,
       });
     }
   };
@@ -321,6 +327,11 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     await updateSetting('high_contrast_enabled', enabled);
   };
 
+  const setShowTimeEstimates = async (enabled: boolean) => {
+    setSettings(prev => ({ ...prev, showTimeEstimates: enabled }));
+    await updateSetting('show_time_estimates', enabled);
+  };
+
   const loadHotkeys = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -445,6 +456,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         setTextToSpeech,
         setTextToSpeechVoice,
         setHighContrast,
+        setShowTimeEstimates,
         hotkeys,
         loadHotkeys,
         availableVoices,

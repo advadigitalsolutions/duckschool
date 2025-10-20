@@ -24,6 +24,7 @@ export function AccessibilityForm() {
     textToSpeechEnabled,
     textToSpeechVoice,
     highContrastEnabled,
+    showTimeEstimates,
     setDyslexiaFont,
     setLineSpacing,
     setLetterSpacing,
@@ -35,7 +36,8 @@ export function AccessibilityForm() {
     setReadingRuler,
     setTextToSpeech,
     setTextToSpeechVoice,
-    setHighContrast
+    setHighContrast,
+    setShowTimeEstimates
   } = useAccessibility();
   return <div className="space-y-6">
       <Card>
@@ -117,6 +119,16 @@ export function AccessibilityForm() {
               </p>
             </div>
             <Switch id="high-contrast" checked={highContrastEnabled} onCheckedChange={setHighContrast} />
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-0.5">
+              <Label htmlFor="show-time-estimates">Show Time Estimates</Label>
+              <p className="text-xs text-muted-foreground">
+                Display estimated time for assignments and tasks
+              </p>
+            </div>
+            <Switch id="show-time-estimates" checked={showTimeEstimates} onCheckedChange={setShowTimeEstimates} />
           </div>
 
           <div className="flex items-center justify-between p-4 border rounded-lg">

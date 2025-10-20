@@ -1666,6 +1666,7 @@ export type Database = {
           name: string | null
           pronouns: string | null
           reading_ruler_enabled: boolean | null
+          show_time_estimates: boolean | null
           text_to_speech_enabled: boolean | null
           text_to_speech_voice: string | null
           timezone: string | null
@@ -1692,6 +1693,7 @@ export type Database = {
           name?: string | null
           pronouns?: string | null
           reading_ruler_enabled?: boolean | null
+          show_time_estimates?: boolean | null
           text_to_speech_enabled?: boolean | null
           text_to_speech_voice?: string | null
           timezone?: string | null
@@ -1718,6 +1720,7 @@ export type Database = {
           name?: string | null
           pronouns?: string | null
           reading_ruler_enabled?: boolean | null
+          show_time_estimates?: boolean | null
           text_to_speech_enabled?: boolean | null
           text_to_speech_voice?: string | null
           timezone?: string | null
@@ -2385,6 +2388,7 @@ export type Database = {
           profile_assessment_completed: boolean | null
           pronouns: string | null
           reading_ruler_enabled: boolean | null
+          show_time_estimates: boolean | null
           special_interests: Json | null
           text_to_speech_enabled: boolean | null
           text_to_speech_voice: string | null
@@ -2421,6 +2425,7 @@ export type Database = {
           profile_assessment_completed?: boolean | null
           pronouns?: string | null
           reading_ruler_enabled?: boolean | null
+          show_time_estimates?: boolean | null
           special_interests?: Json | null
           text_to_speech_enabled?: boolean | null
           text_to_speech_voice?: string | null
@@ -2457,6 +2462,7 @@ export type Database = {
           profile_assessment_completed?: boolean | null
           pronouns?: string | null
           reading_ruler_enabled?: boolean | null
+          show_time_estimates?: boolean | null
           special_interests?: Json | null
           text_to_speech_enabled?: boolean | null
           text_to_speech_voice?: string | null
