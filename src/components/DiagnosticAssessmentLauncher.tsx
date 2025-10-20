@@ -71,13 +71,18 @@ export function DiagnosticAssessmentLauncher({
       console.log('📥 Function response:', { data, error });
 
       if (error) {
-        console.error('❌ Function returned error:', error);
-        throw error;
+        console.error('❌ Function returned error:', {
+          message: error.message,
+          name: error.name,
+          context: error.context,
+          details: error
+        });
+        throw new Error(error.message || 'Failed to start assessment');
       }
 
       if (!data || !data.assessmentId) {
         console.error('❌ Invalid response data:', data);
-        throw new Error('Invalid response from server');
+        throw new Error('Invalid response from server - no assessment ID');
       }
 
       toast({
@@ -88,11 +93,19 @@ export function DiagnosticAssessmentLauncher({
       console.log('✅ Navigating to assessment:', data.assessmentId);
       // Navigate to the assessment interface
       navigate(`/student/diagnostic/${data.assessmentId}`);
-    } catch (error) {
-      console.error('💥 Error starting assessment:', error);
+    } catch (error: any) {
+      console.error('💥 Full error object:', error);
+      console.error('💥 Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        cause: error?.cause
+      });
+      
+      const errorMessage = error?.message || error?.toString() || "Could not start assessment. Please try again.";
+      
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Could not start assessment. Please try again.",
+        title: "Error Starting Assessment",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
