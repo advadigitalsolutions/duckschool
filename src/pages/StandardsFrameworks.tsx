@@ -66,9 +66,7 @@ export default function StandardsFrameworks() {
   const subjectOptions = [
     "Business",
     "English Language Arts",
-    "English/Language Arts",
     "Healthcare",
-    "History & Social Science",
     "History-Social Science",
     "Information Technology",
     "Marketing & Sales",
@@ -724,6 +722,21 @@ export default function StandardsFrameworks() {
             </div>
           </TabsContent>
         </Tabs>
+        
+        <div className="mt-8 pt-4 border-t border-border">
+          <p className="text-xs text-muted-foreground">
+            Standards data © Achievement Standards Network (ASN) / respective contributors, used under CC BY 3.0 US. 
+            Changes: normalized to JSON and re-keyed. License:{" "}
+            <a 
+              href="http://creativecommons.org/licenses/by/3.0/us/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
+              http://creativecommons.org/licenses/by/3.0/us/
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
