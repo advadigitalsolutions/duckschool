@@ -51,6 +51,45 @@ const SUBJECT_TOPICS: Record<string, string[]> = {
   ]
 };
 
+// Topic examples to help students understand concepts
+const TOPIC_EXAMPLES: Record<string, string> = {
+  // Mathematics
+  "Number Operations": "Adding, subtracting, multiplying, and dividing (e.g., 24 × 3 = 72)",
+  "Fractions & Decimals": "Working with parts of numbers (e.g., 1/2 = 0.5, or 3/4 + 1/4)",
+  "Ratios & Proportions": "Comparing quantities (e.g., 2:3 ratio, or if 2 apples cost $1, how much for 6?)",
+  "Algebraic Expressions": "Using variables in math (e.g., 3x + 5, or solving 2y - 4 = 10)",
+  "Equations & Inequalities": "Finding unknown values (e.g., x + 7 = 15, or 2x < 10)",
+  "Geometry Basics": "Shapes, angles, and measurements (e.g., area of a rectangle, or angles in a triangle)",
+  "Measurement & Data": "Units, converting, and interpreting data (e.g., inches to feet, or reading charts)",
+  "Statistics & Probability": "Averages and likelihood (e.g., mean of 5, 7, 9 or chance of rolling a 6)",
+  
+  // English Language Arts
+  "Reading Comprehension": "Understanding what you read (e.g., identifying main ideas, making inferences)",
+  "Vocabulary": "Word meanings and usage (e.g., synonyms, context clues, word roots)",
+  "Grammar & Mechanics": "Proper sentence structure (e.g., subject-verb agreement, punctuation)",
+  "Writing Structure": "Organizing your writing (e.g., paragraphs, introductions, conclusions)",
+  "Literary Analysis": "Understanding stories (e.g., theme, character development, symbolism)",
+  "Research Skills": "Finding and using information (e.g., citing sources, evaluating credibility)",
+  "Speaking & Listening": "Communication skills (e.g., presentations, active listening)",
+  
+  // Science
+  "Scientific Method": "How scientists investigate (e.g., hypothesis, experiment, conclusion)",
+  "Matter & Energy": "States of matter and energy forms (e.g., solid/liquid/gas, heat transfer)",
+  "Forces & Motion": "How things move (e.g., gravity, friction, speed and acceleration)",
+  "Life Cycles": "How living things grow (e.g., butterfly metamorphosis, plant growth)",
+  "Ecosystems": "How organisms interact (e.g., food chains, habitats, adaptations)",
+  "Earth Systems": "Earth's processes (e.g., weather, rock cycle, water cycle)",
+  "Chemical Reactions": "How substances change (e.g., mixing baking soda and vinegar)",
+  
+  // Social Studies
+  "Geography": "Places and maps (e.g., continents, coordinates, physical features)",
+  "Historical Events": "Important past events (e.g., wars, discoveries, social movements)",
+  "Government": "How societies are governed (e.g., democracy, laws, branches of government)",
+  "Economics": "Money and resources (e.g., supply and demand, trade, budgeting)",
+  "Civic Responsibility": "Citizen duties (e.g., voting, community service, rights)",
+  "Cultural Studies": "Different cultures (e.g., traditions, beliefs, customs)"
+};
+
 export function DiagnosticWarmupPhase({ assessmentId, subject, onComplete }: DiagnosticWarmupPhaseProps) {
   const topics = SUBJECT_TOPICS[subject] || SUBJECT_TOPICS["Mathematics"];
   const [responses, setResponses] = useState<Record<string, string>>({});
@@ -85,8 +124,13 @@ export function DiagnosticWarmupPhase({ assessmentId, subject, onComplete }: Dia
       <Card className="border-2">
         <CardHeader>
           <CardTitle className="text-xl">{currentTopic}</CardTitle>
-          <CardDescription>
-            How confident are you with this topic?
+          <CardDescription className="mt-2 space-y-1">
+            <div className="text-sm text-muted-foreground italic">
+              {TOPIC_EXAMPLES[currentTopic] || ""}
+            </div>
+            <div className="text-sm font-medium mt-2">
+              How confident are you with this topic?
+            </div>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -28,6 +28,38 @@ interface Question {
   explanation: string;
 }
 
+// Topic examples to help students understand concepts
+const TOPIC_EXAMPLES: Record<string, string> = {
+  "Number Operations": "Adding, subtracting, multiplying, dividing",
+  "Fractions & Decimals": "Working with parts of numbers",
+  "Ratios & Proportions": "Comparing quantities",
+  "Algebraic Expressions": "Using variables in math",
+  "Equations & Inequalities": "Finding unknown values",
+  "Geometry Basics": "Shapes, angles, and measurements",
+  "Measurement & Data": "Units and interpreting data",
+  "Statistics & Probability": "Averages and likelihood",
+  "Reading Comprehension": "Understanding text",
+  "Vocabulary": "Word meanings and usage",
+  "Grammar & Mechanics": "Sentence structure and punctuation",
+  "Writing Structure": "Organizing your writing",
+  "Literary Analysis": "Understanding stories",
+  "Research Skills": "Finding and using information",
+  "Speaking & Listening": "Communication skills",
+  "Scientific Method": "How scientists investigate",
+  "Matter & Energy": "States of matter and energy forms",
+  "Forces & Motion": "How things move",
+  "Life Cycles": "How living things grow",
+  "Ecosystems": "How organisms interact",
+  "Earth Systems": "Earth's processes",
+  "Chemical Reactions": "How substances change",
+  "Geography": "Places and maps",
+  "Historical Events": "Important past events",
+  "Government": "How societies are governed",
+  "Economics": "Money and resources",
+  "Civic Responsibility": "Citizen duties",
+  "Cultural Studies": "Different cultures"
+};
+
 export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }: DiagnosticDeepDivePhaseProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
@@ -139,7 +171,14 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-semibold">Question {currentQuestion.questionNumber}</h2>
-        <p className="text-sm text-muted-foreground">Topic: {currentQuestion.topic}</p>
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-muted-foreground">Topic: {currentQuestion.topic}</p>
+          {TOPIC_EXAMPLES[currentQuestion.topic] && (
+            <p className="text-xs text-muted-foreground italic">
+              ({TOPIC_EXAMPLES[currentQuestion.topic]})
+            </p>
+          )}
+        </div>
         <Progress value={(questionsAnswered / 15) * 100} className="h-2" />
       </div>
 
