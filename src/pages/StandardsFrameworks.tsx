@@ -61,6 +61,22 @@ export default function StandardsFrameworks() {
     subjects: [] as string[]
   });
 
+  // Filter options for dropdowns
+  const frameworkOptions = ["CA CCSS"];
+  const subjectOptions = [
+    "Business",
+    "English Language Arts",
+    "English/Language Arts",
+    "Healthcare",
+    "History & Social Science",
+    "History-Social Science",
+    "Information Technology",
+    "Marketing & Sales",
+    "Mathematics",
+    "Science"
+  ];
+  const gradeOptions = ["K-12", "8-12", "9-10", "12"];
+
   useEffect(() => {
     loadFrameworks();
     loadBuiltInStandards();
@@ -384,27 +400,54 @@ export default function StandardsFrameworks() {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label>Framework</Label>
-                    <Input
-                      placeholder="e.g., CA-CCSS"
+                    <Select
                       value={selectedFilters.framework}
-                      onChange={(e) => setSelectedFilters({...selectedFilters, framework: e.target.value})}
-                    />
+                      onValueChange={(value) => setSelectedFilters({...selectedFilters, framework: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Frameworks" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Frameworks</SelectItem>
+                        {frameworkOptions.map((option) => (
+                          <SelectItem key={option} value={option}>{option}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label>Subject</Label>
-                    <Input
-                      placeholder="e.g., ELA, Math"
+                    <Select
                       value={selectedFilters.subject}
-                      onChange={(e) => setSelectedFilters({...selectedFilters, subject: e.target.value})}
-                    />
+                      onValueChange={(value) => setSelectedFilters({...selectedFilters, subject: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Subjects" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Subjects</SelectItem>
+                        {subjectOptions.map((option) => (
+                          <SelectItem key={option} value={option}>{option}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label>Grade</Label>
-                    <Input
-                      placeholder="e.g., 6, 9-10"
+                    <Select
                       value={selectedFilters.grade}
-                      onChange={(e) => setSelectedFilters({...selectedFilters, grade: e.target.value})}
-                    />
+                      onValueChange={(value) => setSelectedFilters({...selectedFilters, grade: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Grades" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Grades</SelectItem>
+                        {gradeOptions.map((option) => (
+                          <SelectItem key={option} value={option}>{option}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
