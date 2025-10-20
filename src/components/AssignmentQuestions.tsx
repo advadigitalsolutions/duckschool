@@ -906,12 +906,17 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
           <CardContent className="pt-6">
             <Button 
               onClick={handleSubmit} 
-              disabled={submitting || questions.some(q => !isAnswerValid(answers[q.id]))}
+              disabled={submitting}
               className="w-full"
               size="lg"
             >
               {submitting ? 'Submitting...' : 'Submit Assignment'}
             </Button>
+            {questions.some(q => !isAnswerValid(answers[q.id])) && (
+              <p className="text-sm text-muted-foreground mt-2 text-center">
+                Note: Some questions are unanswered and will be marked incorrect
+              </p>
+            )}
             {maxAttempts && (
               <p className="text-center text-sm text-muted-foreground mt-2">
                 Attempt {attemptNumber} of {maxAttempts}
