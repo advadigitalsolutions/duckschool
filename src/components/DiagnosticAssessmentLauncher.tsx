@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Target, Brain } from "lucide-react";
+import { Target, Sword } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 
@@ -94,7 +94,7 @@ export function DiagnosticAssessmentLauncher({
         size="lg"
         variant={variant}
       >
-        <Brain className="h-5 w-5" />
+        <Sword className="h-5 w-5" />
         {buttonText}
       </Button>
 
