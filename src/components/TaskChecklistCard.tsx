@@ -53,8 +53,8 @@ export function TaskChecklistCard({
       const line = lines[i].trim();
       if (!line) continue;
 
-      // Match numbered lists: "1. Task", "2. Task", etc.
-      const numberedMatch = line.match(/^(\d+)\.\s+(.+)/);
+      // Match numbered lists: "1. Task", "1) Task", "2. Task", "2) Task", etc.
+      const numberedMatch = line.match(/^(\d+)[.)]\s+(.+)/);
       if (numberedMatch) {
         taskCounter++;
         tasks.push({
