@@ -198,7 +198,7 @@ export function DiagnosticResultsDashboard({
           </ul>
 
           <Button onClick={handleGenerateCourse} className="w-full" size="lg">
-            Create My Personalized Course
+            Create my custom assignment based on where I'm at now
           </Button>
         </CardContent>
       </Card>

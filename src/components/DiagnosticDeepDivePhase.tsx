@@ -81,6 +81,7 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchNextQuestion = async () => {
     setIsLoading(true);
@@ -130,6 +131,7 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
   const handleAnswerSubmit = async () => {
     if (!selectedAnswer || !currentQuestion) return;
 
+    setIsSubmitting(true);
     const timeSpent = Math.round((Date.now() - questionStartTime) / 1000);
 
     try {
@@ -169,6 +171,8 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
         description: "Could not submit answer. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -280,11 +284,18 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
           {!showFeedback ? (
             <Button
               onClick={handleAnswerSubmit}
-              disabled={!selectedAnswer}
+              disabled={!selectedAnswer || isSubmitting}
               className="w-full"
               size="lg"
             >
-              Submit Answer
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Checking your answer...
+                </>
+              ) : (
+                "Submit Answer"
+              )}
             </Button>
           ) : (
             <Button
