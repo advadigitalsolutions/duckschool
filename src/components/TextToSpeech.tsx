@@ -76,12 +76,35 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
         }
       }
 
-      // Track word boundaries for highlighting
-      let wordIndex = 0;
+      // Build character position to word index map
+      const wordPositions: { start: number; end: number; index: number }[] = [];
+      let charPos = 0;
+      let wordIdx = 0;
+      
+      words.forEach((word) => {
+        const isWhitespace = /^\s+$/.test(word);
+        if (!isWhitespace) {
+          wordPositions.push({
+            start: charPos,
+            end: charPos + word.length,
+            index: wordIdx
+          });
+          wordIdx++;
+        }
+        charPos += word.length;
+      });
+
+      // Track word boundaries for highlighting using character positions
       utterance.onboundary = (event) => {
-        if (event.name === 'word') {
-          setCurrentWordIndex(wordIndex);
-          wordIndex++;
+        if (event.name === 'word' && event.charIndex !== undefined) {
+          // Find which word index corresponds to this character position
+          const matchedWord = wordPositions.find(
+            pos => event.charIndex >= pos.start && event.charIndex < pos.end
+          );
+          
+          if (matchedWord) {
+            setCurrentWordIndex(matchedWord.index);
+          }
         }
       };
 
