@@ -201,7 +201,7 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
           Add Course
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Add New Course</DialogTitle>
           <DialogDescription>
@@ -209,7 +209,8 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+        <div className="overflow-y-auto max-h-[calc(90vh-120px)] pr-2">
+          <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           {/* Primary Course Type Selection */}
           <div className="space-y-2">
             <Label htmlFor="courseType">Course Type *</Label>
@@ -388,6 +389,7 @@ export const AddCourseDialog = ({ studentId, onCourseAdded }: AddCourseDialogPro
             </Button>
           </div>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
