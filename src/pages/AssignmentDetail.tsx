@@ -26,6 +26,7 @@ import { LearningWizard } from '@/components/LearningWizard';
 import { EditAssignmentDatesDialog } from '@/components/EditAssignmentDatesDialog';
 import { InstructionsPanel } from '@/components/InstructionsPanel';
 import { AssignmentContentRenderer } from '@/components/AssignmentContentRenderer';
+import { RegenerateAssignmentButton } from '@/components/RegenerateAssignmentButton';
 
 
 export default function AssignmentDetail() {
@@ -333,6 +334,10 @@ export default function AssignmentDetail() {
             )}
             {isParent && (
               <>
+                <RegenerateAssignmentButton 
+                  assignmentId={assignment.id}
+                  onComplete={fetchAssignment}
+                />
                 <EditAssignmentDialog 
                   assignment={assignment} 
                   onAssignmentUpdated={fetchAssignment}

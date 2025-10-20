@@ -114,11 +114,33 @@ export const InstructionsPanel: React.FC<InstructionsPanelProps> = ({
             <CollapsibleContent>
               <CardContent>
                 <TextToSpeech text={cleanMarkdown(safeContent.instructions)}>
-                  <AssignmentContentRenderer 
-                    content={safeContent.instructions} 
-                    className="space-y-4"
-                    enableReadAloud={false}
-                  />
+                  <div className="space-y-4">
+                    {safeContent.overview_sections ? (
+                      // New structured format with bullet points
+                      <>
+                        {safeContent.overview_sections.map((section: any, idx: number) => (
+                          <div key={idx} className="space-y-3">
+                            <h3 className="font-semibold text-lg">{section.title}</h3>
+                            <ul className="space-y-2 list-none">
+                              {section.points.map((point: string, pointIdx: number) => (
+                                <li key={pointIdx} className="flex items-start gap-3 text-base leading-relaxed">
+                                  <span className="text-primary mt-1.5 flex-shrink-0">•</span>
+                                  <span>{point}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      // Legacy format - break into paragraphs for readability
+                      <AssignmentContentRenderer 
+                        content={safeContent.instructions} 
+                        className="space-y-4 text-base leading-relaxed"
+                        enableReadAloud={false}
+                      />
+                    )}
+                  </div>
                 </TextToSpeech>
               </CardContent>
             </CollapsibleContent>
