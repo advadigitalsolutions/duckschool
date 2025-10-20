@@ -100,12 +100,16 @@ export function RichTextEditor({ content, onChange, placeholder, debounceMs = 20
     }
   }, [editor]);
 
-  // Sync content prop with editor only on initial load
+  // Sync content prop with editor when it changes (e.g., loading from database)
   useEffect(() => {
-    if (editor && content && !editor.getText()) {
-      editor.commands.setContent(content, { emitUpdate: false });
+    if (editor && content) {
+      const currentContent = editor.getHTML();
+      // Only update if content is different and editor is empty or content is being loaded
+      if (currentContent !== content && (currentContent === '<p></p>' || !currentContent)) {
+        editor.commands.setContent(content, { emitUpdate: false });
+      }
     }
-  }, [editor]);
+  }, [editor, content]);
 
   // Add paste listener
   useEffect(() => {
