@@ -390,9 +390,17 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
       const isCorrect = studentAnswer === correctAnswer;
       return { isCorrect, score: isCorrect ? 1 : 0 };
     } else {
-      // For short answer and essay, use AI grading
+      // For short answer and essay, use AI grading with timeout
       try {
-        const { data, error } = await supabase.functions.invoke('grade-open-response', {
+        console.log('[GRADING] Starting AI grading for question:', question.id);
+        
+        // Create timeout promise that rejects after 30 seconds
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('AI grading timeout after 30 seconds')), 30000);
+        });
+        
+        // Race between grading and timeout
+        const gradingPromise = supabase.functions.invoke('grade-open-response', {
           body: {
             question: question.question,
             studentAnswer: answer,
@@ -400,9 +408,16 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
             maxPoints: question.points || 1
           }
         });
+        
+        const { data, error } = await Promise.race([gradingPromise, timeoutPromise]) as any;
 
-        if (error) throw error;
+        if (error) {
+          console.error('[GRADING] Edge function error:', error);
+          throw error;
+        }
 
+        console.log('[GRADING] AI grading successful:', data);
+        
         // Consider it correct if score >= 0.7 (70% understanding)
         return {
           isCorrect: data.score >= 0.7,
@@ -410,7 +425,9 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
           feedback: data.feedback
         };
       } catch (error) {
-        console.error('Error grading with AI:', error);
+        console.error('[GRADING] Error grading with AI, using fallback:', error);
+        toast.warning('AI grading unavailable, using basic text matching');
+        
         // Fallback to simple string matching if AI grading fails
         const answerStr = (answer as string).toLowerCase().trim();
         const correctStr = (question.correct_answer as string).toLowerCase().trim();
@@ -439,6 +456,7 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
     trackQuestionTime(currentQuestionId);
 
     setSubmitting(true);
+    console.log('[SUBMIT] Starting submission process...');
 
     try {
       // Grade answers
@@ -447,17 +465,32 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
       let score = 0;
       let correctCount = 0;
 
-      // Grade all questions (handle async grading)
-      for (const question of questions) {
-        const result = await gradeAnswer(question, answers[question.id]);
-        detailedResults[question.id] = result;
-        gradedResults[question.id] = result.isCorrect;
-        // Use the partial score for open-ended questions
-        score += result.score * question.points;
-        if (result.isCorrect) {
-          correctCount++;
+      // Grade all questions (handle async grading with progress)
+      toast.info(`Grading ${questions.length} questions...`);
+      
+      for (let i = 0; i < questions.length; i++) {
+        const question = questions[i];
+        console.log(`[SUBMIT] Grading question ${i + 1}/${questions.length}:`, question.id);
+        
+        try {
+          const result = await gradeAnswer(question, answers[question.id]);
+          detailedResults[question.id] = result;
+          gradedResults[question.id] = result.isCorrect;
+          // Use the partial score for open-ended questions
+          score += result.score * question.points;
+          if (result.isCorrect) {
+            correctCount++;
+          }
+          console.log(`[SUBMIT] Question ${i + 1} graded:`, result);
+        } catch (error) {
+          console.error(`[SUBMIT] Failed to grade question ${i + 1}, marking as incorrect:`, error);
+          // If grading fails completely, mark as incorrect
+          detailedResults[question.id] = { isCorrect: false, score: 0 };
+          gradedResults[question.id] = false;
         }
       }
+      
+      console.log('[SUBMIT] All questions graded. Final score:', score);
 
       setResults(gradedResults);
       setDetailedResults(detailedResults);
@@ -553,9 +586,11 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
         toast.success(`Score: ${score}/${maxScore}. Review incorrect answers and try again!`);
       }
     } catch (error) {
-      console.error('Error submitting assignment:', error);
-      toast.error('Failed to submit assignment');
+      console.error('[SUBMIT] Error submitting assignment:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit assignment';
+      toast.error(`Submission failed: ${errorMessage}. Please try again.`);
     } finally {
+      console.log('[SUBMIT] Submission process completed, resetting state');
       setSubmitting(false);
     }
   };
