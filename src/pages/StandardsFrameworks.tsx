@@ -26,6 +26,15 @@ interface Framework {
   is_approved: boolean;
 }
 
+interface BuiltInStandard {
+  code: string;
+  text: string;
+  subject: string;
+  framework: string;
+  grade_band: string;
+  domain?: string;
+}
+
 export default function StandardsFrameworks() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -34,10 +43,55 @@ export default function StandardsFrameworks() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingStandard, setEditingStandard] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<"builtin" | "custom">("builtin");
+  const [builtInStandards, setBuiltInStandards] = useState<BuiltInStandard[]>([]);
+  const [standardsLoading, setStandardsLoading] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState({
+    framework: "",
+    subject: "",
+    grade: ""
+  });
 
   useEffect(() => {
     loadFrameworks();
+    loadBuiltInStandards();
   }, []);
+
+  const loadBuiltInStandards = async () => {
+    try {
+      setStandardsLoading(true);
+      let query = supabase
+        .from('standards')
+        .select('code, text, subject, framework, grade_band')
+        .order('framework')
+        .order('subject')
+        .order('code')
+        .limit(500);
+
+      if (selectedFilters.framework) {
+        query = query.eq('framework', selectedFilters.framework);
+      }
+      if (selectedFilters.subject) {
+        query = query.eq('subject', selectedFilters.subject);
+      }
+      if (selectedFilters.grade) {
+        query = query.or(`grade_band.eq.${selectedFilters.grade},grade_band.like.%${selectedFilters.grade}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setBuiltInStandards(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setStandardsLoading(false);
+    }
+  };
 
   const loadFrameworks = async () => {
     try {
@@ -130,6 +184,20 @@ export default function StandardsFrameworks() {
     s.subject?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
+  const filteredBuiltInStandards = builtInStandards.filter(s =>
+    searchQuery === "" ||
+    s.code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.text?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  useEffect(() => {
+    if (activeTab === 'builtin') {
+      setSearchQuery(""); // Reset search when switching tabs
+      loadBuiltInStandards();
+    }
+  }, [selectedFilters, activeTab]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -151,14 +219,100 @@ export default function StandardsFrameworks() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Frameworks List */}
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle>Your Frameworks ({frameworks.length})</CardTitle>
-              <CardDescription>Select a framework to view details</CardDescription>
-            </CardHeader>
-            <CardContent>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "builtin" | "custom")} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="builtin">
+              Built-in Standards (4,233)
+            </TabsTrigger>
+            <TabsTrigger value="custom">
+              Custom Frameworks ({frameworks.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="builtin">
+            <Card>
+              <CardHeader>
+                <CardTitle>Browse Built-in Standards</CardTitle>
+                <CardDescription>
+                  Explore California Common Core and other educational standards
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label>Framework</Label>
+                    <Input
+                      placeholder="e.g., CA-CCSS"
+                      value={selectedFilters.framework}
+                      onChange={(e) => setSelectedFilters({...selectedFilters, framework: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label>Subject</Label>
+                    <Input
+                      placeholder="e.g., ELA, Math"
+                      value={selectedFilters.subject}
+                      onChange={(e) => setSelectedFilters({...selectedFilters, subject: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label>Grade</Label>
+                    <Input
+                      placeholder="e.g., 6, 9-10"
+                      value={selectedFilters.grade}
+                      onChange={(e) => setSelectedFilters({...selectedFilters, grade: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search standards by code or text..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                <ScrollArea className="h-[600px]">
+                  {standardsLoading ? (
+                    <div className="text-center py-8 text-muted-foreground">Loading standards...</div>
+                  ) : filteredBuiltInStandards.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No standards found. Try adjusting your filters.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {filteredBuiltInStandards.map((standard, idx) => (
+                        <Card key={idx} className="p-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge>{standard.code}</Badge>
+                              <Badge variant="outline">{standard.subject}</Badge>
+                              <Badge variant="secondary">{standard.framework}</Badge>
+                              <Badge variant="secondary">{standard.grade_band}</Badge>
+                            </div>
+                            <p className="text-sm">{standard.text}</p>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="custom">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Frameworks List */}
+              <Card className="md:col-span-1">
+                <CardHeader>
+                  <CardTitle>Your Frameworks ({frameworks.length})</CardTitle>
+                  <CardDescription>Select a framework to view details</CardDescription>
+                </CardHeader>
+                <CardContent>
               <ScrollArea className="h-[600px] pr-4">
                 {isLoading ? (
                   <div className="text-center py-8 text-muted-foreground">Loading...</div>
@@ -208,20 +362,20 @@ export default function StandardsFrameworks() {
                   </div>
                 )}
               </ScrollArea>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          {/* Framework Details */}
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>
-                {selectedFramework ? selectedFramework.name : 'Select a Framework'}
-              </CardTitle>
-              {selectedFramework && (
-                <CardDescription>{selectedFramework.description}</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent>
+              {/* Framework Details */}
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>
+                    {selectedFramework ? selectedFramework.name : 'Select a Framework'}
+                  </CardTitle>
+                  {selectedFramework && (
+                    <CardDescription>{selectedFramework.description}</CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
               {!selectedFramework ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -379,9 +533,11 @@ export default function StandardsFrameworks() {
                   </TabsContent>
                 </Tabs>
               )}
-            </CardContent>
-          </Card>
-        </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
