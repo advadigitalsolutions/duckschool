@@ -105,3 +105,18 @@ verify_jwt = false
 [functions.analyze-schedule-change]
 verify_jwt = false
 
+[functions.start-diagnostic-assessment]
+verify_jwt = true
+
+[functions.get-next-diagnostic-question]
+verify_jwt = true
+
+[functions.submit-warmup-response]
+verify_jwt = true
+
+[functions.submit-diagnostic-response]
+verify_jwt = true
+
+[functions.finalize-diagnostic-assessment]
+verify_jwt = true
+
