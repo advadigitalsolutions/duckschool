@@ -590,8 +590,8 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
 
       if (gradeError) throw gradeError;
 
-      // Award XP for correct answers
-      if (xpConfig && correctCount > 0) {
+      // Award XP for correct answers (only if assignment has questions)
+      if (xpConfig && correctCount > 0 && questions.length > 0) {
         const xpPerQuestion = xpConfig.question_correct_xp;
         const totalXP = correctCount * xpPerQuestion;
         
