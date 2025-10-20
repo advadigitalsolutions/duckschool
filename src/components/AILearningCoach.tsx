@@ -89,7 +89,7 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
         }
       }
     }
-  }, [taskBreakdownMode, currentTask]);
+  }, [taskBreakdownMode, currentTask, onRequestTaskHelp, isSidebarMode, onSidebarModeChange]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -319,16 +319,6 @@ export const AILearningCoach: React.FC<AILearningCoachProps> = ({
   }, []);
 
   if (!isOpen) {
-    // Add useImperativeHandle to expose openTaskHelp method
-    React.useImperativeHandle(React.useRef(null), () => ({
-      openTaskHelp: (taskText: string) => {
-        setTaskBreakdownMode(true);
-        setCurrentTask(taskText);
-        setIsOpen(true);
-        setInput(`Can you help me break down this task: "${taskText}"`);
-      }
-    }));
-
     return (
       <Button
         onClick={() => setIsOpen(true)}
