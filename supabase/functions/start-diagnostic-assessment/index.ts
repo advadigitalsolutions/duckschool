@@ -12,7 +12,7 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  console.log('🎯 start-diagnostic-assessment called');
+  console.log('🎯 start-diagnostic-assessment called', { method: req.method, url: req.url });
 
   try {
     const supabaseClient = createClient(
