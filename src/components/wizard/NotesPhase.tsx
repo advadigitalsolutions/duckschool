@@ -22,7 +22,7 @@ export const NotesPhase: React.FC<NotesPhaseProps> = ({
   onComplete,
   onBack
 }) => {
-  const [notes, setNotes] = useState<any>({});
+  const [notes, setNotes] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
@@ -40,7 +40,7 @@ export const NotesPhase: React.FC<NotesPhaseProps> = ({
         .maybeSingle();
 
       if (error) throw error;
-      if (data?.content) {
+      if (data?.content && typeof data.content === 'string') {
         setNotes(data.content);
       }
     } catch (error) {
@@ -86,8 +86,9 @@ export const NotesPhase: React.FC<NotesPhaseProps> = ({
 
   // Check if notes have meaningful content (more than just empty paragraphs)
   const hasSubstantiveNotes = () => {
-    const notesString = JSON.stringify(notes);
-    return notesString.length > 100; // Rough check for meaningful content
+    // Remove HTML tags and check for actual text content
+    const textContent = notes.replace(/<[^>]*>/g, '').trim();
+    return textContent.length > 20; // At least 20 characters of actual text
   };
 
   return (
