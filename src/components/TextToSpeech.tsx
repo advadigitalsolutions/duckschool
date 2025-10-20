@@ -81,6 +81,7 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
 
         if (!response.ok) {
           const errorData = await response.json();
+          console.error('Text-to-speech API error:', errorData);
           throw new Error(errorData.error || 'Failed to generate speech');
         }
 
@@ -132,9 +133,15 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
         setSpeaking(false);
         setPaused(false);
         setCurrentWordIndex(-1);
+        
+        const errorMessage = error instanceof Error ? error.message : 'Failed to generate or play audio';
+        const isQuotaError = errorMessage.includes('quota') || errorMessage.includes('exceeded');
+        
         toast({
-          title: "Error",
-          description: "Failed to generate or play audio. Please try again.",
+          title: "Text-to-Speech Error",
+          description: isQuotaError 
+            ? "OpenAI API quota exceeded. Please add credits to your OpenAI account or contact support."
+            : errorMessage,
           variant: "destructive",
         });
       }
