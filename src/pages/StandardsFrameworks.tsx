@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, BookOpen, Edit, Save, Trash2, Plus, Search, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Framework {
   id: string;
@@ -50,6 +51,14 @@ export default function StandardsFrameworks() {
     framework: "",
     subject: "",
     grade: ""
+  });
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newFramework, setNewFramework] = useState({
+    name: "",
+    description: "",
+    region: "CA",
+    grade_levels: [] as string[],
+    subjects: [] as string[]
   });
 
   useEffect(() => {
@@ -198,6 +207,60 @@ export default function StandardsFrameworks() {
     }
   }, [selectedFilters, activeTab]);
 
+  const createFramework = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      if (!newFramework.name || newFramework.grade_levels.length === 0 || newFramework.subjects.length === 0) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('custom_frameworks')
+        .insert({
+          name: newFramework.name,
+          description: newFramework.description,
+          region: newFramework.region,
+          grade_levels: newFramework.grade_levels,
+          subjects: newFramework.subjects,
+          standards: [],
+          legal_requirements: {},
+          created_by: user.id,
+          is_approved: false
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Framework Created",
+        description: "Your custom framework has been created. You can now add standards to it."
+      });
+
+      setCreateDialogOpen(false);
+      setNewFramework({
+        name: "",
+        description: "",
+        region: "CA",
+        grade_levels: [],
+        subjects: []
+      });
+      loadFrameworks();
+      setActiveTab("custom");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -213,10 +276,90 @@ export default function StandardsFrameworks() {
                 Standards & Frameworks
               </h1>
               <p className="text-muted-foreground mt-1">
-                Manage your custom educational frameworks and standards
+                Browse built-in standards or create custom educational frameworks
               </p>
             </div>
           </div>
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Framework
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create Custom Framework</DialogTitle>
+                <DialogDescription>
+                  Define a new educational framework with specific standards for your region and subjects
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Framework Name *</Label>
+                  <Input
+                    id="name"
+                    placeholder="e.g., Texas TEKS Science Framework"
+                    value={newFramework.name}
+                    onChange={(e) => setNewFramework({ ...newFramework, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Describe the purpose and scope of this framework..."
+                    value={newFramework.description}
+                    onChange={(e) => setNewFramework({ ...newFramework, description: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="region">Region *</Label>
+                    <Input
+                      id="region"
+                      placeholder="e.g., CA, TX, FL"
+                      value={newFramework.region}
+                      onChange={(e) => setNewFramework({ ...newFramework, region: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subjects">Subjects (comma-separated) *</Label>
+                    <Input
+                      id="subjects"
+                      placeholder="e.g., Math, Science, ELA"
+                      value={newFramework.subjects.join(", ")}
+                      onChange={(e) => setNewFramework({ 
+                        ...newFramework, 
+                        subjects: e.target.value.split(",").map(s => s.trim()).filter(Boolean)
+                      })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="grades">Grade Levels (comma-separated) *</Label>
+                  <Input
+                    id="grades"
+                    placeholder="e.g., K, 1, 2, 3, 4, 5, 6-8, 9-10, 11-12"
+                    value={newFramework.grade_levels.join(", ")}
+                    onChange={(e) => setNewFramework({ 
+                      ...newFramework, 
+                      grade_levels: e.target.value.split(",").map(s => s.trim()).filter(Boolean)
+                    })}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={createFramework}>
+                  Create Framework
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "builtin" | "custom")} className="w-full">
