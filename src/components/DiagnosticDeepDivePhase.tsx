@@ -60,6 +60,18 @@ const TOPIC_EXAMPLES: Record<string, string> = {
   "Cultural Studies": "Different cultures"
 };
 
+const LOADING_MESSAGES = [
+  "Selecting the perfect question for you",
+  "Analyzing your progress",
+  "Finding questions at just the right level",
+  "Tailoring the next challenge",
+  "Computing your mastery path",
+  "Preparing your personalized question",
+  "Crafting the ideal assessment item",
+  "Fine-tuning difficulty level",
+  "Building your learning journey"
+];
+
 export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }: DiagnosticDeepDivePhaseProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
@@ -68,6 +80,7 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
   const fetchNextQuestion = async () => {
     setIsLoading(true);
@@ -102,6 +115,17 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
   useEffect(() => {
     fetchNextQuestion();
   }, []);
+
+  // Cycle through loading messages
+  useEffect(() => {
+    if (!isLoading) return;
+    
+    const interval = setInterval(() => {
+      setLoadingMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   const handleAnswerSubmit = async () => {
     if (!selectedAnswer || !currentQuestion) return;
@@ -156,8 +180,9 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="text-muted-foreground">Loading next question...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-lg font-medium">{LOADING_MESSAGES[loadingMessageIndex]}...</p>
+          <p className="text-sm text-muted-foreground">This won't take long!</p>
         </div>
       </div>
     );
@@ -213,6 +238,21 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
                 )}
               </Button>
             ))}
+            
+            <Button
+              onClick={() => !showFeedback && setSelectedAnswer("IDK")}
+              disabled={showFeedback}
+              variant="outline"
+              size="lg"
+              className={cn(
+                "w-full justify-start text-left h-auto py-4 px-4 border-2 transition-all border-dashed",
+                selectedAnswer === "IDK" && !showFeedback && "border-primary bg-primary/5",
+                showFeedback && selectedAnswer === "IDK" && "border-blue-500 bg-blue-50 dark:bg-blue-950"
+              )}
+            >
+              <span className="font-medium mr-3">?</span>
+              <span className="flex-1 italic">I don't know</span>
+            </Button>
           </div>
 
           {showFeedback && feedback && (
