@@ -59,12 +59,24 @@ Return a score between 0 and 1 where:
 Expected Answer: ${correctAnswer}
 Student's Answer: ${studentAnswer}
 
-Grade this response and provide:
-1. A score (0-1) reflecting the student's understanding
-2. Brief feedback explaining what they got right and what could be improved
-3. Whether they demonstrated the core concept, even if worded differently
+Grade this response focusing on UNDERSTANDING over EXACT WORDING:
 
-Be generous with partial credit. If they show understanding but use different words, that's still correct.`;
+CRITICAL EXAMPLES OF ACCEPTABLE ANSWERS:
+- If correct answer is "73" for a page number question, accept: "page 73", "Page 73", "seventy-three", "pg 73", etc.
+- If correct answer mentions "assign preferred chores", accept: "give them their preferred chores", "let them do what they like", "match people to what they want to do"
+- If asking for main idea, accept any accurate paraphrase of the core concept
+
+GRADING FOCUS:
+1. Does the student have the RIGHT CORE IDEA? → Score 0.9-1.0
+2. Are they close but missing minor details? → Score 0.7-0.89
+3. Do they show partial understanding? → Score 0.4-0.69
+4. Are they fundamentally wrong? → Score 0-0.39
+
+Provide:
+1. A score (0-1) reflecting conceptual understanding
+2. Brief feedback that acknowledges what they got RIGHT first, then suggests improvements
+3. Whether they demonstrated the core concept (be generous - different words can express same idea)`;
+
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

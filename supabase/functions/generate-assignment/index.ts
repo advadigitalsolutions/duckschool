@@ -438,9 +438,9 @@ Return a JSON object with this structure:
     {
       "id": "q2",
       "type": "short_answer",
-      "question": "Question text",
+      "question": "Question text (be specific about expected response format and detail level)",
       "points": 10,
-      "correct_answer": "Expected answer or key concepts",
+      "correct_answer": "Core concept or main idea that shows understanding (avoid overly specific wording)",
       "explanation": "What makes a good answer"
     },
     {
@@ -496,6 +496,29 @@ Return a JSON object with this structure:
 }
 
 Include 8-15 questions of varying difficulty. Mix question types appropriately for the subject.
+
+QUESTION QUALITY STANDARDS:
+1. SHORT ANSWER QUESTIONS:
+   - Be explicit about expected response length and detail (e.g., "In 1-2 sentences..." or "List three ways...")
+   - Make questions SPECIFIC so students know exactly what to include
+   - The "correct_answer" should capture the CORE CONCEPT, not require exact wording
+   - Avoid ambiguous questions that could have many valid interpretations
+   
+2. MULTIPLE CHOICE:
+   - Ensure all distractors are plausible but clearly incorrect
+   - Avoid trick questions or overly similar options
+   - Test understanding, not memorization of exact wording
+   
+3. NUMERIC:
+   - Clearly state units and rounding expectations
+   - Set appropriate tolerance for acceptable answers
+   - Show all required information in the question
+
+4. GENERAL QUALITY:
+   - Each question should have ONE clear correct answer
+   - Avoid vague questions that could be interpreted multiple ways
+   - Match complexity of question to complexity of expected answer
+   - If asking for examples, specify how many examples are needed
 
 CRITICAL: 
 - All multiple-choice questions MUST include "I don't know" as the last option in the options array.
