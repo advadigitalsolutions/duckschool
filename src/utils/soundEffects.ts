@@ -1,82 +1,93 @@
 // Sound effects manager for Focus Journey duck
 const sounds = {
-  walk: '/sounds/duck-walk.mp3',
-  climb: '/sounds/duck-climb.mp3',
-  milestone: '/sounds/milestone-chime.mp3',
-  complete: '/sounds/duck-celebrate.mp3',
-  xpChaChing: '/sounds/xp-cha-ching.mp3',
-  xpCountdown: '/sounds/xp-countdown.mp3',
+  walk: "/sounds/duck-walk.mp3",
+  climb: "/sounds/duck-climb.mp3",
+  milestone: "/sounds/milestone-chime.mp3",
+  complete: "/sounds/duck-celebrate.mp3",
+  xpChaChing: "/sounds/xp-cha-ching.mp3",
+  xpCountdown: "/sounds/xp-countdown.mp3",
 };
+
+//all comments and some development by modpod on github
+/* 
+          __  __           _ _____          _ 
+         |  \/  |         | |  __ \        | |
+         | \  / | ___   __| | |__) |__   __| |
+         | |\/| |/ _ \ / _` |  ___/ _ \ / _` |
+         | |  | | (_) | (_| | |  | (_) | (_| |
+         |_|  |_|\___/ \__,_|_|   \___/ \__,_| 2025
+
+*/
 
 // Array of fall sounds to randomly cycle through
 const fallSounds = [
-  '/sounds/duck-fall-1.mp3',
-  '/sounds/duck-fall-2.mp3',
-  '/sounds/duck-fall-3.mp3',
-  '/sounds/duck-fall-4.mp3',
-  '/sounds/duck-fall-5.mp3',
-  '/sounds/duck-fall-6.mp3',
-  '/sounds/duck-fall-7.mp3',
+  "/sounds/duck-fall-1.mp3", // scream
+  "/sounds/duck-fall-2.mp3", // EAR PIERCINGLY LOUD "huh" meme
+  "/sounds/duck-fall-3.mp3", // weird soft "whup" sound
+  "/sounds/duck-fall-4.mp3", // metal pipe falling
+  "/sounds/duck-fall-5.mp3", // "NoOooo"
+  "/sounds/duck-fall-6.mp3", // "oh no..."
+  "/sounds/duck-fall-7.mp3", // very long scream
 ];
 
 // Array of climb sounds to randomly cycle through
 const climbSounds = [
-  '/sounds/duck-climb-1.mp3',
-  '/sounds/duck-climb-2.mp3',
-  '/sounds/duck-climb-3.mp3',
-  '/sounds/duck-climb-4.mp3',
-  '/sounds/duck-climb-5.mp3',
-  '/sounds/duck-climb-6.mp3',
-  '/sounds/duck-climb-7.mp3',
-  '/sounds/duck-climb-8.mp3',
-  '/sounds/duck-climb-9.mp3',
-  '/sounds/duck-climb-10.mp3',
+  "/sounds/duck-climb-1.mp3", //high pitched "yyyeah!!"
+  "/sounds/duck-climb-2.mp3", //banjo music jingle
+  "/sounds/duck-climb-3.mp3", //muffled banjo music jingle
+  "/sounds/duck-climb-4.mp3", //electric piano music jingle
+  "/sounds/duck-climb-5.mp3", //accordian music jingle
+  "/sounds/duck-climb-6.mp3", //guitar music jingle
+  "/sounds/duck-climb-7.mp3", //electric piano 2 music jingle
+  "/sounds/duck-climb-8.mp3", //piano music jingle
+  "/sounds/duck-climb-9.mp3", //harpsichord music jingle
+  "/sounds/duck-climb-10.mp3", //8 bit music jingle
 ];
 
 // Array of attention sounds for when duck needs user to focus
 const attentionSounds = [
-  '/sounds/duck-attention-1.mp3',
-  '/sounds/duck-attention-2.mp3',
-  '/sounds/duck-attention-3.mp3',
-  '/sounds/duck-attention-4.mp3',
-  '/sounds/duck-attention-5.mp3',
-  '/sounds/duck-attention-6.mp3',
-  '/sounds/duck-attention-7.mp3',
-  '/sounds/duck-attention-8.mp3',
-  '/sounds/duck-attention-9.mp3',
-  '/sounds/duck-attention-10.mp3',
+  "/sounds/duck-attention-1.mp3", //3 sharp quacks
+  "/sounds/duck-attention-2.mp3", // two slower quacks
+  "/sounds/duck-attention-3.mp3", //weird chittering sound
+  "/sounds/duck-attention-4.mp3", // weird soft "whup" sound
+  "/sounds/duck-attention-5.mp3", //small squeak sound
+  "/sounds/duck-attention-6.mp3", //TODO: placeholder!!!!!
+  "/sounds/duck-attention-7.mp3", //two bubble sounds
+  "/sounds/duck-attention-8.mp3", //4 out of breath panting sounds
+  "/sounds/duck-attention-9.mp3", //really long high pitched gibbirish
+  "/sounds/duck-attention-10.mp3", //scream
 ];
 
 // Array of click sounds for when user clicks the duck
 const clickSounds = [
-  '/sounds/duck-click-1.mp3',
-  '/sounds/duck-click-2.mp3',
-  '/sounds/duck-click-3.mp3',
-  '/sounds/duck-click-4.mp3',
-  '/sounds/duck-click-5.mp3',
-  '/sounds/duck-click-6.mp3',
-  '/sounds/duck-click-7.mp3',
-  '/sounds/duck-click-8.mp3',
-  '/sounds/duck-click-9.mp3',
-  '/sounds/duck-click-10.mp3',
-  '/sounds/duck-click-11.mp3',
-  '/sounds/duck-click-12.mp3',
-  '/sounds/duck-click-13.mp3',
-  '/sounds/duck-click-14.mp3',
-  '/sounds/duck-click-15.mp3',
-  '/sounds/duck-click-16.mp3',
-  '/sounds/duck-click-17.mp3',
-  '/sounds/duck-click-18.mp3',
-  '/sounds/duck-click-19.mp3',
+  "/sounds/duck-click-1.mp3", //we will get sued (mario coin)
+  "/sounds/duck-click-2.mp3", //weird chittering sound (same)
+  "/sounds/duck-click-3.mp3", //"what the fuck?" with reverb
+  "/sounds/duck-click-4.mp3", //"bueh bwuh" donald duck voice?
+  "/sounds/duck-click-5.mp3", // iconic quack (is this public domain?)
+  "/sounds/duck-click-6.mp3", //tiny squeak
+  "/sounds/duck-click-7.mp3", //six annoying small quacks
+  "/sounds/duck-click-8.mp3", // iconic (click 5 duplicate)
+  "/sounds/duck-click-9.mp3", // diffirent iconic quack
+  "/sounds/duck-click-10.mp3", // "ayyyyy" deep voice
+  "/sounds/duck-click-11.mp3", // ten annoying constant quacks
+  "/sounds/duck-click-12.mp3", // 2 slower quacks(attention 2 duplicate)
+  "/sounds/duck-click-13.mp3", // one sharp quack
+  "/sounds/duck-click-14.mp3", // slide whistle
+  "/sounds/duck-click-15.mp3", // iconic (click 5 duplicate)
+  "/sounds/duck-click-16.mp3", // extremely annoying many quacks
+  "/sounds/duck-click-17.mp3", // 3 sharp quacks (attention 1 duplicate)
+  "/sounds/duck-click-18.mp3", // slightly annoying many quacks
+  "/sounds/duck-click-19.mp3", // iconic (click 9 duplicate)
 ];
 
 // Array of return sounds for when duck climbs back after being away
 const returnSounds = [
-  '/sounds/duck-return-1.mp3',
-  '/sounds/duck-return-2.mp3',
-  '/sounds/duck-return-3.mp3',
-  '/sounds/duck-return-4.mp3',
-  '/sounds/duck-return-5.mp3',
+  "/sounds/duck-return-1.mp3", // SUPER LOUD "ooo!" sound effect
+  "/sounds/duck-return-2.mp3", //4 out of breath panting sounds
+  "/sounds/duck-return-3.mp3", // EAR PIERCINGLY LOUD ('sigh')
+  "/sounds/duck-return-4.mp3", // "WeEeeE!"
+  "/sounds/duck-return-5.mp3", // (loud) "WuEeheheee!!"
 ];
 
 type SoundName = keyof typeof sounds;
@@ -87,7 +98,7 @@ const audioCache: Partial<Record<SoundName, HTMLAudioElement>> = {};
 export const preloadSounds = () => {
   Object.entries(sounds).forEach(([name, path]) => {
     const audio = new Audio(path);
-    audio.preload = 'auto';
+    audio.preload = "auto";
     audioCache[name as SoundName] = audio;
   });
 };
@@ -95,12 +106,12 @@ export const preloadSounds = () => {
 export const playSound = (name: SoundName, volume = 0.5) => {
   try {
     let audio = audioCache[name];
-    
+
     if (!audio) {
       audio = new Audio(sounds[name]);
       audioCache[name] = audio;
     }
-    
+
     // Clone audio for overlapping sounds
     const soundClone = audio.cloneNode() as HTMLAudioElement;
     soundClone.volume = volume;
@@ -109,7 +120,7 @@ export const playSound = (name: SoundName, volume = 0.5) => {
     });
   } catch (error) {
     // Silently fail
-    console.debug('Sound playback failed:', name);
+    console.debug("Sound playback failed:", name);
   }
 };
 
@@ -126,14 +137,14 @@ export const playRandomFallSound = (volume = 0.5) => {
   try {
     const randomIndex = Math.floor(Math.random() * fallSounds.length);
     const soundPath = fallSounds[randomIndex];
-    
+
     const audio = new Audio(soundPath);
     audio.volume = volume;
     audio.play().catch(() => {
       // Silently fail if autoplay is blocked
     });
   } catch (error) {
-    console.debug('Random fall sound playback failed');
+    console.debug("Random fall sound playback failed");
   }
 };
 
@@ -142,14 +153,14 @@ export const playRandomClimbSound = (volume = 0.5) => {
   try {
     const randomIndex = Math.floor(Math.random() * climbSounds.length);
     const soundPath = climbSounds[randomIndex];
-    
+
     const audio = new Audio(soundPath);
     audio.volume = volume;
     audio.play().catch(() => {
       // Silently fail if autoplay is blocked
     });
   } catch (error) {
-    console.debug('Random climb sound playback failed');
+    console.debug("Random climb sound playback failed");
   }
 };
 
@@ -158,14 +169,14 @@ export const playRandomAttentionSound = (volume = 0.5) => {
   try {
     const randomIndex = Math.floor(Math.random() * attentionSounds.length);
     const soundPath = attentionSounds[randomIndex];
-    
+
     const audio = new Audio(soundPath);
     audio.volume = volume;
     audio.play().catch(() => {
       // Silently fail if autoplay is blocked
     });
   } catch (error) {
-    console.debug('Random attention sound playback failed');
+    console.debug("Random attention sound playback failed");
   }
 };
 
@@ -174,14 +185,14 @@ export const playRandomClickSound = (volume = 0.5) => {
   try {
     const randomIndex = Math.floor(Math.random() * clickSounds.length);
     const soundPath = clickSounds[randomIndex];
-    
+
     const audio = new Audio(soundPath);
     audio.volume = volume;
     audio.play().catch(() => {
       // Silently fail if autoplay is blocked
     });
   } catch (error) {
-    console.debug('Random click sound playback failed');
+    console.debug("Random click sound playback failed");
   }
 };
 
@@ -190,13 +201,13 @@ export const playRandomReturnSound = (volume = 0.5) => {
   try {
     const randomIndex = Math.floor(Math.random() * returnSounds.length);
     const soundPath = returnSounds[randomIndex];
-    
+
     const audio = new Audio(soundPath);
     audio.volume = volume;
     audio.play().catch(() => {
       // Silently fail if autoplay is blocked
     });
   } catch (error) {
-    console.debug('Random return sound playback failed');
+    console.debug("Random return sound playback failed");
   }
 };
