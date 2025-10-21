@@ -214,7 +214,9 @@ export type Database = {
           id: string
           notes_completed: boolean | null
           practice_completed: boolean | null
+          practice_work: string | null
           research_completed: boolean | null
+          skipped_practice: boolean | null
           started_at: string | null
           steps_completed: Json | null
           student_id: string
@@ -231,7 +233,9 @@ export type Database = {
           id?: string
           notes_completed?: boolean | null
           practice_completed?: boolean | null
+          practice_work?: string | null
           research_completed?: boolean | null
+          skipped_practice?: boolean | null
           started_at?: string | null
           steps_completed?: Json | null
           student_id: string
@@ -248,7 +252,9 @@ export type Database = {
           id?: string
           notes_completed?: boolean | null
           practice_completed?: boolean | null
+          practice_work?: string | null
           research_completed?: boolean | null
+          skipped_practice?: boolean | null
           started_at?: string | null
           steps_completed?: Json | null
           student_id?: string
