@@ -22,17 +22,17 @@ const sounds = {
 // Array of fall sounds to randomly cycle through
 const fallSounds = [
   "/sounds/duck-fall-1.mp3", // scream
-  "/sounds/duck-fall-2.mp3", // EAR PIERCINGLY LOUD "huh" meme
+  //TODO:delete "/sounds/duck-fall-2.mp3", // EAR PIERCINGLY LOUD "huh" meme
   "/sounds/duck-fall-3.mp3", // weird soft "whup" sound
-  "/sounds/duck-fall-4.mp3", // metal pipe falling
+  //TODO:delete "/sounds/duck-fall-4.mp3", // metal pipe falling
   "/sounds/duck-fall-5.mp3", // "NoOooo"
-  "/sounds/duck-fall-6.mp3", // "oh no..."
-  "/sounds/duck-fall-7.mp3", // very long scream
+  //TODO:delete "/sounds/duck-fall-6.mp3", // "oh no..."
+  //TODO:delete "/sounds/duck-fall-7.mp3", // very long scream
 ];
 
 // Array of climb sounds to randomly cycle through
 const climbSounds = [
-  "/sounds/duck-climb-1.mp3", //high pitched "yyyeah!!"
+  //TODO:delete "/sounds/duck-climb-1.mp3", //high pitched "yyyeah!!"
   "/sounds/duck-climb-2.mp3", //banjo music jingle
   "/sounds/duck-climb-3.mp3", //muffled banjo music jingle
   "/sounds/duck-climb-4.mp3", //electric piano music jingle
@@ -48,46 +48,46 @@ const climbSounds = [
 const attentionSounds = [
   "/sounds/duck-attention-1.mp3", //3 sharp quacks
   "/sounds/duck-attention-2.mp3", // two slower quacks
-  "/sounds/duck-attention-3.mp3", //weird chittering sound
+  //TODO:delete "/sounds/duck-attention-3.mp3", //weird chittering sound
   "/sounds/duck-attention-4.mp3", // weird soft "whup" sound
   "/sounds/duck-attention-5.mp3", //small squeak sound
-  "/sounds/duck-attention-6.mp3", //TODO: placeholder!!!!!
-  "/sounds/duck-attention-7.mp3", //two bubble sounds
-  "/sounds/duck-attention-8.mp3", //4 out of breath panting sounds
-  "/sounds/duck-attention-9.mp3", //really long high pitched gibbirish
-  "/sounds/duck-attention-10.mp3", //scream
+  //TODO:delete "/sounds/duck-attention-6.mp3", //TODO: placeholder!!!!!
+  //TODO:delete "/sounds/duck-attention-7.mp3", //two bubble sounds
+  //TODO:delete "/sounds/duck-attention-8.mp3", //4 out of breath panting sounds
+  //TODO:delete "/sounds/duck-attention-9.mp3", //really long high pitched gibbirish
+  //TODO:delete "/sounds/duck-attention-10.mp3", //scream
 ];
 
 // Array of click sounds for when user clicks the duck
 const clickSounds = [
   "/sounds/duck-click-1.mp3", //we will get sued (mario coin)
-  "/sounds/duck-click-2.mp3", //weird chittering sound (same)
-  "/sounds/duck-click-3.mp3", //"what the fuck?" with reverb
-  "/sounds/duck-click-4.mp3", //"bueh bwuh" donald duck voice?
+  //TODO:delete "/sounds/duck-click-2.mp3", //weird chittering sound (same)
+  //TODO:delete "/sounds/duck-click-3.mp3", //"what the fuck?" with reverb
+  //TODO:delete "/sounds/duck-click-4.mp3", //"bueh bwuh" donald duck voice?
   "/sounds/duck-click-5.mp3", // iconic quack (is this public domain?)
   "/sounds/duck-click-6.mp3", //tiny squeak
-  "/sounds/duck-click-7.mp3", //six annoying small quacks
+  //TODO:delete "/sounds/duck-click-7.mp3", //six annoying small quacks
   "/sounds/duck-click-8.mp3", // iconic (click 5 duplicate)
   "/sounds/duck-click-9.mp3", // diffirent iconic quack
   "/sounds/duck-click-10.mp3", // "ayyyyy" deep voice
-  "/sounds/duck-click-11.mp3", // ten annoying constant quacks
+  //TODO:delete "/sounds/duck-click-11.mp3", // ten annoying constant quacks
   "/sounds/duck-click-12.mp3", // 2 slower quacks(attention 2 duplicate)
   "/sounds/duck-click-13.mp3", // one sharp quack
-  "/sounds/duck-click-14.mp3", // slide whistle
+  //TODO:delete "/sounds/duck-click-14.mp3", // slide whistle
   "/sounds/duck-click-15.mp3", // iconic (click 5 duplicate)
-  "/sounds/duck-click-16.mp3", // extremely annoying many quacks
+  //TODO:delete "/sounds/duck-click-16.mp3", // extremely annoying many quacks
   "/sounds/duck-click-17.mp3", // 3 sharp quacks (attention 1 duplicate)
-  "/sounds/duck-click-18.mp3", // slightly annoying many quacks
+  //TODO:delete "/sounds/duck-click-18.mp3", // slightly annoying many quacks
   "/sounds/duck-click-19.mp3", // iconic (click 9 duplicate)
 ];
 
 // Array of return sounds for when duck climbs back after being away
 const returnSounds = [
-  "/sounds/duck-return-1.mp3", // SUPER LOUD "ooo!" sound effect
+  //TODO:delete  "/sounds/duck-return-1.mp3", // SUPER LOUD "ooo!" sound effect
   "/sounds/duck-return-2.mp3", //4 out of breath panting sounds
-  "/sounds/duck-return-3.mp3", // EAR PIERCINGLY LOUD ('sigh')
+  //TODO:delete  "/sounds/duck-return-3.mp3", // EAR PIERCINGLY LOUD ('sigh')
   "/sounds/duck-return-4.mp3", // "WeEeeE!"
-  "/sounds/duck-return-5.mp3", // (loud) "WuEeheheee!!"
+  //TODO:delete  "/sounds/duck-return-5.mp3", // (loud) "WuEeheheee!!"
 ];
 
 type SoundName = keyof typeof sounds;
