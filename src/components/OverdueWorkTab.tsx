@@ -32,7 +32,41 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      // Fetch all assignments with due dates before today that don't have complete submissions
+      // First, get the student's courses
+      const { data: coursesData, error: coursesError } = await supabase
+        .from('courses')
+        .select('id')
+        .eq('student_id', studentId);
+
+      if (coursesError) throw coursesError;
+
+      const courseIds = coursesData?.map(c => c.id) || [];
+      
+      // If no courses, no assignments possible
+      if (courseIds.length === 0) {
+        setOverdueAssignments([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get curriculum items for these courses
+      const { data: curriculumData, error: curriculumError } = await supabase
+        .from('curriculum_items')
+        .select('id')
+        .in('course_id', courseIds);
+
+      if (curriculumError) throw curriculumError;
+
+      const curriculumItemIds = curriculumData?.map(ci => ci.id) || [];
+
+      // If no curriculum items, no assignments possible
+      if (curriculumItemIds.length === 0) {
+        setOverdueAssignments([]);
+        setLoading(false);
+        return;
+      }
+
+      // Now fetch assignments for these curriculum items
       const { data: assignmentsData, error } = await supabase
         .from('assignments')
         .select(`
@@ -50,8 +84,8 @@ export function OverdueWorkTab({ studentId }: OverdueWorkTabProps) {
             submitted_at
           )
         `)
+        .in('curriculum_item_id', curriculumItemIds)
         .lt('due_at', today)
-        .eq('curriculum_items.courses.student_id', studentId)
         .order('due_at', { ascending: true });
 
       if (error) throw error;
