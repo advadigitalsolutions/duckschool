@@ -2511,6 +2511,7 @@ export type Database = {
           administrator_assessment: Json | null
           avatar_url: string | null
           bionic_reading_enabled: boolean | null
+          cognitive_traits: Json | null
           color_overlay: string | null
           created_at: string | null
           discussion_tips_shown: number | null
@@ -2528,6 +2529,7 @@ export type Database = {
           high_contrast_enabled: boolean | null
           hotkey_settings: Json | null
           id: string
+          learning_preferences: Json | null
           learning_profile: Json | null
           letter_spacing: string | null
           line_spacing: string | null
@@ -2536,6 +2538,7 @@ export type Database = {
           personality_type: string | null
           profile_assessment_completed: boolean | null
           pronouns: string | null
+          psychological_profile: Json | null
           reading_ruler_enabled: boolean | null
           show_time_estimates: boolean | null
           special_interests: Json | null
@@ -2548,6 +2551,7 @@ export type Database = {
           administrator_assessment?: Json | null
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
+          cognitive_traits?: Json | null
           color_overlay?: string | null
           created_at?: string | null
           discussion_tips_shown?: number | null
@@ -2565,6 +2569,7 @@ export type Database = {
           high_contrast_enabled?: boolean | null
           hotkey_settings?: Json | null
           id?: string
+          learning_preferences?: Json | null
           learning_profile?: Json | null
           letter_spacing?: string | null
           line_spacing?: string | null
@@ -2573,6 +2578,7 @@ export type Database = {
           personality_type?: string | null
           profile_assessment_completed?: boolean | null
           pronouns?: string | null
+          psychological_profile?: Json | null
           reading_ruler_enabled?: boolean | null
           show_time_estimates?: boolean | null
           special_interests?: Json | null
@@ -2585,6 +2591,7 @@ export type Database = {
           administrator_assessment?: Json | null
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
+          cognitive_traits?: Json | null
           color_overlay?: string | null
           created_at?: string | null
           discussion_tips_shown?: number | null
@@ -2602,6 +2609,7 @@ export type Database = {
           high_contrast_enabled?: boolean | null
           hotkey_settings?: Json | null
           id?: string
+          learning_preferences?: Json | null
           learning_profile?: Json | null
           letter_spacing?: string | null
           line_spacing?: string | null
@@ -2610,6 +2618,7 @@ export type Database = {
           personality_type?: string | null
           profile_assessment_completed?: boolean | null
           pronouns?: string | null
+          psychological_profile?: Json | null
           reading_ruler_enabled?: boolean | null
           show_time_estimates?: boolean | null
           special_interests?: Json | null

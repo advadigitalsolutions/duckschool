@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ProfileAssessment } from '@/components/ProfileAssessment';
+import { ImprovedProfileAssessment } from '@/components/ImprovedProfileAssessment';
 
 export function LearningProfileForm() {
   const [student, setStudent] = useState<any>(null);
@@ -47,7 +47,7 @@ export function LearningProfileForm() {
 
   return (
     <div className="space-y-6">
-      <ProfileAssessment 
+      <ImprovedProfileAssessment 
         studentId={student.id} 
         onComplete={fetchStudent}
       />
