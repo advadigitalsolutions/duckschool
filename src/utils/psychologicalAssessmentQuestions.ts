@@ -14,8 +14,8 @@ export const psychologicalAssessmentQuestions: PsychologicalQuestion[] = [
     id: "energy_source",
     question: "Where do you get your energy?",
     category: "personality_core",
-    type: "single",
-    description: "Think about what recharges you after a long day",
+    type: "multiple",
+    description: "Select all that recharge you after a long day",
     options: [
       "Being around people and social activities",
       "Being alone or with one close friend",
@@ -43,7 +43,8 @@ export const psychologicalAssessmentQuestions: PsychologicalQuestion[] = [
     id: "decision_making",
     question: "When making decisions, I tend to...",
     category: "personality_core",
-    type: "single",
+    type: "multiple",
+    description: "Select all that apply to how you make decisions",
     options: [
       "Analyze logically and weigh pros/cons",
       "Go with my gut feeling",
@@ -56,7 +57,8 @@ export const psychologicalAssessmentQuestions: PsychologicalQuestion[] = [
     id: "lifestyle_preference",
     question: "I feel best when my life is...",
     category: "personality_core",
-    type: "single",
+    type: "multiple",
+    description: "Select all that describe when you feel your best",
     options: [
       "Organized with clear plans and schedules",
       "Flexible and spontaneous",
@@ -310,7 +312,8 @@ export const psychologicalAssessmentQuestions: PsychologicalQuestion[] = [
     id: "work_style",
     question: "I work best...",
     category: "social",
-    type: "single",
+    type: "multiple",
+    description: "Select all work styles that suit you",
     options: [
       "Independently - I like working alone",
       "With one partner - paired work is ideal",
@@ -358,7 +361,8 @@ export const psychologicalAssessmentQuestions: PsychologicalQuestion[] = [
     id: "pacing_preference",
     question: "I prefer to learn...",
     category: "organization",
-    type: "single",
+    type: "multiple",
+    description: "Select all learning paces that work for you",
     options: [
       "Quickly - I like to move fast",
       "At a steady, moderate pace",
