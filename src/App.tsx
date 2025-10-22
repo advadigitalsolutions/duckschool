@@ -104,7 +104,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
     location.pathname === route || location.pathname.startsWith('/blog/')
   );
   
-  const isStudentRoute = location.pathname.startsWith('/student') || location.pathname.startsWith('/assignment/');
+  // Exclude parent routes that happen to start with /student (like /student/:id)
+  const isParentStudentDetailRoute = /^\/student\/[a-f0-9-]+$/.test(location.pathname);
+  const isStudentRoute = (location.pathname.startsWith('/student') || location.pathname.startsWith('/assignment/')) && !isParentStudentDetailRoute;
   
   // Only show focus duck on assignment detail pages and learning windows
   const showFocusDuck = location.pathname.startsWith('/assignment/') || 
