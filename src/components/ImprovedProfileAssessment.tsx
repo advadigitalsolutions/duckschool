@@ -28,6 +28,19 @@ export function ImprovedProfileAssessment({ studentId, onComplete }: ImprovedPro
     fetchStudent();
   }, [studentId]);
 
+  // Auto-save draft answers whenever they change
+  useEffect(() => {
+    if (Object.keys(answers).length > 0 && studentId) {
+      const saveDraft = async () => {
+        await supabase
+          .from('students')
+          .update({ assessment_answers_draft: answers })
+          .eq('id', studentId);
+      };
+      saveDraft();
+    }
+  }, [answers, studentId]);
+
   const fetchStudent = async () => {
     const { data } = await supabase
       .from('students')
@@ -37,6 +50,15 @@ export function ImprovedProfileAssessment({ studentId, onComplete }: ImprovedPro
     
     setStudent(data);
     setCompleted(data?.profile_assessment_completed || false);
+    
+    // Load draft answers if they exist
+    if (data?.assessment_answers_draft && typeof data.assessment_answers_draft === 'object') {
+      const draftAnswers = data.assessment_answers_draft as Record<string, string | string[]>;
+      if (Object.keys(draftAnswers).length > 0) {
+        setAnswers(draftAnswers);
+        toast.info('Your previous answers have been restored');
+      }
+    }
   };
 
   const currentQuestion = psychologicalAssessmentQuestions[currentStep];
@@ -74,7 +96,8 @@ export function ImprovedProfileAssessment({ studentId, onComplete }: ImprovedPro
             analysis: analysisData,
             completedAt: new Date().toISOString()
           },
-          profile_assessment_completed: true
+          profile_assessment_completed: true,
+          assessment_answers_draft: {} // Clear draft after completion
         })
         .eq('id', studentId);
 
@@ -109,7 +132,10 @@ export function ImprovedProfileAssessment({ studentId, onComplete }: ImprovedPro
           try {
             const { error } = await supabase
               .from('students')
-              .update({ profile_assessment_completed: false })
+              .update({ 
+                profile_assessment_completed: false,
+                assessment_answers_draft: {} // Clear draft when retaking
+              })
               .eq('id', studentId);
 
             if (error) throw error;
@@ -234,15 +260,6 @@ export function ImprovedProfileAssessment({ studentId, onComplete }: ImprovedPro
               </div>
             )}
 
-            {/* Text input */}
-            {currentQuestion.type === 'text' && (
-              <Textarea
-                value={answers[currentQuestion.id] as string || ''}
-                onChange={(e) => setAnswers({ ...answers, [currentQuestion.id]: e.target.value })}
-                placeholder={currentQuestion.placeholder}
-                className="min-h-[120px]"
-              />
-            )}
           </div>
 
           <div className="flex gap-3">

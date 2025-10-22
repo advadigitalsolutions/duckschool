@@ -121,8 +121,22 @@ export const psychologicalAssessmentQuestions: PsychologicalQuestion[] = [
     id: "ideal_learning_environment",
     question: "My ideal learning space is...",
     category: "learning",
-    type: "text",
-    placeholder: "Describe your perfect place to learn - consider lighting, sounds, furniture, who's around, etc."
+    type: "multiple",
+    description: "Select all that describe your perfect learning environment",
+    options: [
+      "Bright, well-lit with natural light",
+      "Cozy and softly lit",
+      "Complete silence",
+      "Background music or white noise",
+      "Comfortable seating (couch, bean bag)",
+      "Traditional desk setup",
+      "Alone in my own space",
+      "With people nearby but quiet",
+      "Temperature controlled (not too hot or cold)",
+      "Access to snacks and water",
+      "Minimal clutter and distractions",
+      "Surrounded by inspiring decorations"
+    ]
   },
   {
     id: "engagement_drivers",
@@ -183,15 +197,42 @@ export const psychologicalAssessmentQuestions: PsychologicalQuestion[] = [
     id: "stress_response",
     question: "When I'm stressed or overwhelmed, I usually...",
     category: "motivation",
-    type: "text",
-    placeholder: "Describe how you typically react and what helps you feel better"
+    type: "multiple",
+    description: "Select all that apply",
+    options: [
+      "Take breaks and step away",
+      "Talk to someone about it",
+      "Push through and keep working",
+      "Get physical activity or movement",
+      "Listen to music or podcasts",
+      "Take deep breaths or meditate",
+      "Make a plan to break it down",
+      "Need time alone to recharge",
+      "Cry or express emotions",
+      "Distract myself with something fun",
+      "Sleep or rest",
+      "Avoid the stressful thing"
+    ]
   },
   {
     id: "motivation_style",
     question: "What keeps you going when something is difficult?",
     category: "motivation",
-    type: "text",
-    placeholder: "Share what motivates you to push through challenges"
+    type: "multiple",
+    description: "Select all that motivate you",
+    options: [
+      "Knowing I'll be proud of myself",
+      "Not wanting to disappoint others",
+      "Rewards or incentives",
+      "Wanting to prove I can do it",
+      "Understanding it will help my future",
+      "Competition with others or myself",
+      "Support and encouragement from others",
+      "Seeing my progress along the way",
+      "Curiosity about the outcome",
+      "The challenge itself is exciting",
+      "Knowing others believe in me"
+    ]
   },
 
   // Interests & Values
@@ -199,8 +240,25 @@ export const psychologicalAssessmentQuestions: PsychologicalQuestion[] = [
     id: "free_time_activities",
     question: "In my free time, I love to...",
     category: "interests",
-    type: "text",
-    placeholder: "Tell us about your hobbies, interests, and favorite activities"
+    type: "multiple",
+    description: "Select all activities you enjoy",
+    options: [
+      "Play video games",
+      "Read books or comics",
+      "Draw, paint, or create art",
+      "Play sports or exercise",
+      "Watch movies or shows",
+      "Play musical instruments",
+      "Build or make things",
+      "Spend time with friends",
+      "Explore outdoors and nature",
+      "Code or work with technology",
+      "Write stories or journals",
+      "Solve puzzles or brain teasers",
+      "Care for pets or animals",
+      "Cook or bake",
+      "Learn new things online"
+    ]
   },
   {
     id: "subject_preferences",
@@ -227,8 +285,24 @@ export const psychologicalAssessmentQuestions: PsychologicalQuestion[] = [
     id: "learning_goals",
     question: "What do you want to get better at?",
     category: "interests",
-    type: "text",
-    placeholder: "Share your learning goals and dreams - what skills or knowledge excite you?"
+    type: "multiple",
+    description: "Select all skills you want to develop",
+    options: [
+      "Math and problem solving",
+      "Reading and comprehension",
+      "Writing and communication",
+      "Science and experiments",
+      "Creative arts (drawing, music, etc)",
+      "Physical skills and sports",
+      "Technology and coding",
+      "Languages and speaking",
+      "Critical thinking",
+      "Time management and organization",
+      "Memory and studying techniques",
+      "Confidence and public speaking",
+      "Social skills and teamwork",
+      "Focus and concentration"
+    ]
   },
 
   // Social Preferences

@@ -2509,6 +2509,7 @@ export type Database = {
         Row: {
           accommodations: Json | null
           administrator_assessment: Json | null
+          assessment_answers_draft: Json | null
           avatar_url: string | null
           bionic_reading_enabled: boolean | null
           cognitive_traits: Json | null
@@ -2549,6 +2550,7 @@ export type Database = {
         Insert: {
           accommodations?: Json | null
           administrator_assessment?: Json | null
+          assessment_answers_draft?: Json | null
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
           cognitive_traits?: Json | null
@@ -2589,6 +2591,7 @@ export type Database = {
         Update: {
           accommodations?: Json | null
           administrator_assessment?: Json | null
+          assessment_answers_draft?: Json | null
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
           cognitive_traits?: Json | null
