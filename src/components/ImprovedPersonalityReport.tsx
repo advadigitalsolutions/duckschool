@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Brain, Heart, Lightbulb, Target, Sparkles, TrendingUp, Users, Clock } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { MeyersBriggsGradientBar } from './MeyersBriggsGradientBar';
+import { RelationshipAnalysisDialog } from './RelationshipAnalysisDialog';
+import { useState } from 'react';
 
 interface ImprovedPersonalityReportProps {
   student: any;
@@ -15,6 +17,7 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
   const preferences = student.learning_preferences;
   const traits = student.cognitive_traits;
   const analysis = student.learning_profile?.analysis;
+  const [showRelationshipDialog, setShowRelationshipDialog] = useState(false);
 
   if (!profile) {
     return (
@@ -54,26 +57,44 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
         )}
       </Card>
 
-      {/* Personality Dimensions */}
+      {/* Personality Dimensions - Myers-Briggs Style */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-primary" />
             Personality Core
           </CardTitle>
-          <CardDescription>Understanding your fundamental personality dimensions</CardDescription>
+          <CardDescription>Understanding your fundamental Myers-Briggs dimensions</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {profile.core_dimensions && Object.entries(profile.core_dimensions).map(([key, value]: [string, any]) => (
-            <div key={key} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="font-medium capitalize">{key.replace(/_/g, ' ')}</Label>
-                <span className="text-sm text-muted-foreground">{value.score || 0}/100</span>
-              </div>
-              <Progress value={value.score || 0} className="h-2" />
-              <p className="text-sm text-muted-foreground">{value.description || value}</p>
-            </div>
-          ))}
+        <CardContent className="space-y-6">
+          <MeyersBriggsGradientBar
+            leftLabel="Introversion"
+            rightLabel="Extraversion"
+            percentage={profile.core_dimensions?.extraversion?.score || 50}
+            leftColor="hsl(var(--chart-1))"
+            rightColor="hsl(var(--chart-2))"
+          />
+          <MeyersBriggsGradientBar
+            leftLabel="Sensing"
+            rightLabel="Intuition"
+            percentage={profile.core_dimensions?.intuition?.score || 50}
+            leftColor="hsl(var(--chart-3))"
+            rightColor="hsl(var(--chart-4))"
+          />
+          <MeyersBriggsGradientBar
+            leftLabel="Thinking"
+            rightLabel="Feeling"
+            percentage={profile.core_dimensions?.feeling?.score || 50}
+            leftColor="hsl(var(--chart-5))"
+            rightColor="hsl(var(--primary))"
+          />
+          <MeyersBriggsGradientBar
+            leftLabel="Judging"
+            rightLabel="Perceiving"
+            percentage={profile.core_dimensions?.perceiving?.score || 50}
+            leftColor="hsl(var(--secondary))"
+            rightColor="hsl(var(--accent))"
+          />
         </CardContent>
       </Card>
 
@@ -283,6 +304,26 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
           </CardContent>
         </Card>
       )}
+
+      {/* Relationship Analysis CTA */}
+      <Card className="bg-gradient-to-br from-primary/5 to-background border-primary/20">
+        <CardContent className="pt-6 text-center">
+          <Button 
+            onClick={() => setShowRelationshipDialog(true)}
+            size="lg"
+            className="gap-2"
+          >
+            <Users className="h-5 w-5" />
+            See how you and your {student.parent_id ? 'educator' : 'student'} work best together
+          </Button>
+        </CardContent>
+      </Card>
+
+      <RelationshipAnalysisDialog
+        open={showRelationshipDialog}
+        onOpenChange={setShowRelationshipDialog}
+        student={student}
+      />
     </div>
   );
 }

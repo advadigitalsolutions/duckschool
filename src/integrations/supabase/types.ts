@@ -1796,6 +1796,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bionic_reading_enabled: boolean | null
+          cognitive_traits: Json | null
           color_overlay: string | null
           created_at: string | null
           dyslexia_font_enabled: boolean | null
@@ -1809,11 +1810,16 @@ export type Database = {
           high_contrast_enabled: boolean | null
           hotkey_settings: Json | null
           id: string
+          learning_preferences: Json | null
+          learning_profile: Json | null
           letter_spacing: string | null
           line_spacing: string | null
           locale: string | null
           name: string | null
+          personality_type: string | null
+          profile_assessment_completed: boolean | null
           pronouns: string | null
+          psychological_profile: Json | null
           reading_ruler_enabled: boolean | null
           show_time_estimates: boolean | null
           text_to_speech_enabled: boolean | null
@@ -1823,6 +1829,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
+          cognitive_traits?: Json | null
           color_overlay?: string | null
           created_at?: string | null
           dyslexia_font_enabled?: boolean | null
@@ -1836,11 +1843,16 @@ export type Database = {
           high_contrast_enabled?: boolean | null
           hotkey_settings?: Json | null
           id: string
+          learning_preferences?: Json | null
+          learning_profile?: Json | null
           letter_spacing?: string | null
           line_spacing?: string | null
           locale?: string | null
           name?: string | null
+          personality_type?: string | null
+          profile_assessment_completed?: boolean | null
           pronouns?: string | null
+          psychological_profile?: Json | null
           reading_ruler_enabled?: boolean | null
           show_time_estimates?: boolean | null
           text_to_speech_enabled?: boolean | null
@@ -1850,6 +1862,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
+          cognitive_traits?: Json | null
           color_overlay?: string | null
           created_at?: string | null
           dyslexia_font_enabled?: boolean | null
@@ -1863,11 +1876,16 @@ export type Database = {
           high_contrast_enabled?: boolean | null
           hotkey_settings?: Json | null
           id?: string
+          learning_preferences?: Json | null
+          learning_profile?: Json | null
           letter_spacing?: string | null
           line_spacing?: string | null
           locale?: string | null
           name?: string | null
+          personality_type?: string | null
+          profile_assessment_completed?: boolean | null
           pronouns?: string | null
+          psychological_profile?: Json | null
           reading_ruler_enabled?: boolean | null
           show_time_estimates?: boolean | null
           text_to_speech_enabled?: boolean | null
