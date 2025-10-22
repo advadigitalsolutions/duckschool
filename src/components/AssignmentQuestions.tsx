@@ -536,6 +536,7 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
       }
 
       // Update or create question responses
+      console.log('[SUBMIT] Updating question responses...');
       for (const question of questions) {
         // Check if response already exists (from auto-save)
         const { data: existing } = await supabase
@@ -565,18 +566,26 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
             })
             .eq('id', existing.id);
           
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error('[SUBMIT] Error updating question response:', updateError);
+            throw updateError;
+          }
         } else {
           // Insert new response
           const { error: insertError } = await supabase
             .from('question_responses')
             .insert(responseData);
           
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error('[SUBMIT] Error inserting question response:', insertError);
+            throw insertError;
+          }
         }
       }
+      console.log('[SUBMIT] ✓ All question responses updated');
 
       // Create grade
+      console.log('[SUBMIT] Creating grade record...');
       const { error: gradeError } = await supabase
         .from('grades')
         .insert({
@@ -588,22 +597,35 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
           rubric_scores: gradedResults
         });
 
-      if (gradeError) throw gradeError;
+      if (gradeError) {
+        console.error('[SUBMIT] Grade insertion error:', gradeError);
+        throw gradeError;
+      }
+      console.log('[SUBMIT] ✓ Grade created');
 
       // Award XP for correct answers (only if assignment has questions)
+      console.log('[SUBMIT] Awarding XP...');
       if (xpConfig && correctCount > 0 && questions.length > 0) {
         const xpPerQuestion = xpConfig.question_correct_xp;
         const totalXP = correctCount * xpPerQuestion;
         
-        await supabase.from('xp_events').insert({
+        const { error: xpError } = await supabase.from('xp_events').insert({
           student_id: studentId,
           amount: totalXP,
           event_type: 'question_correct',
           description: `Answered ${correctCount} questions correctly`,
           reference_id: assignment.id,
         });
+
+        if (xpError) {
+          console.error('[SUBMIT] XP award error:', xpError);
+          // Don't throw - XP is not critical to submission
+        } else {
+          console.log('[SUBMIT] ✓ XP awarded:', totalXP);
+        }
       }
 
+      console.log('[SUBMIT] ✓ Submission complete!');
       setSubmitted(true);
       
       if (score === maxScore) {
@@ -614,7 +636,12 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
     } catch (error) {
       console.error('[SUBMIT] Error submitting assignment:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit assignment';
-      toast.error(`Submission failed: ${errorMessage}. Please try again.`);
+      const errorDetails = error instanceof Error && 'details' in error ? (error as any).details : '';
+      const fullError = errorDetails ? `${errorMessage} - ${errorDetails}` : errorMessage;
+      console.error('[SUBMIT] Full error details:', fullError);
+      toast.error(`Submission failed: ${fullError}. Please try again.`, {
+        duration: 10000,
+      });
     } finally {
       console.log('[SUBMIT] Submission process completed, resetting state');
       setSubmitting(false);
