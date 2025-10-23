@@ -31,9 +31,10 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
   }
 
   // Extract scores from the text strings in core_dimensions
-  const extractScore = (text: string): number => {
+  const extractScore = (text: string | number): number => {
     if (!text) return 50;
-    const match = text.match(/Score:\s*(\d+)/);
+    if (typeof text === 'number') return text;
+    const match = String(text).match(/Score:\s*(\d+)/);
     return match ? parseInt(match[1]) : 50;
   };
 
@@ -41,6 +42,8 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
   const intuitionScore = extractScore(profile.core_dimensions?.sensing_intuition);
   const feelingScore = extractScore(profile.core_dimensions?.thinking_feeling);
   const perceivingScore = extractScore(profile.core_dimensions?.judging_perceiving);
+
+  console.log('Profile scores:', { extraversionScore, intuitionScore, feelingScore, perceivingScore });
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
