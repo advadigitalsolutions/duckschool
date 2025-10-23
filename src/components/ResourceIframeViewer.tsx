@@ -94,7 +94,7 @@ export function ResourceIframeViewer({ url, title, onClose }: ResourceIframeView
               src={url}
               className="w-full h-full border-0"
               title={title}
-              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+              sandbox="allow-scripts allow-popups allow-forms allow-popups-to-escape-sandbox"
               onLoad={() => setIsLoading(false)}
               onError={() => {
                 setIframeError(true);
