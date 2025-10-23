@@ -32,21 +32,50 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
 
   // Extract scores from the text strings in core_dimensions
   const extractScore = (text: string | number): number => {
-    if (!text) return 50;
+    if (!text) {
+      console.log('No text provided to extractScore');
+      return 50;
+    }
     if (typeof text === 'number') return text;
-    const match = String(text).match(/Score:\s*(\d+)/);
-    return match ? parseInt(match[1]) : 50;
+    const textStr = String(text);
+    console.log('Extracting from:', textStr.substring(0, 100));
+    const match = textStr.match(/Score:\s*(\d+)/);
+    const score = match ? parseInt(match[1]) : 50;
+    console.log('Extracted score:', score);
+    return score;
   };
+
+  console.log('Full profile:', profile);
+  console.log('Core dimensions:', profile.core_dimensions);
 
   const extraversionScore = extractScore(profile.core_dimensions?.introversion_extraversion);
   const intuitionScore = extractScore(profile.core_dimensions?.sensing_intuition);
   const feelingScore = extractScore(profile.core_dimensions?.thinking_feeling);
   const perceivingScore = extractScore(profile.core_dimensions?.judging_perceiving);
 
-  console.log('Profile scores:', { extraversionScore, intuitionScore, feelingScore, perceivingScore });
+  console.log('Final scores:', { extraversionScore, intuitionScore, feelingScore, perceivingScore });
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {/* DEBUG INFO - TEMPORARY */}
+      <Card className="bg-yellow-500/10 border-yellow-500">
+        <CardHeader>
+          <CardTitle className="text-sm">Debug Info (Remove this after fixing)</CardTitle>
+        </CardHeader>
+        <CardContent className="text-xs space-y-2">
+          <div>Has profile: {profile ? 'Yes' : 'No'}</div>
+          <div>Has core_dimensions: {profile?.core_dimensions ? 'Yes' : 'No'}</div>
+          <div>Type of core_dimensions: {typeof profile?.core_dimensions}</div>
+          <div>Scores: E={extraversionScore}, I={intuitionScore}, F={feelingScore}, P={perceivingScore}</div>
+          {profile?.core_dimensions && (
+            <div className="mt-2">
+              <div className="font-semibold">Raw data sample:</div>
+              <div className="truncate">{JSON.stringify(profile.core_dimensions).substring(0, 200)}</div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
       {/* Header */}
       <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-background">
         <CardHeader>
