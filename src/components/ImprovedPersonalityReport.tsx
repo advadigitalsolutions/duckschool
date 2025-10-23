@@ -30,6 +30,18 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
     );
   }
 
+  // Extract scores from the text strings in core_dimensions
+  const extractScore = (text: string): number => {
+    if (!text) return 50;
+    const match = text.match(/Score:\s*(\d+)/);
+    return match ? parseInt(match[1]) : 50;
+  };
+
+  const extraversionScore = extractScore(profile.core_dimensions?.introversion_extraversion);
+  const intuitionScore = extractScore(profile.core_dimensions?.sensing_intuition);
+  const feelingScore = extractScore(profile.core_dimensions?.thinking_feeling);
+  const perceivingScore = extractScore(profile.core_dimensions?.judging_perceiving);
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
@@ -70,28 +82,28 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
           <MeyersBriggsGradientBar
             leftLabel="Introversion"
             rightLabel="Extraversion"
-            percentage={profile.core_dimensions?.extraversion?.score || 50}
+            percentage={extraversionScore}
             leftColor="hsl(var(--chart-1))"
             rightColor="hsl(var(--chart-2))"
           />
           <MeyersBriggsGradientBar
             leftLabel="Sensing"
             rightLabel="Intuition"
-            percentage={profile.core_dimensions?.intuition?.score || 50}
+            percentage={intuitionScore}
             leftColor="hsl(var(--chart-3))"
             rightColor="hsl(var(--chart-4))"
           />
           <MeyersBriggsGradientBar
             leftLabel="Thinking"
             rightLabel="Feeling"
-            percentage={profile.core_dimensions?.feeling?.score || 50}
+            percentage={feelingScore}
             leftColor="hsl(var(--chart-5))"
             rightColor="hsl(var(--primary))"
           />
           <MeyersBriggsGradientBar
             leftLabel="Judging"
             rightLabel="Perceiving"
-            percentage={profile.core_dimensions?.perceiving?.score || 50}
+            percentage={perceivingScore}
             leftColor="hsl(var(--secondary))"
             rightColor="hsl(var(--accent))"
           />
