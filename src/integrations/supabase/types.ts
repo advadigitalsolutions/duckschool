@@ -1994,7 +1994,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_correct: boolean | null
-          question_id: string
+          question_id: string | null
           submission_id: string | null
           time_spent_seconds: number | null
         }
@@ -2004,7 +2004,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_correct?: boolean | null
-          question_id: string
+          question_id?: string | null
           submission_id?: string | null
           time_spent_seconds?: number | null
         }
@@ -2014,7 +2014,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_correct?: boolean | null
-          question_id?: string
+          question_id?: string | null
           submission_id?: string | null
           time_spent_seconds?: number | null
         }
