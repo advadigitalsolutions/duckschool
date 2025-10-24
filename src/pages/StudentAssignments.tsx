@@ -157,7 +157,7 @@ export default function StudentAssignments() {
               subject
             )
           ),
-          submissions!inner (
+          submissions (
             id,
             submitted_at,
             student_id
