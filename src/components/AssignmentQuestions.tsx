@@ -225,22 +225,47 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
   };
 
   const createDraftSubmission = async () => {
-    const { data, error } = await supabase
-      .from('submissions')
-      .insert({
-        assignment_id: assignment.id,
-        student_id: studentId,
-        attempt_no: attemptNumber,
-        content: {},
-        time_spent_seconds: 0,
-        submitted_at: null
-      })
-      .select()
-      .single();
+    try {
+      // Check if a draft already exists before creating
+      const { data: existingDraft } = await supabase
+        .from('submissions')
+        .select('id')
+        .eq('assignment_id', assignment.id)
+        .eq('student_id', studentId)
+        .is('submitted_at', null)
+        .maybeSingle();
 
-    if (!error && data) {
-      setDraftSubmissionId(data.id);
-      console.log('Draft created:', data.id);
+      if (existingDraft) {
+        console.log('[DRAFT] Using existing draft:', existingDraft.id);
+        setDraftSubmissionId(existingDraft.id);
+        return;
+      }
+
+      // Create new draft only if none exists
+      const { data, error } = await supabase
+        .from('submissions')
+        .insert({
+          assignment_id: assignment.id,
+          student_id: studentId,
+          attempt_no: attemptNumber,
+          content: {},
+          time_spent_seconds: 0,
+          submitted_at: null
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[DRAFT] Failed to create draft:', error);
+        throw error;
+      }
+
+      if (data) {
+        setDraftSubmissionId(data.id);
+        console.log('[DRAFT] ✓ New draft created:', data.id);
+      }
+    } catch (error) {
+      console.error('[DRAFT] Error in createDraftSubmission:', error);
     }
   };
 
@@ -457,176 +482,211 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
     trackQuestionTime(currentQuestionId);
 
     setSubmitting(true);
-    console.log('[SUBMIT] Starting submission process...');
+    console.log('[SUBMIT] ========== Starting submission process ==========');
+    console.log('[SUBMIT] Assignment ID:', assignment.id);
+    console.log('[SUBMIT] Student ID:', studentId);
+    console.log('[SUBMIT] Attempt:', attemptNumber);
+    console.log('[SUBMIT] Draft ID:', draftSubmissionId);
 
     try {
-      // Grade answers
+      // ========== STEP 1: Grade all questions ==========
+      console.log('[SUBMIT] STEP 1: Grading questions...');
       const gradedResults: Record<string, boolean> = {};
       const detailedResults: Record<string, { isCorrect: boolean; score: number; feedback?: string }> = {};
       let score = 0;
       let correctCount = 0;
 
-      // Grade all questions (handle async grading with progress)
       toast.info(`Grading ${questions.length} questions...`);
       
-      for (let i = 0; i < questions.length; i++) {
-        const question = questions[i];
-        console.log(`[SUBMIT] Grading question ${i + 1}/${questions.length}:`, question.id);
-        
-        try {
-          const result = await gradeAnswer(question, answers[question.id]);
-          detailedResults[question.id] = result;
-          gradedResults[question.id] = result.isCorrect;
-          // Use the partial score for open-ended questions
-          score += result.score * question.points;
-          if (result.isCorrect) {
-            correctCount++;
+      try {
+        for (let i = 0; i < questions.length; i++) {
+          const question = questions[i];
+          console.log(`[SUBMIT] Grading question ${i + 1}/${questions.length}:`, question.id);
+          
+          try {
+            const result = await gradeAnswer(question, answers[question.id]);
+            detailedResults[question.id] = result;
+            gradedResults[question.id] = result.isCorrect;
+            score += result.score * question.points;
+            if (result.isCorrect) {
+              correctCount++;
+            }
+            console.log(`[SUBMIT] ✓ Question ${i + 1} graded:`, result);
+          } catch (error) {
+            console.error(`[SUBMIT] ⚠️ Failed to grade question ${i + 1}, marking as incorrect:`, error);
+            detailedResults[question.id] = { isCorrect: false, score: 0 };
+            gradedResults[question.id] = false;
           }
-          console.log(`[SUBMIT] Question ${i + 1} graded:`, result);
-        } catch (error) {
-          console.error(`[SUBMIT] Failed to grade question ${i + 1}, marking as incorrect:`, error);
-          // If grading fails completely, mark as incorrect
-          detailedResults[question.id] = { isCorrect: false, score: 0 };
-          gradedResults[question.id] = false;
         }
+        
+        console.log('[SUBMIT] ✓ STEP 1 COMPLETE: All questions graded. Final score:', score, '/', maxScore);
+      } catch (error) {
+        console.error('[SUBMIT] ❌ STEP 1 FAILED: Grading error:', error);
+        throw new Error(`Grading failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
-      
-      console.log('[SUBMIT] All questions graded. Final score:', score);
 
       setResults(gradedResults);
       setDetailedResults(detailedResults);
       setTotalScore(score);
 
-      // Calculate total time spent
+      // ========== STEP 2: Save or update submission ==========
+      console.log('[SUBMIT] STEP 2: Saving submission...');
       const totalTime = Object.values(questionTimes).reduce((sum, time) => sum + time, 0);
-
       let submissionData;
       
-      if (draftSubmissionId) {
-        // Update existing draft submission to finalize it
-        const { data, error: submissionError } = await supabase
-          .from('submissions')
-          .update({
-            submitted_at: new Date().toISOString(),
-            time_spent_seconds: totalTime,
-            content: { answers, results: gradedResults, score, maxScore }
-          })
-          .eq('id', draftSubmissionId)
-          .select()
-          .single();
+      try {
+        if (draftSubmissionId) {
+          console.log('[SUBMIT] Updating existing draft submission:', draftSubmissionId);
+          const { data, error: submissionError } = await supabase
+            .from('submissions')
+            .update({
+              submitted_at: new Date().toISOString(),
+              time_spent_seconds: totalTime,
+              content: { answers, results: gradedResults, score, maxScore }
+            })
+            .eq('id', draftSubmissionId)
+            .select()
+            .single();
 
-        if (submissionError) throw submissionError;
-        submissionData = data;
-      } else {
-        // Create new submission
-        const { data, error: submissionError } = await supabase
-          .from('submissions')
+          if (submissionError) {
+            console.error('[SUBMIT] ❌ Failed to update submission:', submissionError);
+            throw submissionError;
+          }
+          submissionData = data;
+          console.log('[SUBMIT] ✓ Submission updated:', data.id);
+        } else {
+          console.log('[SUBMIT] Creating new submission...');
+          const { data, error: submissionError } = await supabase
+            .from('submissions')
+            .insert({
+              assignment_id: assignment.id,
+              student_id: studentId,
+              attempt_no: attemptNumber,
+              time_spent_seconds: totalTime,
+              content: { answers, results: gradedResults, score, maxScore }
+            })
+            .select()
+            .single();
+
+          if (submissionError) {
+            console.error('[SUBMIT] ❌ Failed to create submission:', submissionError);
+            throw submissionError;
+          }
+          submissionData = data;
+          console.log('[SUBMIT] ✓ Submission created:', data.id);
+        }
+        console.log('[SUBMIT] ✓ STEP 2 COMPLETE: Submission saved');
+      } catch (error) {
+        console.error('[SUBMIT] ❌ STEP 2 FAILED: Submission save error:', error);
+        throw new Error(`Failed to save submission: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+
+      // ========== STEP 3: Save question responses ==========
+      console.log('[SUBMIT] STEP 3: Saving question responses...');
+      try {
+        for (const question of questions) {
+          const { data: existing } = await supabase
+            .from('question_responses')
+            .select('id')
+            .eq('submission_id', submissionData.id)
+            .eq('question_id', question.id)
+            .eq('attempt_number', attemptNumber)
+            .maybeSingle();
+
+          if (existing) {
+            const { error: updateError } = await supabase
+              .from('question_responses')
+              .update({
+                is_correct: gradedResults[question.id],
+                time_spent_seconds: questionTimes[question.id] || 0
+              })
+              .eq('id', existing.id);
+            
+            if (updateError) {
+              console.error('[SUBMIT] ⚠️ Error updating question response:', updateError);
+              throw updateError;
+            }
+          } else {
+            const { error: insertError } = await supabase
+              .from('question_responses')
+              .insert({
+                submission_id: submissionData.id,
+                question_id: question.id,
+                answer: { value: answers[question.id] },
+                is_correct: gradedResults[question.id],
+                time_spent_seconds: questionTimes[question.id] || 0,
+                attempt_number: attemptNumber
+              });
+            
+            if (insertError) {
+              console.error('[SUBMIT] ⚠️ Error inserting question response:', insertError);
+              throw insertError;
+            }
+          }
+        }
+        console.log('[SUBMIT] ✓ STEP 3 COMPLETE: All question responses saved');
+      } catch (error) {
+        console.error('[SUBMIT] ❌ STEP 3 FAILED: Question responses error:', error);
+        throw new Error(`Failed to save question responses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+
+      // ========== STEP 4: Create grade record ==========
+      console.log('[SUBMIT] STEP 4: Creating grade record...');
+      try {
+        const { error: gradeError } = await supabase
+          .from('grades')
           .insert({
             assignment_id: assignment.id,
             student_id: studentId,
-            attempt_no: attemptNumber,
-            time_spent_seconds: totalTime,
-            content: { answers, results: gradedResults, score, maxScore }
-          })
-          .select()
-          .single();
+            score,
+            max_score: maxScore,
+            grader: 'ai',
+            rubric_scores: gradedResults
+          });
 
-        if (submissionError) throw submissionError;
-        submissionData = data;
-      }
-
-      // Update or create question responses
-      console.log('[SUBMIT] Updating question responses...');
-      for (const question of questions) {
-        // Check if response already exists (from auto-save)
-        const { data: existing } = await supabase
-          .from('question_responses')
-          .select('id')
-          .eq('submission_id', submissionData.id)
-          .eq('question_id', question.id)
-          .eq('attempt_number', attemptNumber)
-          .maybeSingle();
-
-        const responseData = {
-          submission_id: submissionData.id,
-          question_id: question.id,
-          answer: { value: answers[question.id] },
-          is_correct: gradedResults[question.id],
-          time_spent_seconds: questionTimes[question.id] || 0,
-          attempt_number: attemptNumber
-        };
-
-        if (existing) {
-          // Update existing response with grading results
-          const { error: updateError } = await supabase
-            .from('question_responses')
-            .update({
-              is_correct: gradedResults[question.id],
-              time_spent_seconds: questionTimes[question.id] || 0
-            })
-            .eq('id', existing.id);
-          
-          if (updateError) {
-            console.error('[SUBMIT] Error updating question response:', updateError);
-            throw updateError;
-          }
-        } else {
-          // Insert new response
-          const { error: insertError } = await supabase
-            .from('question_responses')
-            .insert(responseData);
-          
-          if (insertError) {
-            console.error('[SUBMIT] Error inserting question response:', insertError);
-            throw insertError;
-          }
+        if (gradeError) {
+          console.error('[SUBMIT] ❌ Grade insertion error:', gradeError);
+          throw gradeError;
         }
+        console.log('[SUBMIT] ✓ STEP 4 COMPLETE: Grade created');
+      } catch (error) {
+        console.error('[SUBMIT] ❌ STEP 4 FAILED: Grade creation error:', error);
+        throw new Error(`Failed to create grade: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
-      console.log('[SUBMIT] ✓ All question responses updated');
 
-      // Create grade
-      console.log('[SUBMIT] Creating grade record...');
-      const { error: gradeError } = await supabase
-        .from('grades')
-        .insert({
-          assignment_id: assignment.id,
-          student_id: studentId,
-          score,
-          max_score: maxScore,
-          grader: 'ai',
-          rubric_scores: gradedResults
-        });
-
-      if (gradeError) {
-        console.error('[SUBMIT] Grade insertion error:', gradeError);
-        throw gradeError;
-      }
-      console.log('[SUBMIT] ✓ Grade created');
-
-      // Award XP for correct answers (only if assignment has questions)
-      console.log('[SUBMIT] Awarding XP...');
+      // ========== STEP 5: Award XP (non-critical) ==========
+      console.log('[SUBMIT] STEP 5: Awarding XP...');
       if (xpConfig && correctCount > 0 && questions.length > 0) {
-        const xpPerQuestion = xpConfig.question_correct_xp;
-        const totalXP = correctCount * xpPerQuestion;
-        
-        const { error: xpError } = await supabase.from('xp_events').insert({
-          student_id: studentId,
-          amount: totalXP,
-          event_type: 'question_correct',
-          description: `Answered ${correctCount} questions correctly`,
-          reference_id: assignment.id,
-        });
+        try {
+          const xpPerQuestion = xpConfig.question_correct_xp;
+          const totalXP = correctCount * xpPerQuestion;
+          
+          const { error: xpError } = await supabase.from('xp_events').insert({
+            student_id: studentId,
+            amount: totalXP,
+            event_type: 'question_correct',
+            description: `Answered ${correctCount} questions correctly`,
+            reference_id: assignment.id,
+          });
 
-        if (xpError) {
-          console.error('[SUBMIT] XP award error:', xpError);
-          // Don't throw - XP is not critical to submission
-        } else {
-          console.log('[SUBMIT] ✓ XP awarded:', totalXP);
+          if (xpError) {
+            console.error('[SUBMIT] ⚠️ XP award failed (non-critical):', xpError);
+          } else {
+            console.log('[SUBMIT] ✓ STEP 5 COMPLETE: XP awarded:', totalXP);
+          }
+        } catch (error) {
+          console.error('[SUBMIT] ⚠️ XP award exception (non-critical):', error);
         }
+      } else {
+        console.log('[SUBMIT] STEP 5 SKIPPED: No XP to award');
       }
 
-      console.log('[SUBMIT] ✓ Submission complete!');
+      console.log('[SUBMIT] ========== ✓ SUBMISSION SUCCESSFUL ==========');
       setSubmitted(true);
+      
+      // Clear localStorage backup
+      const backupKey = `assignment_backup_${assignment.id}_${studentId}`;
+      localStorage.removeItem(backupKey);
       
       if (score === maxScore) {
         toast.success('Perfect score! 🎉 Assignment completed!');
@@ -634,16 +694,27 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
         toast.success(`Score: ${score}/${maxScore}. Review incorrect answers and try again!`);
       }
     } catch (error) {
-      console.error('[SUBMIT] Error submitting assignment:', error);
+      console.error('[SUBMIT] ========== ❌ SUBMISSION FAILED ==========');
+      console.error('[SUBMIT] Error details:', error);
+      
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit assignment';
       const errorDetails = error instanceof Error && 'details' in error ? (error as any).details : '';
-      const fullError = errorDetails ? `${errorMessage} - ${errorDetails}` : errorMessage;
-      console.error('[SUBMIT] Full error details:', fullError);
-      toast.error(`Submission failed: ${fullError}. Please try again.`, {
+      const errorCode = error instanceof Error && 'code' in error ? (error as any).code : '';
+      
+      let userMessage = errorMessage;
+      if (errorDetails) {
+        userMessage += ` (${errorDetails})`;
+      }
+      if (errorCode) {
+        userMessage += ` [Code: ${errorCode}]`;
+      }
+      
+      console.error('[SUBMIT] User-facing error:', userMessage);
+      toast.error(`Submission failed: ${userMessage}`, {
         duration: 10000,
       });
     } finally {
-      console.log('[SUBMIT] Submission process completed, resetting state');
+      console.log('[SUBMIT] Resetting submission state');
       setSubmitting(false);
     }
   };

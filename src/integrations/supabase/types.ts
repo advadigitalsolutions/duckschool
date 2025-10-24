@@ -2711,6 +2711,7 @@ export type Database = {
           assignment_id: string | null
           attempt_no: number | null
           content: Json | null
+          created_at: string | null
           files: Json | null
           id: string
           student_id: string | null
@@ -2721,6 +2722,7 @@ export type Database = {
           assignment_id?: string | null
           attempt_no?: number | null
           content?: Json | null
+          created_at?: string | null
           files?: Json | null
           id?: string
           student_id?: string | null
@@ -2731,6 +2733,7 @@ export type Database = {
           assignment_id?: string | null
           attempt_no?: number | null
           content?: Json | null
+          created_at?: string | null
           files?: Json | null
           id?: string
           student_id?: string | null
