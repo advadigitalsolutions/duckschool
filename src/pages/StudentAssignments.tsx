@@ -157,17 +157,32 @@ export default function StudentAssignments() {
               subject
             )
           ),
-          submissions (
+          submissions!inner (
             id,
-            submitted_at
+            submitted_at,
+            student_id
           ),
           grades (
             score,
-            max_score
+            max_score,
+            student_id
           )
         `)
         .in('curriculum_item_id', curriculumIds)
         .order('created_at', { ascending: false });
+
+      // Filter submissions and grades by student_id on the client side
+      // since Supabase doesn't support filtering nested relations
+      if (assignmentsData) {
+        assignmentsData.forEach(assignment => {
+          assignment.submissions = assignment.submissions?.filter(
+            (s: any) => s.student_id === studentData.id
+          ) || [];
+          assignment.grades = assignment.grades?.filter(
+            (g: any) => g.student_id === studentData.id
+          ) || [];
+        });
+      }
 
       if (assignmentsError) {
         console.error('[StudentAssignments] Assignments fetch error:', assignmentsError);
