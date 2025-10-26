@@ -8,7 +8,10 @@ interface BionicTextProps {
 export function BionicText({ children, className = '' }: BionicTextProps) {
   const { enabled } = useBionicReading();
 
-  if (!enabled || !children) {
+  // Convert children to string and handle non-string values
+  const textContent = typeof children === 'string' ? children : String(children || '');
+  
+  if (!enabled || !textContent || textContent === 'undefined' || textContent === 'null') {
     return <span className={className}>{children}</span>;
   }
 
@@ -40,5 +43,5 @@ export function BionicText({ children, className = '' }: BionicTextProps) {
     });
   };
 
-  return <span className={className}>{applyBionicReading(children)}</span>;
+  return <span className={className}>{applyBionicReading(textContent)}</span>;
 }
