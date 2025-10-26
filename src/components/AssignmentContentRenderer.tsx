@@ -14,12 +14,20 @@ export const AssignmentContentRenderer: React.FC<AssignmentContentRendererProps>
   className = '',
   enableReadAloud = true
 }) => {
+  // Type guard at component level: ensure content is a string
+  const safeContent = typeof content === 'string' ? content : String(content || '');
+  
+  if (!safeContent || safeContent === 'undefined' || safeContent === 'null') {
+    return <div className={`prose prose-sm max-w-none ${className}`}>No content available</div>;
+  }
   // Convert markdown to structured HTML
   const renderMarkdown = (text: string) => {
-    if (!text) return '';
+    // Type guard: ensure text is actually a string
+    const safeText = typeof text === 'string' ? text : String(text || '');
+    if (!safeText || safeText === 'undefined' || safeText === 'null') return '';
     
     // Split into paragraphs
-    const paragraphs = text.split('\n\n');
+    const paragraphs = safeText.split('\n\n');
     
     return paragraphs.map((para, idx) => {
       // Handle headings
@@ -90,26 +98,30 @@ export const AssignmentContentRenderer: React.FC<AssignmentContentRendererProps>
   
   // Handle inline markdown (bold, italic, code)
   const formatInlineMarkdown = (text: string): string => {
+    // Type guard: ensure text is actually a string
+    const safeText = typeof text === 'string' ? text : String(text || '');
+    if (!safeText) return '';
+    
     // Remove markdown formatting for BionicText
     // Bold **text**
-    text = text.replace(/\*\*(.+?)\*\*/g, '$1');
+    let cleanedText = safeText.replace(/\*\*(.+?)\*\*/g, '$1');
     // Italic *text*
-    text = text.replace(/\*(.+?)\*/g, '$1');
+    cleanedText = cleanedText.replace(/\*(.+?)\*/g, '$1');
     // Code `text`
-    text = text.replace(/`(.+?)`/g, '$1');
+    cleanedText = cleanedText.replace(/`(.+?)`/g, '$1');
     
-    return text;
+    return cleanedText;
   };
   
   const renderedContent = (
     <div className={`prose prose-sm max-w-none ${className}`}>
-      {renderMarkdown(content)}
+      {renderMarkdown(safeContent)}
     </div>
   );
 
   if (enableReadAloud) {
     return (
-      <TextToSpeech text={cleanMarkdown(content)}>
+      <TextToSpeech text={cleanMarkdown(safeContent)}>
         {renderedContent}
       </TextToSpeech>
     );
