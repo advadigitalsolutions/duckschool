@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, TrendingUp, AlertCircle, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface DiagnosticResults {
   totalQuestions: number;
@@ -28,15 +31,53 @@ export function DiagnosticResultsDashboard({
   studentId 
 }: DiagnosticResultsDashboardProps) {
   const navigate = useNavigate();
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleGenerateCourse = () => {
-    navigate(`/student/dashboard`, { 
-      state: { 
-        diagnosticComplete: true,
-        assessmentId,
-        subject 
+  const handleGenerateCourse = async () => {
+    setIsGenerating(true);
+    
+    try {
+      // Verify student exists
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('id, name, user_id')
+        .eq('id', studentId)
+        .maybeSingle();
+      
+      if (studentError) {
+        console.error('Error fetching student:', studentError);
+        throw new Error('Failed to verify student account');
       }
-    });
+      
+      if (!student) {
+        toast({
+          title: "Account Setup Required",
+          description: "Please complete your profile setup before creating courses. Ask your parent to create your student profile.",
+          variant: "destructive"
+        });
+        navigate('/');
+        return;
+      }
+
+      // Navigate to student dashboard with completion state
+      navigate(`/student/dashboard`, { 
+        state: { 
+          diagnosticComplete: true,
+          assessmentId,
+          subject,
+          studentId 
+        }
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to proceed. Please try again.',
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -197,8 +238,8 @@ export function DiagnosticResultsDashboard({
             </li>
           </ul>
 
-          <Button onClick={handleGenerateCourse} className="w-full" size="lg">
-            Create my custom assignment based on where I'm at now
+          <Button onClick={handleGenerateCourse} className="w-full" size="lg" disabled={isGenerating}>
+            {isGenerating ? 'Verifying account...' : 'Create my custom assignment based on where I\'m at now'}
           </Button>
         </CardContent>
       </Card>

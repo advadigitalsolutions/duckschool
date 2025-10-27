@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Target, TrendingUp, Award, Plus, Trash2, ListChecks, CheckCircle2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { CustomizableHeader } from '@/components/CustomizableHeader';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
@@ -30,6 +30,7 @@ export default function StudentDashboard() {
   const [todaysChores, setTodaysChores] = useState<any[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Enable automatic XP rewards
   useAutoXPRewards({
@@ -108,6 +109,20 @@ export default function StudentDashboard() {
   useEffect(() => {
     checkRoleAndFetch();
   }, []);
+
+  // Handle diagnostic completion
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.diagnosticComplete && studentDbId) {
+      // Clear the state to prevent re-triggering
+      window.history.replaceState({}, document.title);
+      
+      toast.success('Diagnostic complete! You can now view your results in your profile.', {
+        description: 'Create a course from the Parent Dashboard to start learning.',
+        duration: 5000
+      });
+    }
+  }, [location.state, studentDbId]);
   const checkRoleAndFetch = async () => {
     try {
       const {
