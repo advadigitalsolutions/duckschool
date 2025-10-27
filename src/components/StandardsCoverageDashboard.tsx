@@ -41,31 +41,61 @@ export function StandardsCoverageDashboard({
   const loadStandardsCoverage = async () => {
     setLoading(true);
     try {
-      // Get all relevant standards for this course
-      let query = supabase
-        .from('standards')
-        .select('code, text, grade_band, metadata')
-        .eq('framework', framework);
+      // Normalize framework names - handle both "CA-CCSS" and "CA CCSS" formats
+      const frameworkVariations = [
+        framework,
+        framework?.replace(/-/g, ' '), // "CA-CCSS" -> "CA CCSS"
+        framework?.replace(/ /g, '-'), // "CA CCSS" -> "CA-CCSS"
+      ].filter(Boolean);
 
-      if (subject) {
-        query = query.eq('subject', subject);
-      }
+      // Normalize subject names
+      const subjectVariations = subject ? [
+        subject,
+        subject.replace(/\//g, ' '), // "English/Language Arts" -> "English Language Arts"
+        subject.replace(/ /g, '/'),   // "English Language Arts" -> "English/Language Arts"
+      ] : [];
 
-      if (gradeLevel) {
-        const gradeNum = parseInt(gradeLevel.replace(/\D/g, ''));
-        if (!isNaN(gradeNum)) {
-          // Match exact grade or grade ranges that include this grade
-          query = query.or(`grade_band.eq.${gradeNum},grade_band.eq.K-${gradeNum},grade_band.like.%-${gradeNum},grade_band.like.K-12`);
+      console.log('🔍 StandardsCoverageDashboard query:', { framework, frameworkVariations, subject, subjectVariations, gradeLevel });
+      
+      let standardsData: any[] = [];
+      
+      // Try all framework and subject combinations
+      for (const frameworkVariant of frameworkVariations) {
+        for (const subjectVariant of (subjectVariations.length > 0 ? subjectVariations : [null])) {
+          let query = supabase
+            .from('standards')
+            .select('code, text, grade_band, metadata')
+            .eq('framework', frameworkVariant);
+
+          if (subjectVariant) {
+            query = query.eq('subject', subjectVariant);
+          }
+
+          if (gradeLevel) {
+            const gradeNum = parseInt(gradeLevel.replace(/\D/g, ''));
+            if (!isNaN(gradeNum)) {
+              // Match exact grade or grade ranges that include this grade
+              query = query.or(`grade_band.eq.${gradeNum},grade_band.eq.K-${gradeNum},grade_band.like.%-${gradeNum},grade_band.like.K-12`);
+            }
+          }
+
+          const { data, error } = await query;
+          if (error) {
+            console.error('StandardsCoverageDashboard error:', error);
+          }
+          
+          if (data && data.length > 0) {
+            standardsData = data;
+            console.log('📊 StandardsCoverageDashboard found:', data.length, 'standards with', { frameworkVariant, subjectVariant });
+            break;
+          }
         }
+        if (standardsData.length > 0) break;
       }
 
-      console.log('🔍 StandardsCoverageDashboard query:', { framework, subject, gradeLevel });
-      const { data: standardsData, error: standardsError } = await query;
-      if (standardsError) {
-        console.error('StandardsCoverageDashboard error:', standardsError);
-        throw standardsError;
+      if (standardsData.length === 0) {
+        console.log('⚠️ No standards found for any combination');
       }
-      console.log('📊 StandardsCoverageDashboard found:', standardsData?.length, 'standards');
 
       // Get curriculum items with their standards, estimated minutes, and check completion
       const { data: curriculumData, error: curriculumError } = await supabase
