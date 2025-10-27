@@ -99,6 +99,9 @@ export function ParentProfileAssessment({ onComplete }: ParentProfileAssessmentP
 
       if (updateError) throw updateError;
 
+      // Refetch profile to get the updated data including psychological_profile
+      await fetchProfile();
+
       toast.dismiss();
       toast.success('Profile complete! You can now see how to work best with your students.');
       setCompleted(true);
