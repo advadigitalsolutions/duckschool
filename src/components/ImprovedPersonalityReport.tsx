@@ -57,25 +57,6 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* DEBUG INFO - TEMPORARY */}
-      <Card className="bg-yellow-500/10 border-yellow-500">
-        <CardHeader>
-          <CardTitle className="text-sm">Debug Info (Remove this after fixing)</CardTitle>
-        </CardHeader>
-        <CardContent className="text-xs space-y-2">
-          <div>Has profile: {profile ? 'Yes' : 'No'}</div>
-          <div>Has core_dimensions: {profile?.core_dimensions ? 'Yes' : 'No'}</div>
-          <div>Type of core_dimensions: {typeof profile?.core_dimensions}</div>
-          <div>Scores: E={extraversionScore}, I={intuitionScore}, F={feelingScore}, P={perceivingScore}</div>
-          {profile?.core_dimensions && (
-            <div className="mt-2">
-              <div className="font-semibold">Raw data sample:</div>
-              <div className="truncate">{JSON.stringify(profile.core_dimensions).substring(0, 200)}</div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
       {/* Header */}
       <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-background">
         <CardHeader>
