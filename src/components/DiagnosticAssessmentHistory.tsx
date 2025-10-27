@@ -1,15 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Target, Calendar, TrendingUp, TrendingDown, Minus, Loader2, Eye, BookOpen, Pencil, Lightbulb, ArrowRight, CheckCircle } from "lucide-react";
+import { Target, Calendar, TrendingUp, Minus, Loader2, Lightbulb, ArrowRight, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
-import { CourseSettingsDialog } from "./CourseSettingsDialog";
-import { toast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface DiagnosticAssessmentHistoryProps {
@@ -17,8 +14,7 @@ interface DiagnosticAssessmentHistoryProps {
 }
 
 export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentHistoryProps) {
-  const navigate = useNavigate();
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   
   const { data: assessments, isLoading } = useQuery({
     queryKey: ['diagnostic-assessments-history', studentId],
@@ -34,60 +30,6 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
       return data;
     }
   });
-
-  const { data: studentCourses } = useQuery({
-    queryKey: ['student-courses', studentId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('student_id', studentId)
-        .is('archived_at', null);
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const handleApplyToCourse = (assessment: any) => {
-    const matchingCourse = studentCourses?.find(course => 
-      course.subject?.toLowerCase().includes(assessment.subject.toLowerCase())
-    );
-    
-    if (matchingCourse) {
-      setSelectedCourse(matchingCourse.id);
-      toast({
-        title: "Course Found",
-        description: `Opening settings for ${matchingCourse.title}`,
-      });
-    } else {
-      toast({
-        title: "No Matching Course",
-        description: `No active course found for ${assessment.subject}. Would you like to create one?`,
-        variant: "default"
-      });
-    }
-  };
-
-  const handleGeneratePractice = async (assessment: any) => {
-    const matchingCourse = studentCourses?.find(course => 
-      course.subject?.toLowerCase().includes(assessment.subject.toLowerCase())
-    );
-    
-    if (matchingCourse) {
-      toast({
-        title: "Navigating to Course",
-        description: `Opening ${matchingCourse.title} for practice`,
-      });
-      navigate(`/course/${matchingCourse.id}`);
-    } else {
-      toast({
-        title: "No Matching Course",
-        description: `Create a ${assessment.subject} course first to generate practice assignments.`,
-        variant: "default"
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -194,35 +136,7 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(`/diagnostic/${latestAssessment.id}`)}
-                  >
-                    <Eye className="h-3 w-3 mr-1" />
-                    View Details
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleApplyToCourse(latestAssessment)}
-                  >
-                    <BookOpen className="h-3 w-3 mr-1" />
-                    Apply to Course
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleGeneratePractice(latestAssessment)}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    Practice
-                  </Button>
-                </div>
-
-                {/* Enhanced Results Display */}
+                {/* View Detailed Breakdown - shows everything inline */}
                 <Collapsible>
                   <CollapsibleTrigger asChild>
                     <Button variant="ghost" size="sm" className="w-full justify-between">
@@ -382,14 +296,6 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                               <span>
                                 {prevResults?.correctAnswers || 0}/{prevResults?.totalQuestions || 0} ({prevResults?.accuracyRate != null ? Math.round(prevResults.accuracyRate * 100) : 0}%)
                               </span>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => navigate(`/diagnostic/${assessment.id}`)}
-                              >
-                                <Eye className="h-3 w-3 mr-1" />
-                                View
-                              </Button>
                             </div>
                           </div>
                         );
@@ -402,15 +308,6 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
           })}
         </CardContent>
       </Card>
-      
-      {selectedCourse && (
-        <CourseSettingsDialog
-          courseId={selectedCourse}
-          open={!!selectedCourse}
-          onOpenChange={(open) => !open && setSelectedCourse(null)}
-          onUpdate={() => {}}
-        />
-      )}
     </>
   );
 }
