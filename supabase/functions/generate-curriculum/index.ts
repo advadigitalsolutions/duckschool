@@ -176,26 +176,34 @@ serve(async (req) => {
     if (isBridgeMode) {
       // For bridge mode courses, extract standards from existing curriculum items
       console.log('🌉 Bridge mode detected - using standards from curriculum items');
+      console.log('📋 Curriculum items count:', course.curriculum_items?.length || 0);
+      
       const standardCodesInCurriculum = new Set(
         course.curriculum_items?.flatMap((item: any) => 
           Array.isArray(item.standards) ? item.standards : []
         ) || []
       );
       
+      console.log('📝 Standard codes extracted:', Array.from(standardCodesInCurriculum));
+      console.log('🔍 Query params:', { framework, subject: course.subject, codes: Array.from(standardCodesInCurriculum) });
+      
       // Query the full standard details from the standards table
       if (standardCodesInCurriculum.size > 0) {
-        const { data } = await supabaseClient
+        const { data, error: stdError } = await supabaseClient
           .from('standards')
           .select('*')
           .eq('framework', framework)
           .eq('subject', course.subject)
           .in('code', Array.from(standardCodesInCurriculum));
         
+        if (stdError) console.error('❌ Standards query error:', stdError);
         allStandards = data || [];
         console.log('📚 Bridge mode standards found:', allStandards?.length || 0);
-      } else {
-        // Fallback: query by prerequisite bands if no curriculum items yet
-        console.log('🔍 No curriculum items yet - querying by prerequisite bands:', prerequisiteBands);
+      }
+      
+      // If no standards found from curriculum items, use all standards in prerequisite bands
+      if (!allStandards || allStandards.length === 0) {
+        console.log('🔍 Falling back to prerequisite bands:', prerequisiteBands);
         if (prerequisiteBands.length > 0) {
           const { data } = await supabaseClient
             .from('standards')
