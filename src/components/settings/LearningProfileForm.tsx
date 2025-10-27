@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ImprovedProfileAssessment } from '@/components/ImprovedProfileAssessment';
+import { ParentProfileAssessment } from '@/components/ParentProfileAssessment';
 
 export function LearningProfileForm() {
   const [student, setStudent] = useState<any>(null);
@@ -35,12 +36,7 @@ export function LearningProfileForm() {
   if (isParent) {
     return (
       <div className="space-y-6">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <h3 className="text-lg font-semibold mb-2">Learning Profile</h3>
-          <p className="text-muted-foreground">
-            Learning profiles are designed for students. As a parent/educator, you can view and manage your students' learning profiles from their individual profile pages.
-          </p>
-        </div>
+        <ParentProfileAssessment />
       </div>
     );
   }
