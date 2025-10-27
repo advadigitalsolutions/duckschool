@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { Sparkles, Brain, Heart, Users } from 'lucide-react';
 import { psychologicalAssessmentQuestions, assessmentMetadata } from '@/utils/psychologicalAssessmentQuestions';
 import { ImprovedPersonalityReport } from './ImprovedPersonalityReport';
+import { RelationshipAnalysisDialog } from './RelationshipAnalysisDialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface ParentProfileAssessmentProps {
   onComplete?: () => void;
@@ -22,10 +24,28 @@ export function ParentProfileAssessment({ onComplete }: ParentProfileAssessmentP
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [completed, setCompleted] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [students, setStudents] = useState<any[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [showRelationshipDialog, setShowRelationshipDialog] = useState(false);
 
   useEffect(() => {
     fetchProfile();
+    fetchStudents();
   }, []);
+
+  const fetchStudents = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Fetch all students for this parent who have completed their assessments
+    const { data } = await supabase
+      .from('students')
+      .select('*')
+      .eq('parent_id', user.id)
+      .not('psychological_profile', 'is', null);
+
+    setStudents(data || []);
+  };
 
   // Auto-save draft answers whenever they change
   useEffect(() => {
@@ -179,6 +199,65 @@ export function ParentProfileAssessment({ onComplete }: ParentProfileAssessmentP
             toast.info('Starting fresh assessment');
           }}
         />
+
+        {/* Student Relationship Analysis Section */}
+        {students.length > 0 && (
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5 text-primary" />
+                Analyze Your Relationships
+              </CardTitle>
+              <CardDescription>
+                See how you work best with each student who has completed their profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {students.map((student) => (
+                <Card key={student.id} className="border-muted">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={student.avatar_url} />
+                          <AvatarFallback>
+                            {student.display_name?.charAt(0).toUpperCase() || 'S'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{student.display_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {student.personality_type || 'Profile completed'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setSelectedStudent(student);
+                          setShowRelationshipDialog(true);
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <Users className="h-4 w-4" />
+                        View Analysis
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {selectedStudent && (
+          <RelationshipAnalysisDialog
+            open={showRelationshipDialog}
+            onOpenChange={setShowRelationshipDialog}
+            student={selectedStudent}
+          />
+        )}
       </div>
     );
   }
