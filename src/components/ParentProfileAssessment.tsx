@@ -89,7 +89,7 @@ export function ParentProfileAssessment({ onComplete }: ParentProfileAssessmentP
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          psychological_profile: analysisData.profile,
+          psychological_profile: analysisData.psychological_profile,
           learning_preferences: analysisData.learning_preferences,
           cognitive_traits: analysisData.cognitive_traits,
           profile_assessment_completed: true,
@@ -99,12 +99,24 @@ export function ParentProfileAssessment({ onComplete }: ParentProfileAssessmentP
 
       if (updateError) throw updateError;
 
-      // Refetch profile to get the updated data including psychological_profile
-      await fetchProfile();
-
       toast.dismiss();
       toast.success('Profile complete! You can now see how to work best with your students.');
-      setCompleted(true);
+      
+      // Refetch profile to get the updated data including psychological_profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: updatedProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (updatedProfile) {
+          setProfile(updatedProfile);
+          setCompleted(true);
+        }
+      }
+      
       if (onComplete) onComplete();
     } catch (error) {
       console.error('Error submitting assessment:', error);
