@@ -33,10 +33,30 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
   const [targetDate, setTargetDate] = useState<Date | undefined>();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [generationOpen, setGenerationOpen] = useState(false);
+  const [userRole, setUserRole] = useState<'parent' | 'student' | undefined>();
   const { loading, metrics, timeBySubject, standardsCoverage, refreshMetrics } = useCoursePacing(
     courseId,
     targetDate
   );
+
+  // Fetch user role
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data?.role === 'parent' || data?.role === 'student') {
+        setUserRole(data.role);
+      }
+    };
+    fetchUserRole();
+  }, []);
 
   // Load persisted target date from pacing_config.target_completion_date
   useEffect(() => {
@@ -480,6 +500,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
         courseId={courseId}
         currentGradeLevel={gradeLevel}
         currentSubject={courseSubject}
+        userRole={userRole}
         onUpdate={refreshMetrics}
         onDelete={() => navigate('/student/dashboard')}
       />

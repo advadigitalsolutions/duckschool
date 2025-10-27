@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,7 @@ interface CourseSettingsDialogProps {
   courseId: string;
   currentGradeLevel?: string;
   currentSubject?: string;
+  userRole?: 'parent' | 'student';
   onUpdate: () => void;
   onDelete?: () => void;
 }
@@ -50,6 +51,7 @@ export function CourseSettingsDialog({
   courseId,
   currentGradeLevel,
   currentSubject,
+  userRole,
   onUpdate,
   onDelete
 }: CourseSettingsDialogProps) {
@@ -557,14 +559,32 @@ export function CourseSettingsDialog({
 
         <div className="flex justify-between items-center gap-2">
           <div>
-            {courseData && (
+            {courseData && userRole === 'student' && (
+              <AlertDialog>
+                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" asChild>
+                  <AlertDialogTrigger>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Course
+                  </AlertDialogTrigger>
+                </Button>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Educator Permission Required</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Only educators can delete courses. Please ask your educator to delete this course for you.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogAction>OK</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            {courseData && userRole !== 'student' && (
               <DeleteCourseDialog
                 course={courseData}
                 onCourseDeleted={() => {
-                  // Close the settings dialog first
                   onOpenChange(false);
-                  
-                  // Wait for settings dialog animation to complete before navigating
                   setTimeout(() => {
                     onDelete?.();
                   }, 300);
