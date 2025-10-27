@@ -252,23 +252,27 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
         throw new Error(courseError.message || 'Failed to delete course');
       }
 
-      // Show success toast with undo button
-      const toastId = toast.success(
-        `${course.title} deleted successfully`,
-        {
-          duration: 30000, // 30 seconds
-          action: {
-            label: <div className="flex items-center gap-1"><Undo2 className="h-3 w-3" /> Undo</div>,
-            onClick: async () => {
-              await restoreCourse(backup);
-              toast.dismiss(toastId);
-            },
-          },
-        }
-      );
-
+      // Close the dialog immediately to prevent UI getting stuck
       setOpen(false);
-      onCourseDeleted();
+
+      // Wait for dialog animation to complete before showing toast and navigating
+      setTimeout(() => {
+        const toastId = toast.success(
+          `${course.title} deleted successfully`,
+          {
+            duration: 30000, // 30 seconds
+            action: {
+              label: <div className="flex items-center gap-1"><Undo2 className="h-3 w-3" /> Undo</div>,
+              onClick: async () => {
+                await restoreCourse(backup);
+                toast.dismiss(toastId);
+              },
+            },
+          }
+        );
+
+        onCourseDeleted();
+      }, 300);
     } catch (error: any) {
       console.error('Delete course error:', error);
       const errorMessage = error.message || error.details || 'Failed to delete course';
