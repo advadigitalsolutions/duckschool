@@ -12,9 +12,20 @@ interface DiagnosticResults {
   correctAnswers: number;
   accuracyRate: number;
   averageMastery: number;
-  mastered: Array<{ topic: string; mastery: number }>;
-  inProgress: Array<{ topic: string; mastery: number }>;
-  needsWork: Array<{ topic: string; mastery: number }>;
+  masteredTopics?: string[];
+  strugglingTopics?: string[];
+  knowledgeBoundaries?: string[];
+  masteryByTopic?: Record<string, {
+    mastery: number;
+    attempts: number;
+    successes: number;
+    prerequisite?: string;
+  }>;
+  topicBreakdown?: {
+    strengths: Array<{ topic: string; mastery: number }>;
+    growing: Array<{ topic: string; mastery: number }>;
+    needsWork: Array<{ topic: string; mastery: number }>;
+  };
 }
 
 interface DiagnosticResultsDashboardProps {
@@ -131,20 +142,24 @@ export function DiagnosticResultsDashboard({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {!results.mastered || results.mastered.length === 0 ? (
+            {!results.masteredTopics || results.masteredTopics.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">
                 No topics fully mastered yet - but that's okay! We'll work on building these skills.
               </p>
             ) : (
-              results.mastered.map(({ topic, mastery }) => (
-                <div key={topic} className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium">{topic}</span>
-                    <span className="text-muted-foreground">{Math.round(mastery * 100)}%</span>
+              results.masteredTopics.map((topic) => {
+                const topicData = results.masteryByTopic?.[topic];
+                const masteryPercent = (topicData?.mastery || 0) * 100;
+                return (
+                  <div key={topic} className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">{topic}</span>
+                      <span className="text-muted-foreground">{Math.round(masteryPercent)}%</span>
+                    </div>
+                    <Progress value={masteryPercent} className="h-2" />
                   </div>
-                  <Progress value={mastery * 100} variant="success" className="h-2" />
-                </div>
-              ))
+                );
+              })
             )}
           </CardContent>
         </Card>
@@ -161,18 +176,18 @@ export function DiagnosticResultsDashboard({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {!results.inProgress || results.inProgress.length === 0 ? (
+            {!results.topicBreakdown?.growing || results.topicBreakdown.growing.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">
                 No topics in progress
               </p>
             ) : (
-              results.inProgress.map(({ topic, mastery }) => (
+              results.topicBreakdown.growing.map(({ topic, mastery }) => (
                 <div key={topic} className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="font-medium">{topic}</span>
-                    <span className="text-muted-foreground">{Math.round(mastery * 100)}%</span>
+                    <span className="text-muted-foreground">{Math.round(mastery)}%</span>
                   </div>
-                  <Progress value={mastery * 100} className="h-2" />
+                  <Progress value={mastery} className="h-2" />
                 </div>
               ))
             )}
@@ -191,18 +206,18 @@ export function DiagnosticResultsDashboard({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {!results.needsWork || results.needsWork.length === 0 ? (
+            {!results.topicBreakdown?.needsWork || results.topicBreakdown.needsWork.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">
                 Great job! No major gaps identified.
               </p>
             ) : (
-              results.needsWork.map(({ topic, mastery }) => (
+              results.topicBreakdown.needsWork.map(({ topic, mastery }) => (
                 <div key={topic} className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="font-medium">{topic}</span>
-                    <span className="text-muted-foreground">{Math.round(mastery * 100)}%</span>
+                    <span className="text-muted-foreground">{Math.round(mastery)}%</span>
                   </div>
-                  <Progress value={mastery * 100} className="h-2" />
+                  <Progress value={mastery} className="h-2" />
                 </div>
               ))
             )}
