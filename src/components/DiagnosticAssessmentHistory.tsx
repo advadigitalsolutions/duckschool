@@ -239,12 +239,16 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                           Strengths (Mastered)
                         </p>
                         <div className="space-y-2 pl-6">
-                          {results.masteredTopics.map((topic: string) => {
-                            const mastery = results.masteryByTopic?.[topic];
+                          {results.masteredTopics.map((item: any, idx: number) => {
+                            // Handle both string and object formats
+                            const topicName = typeof item === 'string' ? item : item.topic;
+                            const mastery = typeof item === 'string' 
+                              ? results.masteryByTopic?.[item] 
+                              : item;
                             return (
-                              <div key={topic} className="space-y-1">
+                              <div key={`${topicName}-${idx}`} className="space-y-1">
                                 <div className="flex items-center justify-between text-sm">
-                                  <span className="font-medium">{topic}</span>
+                                  <span className="font-medium">{topicName}</span>
                                   <span className="text-green-600 dark:text-green-400">
                                     {Math.round((mastery?.mastery || 0) * 100)}%
                                   </span>
@@ -271,12 +275,16 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                           These are growth frontiers where targeted practice will have maximum impact
                         </p>
                         <div className="space-y-2 pl-6">
-                          {results.knowledgeBoundaries.map((topic: string) => {
-                            const mastery = results.masteryByTopic?.[topic];
+                          {results.knowledgeBoundaries.map((item: any, idx: number) => {
+                            // Handle both string and object formats
+                            const topicName = typeof item === 'string' ? item : item.topic;
+                            const mastery = typeof item === 'string' 
+                              ? results.masteryByTopic?.[item] 
+                              : item;
                             return (
-                              <div key={topic} className="space-y-1">
+                              <div key={`${topicName}-${idx}`} className="space-y-1">
                                 <div className="flex items-center justify-between text-sm">
-                                  <span className="font-medium">{topic}</span>
+                                  <span className="font-medium">{topicName}</span>
                                   <Badge variant="outline" className="text-xs">Edge</Badge>
                                 </div>
                                 <Progress value={(mastery?.mastery || 0) * 100} className="h-1.5" />
@@ -329,12 +337,16 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                           Learning Opportunities
                         </p>
                         <div className="space-y-2 pl-6">
-                          {results.strugglingTopics.map((topic: string) => {
-                            const mastery = results.masteryByTopic?.[topic];
+                          {results.strugglingTopics.map((item: any, idx: number) => {
+                            // Handle both string and object formats
+                            const topicName = typeof item === 'string' ? item : item.topic;
+                            const mastery = typeof item === 'string' 
+                              ? results.masteryByTopic?.[item] 
+                              : item;
                             return (
-                              <div key={topic} className="space-y-1">
+                              <div key={`${topicName}-${idx}`} className="space-y-1">
                                 <div className="flex items-center justify-between text-sm">
-                                  <span className="font-medium">{topic}</span>
+                                  <span className="font-medium">{topicName}</span>
                                   <span className="text-amber-600 dark:text-amber-400">
                                     {Math.round((mastery?.mastery || 0) * 100)}%
                                   </span>
