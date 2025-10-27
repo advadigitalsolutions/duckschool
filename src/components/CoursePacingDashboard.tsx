@@ -180,7 +180,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
             onClick={() => setGenerationOpen(true)}
           >
             <Sparkles className="mr-2 h-4 w-4" />
-            ✨ Create New Assignments
+            Create New Assignments
           </Button>
           <Button variant="outline" onClick={() => setSettingsOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
@@ -481,6 +481,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
         currentGradeLevel={gradeLevel}
         currentSubject={courseSubject}
         onUpdate={refreshMetrics}
+        onDelete={() => navigate('/student/dashboard')}
       />
 
       {/* Curriculum Generation Dialog */}

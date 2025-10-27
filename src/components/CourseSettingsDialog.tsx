@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { useAvailableFrameworks } from '@/hooks/useAvailableFrameworks';
+import { DeleteCourseDialog } from '@/components/DeleteCourseDialog';
+import { Separator } from '@/components/ui/separator';
 
 interface CourseSettingsDialogProps {
   open: boolean;
@@ -17,6 +19,7 @@ interface CourseSettingsDialogProps {
   currentGradeLevel?: string;
   currentSubject?: string;
   onUpdate: () => void;
+  onDelete?: () => void;
 }
 
 const PEDAGOGIES = [
@@ -47,7 +50,8 @@ export function CourseSettingsDialog({
   courseId,
   currentGradeLevel,
   currentSubject,
-  onUpdate
+  onUpdate,
+  onDelete
 }: CourseSettingsDialogProps) {
   const { frameworks, loading: frameworksLoading } = useAvailableFrameworks();
   const [saving, setSaving] = useState(false);
@@ -67,6 +71,7 @@ export function CourseSettingsDialog({
   const [bridgeMode, setBridgeMode] = useState(false);
   const [diagnosticBaseline, setDiagnosticBaseline] = useState('');
   const [prerequisiteBands, setPrerequisiteBands] = useState<string[]>([]);
+  const [courseData, setCourseData] = useState<any>(null);
 
   // Load existing course data when dialog opens
   useEffect(() => {
@@ -87,6 +92,7 @@ export function CourseSettingsDialog({
       if (error) throw error;
 
       if (course) {
+        setCourseData(course);
         setGradeLevel(course.grade_level || currentGradeLevel || '');
         setGoals(course.goals || '');
         
@@ -549,14 +555,33 @@ export function CourseSettingsDialog({
         </div>
         )}
 
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Settings
-          </Button>
+        <div className="flex justify-between items-center gap-2">
+          <div>
+            {courseData && (
+              <DeleteCourseDialog
+                course={courseData}
+                onCourseDeleted={() => {
+                  onOpenChange(false);
+                  onDelete?.();
+                }}
+                trigger={
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Course
+                  </Button>
+                }
+              />
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Settings
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

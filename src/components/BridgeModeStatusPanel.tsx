@@ -149,6 +149,7 @@ export function BridgeModeStatusPanel({ courses, studentId }: BridgeModeStatusPa
           open={!!selectedCourse}
           onOpenChange={(open) => !open && setSelectedCourse(null)}
           onUpdate={() => {}}
+          onDelete={() => setSelectedCourse(null)}
         />
       )}
     </>
