@@ -25,7 +25,9 @@ serve(async (req) => {
       difficulty,
       questionData,
       studentAnswer,
+      studentAnswerContent,
       correctAnswer,
+      correctAnswerContent,
       timeSpent,
       explanation
     } = await req.json();
@@ -34,7 +36,10 @@ serve(async (req) => {
       throw new Error('Missing required fields');
     }
 
-    const isCorrect = studentAnswer === correctAnswer;
+    // Compare answer content, not letter labels, to handle any answer order variations
+    const isCorrect = studentAnswerContent && correctAnswerContent 
+      ? studentAnswerContent.trim().toLowerCase() === correctAnswerContent.trim().toLowerCase()
+      : studentAnswer === correctAnswer; // Fallback to letter comparison for backwards compatibility
     console.log('Processing response:', { assessmentId, questionNumber, isCorrect });
 
     // Generate encouraging AI feedback

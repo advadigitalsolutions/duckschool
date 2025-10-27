@@ -220,7 +220,9 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
             correctAnswer: currentQuestion.correctAnswer
           },
           studentAnswer: selectedAnswer,
+          studentAnswerContent: currentQuestion.options[selectedAnswer as keyof typeof currentQuestion.options],
           correctAnswer: currentQuestion.correctAnswer,
+          correctAnswerContent: currentQuestion.options[currentQuestion.correctAnswer as keyof typeof currentQuestion.options],
           timeSpent,
           explanation: currentQuestion.explanation
         }
