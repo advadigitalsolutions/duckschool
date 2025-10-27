@@ -44,46 +44,42 @@ export function DiagnosticResultsDashboard({
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleGenerateCourse = async () => {
+  const handleCreateBridgeCourse = async () => {
     setIsGenerating(true);
     
     try {
-      // Verify student exists
-      const { data: student, error: studentError } = await supabase
-        .from('students')
-        .select('id, name, user_id')
-        .eq('id', studentId)
-        .maybeSingle();
-      
-      if (studentError) {
-        console.error('Error fetching student:', studentError);
-        throw new Error('Failed to verify student account');
-      }
-      
-      if (!student) {
+      // Call edge function to create bridge course
+      const { data, error } = await supabase.functions.invoke('create-bridge-course', {
+        body: { 
+          assessmentId,
+          studentId,
+          courseTitle: `${subject} Foundations`
+        }
+      });
+
+      if (error) throw error;
+
+      if (!data.shouldCreateCourse === false) {
         toast({
-          title: "Account Setup Required",
-          description: "Please complete your profile setup before creating courses. Ask your parent to create your student profile.",
-          variant: "destructive"
+          title: "No Gaps Found",
+          description: "Great news! No foundational gaps were identified. You're ready for grade-level work!",
         });
-        navigate('/');
+        navigate('/student/dashboard');
         return;
       }
 
-      // Navigate to student dashboard with completion state
-      navigate(`/student/dashboard`, { 
-        state: { 
-          diagnosticComplete: true,
-          assessmentId,
-          subject,
-          studentId 
-        }
+      toast({
+        title: "Bridge Course Created!",
+        description: `Created "${data.courseName}" covering ${data.standardsCovered} foundational standards across ${data.topicAreas.length} topic areas.`,
       });
+
+      // Navigate to the new course
+      navigate(`/course/${data.courseId}`);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error creating bridge course:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to proceed. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to create bridge course. Please try again.',
         variant: "destructive"
       });
     } finally {
@@ -230,32 +226,63 @@ export function DiagnosticResultsDashboard({
         <CardHeader>
           <CardTitle>What's Next?</CardTitle>
           <CardDescription>
-            Based on your results, we can now create a personalized learning plan that's just right for you!
+            {(results.knowledgeBoundaries && results.knowledgeBoundaries.length > 0) || 
+             (results.strugglingTopics && results.strugglingTopics.length > 0) 
+              ? "We found some foundational gaps. Let's create a targeted course to address them!"
+              : "Based on your results, we can create a personalized learning plan that's just right for you!"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <ul className="space-y-2 text-sm">
-            <li className="flex items-start gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <span>We'll start with your strongest topics to build confidence</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <span>Gradually introduce new concepts at just the right pace</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <span>Fill in any gaps with targeted practice</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-              <span>Keep challenging you as you grow!</span>
-            </li>
-          </ul>
+          {(results.knowledgeBoundaries && results.knowledgeBoundaries.length > 0) || 
+           (results.strugglingTopics && results.strugglingTopics.length > 0) ? (
+            <>
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                  📚 Recommended: Create Foundations Course
+                </h4>
+                <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                  We'll create a targeted course that focuses specifically on filling the gaps we found, 
+                  so you have a solid foundation before moving to grade-level work.
+                </p>
+                <ul className="space-y-1 text-sm text-blue-700 dark:text-blue-300">
+                  <li>• Focuses on prerequisites you need</li>
+                  <li>• Starts at your current level</li>
+                  <li>• Builds systematically to fill gaps</li>
+                  <li>• Prepares you for more advanced topics</li>
+                </ul>
+              </div>
 
-          <Button onClick={handleGenerateCourse} className="w-full" size="lg" disabled={isGenerating}>
-            {isGenerating ? 'Verifying account...' : 'Create my custom assignment based on where I\'m at now'}
-          </Button>
+              <Button onClick={handleCreateBridgeCourse} className="w-full" size="lg" disabled={isGenerating}>
+                {isGenerating ? 'Creating course...' : 'Create Foundations Course'}
+              </Button>
+
+              <p className="text-xs text-muted-foreground text-center">
+                This will create a personalized course addressing {results.knowledgeBoundaries?.length || 0} knowledge boundaries 
+                and {results.strugglingTopics?.length || 0} struggling topics
+              </p>
+            </>
+          ) : (
+            <>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>No major gaps found - you're ready for grade-level work!</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>Your results will inform future assignments</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>We'll continue to monitor and adjust</span>
+                </li>
+              </ul>
+
+              <Button onClick={() => navigate('/student/dashboard')} className="w-full" size="lg">
+                Return to Dashboard
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

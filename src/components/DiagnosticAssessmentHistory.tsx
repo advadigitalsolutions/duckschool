@@ -5,16 +5,60 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Target, Calendar, TrendingUp, Minus, Loader2, Lightbulb, ArrowRight, CheckCircle } from "lucide-react";
+import { Target, Calendar, TrendingUp, Minus, Loader2, Lightbulb, ArrowRight, CheckCircle, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
 
 interface DiagnosticAssessmentHistoryProps {
   studentId: string;
 }
 
 export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentHistoryProps) {
+  const navigate = useNavigate();
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
+  const [creatingCourse, setCreatingCourse] = useState<string | null>(null);
+
+  const handleCreateBridgeCourse = async (assessmentId: string, subject: string) => {
+    setCreatingCourse(assessmentId);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('create-bridge-course', {
+        body: { 
+          assessmentId,
+          studentId,
+          courseTitle: `${subject} Foundations`
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.shouldCreateCourse === false) {
+        toast({
+          title: "No Gaps Found",
+          description: "Great news! No foundational gaps were identified.",
+        });
+        return;
+      }
+
+      toast({
+        title: "Bridge Course Created!",
+        description: `Created "${data.courseName}" covering ${data.standardsCovered} standards.`,
+      });
+
+      navigate(`/course/${data.courseId}`);
+    } catch (error) {
+      console.error('Error creating bridge course:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to create bridge course.',
+        variant: "destructive"
+      });
+    } finally {
+      setCreatingCourse(null);
+    }
+  };
   
   const { data: assessments, isLoading } = useQuery({
     queryKey: ['diagnostic-assessments-history', studentId],
@@ -135,6 +179,31 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                     </p>
                   </div>
                 </div>
+
+                {/* Create Bridge Course Button */}
+                {((results?.knowledgeBoundaries && results.knowledgeBoundaries.length > 0) || 
+                  (results?.strugglingTopics && results.strugglingTopics.length > 0)) && (
+                  <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                    <div className="flex items-start gap-3">
+                      <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                          Bridge Course Available
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                          Address {results.knowledgeBoundaries?.length || 0} knowledge boundaries and {results.strugglingTopics?.length || 0} struggling topics
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleCreateBridgeCourse(latestAssessment.id, subject)}
+                        disabled={creatingCourse === latestAssessment.id}
+                      >
+                        {creatingCourse === latestAssessment.id ? 'Creating...' : 'Create Course'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {/* View Detailed Breakdown - shows everything inline */}
                 <Collapsible>

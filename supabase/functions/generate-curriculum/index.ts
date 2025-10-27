@@ -323,6 +323,36 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(50);
 
+    // **PHASE 2: Query diagnostic data for context**
+    const { data: diagnosticResults } = await supabaseClient
+      .from('diagnostic_assessments')
+      .select('results, subject, completed_at')
+      .eq('student_id', student.id)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false })
+      .limit(3);
+
+    // Extract knowledge boundaries from diagnostics
+    const allKnowledgeBoundaries: any[] = [];
+    const allStrugglingTopics: string[] = [];
+    diagnosticResults?.forEach(d => {
+      const res = d.results as any;
+      if (res?.knowledgeBoundaries) {
+        allKnowledgeBoundaries.push(...res.knowledgeBoundaries);
+      }
+      if (res?.strugglingTopics) {
+        allStrugglingTopics.push(...res.strugglingTopics);
+      }
+    });
+
+    // Query standard_mastery with diagnostic origin (course_id = null)
+    const { data: diagnosticMastery } = await supabaseClient
+      .from('standard_mastery')
+      .select('*')
+      .eq('student_id', student.id)
+      .is('course_id', null)
+      .lt('mastery_level', 70);
+
     // Analyze performance patterns
     const weakStandards = new Set<string>();
     const strongStandards = new Set<string>();
@@ -442,6 +472,37 @@ ${JSON.stringify(studentContext, null, 2)}
 RECENT PERFORMANCE DATA:
 ${JSON.stringify(performanceContext, null, 2)}
 
+DIAGNOSTIC INSIGHTS (CRITICAL CONTEXT):
+The student has completed ${diagnosticResults?.length || 0} diagnostic assessment(s).
+
+${allKnowledgeBoundaries.length > 0 ? `
+🚨 KNOWLEDGE BOUNDARIES DETECTED:
+These topics are on the edge - student has partial understanding but needs scaffolding:
+${allKnowledgeBoundaries.slice(0, 10).map((b: any) => `- ${typeof b === 'string' ? b : b.topic} (mastery: ${typeof b === 'object' ? Math.round((b.mastery || 0) * 100) : 'unknown'}%)`).join('\n')}
+
+REQUIRED ACTION: For any assignment involving these topics, you MUST:
+1. Include a prerequisite review section
+2. Provide scaffolded examples
+3. Start with simpler problems before advancing
+` : ''}
+
+${allStrugglingTopics.length > 0 ? `
+⚠️ STRUGGLING AREAS FROM DIAGNOSTIC:
+${allStrugglingTopics.slice(0, 10).join(', ')}
+
+These topics need extra support. Consider:
+- Breaking them into smaller sub-skills
+- Providing worked examples
+- Including prerequisite concepts
+` : ''}
+
+${diagnosticMastery && diagnosticMastery.length > 0 ? `
+📊 WEAK STANDARDS (from diagnostic):
+${diagnosticMastery.slice(0, 10).map(m => 
+  `- ${m.standard_code}: ${Math.round(m.mastery_level)}% mastery`
+).join('\n')}
+` : ''}
+
 COURSE GOALS:
 ${courseGoals}
 
@@ -544,6 +605,37 @@ ${JSON.stringify(studentContext, null, 2)}
 
 RECENT PERFORMANCE DATA:
 ${JSON.stringify(performanceContext, null, 2)}
+
+DIAGNOSTIC INSIGHTS (CRITICAL CONTEXT):
+The student has completed ${diagnosticResults?.length || 0} diagnostic assessment(s).
+
+${allKnowledgeBoundaries.length > 0 ? `
+🚨 KNOWLEDGE BOUNDARIES DETECTED:
+These topics are on the edge - student has partial understanding but needs scaffolding:
+${allKnowledgeBoundaries.slice(0, 10).map((b: any) => `- ${typeof b === 'string' ? b : b.topic} (mastery: ${typeof b === 'object' ? Math.round((b.mastery || 0) * 100) : 'unknown'}%)`).join('\n')}
+
+REQUIRED ACTION: For any assignment involving these topics, you MUST:
+1. Include a prerequisite review section
+2. Provide scaffolded examples
+3. Start with simpler problems before advancing
+` : ''}
+
+${allStrugglingTopics.length > 0 ? `
+⚠️ STRUGGLING AREAS FROM DIAGNOSTIC:
+${allStrugglingTopics.slice(0, 10).join(', ')}
+
+These topics need extra support. Consider:
+- Breaking them into smaller sub-skills
+- Providing worked examples
+- Including prerequisite concepts
+` : ''}
+
+${diagnosticMastery && diagnosticMastery.length > 0 ? `
+📊 WEAK STANDARDS (from diagnostic):
+${diagnosticMastery.slice(0, 10).map(m => 
+  `- ${m.standard_code}: ${Math.round(m.mastery_level)}% mastery`
+).join('\n')}
+` : ''}
 
 Your task is to generate assignment recommendations that:
 1. Target specific uncovered standards

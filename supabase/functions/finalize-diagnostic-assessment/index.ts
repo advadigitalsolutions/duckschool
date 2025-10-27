@@ -69,8 +69,10 @@ serve(async (req) => {
       prereqMap.get(p.standard_code)!.push(p.prerequisite_code);
     });
 
-    // Analyze each topic
+    // **PHASE 3: Analyze each topic with confidence scoring**
     Object.entries(detailedEstimates).forEach(([topic, estimate]: [string, any]) => {
+      const confidence = estimate.confidence || 0.5;
+      
       if (!estimate.tested) {
         untestedTopics.push(topic);
       } else if (estimate.knowledge_boundary) {
@@ -79,10 +81,15 @@ serve(async (req) => {
           mastery: estimate.mastery,
           prerequisite: estimate.prerequisite_tested
         });
-      } else if (estimate.mastery >= 0.7 && estimate.confidence >= 0.7) {
+      } else if (estimate.mastery >= 0.7 && confidence >= 0.7) {
+        // Require high confidence for mastered topics
         masteredTopics.push(topic);
-      } else if (estimate.mastery < 0.4) {
+      } else if (estimate.mastery < 0.4 && confidence >= 0.6) {
+        // Only count as struggling if confident in the assessment
         strugglingTopics.push(topic);
+      } else if (confidence < 0.5) {
+        // Low confidence = effectively untested
+        untestedTopics.push(topic);
       }
     });
 
@@ -150,6 +157,11 @@ serve(async (req) => {
       ? testedTopics.reduce((sum, [_, e]: [string, any]) => sum + e.mastery, 0) / testedTopics.length
       : 0;
 
+    // Identify suspected careless errors
+    const suspectedCarelessErrors = Object.entries(detailedEstimates)
+      .filter(([_, e]: [string, any]) => e.careless_error_suspected)
+      .map(([topic, _]) => topic);
+
     const results = {
       totalQuestions,
       correctAnswers,
@@ -160,7 +172,17 @@ serve(async (req) => {
       strugglingTopics,
       learningPath: uniquePath.slice(0, 10), // Top 10 recommendations
       masteryByTopic: detailedEstimates,
-      completedAt: new Date().toISOString()
+      completedAt: new Date().toISOString(),
+      suspectedCarelessErrors, // Add careless error report
+      diagnosticQuality: {
+        questionsAsked: totalQuestions,
+        topicsConfidentlyAssessed: testedTopics.filter(([_, e]: [string, any]) => 
+          e.tested && (e.confidence || 0) >= 0.7
+        ).length,
+        lowConfidenceTopics: testedTopics.filter(([_, e]: [string, any]) => 
+          e.tested && (e.confidence || 0) < 0.5
+        ).length
+      }
     };
 
     console.log('Adaptive results:', {

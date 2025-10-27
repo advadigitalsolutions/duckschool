@@ -96,6 +96,10 @@ serve(async (req) => {
     let targetDifficulty = 0.5;
     let rationale = '';
 
+    // **PHASE 3: Pattern detection for careless errors**
+    const recentResponsePattern = responses?.slice(0, 5);
+    const sameTopicResponses = responses?.filter(r => r.standard_code === lastResponse?.standard_code);
+
     if (lastResponse && !lastResponse.is_correct) {
       // Student got the last question wrong - adaptive response
       const lastTopic = lastResponse.standard_code;
@@ -103,7 +107,50 @@ serve(async (req) => {
       const topicEstimate = masteryEstimates[lastTopic] || {};
       const attempts = topicEstimate.attempts || 0;
 
-      if (attempts === 1) {
+      // Careless error indicators
+      const hasConsecutiveCorrect = recentResponsePattern?.filter(r => r.is_correct).length >= 3;
+      const lastTopicWasMastered = sameTopicResponses?.filter(r => r.is_correct).length > 0;
+      const isLowDifficultyFailure = lastDifficulty < 0.4;
+
+      // If all indicators suggest careless error, don't count as heavily
+      if (hasConsecutiveCorrect && lastTopicWasMastered && isLowDifficultyFailure) {
+        console.log('⚠️ Likely careless error detected - not penalizing mastery heavily');
+        
+        // Update mastery estimate with lower weight and flag
+        masteryEstimates[lastTopic] = {
+          ...topicEstimate,
+          careless_error_suspected: true,
+          confidence: (topicEstimate.confidence || 0.5) * 0.8
+        };
+        
+        // Move to next untested topic instead of drilling down
+        const untestedTopics: string[] = [];
+        const allTopics = new Set<string>();
+        prerequisites?.forEach(p => {
+          allTopics.add(p.standard_code);
+          allTopics.add(p.prerequisite_code);
+        });
+
+        allTopics.forEach(topic => {
+          const estimate = masteryEstimates[topic];
+          if (!estimate || !estimate.tested) {
+            untestedTopics.push(topic);
+          }
+        });
+
+        if (untestedTopics.length > 0) {
+          targetTopic = untestedTopics[0];
+          targetDifficulty = 0.5;
+          rationale = `Suspected careless error on ${lastTopic} - testing breadth instead`;
+        } else {
+          // No untested topics, continue with normal logic
+          targetTopic = lastTopic;
+          targetDifficulty = Math.max(0.2, lastDifficulty - 0.2);
+          rationale = `Careless error suspected but no untested topics - trying slightly easier`;
+        }
+      } else if (attempts === 0) {
+
+      } else if (attempts === 1) {
         // First wrong answer - try easier on same topic
         targetTopic = lastTopic;
         targetDifficulty = Math.max(0.2, lastDifficulty - 0.3);
