@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, TrendingUp, ChevronLeft, ChevronRight, BookOpen, Upload, X, FileImage } from 'lucide-react';
 import { cleanMarkdown } from '@/utils/textFormatting';
 import { useXPConfig } from '@/hooks/useXP';
 import { BionicText } from './BionicText';
@@ -50,6 +50,8 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; url: string; type: string }>>([]);
+  const [uploading, setUploading] = useState(false);
   
   const { config: xpConfig } = useXPConfig();
 
@@ -222,6 +224,45 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
     } finally {
       setLoadingDraft(false);
     }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${studentId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from('project_artifacts')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('project_artifacts')
+          .getPublicUrl(fileName);
+
+        setUploadedFiles(prev => [...prev, {
+          name: file.name,
+          url: urlData.publicUrl,
+          type: file.type
+        }]);
+      }
+      toast.success('Files uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      toast.error('Failed to upload files');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const createDraftSubmission = async () => {
@@ -542,7 +583,7 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
             .update({
               submitted_at: new Date().toISOString(),
               time_spent_seconds: totalTime,
-              content: { answers, results: gradedResults, score, maxScore }
+              content: { answers, results: gradedResults, score, maxScore, uploadedFiles }
             })
             .eq('id', draftSubmissionId)
             .select()
@@ -563,7 +604,7 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
               student_id: studentId,
               attempt_no: attemptNumber,
               time_spent_seconds: totalTime,
-              content: { answers, results: gradedResults, score, maxScore }
+              content: { answers, results: gradedResults, score, maxScore, uploadedFiles }
             })
             .select()
             .single();
@@ -907,6 +948,65 @@ export function AssignmentQuestions({ assignment, studentId, onBack }: Assignmen
           </CardHeader>
           <CardContent>
             <AssignmentContentRenderer content={readingMaterials} enableReadAloud />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* File Upload Section for Creative Assignments */}
+      {!submitted && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Upload Your Work (Optional)
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Upload images, documents, or files to show your work on assignments like posters, graphics, or projects
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="border-2 border-dashed rounded-lg p-6 text-center">
+              <input
+                type="file"
+                id="assignment-file-upload"
+                className="hidden"
+                multiple
+                accept="image/*,.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                onChange={handleFileUpload}
+                disabled={uploading}
+              />
+              <label htmlFor="assignment-file-upload" className="cursor-pointer">
+                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Click to upload files
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Images, PDFs, documents (max 10MB each)
+                </p>
+              </label>
+            </div>
+
+            {/* Uploaded Files List */}
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Uploaded Files:</p>
+                {uploadedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex items-center gap-2">
+                      <FileImage className="h-4 w-4" />
+                      <span className="text-sm">{file.name}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

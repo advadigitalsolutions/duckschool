@@ -212,7 +212,7 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
 
   return (
     <div className={`space-y-6 transition-all duration-300 ${isSidebarMode ? 'mr-96' : ''}`}>
-      {/* Progress Bar */}
+      {/* Progress Bar - Now clickable for free navigation */}
       <Card className="p-6">
         <div className="space-y-3">
           <div className="flex justify-between items-center mb-2">
@@ -226,10 +226,11 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
           
           <div className="flex justify-between">
             {STEPS.map((step, idx) => (
-              <div
+              <button
                 key={step.key}
-                className={`flex flex-col items-center gap-1 ${
-                  idx <= currentStepIndex ? 'opacity-100' : 'opacity-40'
+                onClick={() => updateProgress(step.key, false)}
+                className={`flex flex-col items-center gap-1 transition-all hover:scale-110 ${
+                  idx === currentStepIndex ? 'opacity-100 scale-110' : 'opacity-60 hover:opacity-100'
                 }`}
               >
                 <div className="text-2xl">{step.icon}</div>
@@ -237,9 +238,12 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
                 {progress?.[`${step.key}_completed`] && (
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
                 )}
-              </div>
+              </button>
             ))}
           </div>
+          <p className="text-xs text-center text-muted-foreground mt-2">
+            💡 Click any step to jump ahead or go back
+          </p>
         </div>
       </Card>
 

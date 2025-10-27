@@ -89,33 +89,22 @@ export const ResearchPhase: React.FC<ResearchPhaseProps> = ({
 
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
-          {canAdvance ? '✓ Research complete' : `${validatedCount}/${minimumResources} resources added`}
+          {canAdvance ? '✓ Research complete' : validatedCount > 0 ? `${validatedCount}/${minimumResources} resources added` : 'Optional - Add resources or skip to next phase'}
         </p>
-        <div className="flex gap-2">
-          {!canAdvance && (
-            <Button
-              onClick={onComplete}
-              variant="ghost"
-              size="lg"
-            >
-              Skip Research
-            </Button>
+        <Button
+          onClick={onComplete}
+          size="lg"
+          className="min-w-[200px]"
+        >
+          {canAdvance ? (
+            <>
+              <CheckCircle2 className="h-5 w-5 mr-2" />
+              Continue to Notes
+            </>
+          ) : (
+            'Continue to Notes →'
           )}
-          <Button
-            onClick={onComplete}
-            size="lg"
-            className="min-w-[200px]"
-          >
-            {canAdvance ? (
-              <>
-                <CheckCircle2 className="h-5 w-5 mr-2" />
-                Continue to Notes
-              </>
-            ) : (
-              'Continue Anyway'
-            )}
-          </Button>
-        </div>
+        </Button>
       </div>
     </div>
   );

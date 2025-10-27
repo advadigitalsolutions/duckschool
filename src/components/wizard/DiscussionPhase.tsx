@@ -105,12 +105,11 @@ export const DiscussionPhase: React.FC<DiscussionPhaseProps> = ({
           size="lg"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Notes
+          ← Notes
         </Button>
 
         <Button
           onClick={onComplete}
-          disabled={!canAdvance}
           size="lg"
           className={cn(
             "min-w-[200px] transition-all",
@@ -121,9 +120,7 @@ export const DiscussionPhase: React.FC<DiscussionPhaseProps> = ({
           {buttonState === 'ready' && <CheckCircle2 className="h-5 w-5 mr-2" />}
           {buttonState === 'default' && <MessageSquare className="h-5 w-5 mr-2" />}
           {buttonState === 'engaged' && <MessageSquare className="h-5 w-5 mr-2" />}
-          {buttonState === 'ready' ? 'Great discussion! Continue' : 
-           buttonState === 'engaged' ? 'Ready to continue?' : 
-           'Continue to Practice'}
+          Practice →
         </Button>
       </div>
     </div>

@@ -113,34 +113,23 @@ export const NotesPhase: React.FC<NotesPhaseProps> = ({
           size="lg"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Research
+          ← Research
         </Button>
 
-        <div className="flex gap-2">
-          {!hasSubstantiveNotes() && (
-            <Button
-              onClick={onComplete}
-              variant="ghost"
-              size="lg"
-            >
-              Skip Notes
-            </Button>
+        <Button
+          onClick={onComplete}
+          size="lg"
+          className="min-w-[200px]"
+        >
+          {hasSubstantiveNotes() ? (
+            <>
+              <CheckCircle2 className="h-5 w-5 mr-2" />
+              Discussion →
+            </>
+          ) : (
+            'Discussion →'
           )}
-          <Button
-            onClick={onComplete}
-            size="lg"
-            className="min-w-[200px]"
-          >
-            {hasSubstantiveNotes() ? (
-              <>
-                <CheckCircle2 className="h-5 w-5 mr-2" />
-                Continue to Discussion
-              </>
-            ) : (
-              'Continue Anyway'
-            )}
-          </Button>
-        </div>
+        </Button>
       </div>
     </div>
   );

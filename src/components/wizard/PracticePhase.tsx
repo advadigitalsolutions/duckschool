@@ -184,37 +184,23 @@ export const PracticePhase: React.FC<PracticePhaseProps> = ({
           size="lg"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Discussion
+          ← Discussion
         </Button>
 
-        <div className="flex gap-2">
-          {canSkip && !canAdvance && (
-            <Button
-              onClick={handleSkipPractice}
-              variant="outline"
-              size="lg"
-            >
-              <SkipForward className="h-5 w-5 mr-2" />
-              Skip Practice
-            </Button>
+        <Button
+          onClick={onComplete}
+          size="lg"
+          className="min-w-[200px]"
+        >
+          {canAdvance ? (
+            <>
+              <CheckCircle2 className="h-5 w-5 mr-2" />
+              Assessment →
+            </>
+          ) : (
+            'Assessment →'
           )}
-          
-          <Button
-            onClick={onComplete}
-            disabled={!canAdvance}
-            size="lg"
-            className="min-w-[200px]"
-          >
-            {canAdvance ? (
-              <>
-                <CheckCircle2 className="h-5 w-5 mr-2" />
-                Continue to Assessment
-              </>
-            ) : (
-              'Complete practice to continue'
-            )}
-          </Button>
-        </div>
+        </Button>
       </div>
     </div>
   );
