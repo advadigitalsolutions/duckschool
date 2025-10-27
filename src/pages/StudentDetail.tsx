@@ -21,7 +21,8 @@ import {
   Archive,
   ArchiveRestore,
   User,
-  Check
+  Check,
+  Target
 } from 'lucide-react';
 import { WeeklyView } from '@/components/WeeklyView';
 import { OverdueWorkTab } from '@/components/OverdueWorkTab';
@@ -43,6 +44,7 @@ import { CoachingTranscriptViewer } from '@/components/CoachingTranscriptViewer'
 import { Settings } from 'lucide-react';
 import { FocusAnalyticsDashboard } from '@/components/FocusAnalyticsDashboard';
 import { useDemoNames } from '@/hooks/useDemoNames';
+import { DiagnosticAssessmentHistory } from '@/components/DiagnosticAssessmentHistory';
 
 export default function StudentDetail() {
   const { id } = useParams();
@@ -228,6 +230,10 @@ export default function StudentDetail() {
             <TabsTrigger value="this-week">This Week</TabsTrigger>
             <TabsTrigger value="overdue">Overdue</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
+            <TabsTrigger value="skills-checkin">
+              <Target className="h-4 w-4 mr-2" />
+              Skills Check-In
+            </TabsTrigger>
             <TabsTrigger value="all-assignments">All Assignments</TabsTrigger>
             <TabsTrigger value="time-analytics">
               <BarChart3 className="h-4 w-4 mr-2" />
@@ -249,6 +255,10 @@ export default function StudentDetail() {
 
           <TabsContent value="overdue" className="space-y-4">
             <OverdueWorkTab studentId={student.id} />
+          </TabsContent>
+
+          <TabsContent value="skills-checkin" className="space-y-4">
+            <DiagnosticAssessmentHistory studentId={student.id} />
           </TabsContent>
 
           <TabsContent value="courses" className="space-y-4">
