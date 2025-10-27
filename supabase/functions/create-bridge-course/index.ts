@@ -145,6 +145,9 @@ serve(async (req) => {
 
     const gradeRange = minGrade <= maxGrade ? `${minGrade}-${maxGrade}` : assessment.grade_level || '5';
     const defaultTitle = courseTitle || `${assessment.subject} Foundations`;
+    
+    // Build course goals from diagnostic topics
+    const courseGoals = `Build foundational skills in ${Array.from(topicAreas).join(', ')}. Address knowledge gaps identified through diagnostic assessment to reach grade-level competency.`;
 
     // Get the user_id from the student record for initiated_by
     const { data: studentData } = await supabaseClient
@@ -163,6 +166,7 @@ serve(async (req) => {
         grade_level: gradeRange,
         course_type: 'bridge_mode',
         description: `Foundational course created from diagnostic assessment. Addresses knowledge gaps in: ${Array.from(topicAreas).join(', ')}`,
+        goals: courseGoals,
         standards_scope: [{
           framework: assessment.framework || 'CA-CCSS',
           bridge_mode: true,
