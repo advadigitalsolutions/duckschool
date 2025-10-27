@@ -107,6 +107,13 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
+    /* Chart colors for data visualization */
+    --chart-1: 217 91% 60%;
+    --chart-2: 142 76% 36%;
+    --chart-3: 280 65% 58%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 84% 60%;
+
     /* Progress and gamification */
     --progress-bg: 210 40% 96%;
     --progress-fill: 217 91% 60%;
@@ -181,6 +188,13 @@ All colors MUST be HSL.
     --border: 220 20% 20%;
     --input: 220 25% 14%;
     --ring: 190 60% 45%;
+    
+    /* Chart colors for data visualization */
+    --chart-1: 190 60% 45%;
+    --chart-2: 160 65% 42%;
+    --chart-3: 280 65% 58%;
+    --chart-4: 45 88% 52%;
+    --chart-5: 0 68% 58%;
     
     /* Sidebar matching background theme */
     --sidebar-background: 220 40% 9%;
