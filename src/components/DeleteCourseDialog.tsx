@@ -113,37 +113,61 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
       const backup: any = { course };
 
       // Get all curriculum items
-      const { data: curriculumItems } = await supabase
+      const { data: curriculumItems, error: ciError } = await supabase
         .from('curriculum_items')
         .select('*')
         .eq('course_id', course.id);
+      
+      if (ciError) {
+        console.error('Error fetching curriculum items:', ciError);
+        throw new Error(`Failed to fetch curriculum items: ${ciError.message}`);
+      }
+      
       backup.curriculumItems = curriculumItems;
 
       if (curriculumItems && curriculumItems.length > 0) {
         const curriculumItemIds = curriculumItems.map((ci: any) => ci.id);
 
         // Get all assignments
-        const { data: assignments } = await supabase
+        const { data: assignments, error: assignmentsError } = await supabase
           .from('assignments')
           .select('*')
           .in('curriculum_item_id', curriculumItemIds);
+        
+        if (assignmentsError) {
+          console.error('Error fetching assignments:', assignmentsError);
+          throw new Error(`Failed to fetch assignments: ${assignmentsError.message}`);
+        }
+        
         backup.assignments = assignments;
 
         if (assignments && assignments.length > 0) {
           const assignmentIds = assignments.map((a: any) => a.id);
 
           // Get submissions
-          const { data: submissions } = await supabase
+          const { data: submissions, error: submissionsError } = await supabase
             .from('submissions')
             .select('*')
             .in('assignment_id', assignmentIds);
+          
+          if (submissionsError) {
+            console.error('Error fetching submissions:', submissionsError);
+            throw new Error(`Failed to fetch submissions: ${submissionsError.message}`);
+          }
+          
           backup.submissions = submissions;
 
           // Get grades
-          const { data: grades } = await supabase
+          const { data: grades, error: gradesError } = await supabase
             .from('grades')
             .select('*')
             .in('assignment_id', assignmentIds);
+          
+          if (gradesError) {
+            console.error('Error fetching grades:', gradesError);
+            throw new Error(`Failed to fetch grades: ${gradesError.message}`);
+          }
+          
           backup.grades = grades;
 
           // Get question responses
@@ -249,6 +273,7 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
       console.error('Delete course error:', error);
       const errorMessage = error.message || error.details || 'Failed to delete course';
       toast.error(`Failed to delete course: ${errorMessage}`);
+      setOpen(false); // Close the dialog on error
     } finally {
       setLoading(false);
     }
