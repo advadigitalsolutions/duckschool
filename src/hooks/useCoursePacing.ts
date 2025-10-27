@@ -23,6 +23,8 @@ interface PacingMetrics {
   needsMoreCurriculum: boolean;
   missingData: string[];
   framework?: string;
+  isBridgeCourse?: boolean;
+  bridgeSessions?: number;
 }
 
 interface TimeBySubject {
@@ -391,11 +393,17 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         recommendedDailyMinutes = remainingMinutes / daysUntilTarget;
       } else if (remainingMinutes > 0) {
         // Bridge courses are short remedial interventions, not full year-long courses
-        // Use 12 weeks (84 days) for bridge courses, 9 months (270 days) for regular courses
-        // This allows for 30-60 min/day of focused remedial work
-        const isBridgeCourse = (course as any).bridge_mode === true || course.course_type === 'bridge_mode';
-        const assumedDays = isBridgeCourse ? 84 : 270; // 12 weeks for bridge, 9 months for regular
-        recommendedDailyMinutes = remainingMinutes / assumedDays;
+        if (isBridgeCourse) {
+          // For bridge courses: calculate sessions instead of daily minutes
+          // Assume 30-60 minute focused sessions, 3-5 times per week
+          // Don't spread over months - this is prep work to complete quickly
+          const minutesPerSession = 45;
+          const sessionsNeeded = Math.ceil(remainingMinutes / minutesPerSession);
+          recommendedDailyMinutes = minutesPerSession; // Will be used differently for bridge display
+        } else {
+          // Regular courses: spread over 9-month school year
+          recommendedDailyMinutes = remainingMinutes / 270;
+        }
       }
 
       console.log('📊 RECOMMENDATION DEBUG:', {
@@ -435,6 +443,8 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         percentage: allStandards.size > 0 ? (coveredStandards.size / allStandards.size) * 100 : 0
       };
 
+      const bridgeSessions = isBridgeCourse ? Math.ceil((effectiveTotalMinutes - completedMinutes) / 45) : undefined;
+
       setMetrics({
         totalMinutes: effectiveTotalMinutes || curriculumCreatedMinutes,
         curriculumCreatedMinutes,
@@ -453,7 +463,8 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         framework: courseFramework,
         trackingMode,
         isConfiguredPace,
-        isBridgeCourse: (course as any).bridge_mode === true || course.course_type === 'bridge_mode'
+        isBridgeCourse,
+        bridgeSessions,
       } as any);
 
       setStandardsCoverage(standardsCoverage);

@@ -6,7 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, TrendingUp, TrendingDown, Minus, AlertTriangle, Settings, Sparkles, Info } from 'lucide-react';
+import { CalendarIcon, TrendingUp, TrendingDown, Minus, AlertTriangle, Settings, Sparkles, Info, Target } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCoursePacing } from '@/hooks/useCoursePacing';
 import { UnifiedMasteryDashboard } from './UnifiedMasteryDashboard';
@@ -390,78 +390,133 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
         </CardContent>
       </Card>
 
-      {/* Target Date & Recommendations */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Pacing Recommendations</CardTitle>
-          <CardDescription>Adjust your target date to see recommended daily effort</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-[280px] justify-start text-left font-normal",
-                    !targetDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {targetDate ? format(targetDate, "PPP") : <span>Pick a target date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={targetDate}
-                  onSelect={handleTargetDateChange}
-                  initialFocus
-                  disabled={(date) => date < new Date()}
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-            
-            {targetDate && (
-              <Button variant="ghost" onClick={() => handleTargetDateChange(undefined)}>
-                Clear
-              </Button>
-            )}
-          </div>
-
-          {(targetDate || metrics.recommendedDailyMinutes > 0) && (
-            <div className="rounded-lg bg-muted p-4 space-y-2">
-              <div className="font-semibold">
-                {targetDate 
-                  ? `To complete by ${format(targetDate, 'MMM dd, yyyy')}:` 
-                  : `Suggested pace (based on ${(metrics as any).isBridgeCourse ? '12-week' : '9-month school year'} timeframe):`}
+      {/* Pacing Recommendations */}
+      {metrics.isBridgeCourse ? (
+        // Bridge Course: Session-based display
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Prerequisite Work Overview
+            </CardTitle>
+            <CardDescription>
+              Foundational skills to complete before moving forward
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Total Time Required:</span>
+                <span className="text-lg font-bold text-primary">
+                  {Math.round((metrics as any).totalMinutes / 60 * 10) / 10} hours
+                </span>
               </div>
-              <div className="text-2xl font-bold text-primary">
-                {metrics.recommendedDailyMinutes < 1 
-                  ? `${Math.round(metrics.recommendedDailyMinutes * 60)} seconds` 
-                  : metrics.recommendedDailyMinutes < 60
-                    ? `${Math.round(metrics.recommendedDailyMinutes)} minutes`
-                    : `${(metrics.recommendedDailyMinutes / 60).toFixed(1)} hours`
-                } per day
-              </div>
-              {metrics.recommendedDailyMinutes >= 1 && (
-                <div className="text-sm text-muted-foreground">
-                  ({metrics.recommendedDailyMinutes < 60 
-                    ? `${(metrics.recommendedDailyMinutes / 60).toFixed(2)} hours`
-                    : `${Math.round(metrics.recommendedDailyMinutes)} minutes`
-                  } per day)
-                </div>
-              )}
-              {!targetDate && (
-                <div className="text-xs text-muted-foreground mt-2">
-                  💡 Set a target date above to see personalized pacing recommendations
+              {metrics.bridgeSessions && metrics.bridgeSessions > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Recommended Approach:</span>
+                  <span className="text-lg font-bold text-primary">
+                    {metrics.bridgeSessions} focused session{metrics.bridgeSessions > 1 ? 's' : ''}
+                  </span>
                 </div>
               )}
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            <div className="pt-2 space-y-2">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                💡 These are foundational skills needed before starting the main coursework. 
+                Complete at your own pace - most students finish this prep work within 1-2 weeks 
+                with regular {metrics.bridgeSessions && metrics.bridgeSessions <= 4 ? '30-45' : '45-60'} minute sessions.
+              </p>
+            </div>
+
+            {metrics.progressPercentage > 0 && (
+              <div className="pt-3 border-t">
+                <div className="text-sm font-medium mb-2">Progress</div>
+                <Progress value={metrics.progressPercentage} className="h-2" />
+                <div className="text-xs text-muted-foreground mt-1">
+                  {Math.round(metrics.progressPercentage)}% complete
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        // Regular Course: Traditional daily pacing
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Pacing Recommendations
+            </CardTitle>
+            <CardDescription>Adjust your target date to see recommended daily effort</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[280px] justify-start text-left font-normal",
+                      !targetDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {targetDate ? format(targetDate, "PPP") : <span>Pick a target date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={targetDate}
+                    onSelect={handleTargetDateChange}
+                    initialFocus
+                    disabled={(date) => date < new Date()}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              {targetDate && (
+                <Button variant="ghost" onClick={() => handleTargetDateChange(undefined)}>
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            {(targetDate || metrics.recommendedDailyMinutes > 0) && (
+              <div className="rounded-lg bg-muted p-4 space-y-2">
+                <div className="font-semibold">
+                  {targetDate 
+                    ? `To complete by ${format(targetDate, 'MMM dd, yyyy')}:` 
+                    : 'Suggested pace (based on 9-month school year):'}
+                </div>
+                <div className="text-2xl font-bold text-primary">
+                  {metrics.recommendedDailyMinutes < 1 
+                    ? `${Math.round(metrics.recommendedDailyMinutes * 60)} seconds` 
+                    : metrics.recommendedDailyMinutes < 60
+                      ? `${Math.round(metrics.recommendedDailyMinutes)} minutes`
+                      : `${(metrics.recommendedDailyMinutes / 60).toFixed(1)} hours`
+                  } per day
+                </div>
+                {metrics.recommendedDailyMinutes >= 1 && (
+                  <div className="text-sm text-muted-foreground">
+                    ({metrics.recommendedDailyMinutes < 60 
+                      ? `${(metrics.recommendedDailyMinutes / 60).toFixed(2)} hours`
+                      : `${Math.round(metrics.recommendedDailyMinutes)} minutes`
+                    } per day)
+                  </div>
+                )}
+                {!targetDate && (
+                  <div className="text-xs text-muted-foreground mt-2">
+                    💡 Set a target date above to see personalized pacing recommendations
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Unified Mastery Dashboard */}
       <UnifiedMasteryDashboard 

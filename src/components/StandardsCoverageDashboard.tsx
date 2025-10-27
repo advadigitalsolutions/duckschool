@@ -258,22 +258,48 @@ export function StandardsCoverageDashboard({
     );
   }
 
+  // Check if this is a bridge course with only diagnostic codes
+  const [isBridgeMode, setIsBridgeMode] = useState(false);
+  
+  useEffect(() => {
+    const checkBridgeMode = async () => {
+      const { data: courseData } = await supabase
+        .from('courses')
+        .select('course_type, standards_scope')
+        .eq('id', courseId)
+        .single();
+      
+      setIsBridgeMode(courseData?.course_type === 'bridge_mode');
+    };
+    checkBridgeMode();
+  }, [courseId]);
+
   if (totalCount === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Standards Coverage</CardTitle>
           <CardDescription>
-            No standards to display yet
+            {isBridgeMode ? 'Diagnostic-based remedial course' : 'No standards to display yet'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center text-muted-foreground p-8">
             <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <div className="space-y-2">
-              <p className="font-semibold">Why am I seeing this?</p>
-              <p className="text-sm">This course doesn't have any curriculum created yet.</p>
-              <p className="text-sm">Generate curriculum to see standards coverage and track progress.</p>
+              {isBridgeMode ? (
+                <>
+                  <p className="font-semibold">This is a prerequisite course</p>
+                  <p className="text-sm">This course focuses on foundational topics identified through diagnostic assessment.</p>
+                  <p className="text-sm">Coverage is tracked through topic areas rather than formal standards.</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold">Why am I seeing this?</p>
+                  <p className="text-sm">This course doesn't have any curriculum created yet.</p>
+                  <p className="text-sm">Generate curriculum to see standards coverage and track progress.</p>
+                </>
+              )}
             </div>
           </div>
         </CardContent>

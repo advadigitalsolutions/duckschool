@@ -121,7 +121,9 @@ serve(async (req) => {
 
         if (matchedStandards.length > 0) {
           console.log(`Found ${matchedStandards.length} standards for topic "${topic}":`, matchedStandards.map(s => s.code));
+          // Store both real standard codes AND diagnostic label together
           matchedStandards.forEach(std => mappedStandards.add(std.code));
+          mappedStandards.add(`DIAGNOSTIC:${topic}`);
         } else {
           console.log(`No standards found for topic "${topic}" in grades ${searchGrades.join(', ')} - using diagnostic code`);
           mappedStandards.add(`DIAGNOSTIC:${topic}`);
@@ -227,6 +229,10 @@ serve(async (req) => {
         return avg + (topic?.mastery || 0);
       }, 0) / standards.length;
 
+      // Calculate time estimate: use 30-60 min for foundational topics
+      const hasRealStandards = standards.some(s => !s.startsWith('DIAGNOSTIC:'));
+      const estimatedMinutes = hasRealStandards ? 45 : 30;
+
       curriculumItems.push({
         course_id: course.id,
         title: `${topicArea} - Foundation Review`,
@@ -239,7 +245,7 @@ serve(async (req) => {
             activities: []
           }
         },
-        est_minutes: 30,
+        est_minutes: estimatedMinutes,
         assessment_type: 'practice'
       });
     }
