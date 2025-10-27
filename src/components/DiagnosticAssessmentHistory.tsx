@@ -199,7 +199,7 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                         onClick={() => handleCreateBridgeCourse(latestAssessment.id, subject)}
                         disabled={creatingCourse === latestAssessment.id}
                       >
-                        {creatingCourse === latestAssessment.id ? 'Creating...' : 'Create Course'}
+                        {creatingCourse === latestAssessment.id ? 'Creating...' : 'Create Foundations Course'}
                       </Button>
                     </div>
                   </div>
