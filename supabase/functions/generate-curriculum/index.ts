@@ -160,6 +160,7 @@ serve(async (req) => {
 
     // Get standards - either custom or from database
     let allStandards = null;
+    let diagnosticTopicsForPrompt: string[] | undefined = undefined;
     
     console.log('🔍 Looking for standards:', { 
       isCustomFramework, 
@@ -185,36 +186,50 @@ serve(async (req) => {
       );
       
       console.log('📝 Standard codes extracted:', Array.from(standardCodesInCurriculum));
-      console.log('🔍 Query params:', { framework, subject: course.subject, codes: Array.from(standardCodesInCurriculum) });
       
-      // Query the full standard details from the standards table
-      if (standardCodesInCurriculum.size > 0) {
+      // Separate real standards from diagnostic codes
+      const realCodes = Array.from(standardCodesInCurriculum).filter((code: any) => !code.startsWith('DIAGNOSTIC:'));
+      const diagnosticTopics = Array.from(standardCodesInCurriculum)
+        .filter((code: any) => code.startsWith('DIAGNOSTIC:'))
+        .map((code: any) => code.replace('DIAGNOSTIC:', ''));
+      
+      console.log('🔍 Real standard codes:', realCodes);
+      console.log('🎯 Diagnostic topics:', diagnosticTopics);
+      
+      // Store diagnostic topics for AI prompt
+      diagnosticTopicsForPrompt = diagnosticTopics.length > 0 ? diagnosticTopics : undefined;
+      
+      // Query the full standard details for real codes
+      if (realCodes.length > 0) {
         const { data, error: stdError } = await supabaseClient
           .from('standards')
           .select('*')
           .eq('framework', framework)
           .eq('subject', course.subject)
-          .in('code', Array.from(standardCodesInCurriculum));
+          .in('code', realCodes);
         
         if (stdError) console.error('❌ Standards query error:', stdError);
         allStandards = data || [];
-        console.log('📚 Bridge mode standards found:', allStandards?.length || 0);
+        console.log('📚 Real standards found:', allStandards?.length || 0);
+      }
+      
+      // Add diagnostic topics to the mix for content generation
+      if (diagnosticTopics.length > 0) {
+        console.log('📚 Including diagnostic topics:', diagnosticTopics.length);
       }
       
       // If no standards found from curriculum items, use all standards in prerequisite bands
-      if (!allStandards || allStandards.length === 0) {
+      if ((!allStandards || allStandards.length === 0) && prerequisiteBands.length > 0) {
         console.log('🔍 Falling back to prerequisite bands:', prerequisiteBands);
-        if (prerequisiteBands.length > 0) {
-          const { data } = await supabaseClient
-            .from('standards')
-            .select('*')
-            .eq('framework', framework)
-            .eq('subject', course.subject)
-            .in('grade_band', prerequisiteBands.map(String));
-          
-          allStandards = data || [];
-          console.log('📚 Standards from prerequisite bands:', allStandards?.length || 0);
-        }
+        const { data } = await supabaseClient
+          .from('standards')
+          .select('*')
+          .eq('framework', framework)
+          .eq('subject', course.subject)
+          .in('grade_band', prerequisiteBands.map(String));
+        
+        allStandards = data || [];
+        console.log('📚 Standards from prerequisite bands:', allStandards?.length || 0);
       }
     } else if (isCustomFramework) {
       // Use AI-generated custom standards
@@ -589,11 +604,22 @@ Consider what foundational knowledge and skills the student needs to achieve the
         return 0;
       });
       
-      systemPrompt = `You are an expert curriculum designer creating assignments for ${course.subject} at grade ${gradeLevel} using ${pedagogy} pedagogy.
+      systemPrompt = `You are an expert curriculum designer creating assignments for ${course.subject} at grade ${gradeLevel} using ${pedagogy} pedagogy.${isBridgeMode ? ' This is a BRIDGE MODE course designed to address knowledge gaps and build foundational skills.' : ''}
 
 PEDAGOGY GUIDANCE:
 ${pedagogyGuidance}
 ${approachOverrideContext}
+${isBridgeMode && diagnosticTopicsForPrompt ? `
+🌉 BRIDGE MODE - DIAGNOSTIC FOCUS AREAS:
+This course addresses specific foundational gaps identified through diagnostic assessment:
+${diagnosticTopicsForPrompt.map((topic: string) => `- ${topic}`).join('\n')}
+
+CRITICAL: Generate content that:
+1. Directly addresses these diagnostic focus areas
+2. Builds prerequisite skills needed for grade-level work
+3. Provides scaffolded support and review
+4. Helps bridge gaps to reach grade-level competency
+` : ''}
 
 🚨 CRITICAL GRADE LEVEL REQUIREMENTS - THIS IS NON-NEGOTIABLE 🚨
 Student Age: ${gradeLevel === '10' ? '15-16 years old' : `Grade ${gradeLevel}`}

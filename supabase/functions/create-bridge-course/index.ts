@@ -64,36 +64,72 @@ serve(async (req) => {
       prereqMap.get(p.standard_code)!.push(p.prerequisite_code);
     });
 
-    // Collect all standards that need to be taught
-    const standardsToTeach = new Set<string>();
+    // Collect diagnostic topics
+    const diagnosticTopics = new Set<string>();
     const topicAreas = new Set<string>();
 
-    // Add prerequisites for knowledge boundaries
     knowledgeBoundaries.forEach((boundary: any) => {
       const topic = typeof boundary === 'string' ? boundary : boundary.topic;
-      standardsToTeach.add(topic);
+      diagnosticTopics.add(topic);
       topicAreas.add(topic.split(' - ')[0] || topic);
-      
-      // Add prerequisites
-      const prereqs = prereqMap.get(topic) || [];
-      prereqs.forEach(p => standardsToTeach.add(p));
     });
 
-    // Add struggling topics and their prerequisites
     strugglingTopics.forEach((topic: string) => {
-      standardsToTeach.add(topic);
+      diagnosticTopics.add(topic);
       topicAreas.add(topic.split(' - ')[0] || topic);
-      
-      const prereqs = prereqMap.get(topic) || [];
-      prereqs.forEach(p => standardsToTeach.add(p));
     });
 
-    // Fetch actual standard data for the identified standards
-    const { data: standardsData } = await supabaseClient
-      .from('standards')
-      .select('code, grade_band, text, subject')
-      .eq('subject', assessment.subject)
-      .in('code', Array.from(standardsToTeach).slice(0, 100)); // Limit for safety
+    console.log('Diagnostic topics:', Array.from(diagnosticTopics));
+
+    // Map diagnostic topics to actual standard codes
+    const mappedStandards = new Set<string>();
+    
+    for (const topic of diagnosticTopics) {
+      // Extract keywords from topic for matching
+      const keywords = topic.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(word => word.length > 3); // Filter short words
+
+      console.log(`Mapping topic "${topic}" with keywords:`, keywords);
+
+      // Query standards using text matching
+      if (keywords.length > 0) {
+        const { data: matchedStandards } = await supabaseClient
+          .from('standards')
+          .select('code, text, grade_band')
+          .eq('subject', assessment.subject)
+          .eq('framework', assessment.framework || 'CA-CCSS')
+          .or(keywords.map(kw => `text.ilike.%${kw}%`).join(','))
+          .limit(10);
+
+        if (matchedStandards && matchedStandards.length > 0) {
+          console.log(`Found ${matchedStandards.length} standards for topic "${topic}"`);
+          matchedStandards.forEach(std => mappedStandards.add(std.code));
+        } else {
+          // No standards found - create diagnostic reference
+          console.log(`No standards found for topic "${topic}" - using diagnostic code`);
+          mappedStandards.add(`DIAGNOSTIC:${topic}`);
+        }
+      } else {
+        mappedStandards.add(`DIAGNOSTIC:${topic}`);
+      }
+    }
+
+    console.log('Mapped standards:', Array.from(mappedStandards));
+
+    // Fetch full standard data for real codes
+    const realCodes = Array.from(mappedStandards).filter(code => !code.startsWith('DIAGNOSTIC:'));
+    let standardsData: any[] = [];
+    
+    if (realCodes.length > 0) {
+      const { data } = await supabaseClient
+        .from('standards')
+        .select('code, grade_band, text, subject')
+        .eq('subject', assessment.subject)
+        .in('code', realCodes);
+      standardsData = data || [];
+    }
 
     // Determine grade range from standards
     let minGrade = 12;
@@ -155,8 +191,10 @@ serve(async (req) => {
     
     // Group standards by topic area
     const topicGroups = new Map<string, string[]>();
-    Array.from(standardsToTeach).forEach(std => {
-      const topicArea = std.split(' - ')[0] || 'General';
+    Array.from(mappedStandards).forEach(std => {
+      const topicArea = std.startsWith('DIAGNOSTIC:') 
+        ? std.replace('DIAGNOSTIC:', '') 
+        : std.split('.')[0] || 'General';
       if (!topicGroups.has(topicArea)) {
         topicGroups.set(topicArea, []);
       }
@@ -216,7 +254,7 @@ serve(async (req) => {
         success: true,
         courseId: course.id,
         courseName: defaultTitle,
-        standardsCovered: standardsToTeach.size,
+        standardsCovered: mappedStandards.size,
         gradeRange,
         topicAreas: Array.from(topicAreas)
       }),
