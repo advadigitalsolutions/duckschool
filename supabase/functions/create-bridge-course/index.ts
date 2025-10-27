@@ -84,31 +84,46 @@ serve(async (req) => {
     // Map diagnostic topics to actual standard codes
     const mappedStandards = new Set<string>();
     
+    // Get prerequisite grade bands from diagnostic
+    const diagnosticBaseline = results.knowledgeBoundaries?.[0]?.estimatedGrade || 
+                               results.strugglingTopics?.[0]?.estimatedGrade ||
+                               Math.max(parseInt(assessment.grade_level || '5') - 3, 3);
+    const searchGrades = [diagnosticBaseline, diagnosticBaseline + 1, diagnosticBaseline + 2];
+    
+    console.log('Searching for standards in prerequisite grades:', searchGrades);
+    
     for (const topic of diagnosticTopics) {
       // Extract keywords from topic for matching
       const keywords = topic.toLowerCase()
         .replace(/[^a-z0-9\s]/g, ' ')
         .split(/\s+/)
-        .filter(word => word.length > 3); // Filter short words
+        .filter(word => word.length > 3);
 
       console.log(`Mapping topic "${topic}" with keywords:`, keywords);
 
       // Query standards using text matching
       if (keywords.length > 0) {
-        const { data: matchedStandards } = await supabaseClient
+        const { data: allMatches } = await supabaseClient
           .from('standards')
           .select('code, text, grade_band')
           .eq('subject', assessment.subject)
           .eq('framework', assessment.framework || 'CA-CCSS')
           .or(keywords.map(kw => `text.ilike.%${kw}%`).join(','))
-          .limit(10);
+          .limit(100);
 
-        if (matchedStandards && matchedStandards.length > 0) {
-          console.log(`Found ${matchedStandards.length} standards for topic "${topic}"`);
+        // Filter by grade from code (e.g., "5.NBT.2" -> grade 5)
+        const matchedStandards = (allMatches || []).filter(std => {
+          const gradeMatch = std.code.match(/^(\d+)\./);
+          if (!gradeMatch) return false;
+          const grade = parseInt(gradeMatch[1]);
+          return searchGrades.includes(grade);
+        }).slice(0, 10);
+
+        if (matchedStandards.length > 0) {
+          console.log(`Found ${matchedStandards.length} standards for topic "${topic}":`, matchedStandards.map(s => s.code));
           matchedStandards.forEach(std => mappedStandards.add(std.code));
         } else {
-          // No standards found - create diagnostic reference
-          console.log(`No standards found for topic "${topic}" - using diagnostic code`);
+          console.log(`No standards found for topic "${topic}" in grades ${searchGrades.join(', ')} - using diagnostic code`);
           mappedStandards.add(`DIAGNOSTIC:${topic}`);
         }
       } else {
