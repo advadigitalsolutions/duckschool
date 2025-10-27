@@ -378,21 +378,25 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
 
     // Broadcast to other windows (leader only)
     if (broadcastChannel) {
-      const updateTimestamp = Date.now();
-      broadcastChannel.postMessage({
-        type: 'state_update',
-        timestamp: updateTimestamp,
-        sequence: localSequenceNumber.current++,
-        data: {
-          timeLeft,
-          isRunning,
-          isBreak,
-          sessionsCompleted,
-          totalDuration,
-          settings,
-        }
-      });
-      lastUpdateTimestamp.current = updateTimestamp;
+      try {
+        const updateTimestamp = Date.now();
+        broadcastChannel.postMessage({
+          type: 'state_update',
+          timestamp: updateTimestamp,
+          sequence: localSequenceNumber.current++,
+          data: {
+            timeLeft,
+            isRunning,
+            isBreak,
+            sessionsCompleted,
+            totalDuration,
+            settings,
+          }
+        });
+        lastUpdateTimestamp.current = updateTimestamp;
+      } catch (error) {
+        console.warn('Failed to broadcast state update, channel may be closed:', error);
+      }
     }
   }, [timeLeft, isRunning, isBreak, sessionsCompleted, totalDuration, settings, studentId, isInitializing, broadcastChannel, isLeader]);
 

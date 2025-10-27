@@ -33,10 +33,24 @@ export function StandardsCoverageDashboard({
   const [loading, setLoading] = useState(true);
   const [allStandards, setAllStandards] = useState<Standard[]>([]);
   const [coveredStandards, setCoveredStandards] = useState<Set<string>>(new Set());
+  const [isBridgeMode, setIsBridgeMode] = useState(false);
 
   useEffect(() => {
     loadStandardsCoverage();
   }, [courseId, framework, gradeLevel, subject]);
+  
+  useEffect(() => {
+    const checkBridgeMode = async () => {
+      const { data: courseData } = await supabase
+        .from('courses')
+        .select('course_type, standards_scope')
+        .eq('id', courseId)
+        .single();
+      
+      setIsBridgeMode(courseData?.course_type === 'bridge_mode');
+    };
+    checkBridgeMode();
+  }, [courseId]);
 
   const loadStandardsCoverage = async () => {
     setLoading(true);
@@ -257,22 +271,6 @@ export function StandardsCoverageDashboard({
       </Card>
     );
   }
-
-  // Check if this is a bridge course with only diagnostic codes
-  const [isBridgeMode, setIsBridgeMode] = useState(false);
-  
-  useEffect(() => {
-    const checkBridgeMode = async () => {
-      const { data: courseData } = await supabase
-        .from('courses')
-        .select('course_type, standards_scope')
-        .eq('id', courseId)
-        .single();
-      
-      setIsBridgeMode(courseData?.course_type === 'bridge_mode');
-    };
-    checkBridgeMode();
-  }, [courseId]);
 
   if (totalCount === 0) {
     return (
