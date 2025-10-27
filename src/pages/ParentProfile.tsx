@@ -17,6 +17,7 @@ import { useBionicReading } from '@/contexts/BionicReadingContext';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { BionicText } from '@/components/BionicText';
 import { Slider } from '@/components/ui/slider';
+import { ParentProfileAssessment } from '@/components/ParentProfileAssessment';
 import avatarElephant from '@/assets/avatars/avatar-elephant.png';
 import avatarWolf from '@/assets/avatars/avatar-wolf.png';
 import avatarBeetle from '@/assets/avatars/avatar-beetle.png';
@@ -285,6 +286,7 @@ export default function ParentProfile() {
         <Tabs defaultValue="profile" className="space-y-4">
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="learning-profile">Teaching & Learning Profile</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
@@ -640,6 +642,10 @@ export default function ParentProfile() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="learning-profile">
+            <ParentProfileAssessment onComplete={() => fetchProfile()} />
           </TabsContent>
         </Tabs>
       </div>

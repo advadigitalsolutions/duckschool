@@ -1843,6 +1843,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          assessment_answers_draft: Json | null
           avatar_url: string | null
           bionic_reading_enabled: boolean | null
           cognitive_traits: Json | null
@@ -1876,6 +1877,7 @@ export type Database = {
           timezone: string | null
         }
         Insert: {
+          assessment_answers_draft?: Json | null
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
           cognitive_traits?: Json | null
@@ -1909,6 +1911,7 @@ export type Database = {
           timezone?: string | null
         }
         Update: {
+          assessment_answers_draft?: Json | null
           avatar_url?: string | null
           bionic_reading_enabled?: boolean | null
           cognitive_traits?: Json | null
