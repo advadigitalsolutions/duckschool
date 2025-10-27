@@ -41,60 +41,104 @@ export function StandardsCoverageDashboard({
   const loadStandardsCoverage = async () => {
     setLoading(true);
     try {
-      // Normalize framework names - handle both "CA-CCSS" and "CA CCSS" formats
-      const frameworkVariations = [
-        framework,
-        framework?.replace(/-/g, ' '), // "CA-CCSS" -> "CA CCSS"
-        framework?.replace(/ /g, '-'), // "CA CCSS" -> "CA-CCSS"
-      ].filter(Boolean);
-
-      // Normalize subject names
-      const subjectVariations = subject ? [
-        subject,
-        subject.replace(/\//g, ' '), // "English/Language Arts" -> "English Language Arts"
-        subject.replace(/ /g, '/'),   // "English Language Arts" -> "English/Language Arts"
-      ] : [];
-
-      console.log('🔍 StandardsCoverageDashboard query:', { framework, frameworkVariations, subject, subjectVariations, gradeLevel });
+      // First, check if this is a bridge course by getting course details
+      const { data: courseData } = await supabase
+        .from('courses')
+        .select('course_type, standards_scope')
+        .eq('id', courseId)
+        .single();
+      
+      const isBridgeMode = courseData?.course_type === 'bridge_mode' || 
+                           courseData?.standards_scope?.[0]?.bridge_mode === true;
+      
+      console.log('🔍 Course type:', courseData?.course_type, 'Bridge mode:', isBridgeMode);
       
       let standardsData: any[] = [];
       
-      // Try all framework and subject combinations
-      for (const frameworkVariant of frameworkVariations) {
-        for (const subjectVariant of (subjectVariations.length > 0 ? subjectVariations : [null])) {
-          let query = supabase
+      if (isBridgeMode) {
+        // For bridge courses, get standards from curriculum items first
+        const { data: curriculumItems } = await supabase
+          .from('curriculum_items')
+          .select('standards')
+          .eq('course_id', courseId);
+        
+        const standardCodesInCourse = new Set<string>();
+        curriculumItems?.forEach(item => {
+          const codes = Array.isArray(item.standards) ? item.standards : [];
+          codes.forEach((code: string) => {
+            if (!code.startsWith('DIAGNOSTIC:')) {
+              standardCodesInCourse.add(code);
+            }
+          });
+        });
+        
+        console.log('📚 Bridge course standards:', Array.from(standardCodesInCourse));
+        
+        // Query details for these specific standards
+        if (standardCodesInCourse.size > 0) {
+          const { data } = await supabase
             .from('standards')
             .select('code, text, grade_band, metadata')
-            .eq('framework', frameworkVariant);
+            .in('code', Array.from(standardCodesInCourse));
+          
+          standardsData = data || [];
+          console.log('📊 Found details for', standardsData.length, 'bridge standards');
+        }
+      } else {
+        // Original logic for non-bridge courses
+        // Normalize framework names - handle both "CA-CCSS" and "CA CCSS" formats
+        const frameworkVariations = [
+          framework,
+          framework?.replace(/-/g, ' '), // "CA-CCSS" -> "CA CCSS"
+          framework?.replace(/ /g, '-'), // "CA CCSS" -> "CA-CCSS"
+        ].filter(Boolean);
 
-          if (subjectVariant) {
-            query = query.eq('subject', subjectVariant);
-          }
+        // Normalize subject names
+        const subjectVariations = subject ? [
+          subject,
+          subject.replace(/\//g, ' '), // "English/Language Arts" -> "English Language Arts"
+          subject.replace(/ /g, '/'),   // "English Language Arts" -> "English/Language Arts"
+        ] : [];
 
-          if (gradeLevel) {
-            const gradeNum = parseInt(gradeLevel.replace(/\D/g, ''));
-            if (!isNaN(gradeNum)) {
-              // Match exact grade or grade ranges that include this grade
-              query = query.or(`grade_band.eq.${gradeNum},grade_band.eq.K-${gradeNum},grade_band.like.%-${gradeNum},grade_band.like.K-12`);
+        console.log('🔍 StandardsCoverageDashboard query:', { framework, frameworkVariations, subject, subjectVariations, gradeLevel });
+        
+        // Try all framework and subject combinations
+        for (const frameworkVariant of frameworkVariations) {
+          for (const subjectVariant of (subjectVariations.length > 0 ? subjectVariations : [null])) {
+            let query = supabase
+              .from('standards')
+              .select('code, text, grade_band, metadata')
+              .eq('framework', frameworkVariant);
+
+            if (subjectVariant) {
+              query = query.eq('subject', subjectVariant);
+            }
+
+            if (gradeLevel) {
+              const gradeNum = parseInt(gradeLevel.replace(/\D/g, ''));
+              if (!isNaN(gradeNum)) {
+                // Match exact grade or grade ranges that include this grade
+                query = query.or(`grade_band.eq.${gradeNum},grade_band.eq.K-${gradeNum},grade_band.like.%-${gradeNum},grade_band.like.K-12`);
+              }
+            }
+
+            const { data, error } = await query;
+            if (error) {
+              console.error('StandardsCoverageDashboard error:', error);
+            }
+            
+            if (data && data.length > 0) {
+              standardsData = data;
+              console.log('📊 StandardsCoverageDashboard found:', data.length, 'standards with', { frameworkVariant, subjectVariant });
+              break;
             }
           }
-
-          const { data, error } = await query;
-          if (error) {
-            console.error('StandardsCoverageDashboard error:', error);
-          }
-          
-          if (data && data.length > 0) {
-            standardsData = data;
-            console.log('📊 StandardsCoverageDashboard found:', data.length, 'standards with', { frameworkVariant, subjectVariant });
-            break;
-          }
+          if (standardsData.length > 0) break;
         }
-        if (standardsData.length > 0) break;
-      }
 
-      if (standardsData.length === 0) {
-        console.log('⚠️ No standards found for any combination');
+        if (standardsData.length === 0) {
+          console.log('⚠️ No standards found for any combination');
+        }
       }
 
       // Get curriculum items with their standards, estimated minutes, and check completion
