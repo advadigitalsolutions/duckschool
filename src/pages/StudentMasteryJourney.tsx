@@ -88,6 +88,23 @@ export default function StudentMasteryJourney() {
     enabled: !!studentId
   });
 
+  // Fetch diagnostic assessments
+  const {
+    data: diagnosticData
+  } = useQuery({
+    queryKey: ['diagnostic-mastery', studentId],
+    queryFn: async () => {
+      if (!studentId) return null;
+      const {
+        data
+      } = await supabase.from('diagnostic_assessments').select('*').eq('student_id', studentId).eq('status', 'completed').order('completed_at', {
+        ascending: false
+      });
+      return data;
+    },
+    enabled: !!studentId
+  });
+
   // Calculate overall progress
   const overallMastery = masteryData?.reduce((acc, course) => {
     return acc + (course.overall_mastery_percentage || 0);
@@ -161,7 +178,11 @@ export default function StudentMasteryJourney() {
 
       {/* Tabs for different views */}
       <Tabs defaultValue="growth" className="space-y-4">
-        <TabsList className="grid w-full md:w-auto grid-cols-3">
+        <TabsList className="grid w-full md:w-auto grid-cols-4">
+          <TabsTrigger value="diagnostic" className="gap-2">
+            <Target className="h-4 w-4" />
+            Diagnostic Insights
+          </TabsTrigger>
           <TabsTrigger value="growth" className="gap-2">
             <Brain className="h-4 w-4" />
             Growth Areas
@@ -176,6 +197,99 @@ export default function StudentMasteryJourney() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="diagnostic" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
+                Diagnostic Assessment Insights
+              </CardTitle>
+              <CardDescription>
+                Skills assessments reveal your learning edges and growth opportunities
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {diagnosticData && diagnosticData.length > 0 ? (
+                diagnosticData.map((assessment) => {
+                  const results = assessment.results as any;
+                  return (
+                    <div key={assessment.id} className="p-4 rounded-lg border">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold text-lg">{assessment.subject}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Completed {new Date(assessment.completed_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge variant="outline">{results?.totalQuestions || 0} questions</Badge>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div className="text-center p-3 rounded-lg bg-muted/50">
+                          <div className="text-xl font-bold">
+                            {Math.round((results?.accuracyRate || 0) * 100)}%
+                          </div>
+                          <div className="text-xs text-muted-foreground">Accuracy</div>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-muted/50">
+                          <div className="text-xl font-bold">
+                            {results?.correctAnswers || 0}/{results?.totalQuestions || 0}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Questions</div>
+                        </div>
+                        <div className="text-center p-3 rounded-lg bg-muted/50">
+                          <div className="text-xl font-bold">
+                            {Math.round((results?.averageMastery || 0) * 100)}%
+                          </div>
+                          <div className="text-xs text-muted-foreground">Avg Mastery</div>
+                        </div>
+                      </div>
+
+                      {results?.knowledgeBoundaries?.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                            🎯 Knowledge Edges Identified:
+                          </p>
+                          <div className="pl-4 space-y-1">
+                            {results.knowledgeBoundaries.slice(0, 3).map((topic: string, idx: number) => {
+                              const mastery = results.masteryByTopic?.[topic];
+                              return (
+                                <p key={idx} className="text-sm text-muted-foreground">
+                                  • {topic} ({Math.round((mastery?.mastery || 0) * 100)}% mastery)
+                                </p>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {results?.learningPath?.length > 0 && (
+                        <div className="space-y-2 mt-3">
+                          <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                            🚀 Recommended Next Steps:
+                          </p>
+                          <div className="pl-4 space-y-1">
+                            {results.learningPath.slice(0, 2).map((item: any, idx: number) => (
+                              <p key={idx} className="text-sm text-muted-foreground">
+                                {idx + 1}. {item.topic} - {item.reason}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Target className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>Complete a Skills Check-In to see diagnostic insights</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="growth" className="space-y-4">
           <Card>
             <CardHeader>
@@ -184,32 +298,79 @@ export default function StudentMasteryJourney() {
                 Your Learning Edge
               </CardTitle>
               <CardDescription>
-                These are your growth opportunities. Each one is a chance to level up your understanding!
+                Growth opportunities from both assignments and diagnostic assessments
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {growthOpportunities && growthOpportunities.length > 0 ? growthOpportunities.map(opportunity => <div key={opportunity.id} className="flex items-center justify-between p-4 rounded-lg border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors">
-                    <div className="flex-1">
-                      <div className="font-medium">{opportunity.standard_code}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {opportunity.total_attempts} {opportunity.total_attempts === 1 ? 'attempt' : 'attempts'} so far
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-accent">
-                          {Math.round(opportunity.mastery_level)}%
+              {/* Assignment-based growth areas */}
+              {growthOpportunities && growthOpportunities.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">From Course Work:</p>
+                  {growthOpportunities.map(opportunity => (
+                    <div key={opportunity.id} className="flex items-center justify-between p-4 rounded-lg border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors">
+                      <div className="flex-1">
+                        <div className="font-medium">{opportunity.standard_code}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {opportunity.total_attempts} {opportunity.total_attempts === 1 ? 'attempt' : 'attempts'} so far
                         </div>
-                        <div className="text-xs text-muted-foreground">current</div>
                       </div>
-                      <Badge variant="outline" className="bg-background">
-                        🌱 Growing
-                      </Badge>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-accent">
+                            {Math.round(opportunity.mastery_level)}%
+                          </div>
+                          <div className="text-xs text-muted-foreground">current</div>
+                        </div>
+                        <Badge variant="outline" className="bg-background">
+                          🌱 Growing
+                        </Badge>
+                      </div>
                     </div>
-                  </div>) : <div className="text-center py-8 text-muted-foreground">
+                  ))}
+                </div>
+              )}
+
+              {/* Diagnostic-based growth areas */}
+              {diagnosticData && diagnosticData.length > 0 && (
+                <div className="space-y-3 mt-4">
+                  <p className="text-sm font-medium">From Diagnostic Assessments:</p>
+                  {diagnosticData.map((assessment) => {
+                    const results = assessment.results as any;
+                    return results?.knowledgeBoundaries?.slice(0, 3).map((topic: string, idx: number) => {
+                      const mastery = results.masteryByTopic?.[topic];
+                      return (
+                        <div key={`${assessment.id}-${idx}`} className="flex items-center justify-between p-4 rounded-lg border border-blue-200/20 bg-blue-50/5 dark:bg-blue-950/10">
+                          <div className="flex-1">
+                            <div className="font-medium">{topic}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {assessment.subject} • Knowledge Edge
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                {Math.round((mastery?.mastery || 0) * 100)}%
+                              </div>
+                              <div className="text-xs text-muted-foreground">mastery</div>
+                            </div>
+                            <Badge variant="outline" className="bg-background">
+                              🎯 Edge
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })}
+                </div>
+              )}
+
+              {(!growthOpportunities || growthOpportunities.length === 0) && 
+               (!diagnosticData || diagnosticData.length === 0) && (
+                <div className="text-center py-8 text-muted-foreground">
                   <Target className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Great work! Take some assessments to discover new growth opportunities.</p>
-                </div>}
+                  <p>Complete assignments and diagnostics to discover growth opportunities!</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

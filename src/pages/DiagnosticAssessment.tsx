@@ -5,8 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { DiagnosticWarmupPhase } from "@/components/DiagnosticWarmupPhase";
 import { DiagnosticDeepDivePhase } from "@/components/DiagnosticDeepDivePhase";
 import { DiagnosticResultsDashboard } from "@/components/DiagnosticResultsDashboard";
+import { DiagnosticDetailedReport } from "@/components/DiagnosticDetailedReport";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function DiagnosticAssessment() {
   const { assessmentId } = useParams<{ assessmentId: string }>();
@@ -151,12 +153,32 @@ export default function DiagnosticAssessment() {
         )}
 
         {assessment.current_phase === 'completed' && assessment.results && (
-          <DiagnosticResultsDashboard
-            assessmentId={assessment.id}
-            results={assessment.results as any}
-            subject={assessment.subject}
-            studentId={currentUser.id}
-          />
+          <Tabs defaultValue="summary" className="space-y-6">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+              <TabsTrigger value="summary">Summary</TabsTrigger>
+              <TabsTrigger value="detailed">Detailed Report</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="summary">
+              <DiagnosticResultsDashboard
+                assessmentId={assessment.id}
+                results={assessment.results as any}
+                subject={assessment.subject}
+                studentId={currentUser.id}
+              />
+            </TabsContent>
+            
+            <TabsContent value="detailed">
+              <DiagnosticDetailedReport
+                assessmentId={assessment.id}
+                results={assessment.results as any}
+                subject={assessment.subject}
+                completedAt={assessment.completed_at || assessment.updated_at}
+                framework={assessment.framework}
+                gradeLevel={assessment.grade_level}
+              />
+            </TabsContent>
+          </Tabs>
         )}
 
         {(isSubmittingWarmup || isFinalizing) && (

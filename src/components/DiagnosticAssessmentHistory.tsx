@@ -6,9 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Target, Calendar, TrendingUp, TrendingDown, Minus, Loader2, Eye, BookOpen, Pencil } from "lucide-react";
+import { Target, Calendar, TrendingUp, TrendingDown, Minus, Loader2, Eye, BookOpen, Pencil, Lightbulb, ArrowRight, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { CourseSettingsDialog } from "./CourseSettingsDialog";
+import { toast } from "@/hooks/use-toast";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface DiagnosticAssessmentHistoryProps {
   studentId: string;
@@ -54,6 +56,16 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
     
     if (matchingCourse) {
       setSelectedCourse(matchingCourse.id);
+      toast({
+        title: "Course Found",
+        description: `Opening settings for ${matchingCourse.title}`,
+      });
+    } else {
+      toast({
+        title: "No Matching Course",
+        description: `No active course found for ${assessment.subject}. Would you like to create one?`,
+        variant: "default"
+      });
     }
   };
 
@@ -63,7 +75,17 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
     );
     
     if (matchingCourse) {
+      toast({
+        title: "Navigating to Course",
+        description: `Opening ${matchingCourse.title} for practice`,
+      });
       navigate(`/course/${matchingCourse.id}`);
+    } else {
+      toast({
+        title: "No Matching Course",
+        description: `Create a ${assessment.subject} course first to generate practice assignments.`,
+        variant: "default"
+      });
     }
   };
 
@@ -200,82 +222,135 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                   </Button>
                 </div>
 
-                {/* Mastery by Topic */}
-                {results?.topicBreakdown && (
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium">Topic Mastery</h4>
-                    <div className="space-y-3">
-                      {/* Strengths */}
-                      {results.topicBreakdown.strengths?.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
-                            <TrendingUp className="h-3 w-3" />
-                            Strengths (≥80%)
-                          </p>
-                          <div className="space-y-2 pl-4">
-                            {results.topicBreakdown.strengths.map((topic: any, idx: number) => (
-                              <div key={idx} className="space-y-1">
+                {/* Enhanced Results Display */}
+                <Collapsible>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full justify-between">
+                      <span className="text-sm font-medium">View Detailed Breakdown</span>
+                      <TrendingUp className="h-4 w-4" />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 mt-4">
+                    {/* Strengths */}
+                    {results?.masteredTopics?.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-green-600 dark:text-green-400 flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4" />
+                          Strengths (Mastered)
+                        </p>
+                        <div className="space-y-2 pl-6">
+                          {results.masteredTopics.map((topic: string) => {
+                            const mastery = results.masteryByTopic?.[topic];
+                            return (
+                              <div key={topic} className="space-y-1">
                                 <div className="flex items-center justify-between text-sm">
-                                  <span className="text-muted-foreground">{topic.topic}</span>
-                                  <span className="font-medium text-green-600 dark:text-green-400">
-                                    {Math.round(topic.mastery)}%
+                                  <span className="font-medium">{topic}</span>
+                                  <span className="text-green-600 dark:text-green-400">
+                                    {Math.round((mastery?.mastery || 0) * 100)}%
                                   </span>
                                 </div>
-                                <Progress value={topic.mastery} className="h-1.5" />
+                                <Progress value={(mastery?.mastery || 0) * 100} className="h-1.5" />
+                                <p className="text-xs text-muted-foreground">
+                                  {mastery?.attempts || 0} attempts, {mastery?.successes || 0} successful
+                                </p>
                               </div>
-                            ))}
-                          </div>
+                            );
+                          })}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* Growing */}
-                      {results.topicBreakdown.growing?.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
-                            <Minus className="h-3 w-3" />
-                            Growing (60-79%)
-                          </p>
-                          <div className="space-y-2 pl-4">
-                            {results.topicBreakdown.growing.map((topic: any, idx: number) => (
-                              <div key={idx} className="space-y-1">
+                    {/* Knowledge Boundaries */}
+                    {results?.knowledgeBoundaries?.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                          <Target className="h-4 w-4" />
+                          Knowledge Edges Identified
+                        </p>
+                        <p className="text-xs text-muted-foreground pl-6 mb-2">
+                          These are growth frontiers where targeted practice will have maximum impact
+                        </p>
+                        <div className="space-y-2 pl-6">
+                          {results.knowledgeBoundaries.map((topic: string) => {
+                            const mastery = results.masteryByTopic?.[topic];
+                            return (
+                              <div key={topic} className="space-y-1">
                                 <div className="flex items-center justify-between text-sm">
-                                  <span className="text-muted-foreground">{topic.topic}</span>
-                                  <span className="font-medium text-yellow-600 dark:text-yellow-400">
-                                    {Math.round(topic.mastery)}%
-                                  </span>
+                                  <span className="font-medium">{topic}</span>
+                                  <Badge variant="outline" className="text-xs">Edge</Badge>
                                 </div>
-                                <Progress value={topic.mastery} className="h-1.5" />
+                                <Progress value={(mastery?.mastery || 0) * 100} className="h-1.5" />
+                                <p className="text-xs text-muted-foreground">
+                                  {Math.round((mastery?.mastery || 0) * 100)}% mastery
+                                  {mastery?.prerequisite && ` • Prerequisite: ${mastery.prerequisite}`}
+                                </p>
                               </div>
-                            ))}
-                          </div>
+                            );
+                          })}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* Focus Areas */}
-                      {results.topicBreakdown.needsWork?.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <TrendingDown className="h-3 w-3" />
-                            Focus Areas (&lt;60%)
-                          </p>
-                          <div className="space-y-2 pl-4">
-                            {results.topicBreakdown.needsWork.map((topic: any, idx: number) => (
-                              <div key={idx} className="space-y-1">
+                    {/* Learning Path */}
+                    {results?.learningPath?.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-2">
+                          <Lightbulb className="h-4 w-4" />
+                          Recommended Learning Path
+                        </p>
+                        <div className="space-y-2 pl-6">
+                          {results.learningPath.slice(0, 3).map((item: any, idx: number) => (
+                            <div key={idx} className="flex gap-2 text-sm">
+                              <span className="font-bold text-purple-600 dark:text-purple-400">
+                                {idx + 1}.
+                              </span>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{item.topic}</span>
+                                  <Badge variant={item.priority === 'high' ? 'destructive' : 'secondary'} className="text-xs">
+                                    {item.priority}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {item.reason}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Struggling Topics */}
+                    {results?.strugglingTopics?.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                          <ArrowRight className="h-4 w-4" />
+                          Learning Opportunities
+                        </p>
+                        <div className="space-y-2 pl-6">
+                          {results.strugglingTopics.map((topic: string) => {
+                            const mastery = results.masteryByTopic?.[topic];
+                            return (
+                              <div key={topic} className="space-y-1">
                                 <div className="flex items-center justify-between text-sm">
-                                  <span className="text-muted-foreground">{topic.topic}</span>
-                                  <span className="font-medium text-red-600 dark:text-red-400">
-                                    {Math.round(topic.mastery)}%
+                                  <span className="font-medium">{topic}</span>
+                                  <span className="text-amber-600 dark:text-amber-400">
+                                    {Math.round((mastery?.mastery || 0) * 100)}%
                                   </span>
                                 </div>
-                                <Progress value={topic.mastery} className="h-1.5" />
+                                <Progress value={(mastery?.mastery || 0) * 100} className="h-1.5" />
+                                <p className="text-xs text-muted-foreground">
+                                  {mastery?.attempts || 0} attempts so far
+                                </p>
                               </div>
-                            ))}
-                          </div>
+                            );
+                          })}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                      </div>
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
 
                 {/* Previous Assessments */}
                 {subjectAssessments.length > 1 && (
