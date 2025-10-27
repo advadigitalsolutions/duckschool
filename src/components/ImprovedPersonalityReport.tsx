@@ -334,25 +334,29 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
         </Card>
       )}
 
-      {/* Relationship Analysis CTA */}
-      <Card className="bg-gradient-to-br from-primary/5 to-background border-primary/20">
-        <CardContent className="pt-6 text-center">
-          <Button 
-            onClick={() => setShowRelationshipDialog(true)}
-            size="lg"
-            className="gap-2"
-          >
-            <Users className="h-5 w-5" />
-            See how you and your {student.parent_id ? 'educator' : 'student'} work best together
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Relationship Analysis CTA - Only show for students with educators */}
+      {student.parent_id && (
+        <>
+          <Card className="bg-gradient-to-br from-primary/5 to-background border-primary/20">
+            <CardContent className="pt-6 text-center">
+              <Button 
+                onClick={() => setShowRelationshipDialog(true)}
+                size="lg"
+                className="gap-2"
+              >
+                <Users className="h-5 w-5" />
+                See how you and your educator work best together
+              </Button>
+            </CardContent>
+          </Card>
 
-      <RelationshipAnalysisDialog
-        open={showRelationshipDialog}
-        onOpenChange={setShowRelationshipDialog}
-        student={student}
-      />
+          <RelationshipAnalysisDialog
+            open={showRelationshipDialog}
+            onOpenChange={setShowRelationshipDialog}
+            student={student}
+          />
+        </>
+      )}
     </div>
   );
 }
