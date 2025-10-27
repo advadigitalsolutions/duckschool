@@ -10,6 +10,9 @@ import { AssignmentQuestions } from './AssignmentQuestions';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useActivitySession } from '@/hooks/useActivitySession';
+import { useIdleDetection } from '@/hooks/useIdleDetection';
+import { useWindowVisibility } from '@/hooks/useWindowVisibility';
 
 interface LearningWizardProps {
   assignment: any;
@@ -36,6 +39,48 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
   const [notes, setNotes] = useState('');
   const [isSidebarMode, setIsSidebarMode] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Time tracking
+  const { sessionId, createSession, endSession, updateActiveTime, updateIdleTime, updateAwayTime, updateResearchTime } = useActivitySession(studentId);
+  
+  const { isIdle } = useIdleDetection({
+    idleThreshold: 60000
+  });
+  
+  const { isVisible } = useWindowVisibility();
+
+  // Create session on mount
+  useEffect(() => {
+    if (studentId && !sessionId && !loading) {
+      createSession();
+    }
+  }, [studentId, sessionId, loading, createSession]);
+
+  // End session on unmount
+  useEffect(() => {
+    return () => {
+      if (sessionId) {
+        endSession('manual');
+      }
+    };
+  }, [sessionId, endSession]);
+
+  // Track active/idle/away time every second
+  useEffect(() => {
+    if (!sessionId || loading) return;
+
+    const interval = setInterval(() => {
+      if (!isVisible) {
+        updateAwayTime(1);
+      } else if (isIdle) {
+        updateIdleTime(1);
+      } else {
+        updateActiveTime(1);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [sessionId, loading, isVisible, isIdle, updateActiveTime, updateIdleTime, updateAwayTime]);
 
   const assignmentBody = typeof assignment.curriculum_items?.body === 'string'
     ? JSON.parse(assignment.curriculum_items.body)
@@ -206,6 +251,7 @@ export const LearningWizard: React.FC<LearningWizardProps> = ({
             studentId={studentId}
             researchGuidance={assignmentBody?.research_guidance}
             onComplete={() => handleStepComplete('notes')}
+            updateResearchTime={updateResearchTime}
           />
         )}
 

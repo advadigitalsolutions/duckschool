@@ -12,6 +12,9 @@ import { cleanMarkdown } from '@/utils/textFormatting';
 import { useXPConfig } from '@/hooks/useXP';
 import { BionicText } from './BionicText';
 import { Badge } from '@/components/ui/badge';
+import { useActivitySession } from '@/hooks/useActivitySession';
+import { useIdleDetection } from '@/hooks/useIdleDetection';
+import { useWindowVisibility } from '@/hooks/useWindowVisibility';
 
 interface ActivitySubmissionProps {
   assignment: any;
@@ -48,6 +51,39 @@ export function ActivitySubmission({ assignment, studentId }: ActivitySubmission
   const [loadingPrevious, setLoadingPrevious] = useState(true);
 
   const { config: xpConfig } = useXPConfig();
+
+  // Time tracking
+  const { sessionId, createSession, endSession, updateActiveTime, updateIdleTime, updateAwayTime } = useActivitySession(studentId);
+  
+  const { isIdle } = useIdleDetection({
+    idleThreshold: 60000
+  });
+  
+  const { isVisible } = useWindowVisibility();
+
+  // Create session when form opens (not submitted yet)
+  useEffect(() => {
+    if (studentId && !sessionId && !loadingPrevious && !submitted) {
+      createSession();
+    }
+  }, [studentId, sessionId, loadingPrevious, submitted, createSession]);
+
+  // Track active/idle/away time every second
+  useEffect(() => {
+    if (!sessionId || submitted) return;
+
+    const interval = setInterval(() => {
+      if (!isVisible) {
+        updateAwayTime(1);
+      } else if (isIdle) {
+        updateIdleTime(1);
+      } else {
+        updateActiveTime(1);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [sessionId, submitted, isVisible, isIdle, updateActiveTime, updateIdleTime, updateAwayTime]);
 
   const activityDetails = typeof assignment?.curriculum_items?.body === 'string'
     ? JSON.parse(assignment.curriculum_items.body)
@@ -160,6 +196,11 @@ export function ActivitySubmission({ assignment, studentId }: ActivitySubmission
 
       toast.success('Activity logged successfully! 🎉');
       setSubmitted(true);
+      
+      // End the time tracking session
+      if (sessionId) {
+        endSession('manual');
+      }
       
       // Reload submissions to show the new one
       loadPreviousSubmissions();

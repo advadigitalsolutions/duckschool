@@ -7,6 +7,9 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle, Brain, Target, Gauge, Sparkles, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TextToSpeech } from "@/components/TextToSpeech";
+import { useActivitySession } from "@/hooks/useActivitySession";
+import { useIdleDetection } from "@/hooks/useIdleDetection";
+import { useWindowVisibility } from "@/hooks/useWindowVisibility";
 
 interface DiagnosticDeepDivePhaseProps {
   assessmentId: string;
@@ -86,6 +89,53 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
   const [currentLoadingStep, setCurrentLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Time tracking
+  const { sessionId, createSession, endSession, updateActiveTime, updateIdleTime, updateAwayTime } = useActivitySession(studentId);
+  
+  const { isIdle } = useIdleDetection({
+    idleThreshold: 60000,
+    onIdle: () => console.log('User is idle'),
+    onActive: () => console.log('User is active')
+  });
+  
+  const { isVisible, totalAwaySeconds } = useWindowVisibility({
+    onHidden: () => console.log('Window hidden'),
+    onVisible: () => console.log('Window visible')
+  });
+
+  // Create session on mount
+  useEffect(() => {
+    if (studentId && !sessionId) {
+      createSession();
+    }
+  }, [studentId, sessionId, createSession]);
+
+  // End session on unmount or completion
+  useEffect(() => {
+    return () => {
+      if (sessionId) {
+        endSession('manual');
+      }
+    };
+  }, [sessionId, endSession]);
+
+  // Track active/idle/away time every second
+  useEffect(() => {
+    if (!sessionId || isLoading) return;
+
+    const interval = setInterval(() => {
+      if (!isVisible) {
+        updateAwayTime(1);
+      } else if (isIdle) {
+        updateIdleTime(1);
+      } else {
+        updateActiveTime(1);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [sessionId, isLoading, isVisible, isIdle, updateActiveTime, updateIdleTime, updateAwayTime]);
 
   const fetchNextQuestion = async () => {
     setIsLoading(true);

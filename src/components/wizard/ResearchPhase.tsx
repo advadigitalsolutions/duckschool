@@ -11,16 +11,32 @@ interface ResearchPhaseProps {
   studentId: string;
   researchGuidance: any;
   onComplete: () => void;
+  updateResearchTime?: (seconds: number) => void;
 }
 
 export const ResearchPhase: React.FC<ResearchPhaseProps> = ({
   assignmentId,
   studentId,
   researchGuidance,
-  onComplete
+  onComplete,
+  updateResearchTime
 }) => {
   const [resources, setResources] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Track research time when viewing external resources
+  useEffect(() => {
+    if (!updateResearchTime) return;
+
+    const interval = setInterval(() => {
+      // Count as research time if user has resources open
+      if (resources.length > 0) {
+        updateResearchTime(1);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [resources.length, updateResearchTime]);
 
   const minimumResources = researchGuidance?.minimum_resources || 2;
 
