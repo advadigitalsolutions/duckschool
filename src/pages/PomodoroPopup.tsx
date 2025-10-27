@@ -5,20 +5,27 @@ import { supabase } from '@/integrations/supabase/client';
 
 export default function PomodoroPopup() {
   const [studentId, setStudentId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: studentData } = await supabase
-          .from('students')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (studentData) {
-          setStudentId(studentData.id);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: studentData } = await supabase
+            .from('students')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (studentData) {
+            setStudentId(studentData.id);
+          }
         }
+      } catch (error) {
+        console.error('Error loading student:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -38,7 +45,14 @@ export default function PomodoroPopup() {
         </div>
         
         <div className="relative z-10 flex items-center justify-center h-full">
-          <SimplePomodoroTimer studentId={studentId} compact />
+          {loading ? (
+            <div className="text-center text-white">
+              <div className="text-2xl font-semibold mb-4">Loading timer...</div>
+              <div className="animate-spin h-12 w-12 border-4 border-white border-t-transparent rounded-full mx-auto"></div>
+            </div>
+          ) : (
+            <SimplePomodoroTimer studentId={studentId} compact />
+          )}
         </div>
       </div>
     </PomodoroProvider>

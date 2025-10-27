@@ -99,8 +99,9 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
     const channel = new BroadcastChannel('pomodoro_sync');
     setBroadcastChannel(channel);
 
-    // Attempt to become leader
+    // Attempt to become leader (only once)
     const becomeLeader = () => {
+      if (isLeader) return; // Already leader, don't do it again
       console.log('🎯 Becoming leader window');
       setIsLeader(true);
       
@@ -124,6 +125,7 @@ export function PomodoroProvider({ children, studentId }: PomodoroProviderProps)
     // Check for leader heartbeat
     let lastLeaderHeartbeat = Date.now();
     const checkForLeader = () => {
+      if (isLeader) return; // Already leader, don't check again
       const timeSinceLastHeartbeat = Date.now() - lastLeaderHeartbeat;
       if (timeSinceLastHeartbeat > 5000) {
         // No leader detected, become leader
