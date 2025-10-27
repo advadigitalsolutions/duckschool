@@ -143,7 +143,7 @@ export function EducatorSidebar() {
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-[hsl(var(--chart-1))]" />
+                  <BookOpen className="h-5 w-5" />
                   {!isCollapsed && <span className="font-medium">Courses</span>}
                 </div>
                 {!isCollapsed && <ChevronDown className={`h-4 w-4 transition-transform ${coursesOpen ? 'rotate-180' : ''}`} />}
@@ -178,7 +178,7 @@ export function EducatorSidebar() {
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-[hsl(var(--chart-3))]" />
+                  <BarChart3 className="h-5 w-5" />
                   {!isCollapsed && <span className="font-medium">Analytics</span>}
                 </div>
                 {!isCollapsed && <ChevronDown className={`h-4 w-4 transition-transform ${analyticsOpen ? 'rotate-180' : ''}`} />}
@@ -220,7 +220,7 @@ export function EducatorSidebar() {
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="w-full flex items-center justify-between group hover:bg-accent/50 rounded-md px-2 py-1.5 transition-colors">
                 <div className="flex items-center gap-2">
-                  <Gift className="h-5 w-5 text-[hsl(var(--chart-2))]" />
+                  <Gift className="h-5 w-5" />
                   {!isCollapsed && <span className="font-medium">Rewards</span>}
                 </div>
                 {!isCollapsed && <ChevronDown className={`h-4 w-4 transition-transform ${rewardsOpen ? 'rotate-180' : ''}`} />}
