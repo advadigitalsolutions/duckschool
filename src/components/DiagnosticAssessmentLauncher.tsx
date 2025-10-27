@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,42 @@ export function DiagnosticAssessmentLauncher({
       return data;
     }
   });
+
+  // Auto-detect framework and grade level from student's courses when subject changes
+  const { data: studentCourses } = useQuery({
+    queryKey: ['student-courses-for-diagnostic', studentId, subject],
+    queryFn: async () => {
+      if (!subject) return null;
+      
+      const { data, error } = await supabase
+        .from('courses')
+        .select('subject, grade_level, standards_scope')
+        .eq('student_id', studentId)
+        .eq('subject', subject)
+        .eq('archived', false)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      return data?.[0] || null;
+    },
+    enabled: !!subject
+  });
+
+  // Auto-populate framework and grade from detected course
+  useEffect(() => {
+    if (studentCourses) {
+      const detectedFramework = studentCourses.standards_scope?.[0]?.framework;
+      const detectedGrade = studentCourses.grade_level;
+      
+      if (detectedFramework && detectedFramework !== framework) {
+        setFramework(detectedFramework);
+      }
+      if (detectedGrade && detectedGrade !== gradeLevel) {
+        setGradeLevel(detectedGrade);
+      }
+    }
+  }, [studentCourses]);
 
   const handleStartAssessment = async () => {
     console.log('🎯 Begin Assessment clicked:', { subject, framework, gradeLevel, studentId });
@@ -169,8 +205,28 @@ export function DiagnosticAssessmentLauncher({
               </Select>
             </div>
 
+            {studentCourses && (framework || gradeLevel) && (
+              <div className="p-3 bg-green-50 dark:bg-green-950 rounded-md border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-900 dark:text-green-100 font-medium mb-1">
+                  Auto-detected from your {subject} course:
+                </p>
+                <ul className="text-xs text-green-800 dark:text-green-200 space-y-1">
+                  {framework && <li>• Framework: {framework}</li>}
+                  {gradeLevel && <li>• Grade Level: {gradeLevel}</li>}
+                </ul>
+              </div>
+            )}
+
+            {subject && !studentCourses && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-950 rounded-md border border-amber-200 dark:border-amber-800">
+                <p className="text-sm text-amber-900 dark:text-amber-100">
+                  No {subject} course found. You can manually select grade level below if needed.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="gradeLevel">Grade Level (Optional)</Label>
+              <Label htmlFor="gradeLevel">Grade Level {gradeLevel ? '(Auto-detected)' : '(Optional)'}</Label>
               <Select value={gradeLevel} onValueChange={setGradeLevel}>
                 <SelectTrigger id="gradeLevel">
                   <SelectValue placeholder="Select grade level" />
@@ -181,20 +237,6 @@ export function DiagnosticAssessmentLauncher({
                       Grade {grade}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="framework">Framework (Optional)</Label>
-              <Select value={framework} onValueChange={setFramework}>
-                <SelectTrigger id="framework">
-                  <SelectValue placeholder="Select framework" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Common Core">Common Core</SelectItem>
-                  <SelectItem value="State Standards">State Standards</SelectItem>
-                  <SelectItem value="Custom">Custom</SelectItem>
                 </SelectContent>
               </Select>
             </div>
