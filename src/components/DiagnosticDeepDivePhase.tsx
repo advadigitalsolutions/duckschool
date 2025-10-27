@@ -212,12 +212,14 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
 
       <Card className="border-2">
         <CardHeader>
-          <TextToSpeech text={`${currentQuestion.question}. ${Object.entries(currentQuestion.options).map(([letter, text]) => `Option ${letter}: ${text}`).join('. ')}`}>
-            <CardTitle className="text-lg leading-relaxed">{currentQuestion.question}</CardTitle>
-          </TextToSpeech>
+          <CardTitle className="text-lg leading-relaxed">{currentQuestion.question}</CardTitle>
           <CardDescription>Choose the best answer</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <TextToSpeech 
+            text={`${currentQuestion.question}. ${Object.entries(currentQuestion.options).map(([letter, text]) => `Option ${letter}: ${text}`).join('. ')}`}
+            className="mb-4"
+          />
           {!showFeedback && (
             <div className="space-y-2">
               {Object.entries(currentQuestion.options).map(([letter, text]) => (
