@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TextToSpeech } from "@/components/TextToSpeech";
 
 interface DiagnosticDeepDivePhaseProps {
   assessmentId: string;
@@ -211,7 +212,9 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
 
       <Card className="border-2">
         <CardHeader>
-          <CardTitle className="text-lg leading-relaxed">{currentQuestion.question}</CardTitle>
+          <TextToSpeech text={`${currentQuestion.question}. ${Object.entries(currentQuestion.options).map(([letter, text]) => `Option ${letter}: ${text}`).join('. ')}`}>
+            <CardTitle className="text-lg leading-relaxed">{currentQuestion.question}</CardTitle>
+          </TextToSpeech>
           <CardDescription>Choose the best answer</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
