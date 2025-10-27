@@ -1,46 +1,47 @@
-import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Home, BookOpen, Calendar, Trophy, Timer, ChevronDown, GraduationCap, BarChart3, Award, ShoppingBag, Activity, ClipboardList, CalendarDays, ListTodo, Sparkles, ListChecks, Settings, Target } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton, useSidebar } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
 export function StudentSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const {
-    state
-  } = useSidebar();
-  const [student, setStudent] = useState<any>(null);
-  const [courses, setCourses] = useState<any[]>([]);
-  useEffect(() => {
-    fetchData();
-  }, []);
-  const fetchData = async () => {
-    try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
-      if (!user) return;
+  const { state } = useSidebar();
 
-      // Fetch student data
-      const {
-        data: studentData
-      } = await supabase.from('students').select('*').eq('user_id', user.id).single();
-      if (studentData) {
-        setStudent(studentData);
-
-        // Fetch courses
-        const {
-          data: coursesData
-        } = await supabase.from('courses').select('*').eq('student_id', studentData.id).order('title');
-        setCourses(coursesData || []);
-      }
-    } catch (error) {
-      console.error('Error fetching sidebar data:', error);
+  const { data: student } = useQuery({
+    queryKey: ['student-profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data } = await supabase
+        .from('students')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      return data;
     }
-  };
+  });
+
+  const { data: courses = [] } = useQuery({
+    queryKey: ['student-courses', student?.id],
+    queryFn: async () => {
+      if (!student?.id) return [];
+      
+      const { data } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('student_id', student.id)
+        .eq('archived', false)
+        .order('title');
+      
+      return data || [];
+    },
+    enabled: !!student?.id
+  });
   const isActive = (path: string) => location.pathname === path;
   const isCollapsed = state === "collapsed";
   return <Sidebar className={isCollapsed ? "w-16" : "w-60"} collapsible="icon">

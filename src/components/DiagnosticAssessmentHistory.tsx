@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ interface DiagnosticAssessmentHistoryProps {
 
 export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentHistoryProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   const [creatingCourse, setCreatingCourse] = useState<string | null>(null);
 
@@ -46,6 +47,9 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
         title: "Bridge Course Created!",
         description: `Created "${data.courseName}" covering ${data.standardsCovered} standards.`,
       });
+
+      // Invalidate courses cache to refresh sidebar
+      queryClient.invalidateQueries({ queryKey: ['student-courses'] });
 
       navigate(`/course/${data.courseId}`);
     } catch (error) {
