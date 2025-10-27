@@ -126,7 +126,7 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Accuracy</p>
                   <p className="text-2xl font-bold">
-                    {results?.accuracy ? `${Math.round(results.accuracy)}%` : 'N/A'}
+                    {results?.accuracyRate != null ? `${Math.round(results.accuracyRate * 100)}%` : 'N/A'}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -138,7 +138,7 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Avg Mastery</p>
                   <p className="text-2xl font-bold">
-                    {results?.averageMastery ? `${Math.round(results.averageMastery)}%` : 'N/A'}
+                    {results?.averageMastery != null ? `${Math.round(results.averageMastery * 100)}%` : 'N/A'}
                   </p>
                 </div>
               </div>
@@ -234,7 +234,7 @@ export function DiagnosticAssessmentHistory({ studentId }: DiagnosticAssessmentH
                           <div className="flex items-center justify-between">
                             <span>{format(new Date(assessment.completed_at), 'MMM d, yyyy')}</span>
                             <span>
-                              {prevResults?.correctAnswers || 0}/{prevResults?.totalQuestions || 0} ({prevResults?.accuracy ? Math.round(prevResults.accuracy) : 0}%)
+                              {prevResults?.correctAnswers || 0}/{prevResults?.totalQuestions || 0} ({prevResults?.accuracyRate != null ? Math.round(prevResults.accuracyRate * 100) : 0}%)
                             </span>
                           </div>
                         </div>
