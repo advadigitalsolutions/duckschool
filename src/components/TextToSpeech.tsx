@@ -19,6 +19,7 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [words, setWords] = useState<string[]>([]);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const userStoppedRef = useRef(false);
 
   useEffect(() => {
     const cleanText = cleanMarkdown(text);
@@ -126,11 +127,16 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
         setSpeaking(false);
         setPaused(false);
         setCurrentWordIndex(-1);
-        toast({
-          title: "Playback Error",
-          description: "Failed to play audio. Please try again.",
-          variant: "destructive",
-        });
+        
+        // Only show error toast if user didn't intentionally stop it
+        if (!userStoppedRef.current) {
+          toast({
+            title: "Playback Error",
+            description: "Failed to play audio. Please try again.",
+            variant: "destructive",
+          });
+        }
+        userStoppedRef.current = false;
       };
 
       // Start speaking
@@ -150,6 +156,7 @@ export function TextToSpeech({ text, children, className = '' }: TextToSpeechPro
   };
 
   const handleStop = () => {
+    userStoppedRef.current = true;
     window.speechSynthesis.cancel();
     utteranceRef.current = null;
     setSpeaking(false);
