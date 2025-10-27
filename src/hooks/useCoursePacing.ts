@@ -91,6 +91,7 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       const pacingConfig = course.pacing_config as any;
       const courseFramework = course.standards_scope?.[0]?.framework || pacingConfig?.framework || 'CA-CCSS';
       const isCustomFramework = courseFramework === 'CUSTOM';
+      const isBridgeCourse = (course as any).bridge_mode === true || course.course_type === 'bridge_mode';
       
       // For custom frameworks, check if we have AI-generated standards
       const customStandards = isCustomFramework ? course.standards_scope?.[0]?.custom_standards : null;
@@ -98,10 +99,33 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
       // For CUSTOM framework, use AI-generated standards if available
       let standards = null;
       
+      // For bridge courses, get standards from actual curriculum items instead of querying by grade
+      if (isBridgeCourse && !isCustomFramework) {
+        const standardCodesInCourse = new Set<string>();
+        course.curriculum_items?.forEach((item: any) => {
+          const codes = Array.isArray(item.standards) ? item.standards : [];
+          codes.forEach((code: string) => {
+            if (!code.startsWith('DIAGNOSTIC:')) {
+              standardCodesInCourse.add(code);
+            }
+          });
+        });
+        
+        if (standardCodesInCourse.size > 0) {
+          const { data } = await supabase
+            .from('standards')
+            .select('*')
+            .in('code', Array.from(standardCodesInCourse));
+          standards = data;
+          console.log('📚 Bridge course using', standards?.length, 'standards from curriculum items');
+        }
+      }
+      
       if (isCustomFramework && customStandards) {
         // Use the custom standards generated from goals
         standards = customStandards;
-      } else if (!isCustomFramework) {
+      } else if (!isCustomFramework && !isBridgeCourse) {
+        // Only query by grade for non-bridge regular courses
         // Normalize framework names - handle both "CA-CCSS" and "CA CCSS" formats
         const frameworkVariations = [
           courseFramework,
@@ -367,9 +391,10 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         recommendedDailyMinutes = remainingMinutes / daysUntilTarget;
       } else if (remainingMinutes > 0) {
         // Bridge courses are short remedial interventions, not full year-long courses
-        // Use 6 weeks (42 days) for bridge courses, 9 months (270 days) for regular courses
-        const isBridgeCourse = (course as any).bridge_mode === true;
-        const assumedDays = isBridgeCourse ? 42 : 270; // 6 weeks for bridge, 9 months for regular
+        // Use 12 weeks (84 days) for bridge courses, 9 months (270 days) for regular courses
+        // This allows for 30-60 min/day of focused remedial work
+        const isBridgeCourse = (course as any).bridge_mode === true || course.course_type === 'bridge_mode';
+        const assumedDays = isBridgeCourse ? 84 : 270; // 12 weeks for bridge, 9 months for regular
         recommendedDailyMinutes = remainingMinutes / assumedDays;
       }
 

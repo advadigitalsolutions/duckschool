@@ -435,7 +435,7 @@ export function CoursePacingDashboard({ courseId, courseTitle, courseSubject, st
               <div className="font-semibold">
                 {targetDate 
                   ? `To complete by ${format(targetDate, 'MMM dd, yyyy')}:` 
-                  : `Suggested pace (based on ${(metrics as any).isBridgeCourse ? '6-week' : '9-month school year'} timeframe):`}
+                  : `Suggested pace (based on ${(metrics as any).isBridgeCourse ? '12-week' : '9-month school year'} timeframe):`}
               </div>
               <div className="text-2xl font-bold text-primary">
                 {metrics.recommendedDailyMinutes < 1 
