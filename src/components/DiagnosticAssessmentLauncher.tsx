@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Target, Sword } from "lucide-react";
+import { Target, Sword, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 
@@ -22,8 +23,9 @@ export function DiagnosticAssessmentLauncher({
 }: DiagnosticAssessmentLauncherProps) {
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
-  const [framework, setFramework] = useState("");
+  const [framework, setFramework] = useState("CA-CCSS");
   const [gradeLevel, setGradeLevel] = useState("");
+  const [customGoals, setCustomGoals] = useState("");
   const [isStarting, setIsStarting] = useState(false);
   const navigate = useNavigate();
 
@@ -43,49 +45,32 @@ export function DiagnosticAssessmentLauncher({
     }
   });
 
-  // Auto-detect framework and grade level from student's courses when subject changes
-  const { data: studentCourses } = useQuery({
-    queryKey: ['student-courses-for-diagnostic', studentId, subject],
-    queryFn: async () => {
-      if (!subject) return null;
-      
-      const { data, error } = await supabase
-        .from('courses')
-        .select('subject, grade_level, standards_scope')
-        .eq('student_id', studentId)
-        .eq('subject', subject)
-        .eq('archived', false)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      
-      if (error) throw error;
-      return data?.[0] || null;
-    },
-    enabled: !!subject
-  });
-
-  // Auto-populate framework and grade from detected course
+  // Reset framework when subject changes
   useEffect(() => {
-    if (studentCourses) {
-      const detectedFramework = studentCourses.standards_scope?.[0]?.framework;
-      const detectedGrade = studentCourses.grade_level;
-      
-      if (detectedFramework && detectedFramework !== framework) {
-        setFramework(detectedFramework);
-      }
-      if (detectedGrade && detectedGrade !== gradeLevel) {
-        setGradeLevel(detectedGrade);
-      }
+    if (subject && subject !== "Other") {
+      setFramework("CA-CCSS");
+      setCustomGoals("");
+    } else if (subject === "Other") {
+      setFramework("CUSTOM");
     }
-  }, [studentCourses]);
+  }, [subject]);
 
   const handleStartAssessment = async () => {
-    console.log('🎯 Begin Assessment clicked:', { subject, framework, gradeLevel, studentId });
+    console.log('🎯 Begin Assessment clicked:', { subject, framework, gradeLevel, customGoals, studentId });
     
     if (!subject) {
       toast({
         title: "Subject Required",
         description: "Please select a subject to assess",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (subject === "Other" && !customGoals.trim()) {
+      toast({
+        title: "Goals Required",
+        description: "Please describe what you want to be assessed on",
         variant: "destructive"
       });
       return;
@@ -99,8 +84,9 @@ export function DiagnosticAssessmentLauncher({
         body: {
           studentId,
           subject,
-          framework: framework || null,
-          gradeLevel: gradeLevel || null
+          framework: framework || "CA-CCSS",
+          gradeLevel: gradeLevel || null,
+          customGoals: subject === "Other" ? customGoals : null
         }
       });
 
@@ -127,7 +113,7 @@ export function DiagnosticAssessmentLauncher({
       });
 
       console.log('✅ Navigating to assessment:', data.assessmentId);
-      // Navigate to the assessment interface
+      setOpen(false);
       navigate(`/student/diagnostic/${data.assessmentId}`);
     } catch (error: any) {
       console.error('💥 Full error object:', error);
@@ -205,45 +191,66 @@ export function DiagnosticAssessmentLauncher({
               </Select>
             </div>
 
-            {studentCourses && (framework || gradeLevel) && (
-              <div className="p-3 bg-green-50 dark:bg-green-950 rounded-md border border-green-200 dark:border-green-800">
-                <p className="text-sm text-green-900 dark:text-green-100 font-medium mb-1">
-                  Auto-detected from your {subject} course:
-                </p>
-                <ul className="text-xs text-green-800 dark:text-green-200 space-y-1">
-                  {framework && <li>• Framework: {framework}</li>}
-                  {gradeLevel && <li>• Grade Level: {gradeLevel}</li>}
-                </ul>
-              </div>
-            )}
-
-            {subject && !studentCourses && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950 rounded-md border border-amber-200 dark:border-amber-800">
-                <p className="text-sm text-amber-900 dark:text-amber-100">
-                  No {subject} course found. You can manually select grade level below if needed.
+            {subject === "Other" ? (
+              <div className="space-y-2">
+                <Label htmlFor="customGoals">What would you like to be assessed on? *</Label>
+                <Textarea
+                  id="customGoals"
+                  placeholder="Example: I want to assess my knowledge of cooking techniques, meal planning, and nutrition basics for a home economics course."
+                  value={customGoals}
+                  onChange={(e) => setCustomGoals(e.target.value)}
+                  rows={4}
+                  className="resize-none"
+                />
+                <p className="text-xs text-muted-foreground flex items-start gap-1">
+                  <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                  Describe the topics and skills you want evaluated. This helps us create relevant questions.
                 </p>
               </div>
-            )}
+            ) : subject ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="framework">Standards Framework *</Label>
+                  <Select value={framework} onValueChange={setFramework}>
+                    <SelectTrigger id="framework">
+                      <SelectValue placeholder="Select framework" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CA-CCSS">California Common Core (CA-CCSS)</SelectItem>
+                      <SelectItem value="CCSS">Common Core State Standards (CCSS)</SelectItem>
+                      <SelectItem value="NGSS">Next Generation Science Standards (NGSS)</SelectItem>
+                      <SelectItem value="TX-TEKS">Texas Essential Knowledge and Skills (TX-TEKS)</SelectItem>
+                      <SelectItem value="FL-BEST">Florida BEST Standards</SelectItem>
+                      <SelectItem value="NY-CCLS">New York State Learning Standards</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="gradeLevel">Grade Level {gradeLevel ? '(Auto-detected)' : '(Optional)'}</Label>
-              <Select value={gradeLevel} onValueChange={setGradeLevel}>
-                <SelectTrigger id="gradeLevel">
-                  <SelectValue placeholder="Select grade level" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 13 }, (_, i) => i).map(grade => (
-                    <SelectItem key={grade} value={`Grade ${grade}`}>
-                      Grade {grade}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gradeLevel">Grade Level (Optional)</Label>
+                  <Select value={gradeLevel} onValueChange={setGradeLevel}>
+                    <SelectTrigger id="gradeLevel">
+                      <SelectValue placeholder="Select grade level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Not specified</SelectItem>
+                      {Array.from({ length: 13 }, (_, i) => i).map(grade => (
+                        <SelectItem key={grade} value={grade.toString()}>
+                          Grade {grade}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    We'll adapt the difficulty based on your responses if not specified
+                  </p>
+                </div>
+              </>
+            ) : null}
 
             <Button
               onClick={handleStartAssessment}
-              disabled={isStarting || !subject}
+              disabled={isStarting || !subject || (subject === "Other" && !customGoals.trim())}
               className="w-full"
               size="lg"
             >

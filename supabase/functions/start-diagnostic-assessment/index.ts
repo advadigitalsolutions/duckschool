@@ -24,7 +24,7 @@ serve(async (req) => {
     const body = await req.json();
     console.log('📥 Request body:', body);
     
-    const { studentId, subject, framework, gradeLevel } = body;
+    const { studentId, subject, framework, gradeLevel, customGoals } = body;
 
     console.log('Starting diagnostic assessment:', { studentId, subject, framework, gradeLevel });
 
@@ -55,19 +55,23 @@ serve(async (req) => {
     }
 
     // Create new assessment
+    const assessmentData: any = {
+      student_id: studentId,
+      subject,
+      framework: framework || 'CA-CCSS',
+      grade_level: gradeLevel || null,
+      status: 'warmup',
+      current_phase: 'warmup',
+      warmup_data: customGoals ? { custom_goals: customGoals } : {},
+      mastery_estimates: {},
+      questions_asked: 0
+    };
+
+    console.log('Creating assessment with data:', assessmentData);
+
     const { data: newAssessment, error: insertError } = await supabaseClient
       .from('diagnostic_assessments')
-      .insert({
-        student_id: studentId,
-        subject,
-        framework: framework || null,
-        grade_level: gradeLevel || null,
-        status: 'warmup',
-        current_phase: 'warmup',
-        warmup_data: {},
-        mastery_estimates: {},
-        questions_asked: 0
-      })
+      .insert(assessmentData)
       .select()
       .single();
 
