@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { queryStandardsFlexible } from '../_shared/standards-query-helper.ts';
 
 // ═══════════════════════════════════════════════════════════════
 // ⚠️  USER MANDATE: OPENAI ONLY - DO NOT REPLACE WITH LOVABLE AI
@@ -39,18 +40,14 @@ serve(async (req) => {
 
     console.log('Detecting standards for content:', { subject, gradeLevel, framework });
 
-    // Fetch applicable standards from database
-    const { data: availableStandards, error: standardsError } = await supabase
-      .from('standards')
-      .select('code, text, subject, grade_band, metadata')
-      .eq('framework', framework)
-      .eq('subject', subject)
-      .or(`grade_band.eq.${gradeLevel},grade_band.like.%${gradeLevel}%`);
-
-    if (standardsError) {
-      console.error('Error fetching standards:', standardsError);
-      throw standardsError;
-    }
+    // Fetch applicable standards from database using flexible query
+    const availableStandards = await queryStandardsFlexible({
+      supabase,
+      framework,
+      subject,
+      gradeLevel,
+      select: 'code, text, subject, grade_band, metadata'
+    });
 
     if (!availableStandards || availableStandards.length === 0) {
       console.log('No standards found for criteria');

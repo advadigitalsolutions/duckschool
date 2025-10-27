@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { queryStandardsFlexible } from '../_shared/standards-query-helper.ts';
 
 // ═══════════════════════════════════════════════════════════════
 // ⚠️  USER MANDATE: OPENAI ONLY - DO NOT REPLACE WITH LOVABLE AI
@@ -212,12 +213,13 @@ serve(async (req) => {
           });
           
           // Get all applicable standards (including prerequisites if bridge mode)
-          const { data: allStandards } = await supabase
-            .from('standards')
-            .select('code, text, subject, grade_band')
-            .eq('framework', framework)
-            .eq('subject', courseData.subject)
-            .in('grade_band', gradeBandsToQuery);
+          const allStandards = await queryStandardsFlexible({
+            supabase,
+            framework,
+            subject: courseData.subject,
+            gradeBands: gradeBandsToQuery,
+            select: 'code, text, subject, grade_band'
+          });
 
           // Get covered standards from existing assignments
           const { data: curriculumItems } = await supabase

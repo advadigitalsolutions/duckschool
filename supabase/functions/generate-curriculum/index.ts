@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { queryStandardsFlexible } from '../_shared/standards-query-helper.ts';
 
 // ═══════════════════════════════════════════════════════════════
 // ⚠️  USER MANDATE: OPENAI ONLY - DO NOT REPLACE WITH LOVABLE AI
@@ -172,36 +173,30 @@ serve(async (req) => {
       allStandards = course.standards_scope?.[0]?.custom_standards || null;
       console.log('📚 Custom standards found:', allStandards?.length || 0);
     } else {
-      // Build standards query with course scope filtering
-      let query = supabaseClient
-        .from('standards')
-        .select('*')
-        .eq('framework', framework)
-        .eq('subject', course.subject);
-      
-      // Apply prefix filtering from course scope BEFORE querying
-      if (courseScope?.allowPrefixes && courseScope.allowPrefixes.length > 0) {
-        console.log('🔍 Filtering by prefixes:', courseScope.allowPrefixes);
-        // Use OR condition to match any of the allowed prefixes
-        const orConditions = courseScope.allowPrefixes
-          .map(prefix => `code.ilike.${prefix}%`)
-          .join(',');
-        query = query.or(orConditions);
-      } else {
-        // No prefix filter, try grade-based filtering
-        query = query.eq('grade_band', gradeLevel);
-      }
-      
-      let { data, error: standardsError } = await query;
-
-      console.log('📊 Exact grade query results:', { 
-        found: data?.length || 0, 
-        error: standardsError?.message 
+      // Build standards query with course scope filtering using flexible query
+      let data = await queryStandardsFlexible({
+        supabase: supabaseClient,
+        framework,
+        subject: course.subject,
+        additionalFilters: (query) => {
+          // Apply prefix filtering from course scope BEFORE querying
+          if (courseScope?.allowPrefixes && courseScope.allowPrefixes.length > 0) {
+            console.log('🔍 Filtering by prefixes:', courseScope.allowPrefixes);
+            // Use OR condition to match any of the allowed prefixes
+            const orConditions = courseScope.allowPrefixes
+              .map((prefix: string) => `code.ilike.${prefix}%`)
+              .join(',');
+            return query.or(orConditions);
+          } else {
+            // No prefix filter, try grade-based filtering
+            return query.eq('grade_band', gradeLevel);
+          }
+        }
       });
 
-      if (standardsError) {
-        console.error('Standards error:', standardsError);
-      }
+      console.log('📊 Exact grade query results:', { 
+        found: data?.length || 0
+      });
 
       // Apply post-query filtering based on course scope
       if (data && data.length > 0 && courseScope) {

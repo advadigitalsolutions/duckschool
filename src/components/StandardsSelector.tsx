@@ -49,27 +49,55 @@ export function StandardsSelector({
     
     setLoading(true);
     try {
-      let query = supabase
-        .from('standards')
-        .select('*')
-        .eq('framework', framework);
+      // Normalize framework names - handle both "CA-CCSS" and "CA CCSS" formats
+      const frameworkVariations = [
+        framework,
+        framework.replace(/-/g, ' '), // "CA-CCSS" -> "CA CCSS"
+        framework.replace(/ /g, '-'), // "CA CCSS" -> "CA-CCSS"
+      ];
 
-      if (subject) {
-        query = query.eq('subject', subject);
-      }
+      // Normalize subject names
+      const subjectVariations = subject ? [
+        subject,
+        subject.replace(/\//g, ' '), // "English/Language Arts" -> "English Language Arts"
+        subject.replace(/ /g, '/'),   // "English Language Arts" -> "English/Language Arts"
+      ] : [null];
 
-      if (gradeLevel) {
-        // Match grade band (e.g., "9-10" for grade 10)
-        const gradeNum = parseInt(gradeLevel.replace(/\D/g, ''));
-        if (!isNaN(gradeNum)) {
-          query = query.or(`grade_band.eq.${gradeNum},grade_band.like.%${gradeNum}%`);
+      let data: any[] = [];
+
+      // Try all framework and subject combinations
+      for (const frameworkVariant of frameworkVariations) {
+        for (const subjectVariant of subjectVariations) {
+          let query = supabase
+            .from('standards')
+            .select('*')
+            .eq('framework', frameworkVariant);
+
+          if (subjectVariant) {
+            query = query.eq('subject', subjectVariant);
+          }
+
+          if (gradeLevel) {
+            // Match grade band (e.g., "9-10" for grade 10)
+            const gradeNum = parseInt(gradeLevel.replace(/\D/g, ''));
+            if (!isNaN(gradeNum)) {
+              query = query.or(`grade_band.eq.${gradeNum},grade_band.like.%${gradeNum}%`);
+            }
+          }
+
+          query = query.order('code').limit(100);
+
+          const { data: queryData, error } = await query;
+          if (error) throw error;
+          
+          if (queryData && queryData.length > 0) {
+            data = queryData;
+            break;
+          }
         }
+        if (data.length > 0) break;
       }
 
-      query = query.order('code').limit(100);
-
-      const { data, error } = await query;
-      if (error) throw error;
       setStandards(data || []);
     } catch (error: any) {
       console.error('Error loading standards:', error);
