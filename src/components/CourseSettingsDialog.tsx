@@ -561,8 +561,13 @@ export function CourseSettingsDialog({
               <DeleteCourseDialog
                 course={courseData}
                 onCourseDeleted={() => {
+                  // Close the settings dialog first
                   onOpenChange(false);
-                  onDelete?.();
+                  
+                  // Wait for settings dialog animation to complete before navigating
+                  setTimeout(() => {
+                    onDelete?.();
+                  }, 300);
                 }}
                 trigger={
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">

@@ -272,7 +272,7 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
         );
 
         onCourseDeleted();
-      }, 300);
+      }, 600);
     } catch (error: any) {
       console.error('Delete course error:', error);
       const errorMessage = error.message || error.details || 'Failed to delete course';
