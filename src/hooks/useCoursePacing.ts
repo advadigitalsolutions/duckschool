@@ -366,9 +366,10 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         const daysUntilTarget = Math.max(1, Math.ceil((targetDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
         recommendedDailyMinutes = remainingMinutes / daysUntilTarget;
       } else if (remainingMinutes > 0) {
-        // Baseline: Assume completion in 9 months (270 days = typical school year)
-        // This gives parents a starting point even without setting a target
-        const assumedDays = 270; // 9-month school year
+        // Bridge courses are short remedial interventions, not full year-long courses
+        // Use 6 weeks (42 days) for bridge courses, 9 months (270 days) for regular courses
+        const isBridgeCourse = (course as any).bridge_mode === true;
+        const assumedDays = isBridgeCourse ? 42 : 270; // 6 weeks for bridge, 9 months for regular
         recommendedDailyMinutes = remainingMinutes / assumedDays;
       }
 
