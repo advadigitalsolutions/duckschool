@@ -83,6 +83,8 @@ export function StandardsCoverageDashboard({
           
           standardsData = data || [];
           console.log('📊 Found details for', standardsData.length, 'bridge standards');
+        } else {
+          console.log('⚠️ Bridge course has no curriculum items yet - skipping standards query');
         }
       } else {
         // Original logic for non-bridge courses
@@ -262,10 +264,7 @@ export function StandardsCoverageDashboard({
         <CardHeader>
           <CardTitle>Standards Coverage</CardTitle>
           <CardDescription>
-            {framework && subject && gradeLevel
-              ? `No ${framework} standards found for ${subject} at grade ${gradeLevel}`
-              : 'No standards found for this configuration'
-            }
+            No standards to display yet
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -273,8 +272,8 @@ export function StandardsCoverageDashboard({
             <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <div className="space-y-2">
               <p className="font-semibold">Why am I seeing this?</p>
-              <p className="text-sm">The standards database may not have detailed standards for this specific combination.</p>
-              <p className="text-sm">Generate curriculum to track progress based on what you create.</p>
+              <p className="text-sm">This course doesn't have any curriculum created yet.</p>
+              <p className="text-sm">Generate curriculum to see standards coverage and track progress.</p>
             </div>
           </div>
         </CardContent>

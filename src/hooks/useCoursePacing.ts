@@ -427,7 +427,8 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         missingData,
         framework: courseFramework,
         trackingMode,
-        isConfiguredPace
+        isConfiguredPace,
+        isBridgeCourse: (course as any).bridge_mode === true || course.course_type === 'bridge_mode'
       } as any);
 
       setStandardsCoverage(standardsCoverage);
