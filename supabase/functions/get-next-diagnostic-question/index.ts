@@ -157,6 +157,16 @@ serve(async (req) => {
         const estimate = masteryEstimates[topic];
         
         if (!estimate || !estimate.tested) {
+          // Check if this is an easier topic with a tested harder counterpart
+          const harderTopic = topicHierarchy.get(topic);
+          const harderEstimate = harderTopic ? masteryEstimates[harderTopic] : null;
+          
+          // Skip this untested topic if the harder version has already been tested
+          if (harderEstimate && harderEstimate.tested) {
+            console.log(`Skipping untested ${topic} - harder topic ${harderTopic} already tested`);
+            return; // Skip to next topic
+          }
+          
           // Check if this is a prerequisite of a failed topic
           let isPrereqOfFailed = false;
           for (const [failedTopic, failedEstimate] of Object.entries(masteryEstimates)) {
