@@ -44,7 +44,9 @@ export default function StudentSkillsCheckIn() {
       if (error) throw error;
       return data;
     },
-    enabled: !!currentUser?.id
+    enabled: !!currentUser?.id,
+    refetchInterval: 2000, // Auto-refresh every 2 seconds to catch state changes
+    staleTime: 1000
   });
 
   const { data: bridgeCourses, isLoading: loadingBridge } = useQuery({
@@ -88,14 +90,8 @@ export default function StudentSkillsCheckIn() {
         </p>
       </div>
 
-      {/* Active Assessment Card */}
-      {loadingActive ? (
-        <Card>
-          <CardContent className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </CardContent>
-        </Card>
-      ) : activeAssessment ? (
+      {/* Active Assessment Card - only show if assessment exists */}
+      {!loadingActive && activeAssessment && (
         <Card className="border-primary">
           <CardHeader>
             <CardTitle>Assessment in Progress</CardTitle>
@@ -119,18 +115,12 @@ export default function StudentSkillsCheckIn() {
             </div>
           </CardContent>
         </Card>
-      ) : null}
+      )}
 
-      {/* Bridge Mode Status */}
-      {loadingBridge ? (
-        <Card>
-          <CardContent className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </CardContent>
-        </Card>
-      ) : bridgeCourses && bridgeCourses.length > 0 ? (
+      {/* Bridge Mode Status - only show if courses exist */}
+      {!loadingBridge && bridgeCourses && bridgeCourses.length > 0 && (
         <BridgeModeStatusPanel courses={bridgeCourses} studentId={currentUser.id} />
-      ) : null}
+      )}
 
       {/* Start New Assessment */}
       <Card>
