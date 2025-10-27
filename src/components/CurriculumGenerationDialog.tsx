@@ -49,6 +49,8 @@ export function CurriculumGenerationDialog({
   const [approachOverride, setApproachOverride] = useState('');
   const [showCompletion, setShowCompletion] = useState(false);
   const [createdCount, setCreatedCount] = useState(0);
+  const [isBridgeMode, setIsBridgeMode] = useState(false);
+  const [diagnosticTopics, setDiagnosticTopics] = useState<string[]>([]);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -69,6 +71,8 @@ export function CurriculumGenerationDialog({
         setUncoveredCount(data.uncoveredCount);
         setPedagogy(data.pedagogy);
         setFramework(data.framework);
+        setIsBridgeMode(data.isBridgeMode || false);
+        setDiagnosticTopics(data.diagnosticTopics || []);
         toast.success(`Generated ${data.suggestions.length} assignment suggestions`);
       } else {
         // Show appropriate message based on the response
@@ -362,7 +366,9 @@ export function CurriculumGenerationDialog({
                   <p className="text-sm text-muted-foreground">
                     {framework === 'CUSTOM' 
                       ? `${uncoveredCount} learning milestones • ${pedagogy} pedagogy • Custom Framework`
-                      : `${uncoveredCount} uncovered standards • ${pedagogy} pedagogy • ${framework}`}
+                      : isBridgeMode && diagnosticTopics.length > 0
+                        ? `${diagnosticTopics.length} focus areas: ${diagnosticTopics.join(', ')} • ${pedagogy} pedagogy • Bridge Mode`
+                        : `${uncoveredCount} uncovered standards • ${pedagogy} pedagogy • ${framework}`}
                   </p>
                 </div>
                 <div className="flex gap-2">

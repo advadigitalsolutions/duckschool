@@ -911,6 +911,8 @@ For each standard, suggest 1-2 high-quality assignments that would effectively c
       framework,
       generationType: useGoalsBasedGeneration ? 'goals' : 'standards',
       goals: useGoalsBasedGeneration ? courseGoals : null,
+      isBridgeMode,
+      diagnosticTopics: isBridgeMode && diagnosticTopicsForPrompt ? diagnosticTopicsForPrompt : undefined,
       validationStats: {
         generated: suggestions.length + rejectedSuggestions.length,
         accepted: suggestions.length,
