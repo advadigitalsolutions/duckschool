@@ -173,7 +173,7 @@ serve(async (req) => {
       .eq('id', studentId)
       .single();
 
-    // Create the bridge course
+    // Create the bridge course with CUSTOM framework to avoid grade-level mismatch warnings
     const { data: course, error: courseError } = await supabaseClient
       .from('courses')
       .insert({
@@ -185,12 +185,23 @@ serve(async (req) => {
         description: `Foundational course created from diagnostic assessment. Addresses knowledge gaps in: ${Array.from(topicAreas).join(', ')}`,
         goals: courseGoals,
         standards_scope: [{
-          framework: assessment.framework || 'CA-CCSS',
+          framework: 'CUSTOM',
           bridge_mode: true,
           diagnostic_baseline: minGrade,
           prerequisite_bands: Array.from(new Set([minGrade, maxGrade])),
           gap_areas: Array.from(topicAreas),
-          source_assessment_id: assessmentId
+          source_assessment_id: assessmentId,
+          original_framework: assessment.framework || 'CA-CCSS',
+          custom_standards: standardsData.map(s => ({
+            code: s.code,
+            text: s.text,
+            grade_band: s.grade_band,
+            metadata: {
+              estimated_hours: 0.5,
+              is_remedial: true,
+              prerequisite_for: assessment.grade_level
+            }
+          }))
         }],
         auto_generate_weekly: false,
         archived: false,
