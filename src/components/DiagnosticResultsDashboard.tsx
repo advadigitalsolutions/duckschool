@@ -90,7 +90,7 @@ export function DiagnosticResultsDashboard({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {results.mastered.length === 0 ? (
+            {!results.mastered || results.mastered.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">
                 No topics fully mastered yet - but that's okay! We'll work on building these skills.
               </p>
@@ -120,7 +120,7 @@ export function DiagnosticResultsDashboard({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {results.inProgress.length === 0 ? (
+            {!results.inProgress || results.inProgress.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">
                 No topics in progress
               </p>
@@ -150,7 +150,7 @@ export function DiagnosticResultsDashboard({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {results.needsWork.length === 0 ? (
+            {!results.needsWork || results.needsWork.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">
                 Great job! No major gaps identified.
               </p>
