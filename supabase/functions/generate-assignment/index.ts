@@ -79,6 +79,7 @@ serve(async (req) => {
     let studentGoals = null;
     let studentInterests = null;
     let customFramework = null;
+    let studentMasteryData: any[] = [];
 
     if (studentProfile?.parent_id) {
       // Get parent/teacher profile
@@ -88,6 +89,33 @@ serve(async (req) => {
         .eq('id', studentProfile.parent_id)
         .single();
       parentProfile = parent;
+    }
+
+    // Get student's mastery data for targeted assignment generation
+    if (studentProfile?.id && targetCourseIds.length > 0) {
+      const { data: mastery } = await supabase
+        .from('standard_mastery')
+        .select('*')
+        .in('course_id', targetCourseIds)
+        .eq('student_id', studentProfile.id)
+        .order('last_attempted_at', { ascending: false });
+
+      studentMasteryData = (mastery || []).map(m => ({
+        standard_code: m.standard_code,
+        mastery_level: m.mastery_level,
+        confidence_score: m.confidence_score,
+        total_attempts: m.total_attempts,
+        last_attempted_at: m.last_attempted_at,
+        data_source: m.total_attempts === 1 ? 'diagnostic' : 'assignments',
+        days_since_last_attempt: Math.floor((Date.now() - new Date(m.last_attempted_at).getTime()) / (1000 * 60 * 60 * 24))
+      }));
+
+      console.log('Student mastery context:', {
+        total_standards: studentMasteryData.length,
+        diagnostic_only: studentMasteryData.filter(m => m.data_source === 'diagnostic').length,
+        assignment_practiced: studentMasteryData.filter(m => m.data_source === 'assignments').length,
+        weak_areas: studentMasteryData.filter(m => (m.mastery_level || 0) < 70).length
+      });
     }
 
     if (courseId) {
@@ -210,6 +238,33 @@ serve(async (req) => {
       isInitialAssessment 
     });
 
+    // Build mastery context with recency information
+    const masteryContext = studentMasteryData.length > 0 ? `
+
+STUDENT MASTERY PROFILE (Recency-Based Priority):
+
+Recent Assignment Performance (PRIMARY SOURCE - Use these for difficulty calibration):
+${studentMasteryData.filter(m => m.data_source === 'assignments' && m.days_since_last_attempt < 30).slice(0, 10).map(m => 
+  `- ${m.standard_code}: ${m.mastery_level}% mastery (${m.total_attempts} attempts, last: ${m.days_since_last_attempt} days ago) ${m.mastery_level < 70 ? '⚠️ NEEDS WORK' : '✓'}`
+).join('\n') || '(No recent assignment data)'}
+
+Diagnostic Assessment Baseline (FALLBACK SOURCE - Use for unpracticed topics):
+${studentMasteryData.filter(m => m.data_source === 'diagnostic').slice(0, 10).map(m => 
+  `- ${m.standard_code}: ${m.mastery_level}% mastery (from diagnostic, ${m.days_since_last_attempt} days ago) ${m.mastery_level < 70 ? '⚠️ NEEDS PRACTICE' : ''}`
+).join('\n') || '(No diagnostic data available)'}
+
+MASTERY-INFORMED INSTRUCTION:
+1. For topics WITH recent assignment data: Use that data as the primary source of truth for difficulty level
+2. For topics WITHOUT assignment data but WITH diagnostic data: Use diagnostic as baseline
+3. For topics with NO data: Start with grade-appropriate difficulty and include diagnostic questions
+4. Prioritize addressing diagnostic weaknesses that haven't been practiced yet in assignments
+
+WEAK AREAS REQUIRING ATTENTION:
+${studentMasteryData.filter(m => (m.mastery_level || 0) < 70).slice(0, 5).map((m, i) => 
+  `${i+1}. ${m.standard_code}: ${m.mastery_level}% (${m.data_source === 'diagnostic' ? 'From diagnostic - NOT YET PRACTICED' : `From ${m.total_attempts} assignments`})`
+).join('\n') || '(All areas at satisfactory mastery)'}
+` : '';
+
     const studentContext = studentProfile ? `
 
 STUDENT PROFILE:
@@ -220,6 +275,8 @@ STUDENT PROFILE:
 - ADHD Accommodations: ${JSON.stringify(studentProfile.accommodations || {})}
 - Student Goals: ${JSON.stringify(studentGoals || {})}
 - Student Interests: ${JSON.stringify(studentInterests || [])}
+
+${masteryContext}
 
 PARENT/TEACHER PROFILE:
 ${parentProfile ? `
@@ -245,7 +302,8 @@ Use this comprehensive profile to personalize the assignment. Consider:
 - Parent's teaching style and educational approach
 - How to align both learning and teaching preferences
 - Any ADHD accommodations needed
-- Prior knowledge from completed assessments
+- CRITICAL: Use mastery data to inform difficulty - challenge where strong, support where weak
+- Prioritize diagnostic weaknesses that haven't been addressed through assignments yet
 - Progress toward framework standards
 ` : '';
 

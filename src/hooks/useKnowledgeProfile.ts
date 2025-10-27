@@ -40,12 +40,22 @@ export function useKnowledgeProfile(studentId: string | null) {
         .order('priority_score', { ascending: false })
         .limit(10);
 
+      // Add data source indicators to mastery data
+      const masteryWithSource = (mastery || []).map(m => ({
+        ...m,
+        dataSource: m.total_attempts === 1 ? 'diagnostic' : 
+                   m.total_attempts > 1 ? 'assignments' : 'unknown',
+        isRecent: new Date(m.last_attempted_at).getTime() > Date.now() - (30 * 24 * 60 * 60 * 1000)
+      }));
+
       return {
-        mastery: mastery || [],
+        mastery: masteryWithSource,
         courseSummaries: courseSummaries || [],
         weakAreas: weakAreas || [],
         priorities: priorities || [],
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        diagnosticCount: masteryWithSource.filter(m => m.dataSource === 'diagnostic').length,
+        assignmentBasedCount: masteryWithSource.filter(m => m.dataSource === 'assignments').length
       };
     },
     enabled: !!studentId,

@@ -33,7 +33,21 @@ serve(async (req) => {
       throw new Error('Course not found');
     }
 
-    // Get last week's submissions
+    // Query standard_mastery table for comprehensive mastery data
+    const { data: standardMastery } = await supabase
+      .from('standard_mastery')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('course_id', courseId)
+      .order('last_attempted_at', { ascending: false });
+
+    console.log('Standard mastery data:', {
+      total_standards: standardMastery?.length || 0,
+      diagnostic_only: standardMastery?.filter(m => m.total_attempts === 1).length || 0,
+      assignment_practiced: standardMastery?.filter(m => (m.total_attempts || 0) > 1).length || 0
+    });
+
+    // Get last week's submissions for recent performance metrics
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     
     const { data: submissions } = await supabase
@@ -91,36 +105,61 @@ serve(async (req) => {
       }
     });
 
-    // Identify gaps (< 70% accuracy or not practiced)
-    const gaps = Object.entries(standardsPerformance)
-      .filter(([_, perf]) => {
-        const accuracy = perf.correct / perf.total;
-        return accuracy < 0.7;
-      })
-      .map(([standard, perf]) => ({
-        standard_code: standard,
-        gap_type: 'struggled',
-        confidence_score: perf.correct / perf.total
-      }));
+    // Build comprehensive mastery data with recency tracking
+    const masteryData = (standardMastery || []).map(m => ({
+      standard_code: m.standard_code,
+      mastery_level: m.mastery_level,
+      confidence_score: m.confidence_score,
+      total_attempts: m.total_attempts,
+      successful_attempts: m.successful_attempts,
+      last_attempted_at: m.last_attempted_at,
+      data_source: m.total_attempts === 1 ? 'diagnostic' : 'assignments',
+      is_recent: new Date(m.last_attempted_at).getTime() > Date.now() - (30 * 24 * 60 * 60 * 1000) // within 30 days
+    }));
 
-    // Get all course standards
+    // Identify gaps from mastery data
+    const gaps = masteryData
+      .filter(m => (m.mastery_level || 0) < 70)
+      .map(m => ({
+        standard_code: m.standard_code,
+        gap_type: m.data_source === 'diagnostic' ? 'diagnostic_weakness' : 'struggled',
+        confidence_score: m.confidence_score || 0,
+        mastery_level: m.mastery_level || 0,
+        data_source: m.data_source,
+        last_attempted_at: m.last_attempted_at,
+        // Prioritize diagnostic-only gaps that haven't been addressed
+        priority: m.data_source === 'diagnostic' ? 'high' : 'medium'
+      }))
+      .sort((a, b) => {
+        // Sort by priority (diagnostic first) then by mastery level (lowest first)
+        if (a.priority !== b.priority) {
+          return a.priority === 'high' ? -1 : 1;
+        }
+        return (a.mastery_level || 0) - (b.mastery_level || 0);
+      });
+
+    // Get all course standards to find unpracticed ones
     const { data: allStandards } = await supabase
       .from('curriculum_items')
       .select('standards')
       .eq('course_id', courseId);
 
-    const practicedStandards = new Set(Object.keys(standardsPerformance));
+    const practicedStandards = new Set(masteryData.map(m => m.standard_code));
     const allCourseStandards = new Set(
       (allStandards || []).flatMap(item => item.standards || [])
     );
 
-    // Find standards not practiced
+    // Find standards not practiced at all
     allCourseStandards.forEach(std => {
       if (!practicedStandards.has(std)) {
         gaps.push({
           standard_code: std,
           gap_type: 'not_practiced',
-          confidence_score: 0
+          confidence_score: 0,
+          mastery_level: 0,
+          data_source: 'none',
+          last_attempted_at: null,
+          priority: 'low'
         });
       }
     });
@@ -141,6 +180,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         gaps,
+        masteryData,
         interests,
         learningProfile,
         recentPerformance: {
@@ -155,7 +195,8 @@ serve(async (req) => {
           suggestedDifficulty: responses && responses.length > 0 && 
             responses.filter(r => r.is_correct).length / responses.length > 0.8 
             ? 'increase' 
-            : 'maintain'
+            : 'maintain',
+          diagnosticGapsPriority: gaps.filter(g => g.data_source === 'diagnostic').slice(0, 3).map(g => g.standard_code)
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
