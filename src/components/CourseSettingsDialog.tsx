@@ -64,6 +64,9 @@ export function CourseSettingsDialog({
   const [showFrameworkWarning, setShowFrameworkWarning] = useState(false);
   const [existingCurriculumCount, setExistingCurriculumCount] = useState(0);
   const [remapping, setRemapping] = useState(false);
+  const [bridgeMode, setBridgeMode] = useState(false);
+  const [diagnosticBaseline, setDiagnosticBaseline] = useState('');
+  const [prerequisiteBands, setPrerequisiteBands] = useState<string[]>([]);
 
   // Load existing course data when dialog opens
   useEffect(() => {
@@ -94,7 +97,7 @@ export function CourseSettingsDialog({
           setApproachOverride(override);
         }
         
-        // Extract framework from standards_scope or pacing_config
+        // Extract framework and bridge mode settings from standards_scope or pacing_config
         const pacingConfig = course.pacing_config as any;
         let extractedFramework = '';
         
@@ -104,6 +107,13 @@ export function CourseSettingsDialog({
             const scopeFramework = (scopeItem as any).framework;
             if (typeof scopeFramework === 'string') {
               extractedFramework = scopeFramework;
+            }
+            
+            // Extract bridge mode settings
+            if ((scopeItem as any).bridge_mode === true) {
+              setBridgeMode(true);
+              setPrerequisiteBands((scopeItem as any).prerequisite_bands || []);
+              setDiagnosticBaseline((scopeItem as any).diagnostic_baseline || '');
             }
           }
         }
@@ -211,11 +221,20 @@ export function CourseSettingsDialog({
 
       // Only set standards_scope if NOT custom (custom was handled by edge function)
       if (framework !== 'CUSTOM') {
-        updates.standards_scope = [{ 
+        const scopeConfig: any = { 
           framework,
           subject: currentSubject,
           grade_band: gradeLevel
-        }];
+        };
+        
+        // Include bridge mode settings if enabled
+        if (bridgeMode) {
+          scopeConfig.bridge_mode = true;
+          scopeConfig.prerequisite_bands = prerequisiteBands;
+          scopeConfig.diagnostic_baseline = diagnosticBaseline;
+        }
+        
+        updates.standards_scope = [scopeConfig];
       }
 
       // Always update pacing_config with framework
@@ -387,6 +406,27 @@ export function CourseSettingsDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {bridgeMode && (
+            <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg space-y-2">
+              <div className="flex items-start gap-2">
+                <div className="mt-0.5">🎯</div>
+                <div className="flex-1 space-y-1">
+                  <p className="font-semibold text-sm text-amber-900 dark:text-amber-100">
+                    Prerequisite Bridge Mode Active
+                  </p>
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                    Based on diagnostic results, this course will start with foundational topics from grades {prerequisiteBands.join(', ')} before progressing to {gradeLevel} content.
+                  </p>
+                  <div className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                    <strong>Diagnostic baseline:</strong> Grade {diagnosticBaseline}<br />
+                    <strong>Target level:</strong> Grade {gradeLevel}<br />
+                    <strong>Strategy:</strong> Master prerequisites → bridge to course content
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="pedagogy">Educational Pedagogy</Label>

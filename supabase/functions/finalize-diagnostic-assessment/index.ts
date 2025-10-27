@@ -200,54 +200,70 @@ serve(async (req) => {
 
     let courseId = existingCourse?.id;
 
-    // Update mastery for each tested topic
+    // Map topics to actual standard codes and update mastery
     for (const [topic, estimate] of Object.entries(detailedEstimates)) {
       const est = estimate as any;
       if (!est.tested) continue;
       
-      const masteryData: any = {
-        student_id: studentId,
-        standard_code: topic,
-        mastery_level: est.mastery * 100, // Convert to percentage
-        total_attempts: est.attempts || 1,
-        correct_attempts: est.successful_attempts || 0,
-        last_attempted_at: new Date().toISOString(),
-      };
-
-      if (courseId) {
-        masteryData.course_id = courseId;
-      }
-
-      const { error: masteryError } = await supabaseClient
-        .from('standard_mastery')
-        .upsert(masteryData, {
-          onConflict: courseId ? 'student_id,course_id,standard_code' : 'student_id,standard_code'
-        });
-
-      if (masteryError) {
-        console.error('Error updating standard mastery:', masteryError);
-      }
-
-      // Add to progress_gaps if struggling or at knowledge boundary
-      if (est.mastery < 0.4 || est.knowledge_boundary) {
-        const gapData: any = {
+      // Try to find matching standards from the standards table
+      const { data: matchingStandards } = await supabaseClient
+        .from('standards')
+        .select('code, grade_band, text')
+        .eq('subject', assessment.subject)
+        .ilike('text', `%${topic}%`)
+        .limit(5);
+      
+      // Create standard codes array - use matched standards or topic name as fallback
+      const standardCodes = matchingStandards && matchingStandards.length > 0
+        ? matchingStandards.map(s => s.code)
+        : [topic]; // Use topic as standard code if no match found
+      
+      console.log(`Mapping topic "${topic}" to standards:`, standardCodes);
+      
+      // Save mastery for each matched standard
+      for (const standardCode of standardCodes) {
+        const masteryData: any = {
           student_id: studentId,
-          standard_code: topic,
-          gap_type: est.knowledge_boundary ? 'knowledge_boundary' : 'knowledge',
-          severity: est.mastery < 0.2 ? 'high' : 'medium',
-          confidence_score: est.confidence || 0.5,
-          identified_at: new Date().toISOString()
+          standard_code: standardCode,
+          mastery_level: est.mastery * 100, // Convert to percentage
+          confidence_score: (est.confidence || 0.5) * 100,
+          total_attempts: 1, // Diagnostic = 1 attempt
+          correct_attempts: est.successful_attempts || 0,
+          last_attempted_at: new Date().toISOString(),
+          course_id: null // Null indicates diagnostic data, not course-specific
         };
 
-        if (courseId) {
-          gapData.course_id = courseId;
+        const { error: masteryError } = await supabaseClient
+          .from('standard_mastery')
+          .upsert(masteryData, {
+            onConflict: 'student_id,standard_code',
+            ignoreDuplicates: false
+          });
+
+        if (masteryError) {
+          console.error('Error updating standard mastery:', masteryError);
         }
 
-        await supabaseClient
-          .from('progress_gaps')
-          .insert(gapData);
+        // Add to progress_gaps if struggling or at knowledge boundary
+        if (est.mastery < 0.4 || est.knowledge_boundary) {
+          const gapData: any = {
+            student_id: studentId,
+            standard_code: standardCode,
+            gap_type: est.knowledge_boundary ? 'knowledge_boundary' : 'knowledge',
+            severity: est.mastery < 0.2 ? 'high' : 'medium',
+            confidence_score: est.confidence || 0.5,
+            identified_at: new Date().toISOString(),
+            course_id: null // Diagnostic gaps are not course-specific initially
+          };
+
+          await supabaseClient
+            .from('progress_gaps')
+            .insert(gapData);
+        }
       }
     }
+    
+    console.log('Diagnostic mastery data saved to standard_mastery table');
 
     console.log('Adaptive assessment finalized successfully');
 

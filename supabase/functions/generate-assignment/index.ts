@@ -175,8 +175,12 @@ serve(async (req) => {
       });
     }
 
-    // Get uncovered standards for courses
-    let uncoveredStandards: Array<{ code: string; text: string; subject?: string }> = [];
+    // Get uncovered standards for courses (with prerequisite support)
+    let uncoveredStandards: Array<{ code: string; text: string; subject?: string; grade_band?: string }> = [];
+    let bridgeModeActive = false;
+    let prerequisiteBands: string[] = [];
+    let diagnosticBaseline = '';
+    
     if (!isInitialAssessment && targetCourseIds.length > 0) {
       // Get all standards for all selected courses
       for (const cId of targetCourseIds) {
@@ -188,14 +192,32 @@ serve(async (req) => {
 
         if (courseData?.standards_scope?.[0]?.framework) {
           const framework = courseData.standards_scope[0].framework;
+          const scopeConfig = courseData.standards_scope[0];
           
-          // Get all applicable standards
+          // Check if bridge mode is enabled
+          bridgeModeActive = scopeConfig.bridge_mode === true;
+          prerequisiteBands = scopeConfig.prerequisite_bands || [];
+          diagnosticBaseline = scopeConfig.diagnostic_baseline || '';
+          
+          // Determine which grade bands to query
+          const gradeBandsToQuery = bridgeModeActive 
+            ? [...prerequisiteBands, courseData.grade_level]
+            : [courseData.grade_level];
+          
+          console.log('Standards query config:', {
+            bridge_mode: bridgeModeActive,
+            prerequisite_bands: prerequisiteBands,
+            target_grade: courseData.grade_level,
+            querying_bands: gradeBandsToQuery
+          });
+          
+          // Get all applicable standards (including prerequisites if bridge mode)
           const { data: allStandards } = await supabase
             .from('standards')
-            .select('code, text, subject')
+            .select('code, text, subject, grade_band')
             .eq('framework', framework)
             .eq('subject', courseData.subject)
-            .or(`grade_band.eq.${courseData.grade_level},grade_band.like.%${courseData.grade_level}%`);
+            .in('grade_band', gradeBandsToQuery);
 
           // Get covered standards from existing assignments
           const { data: curriculumItems } = await supabase
@@ -212,13 +234,49 @@ serve(async (req) => {
             std => !coveredStandardCodes.has(std.code)
           );
 
-          uncoveredStandards = [...uncoveredStandards, ...courseUncovered];
+          // Prioritize prerequisite standards if bridge mode active
+          if (bridgeModeActive) {
+            // Separate into tiers
+            const prerequisiteStandards = courseUncovered.filter(s => 
+              prerequisiteBands.includes(s.grade_band || '')
+            );
+            const courseLevelStandards = courseUncovered.filter(s => 
+              s.grade_band === courseData.grade_level
+            );
+            
+            // Match with weak diagnostic areas
+            const diagnosticWeakStandards = studentMasteryData
+              .filter(m => m.mastery_level < 70 && m.data_source === 'diagnostic')
+              .map(m => m.standard_code);
+            
+            const prioritizedPrerequisites = prerequisiteStandards.filter(s =>
+              diagnosticWeakStandards.some(weak => s.code.includes(weak) || weak.includes(s.code))
+            );
+            
+            // Priority order: diagnostic weak prerequisites -> other prerequisites -> course level
+            uncoveredStandards = [
+              ...prioritizedPrerequisites,
+              ...prerequisiteStandards.filter(s => !prioritizedPrerequisites.includes(s)),
+              ...courseLevelStandards,
+              ...uncoveredStandards
+            ];
+            
+            console.log('Bridge mode prioritization:', {
+              total_uncovered: courseUncovered.length,
+              prerequisite_uncovered: prerequisiteStandards.length,
+              diagnostic_weak_prerequisites: prioritizedPrerequisites.length,
+              course_level_uncovered: courseLevelStandards.length
+            });
+          } else {
+            uncoveredStandards = [...uncoveredStandards, ...courseUncovered];
+          }
 
           console.log(`Standards analysis for course ${cId}:`, {
             subject: courseData.subject,
             total: allStandards?.length,
             covered: coveredStandardCodes.size,
-            uncovered: courseUncovered.length
+            uncovered: courseUncovered.length,
+            bridge_mode: bridgeModeActive
           });
         }
       }
@@ -339,6 +397,36 @@ Include the standard codes in the alignment section of your response.
 ` : '';
 
     // Add cross-subject integration guidance with quality scoring
+    // Add prerequisite bridge mode guidance
+    const prerequisiteGuidance = bridgeModeActive ? `
+CRITICAL: PREREQUISITE BRIDGE MODE ENABLED
+
+This student's diagnostic assessment revealed knowledge gaps ${prerequisiteBands.length} grade levels below the target course level.
+
+DIAGNOSTIC BASELINE: Grade ${diagnosticBaseline}
+COURSE TARGET: Grade ${gradeLevel}
+PREREQUISITE BANDS: Grades ${prerequisiteBands.join(', ')}
+
+ASSIGNMENT GENERATION PRIORITY:
+1. Focus 70% on prerequisite topics (Grades ${prerequisiteBands.join(', ')})
+2. Focus 30% on bridging to course-level topics (Grade ${gradeLevel})
+3. Create scaffolded progression: master prerequisites → apply to course content
+
+WEAK PREREQUISITE AREAS (from diagnostic):
+${studentMasteryData
+  .filter(m => m.mastery_level < 70 && m.data_source === 'diagnostic')
+  .slice(0, 5)
+  .map(m => `- ${m.standard_code}: ${m.mastery_level}% mastery`)
+  .join('\n') || '(No diagnostic weak areas identified)'}
+
+LABELING REQUIREMENTS:
+- "Foundation Builder: [Topic]" for prerequisite work (Grades ${prerequisiteBands.join(', ')})
+- "Bridge to Algebra: [Topic]" for transition lessons connecting prerequisites to course content
+- "Algebra I: [Topic]" for course-level content (Grade ${gradeLevel})
+
+This ensures the student builds necessary foundations before tackling advanced concepts.
+` : '';
+
     const crossSubjectGuidance = enableCrossSubject && integrationPlan.length > 0 ? `
 CROSS-SUBJECT INTEGRATION - CRITICAL:
 This is a multi-course assignment with cross-subject integration enabled. Advanced analysis has identified high-quality opportunities to naturally incorporate weak areas:
@@ -386,6 +474,7 @@ Generate a complete assignment that includes:
 
 ${studentContext}
 ${assessmentContext}
+${prerequisiteGuidance}
 ${standardsGuidance}
 ${crossSubjectGuidance}
 ${pedagogyContext}
