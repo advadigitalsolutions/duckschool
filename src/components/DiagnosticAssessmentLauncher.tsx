@@ -24,7 +24,7 @@ export function DiagnosticAssessmentLauncher({
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
   const [framework, setFramework] = useState("CA-CCSS");
-  const [gradeLevel, setGradeLevel] = useState("");
+  const [gradeLevel, setGradeLevel] = useState("unspecified");
   const [customGoals, setCustomGoals] = useState("");
   const [isStarting, setIsStarting] = useState(false);
   const navigate = useNavigate();
@@ -85,7 +85,7 @@ export function DiagnosticAssessmentLauncher({
           studentId,
           subject,
           framework: framework || "CA-CCSS",
-          gradeLevel: gradeLevel || null,
+          gradeLevel: (gradeLevel && gradeLevel !== "unspecified") ? gradeLevel : null,
           customGoals: subject === "Other" ? customGoals : null
         }
       });
@@ -233,7 +233,7 @@ export function DiagnosticAssessmentLauncher({
                       <SelectValue placeholder="Select grade level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Not specified</SelectItem>
+                      <SelectItem value="unspecified">Not specified</SelectItem>
                       {Array.from({ length: 13 }, (_, i) => i).map(grade => (
                         <SelectItem key={grade} value={grade.toString()}>
                           Grade {grade}
