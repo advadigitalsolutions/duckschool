@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Brain, Target, Gauge, Sparkles, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TextToSpeech } from "@/components/TextToSpeech";
 
@@ -61,11 +61,18 @@ const TOPIC_EXAMPLES: Record<string, string> = {
   "Cultural Studies": "Different cultures"
 };
 
-const LOADING_MESSAGES = [
-  "Preparing your next questions",
-  "Analyzing your learning progress",
-  "Creating personalized questions",
-  "Getting everything ready for you"
+interface LoadingStep {
+  message: string;
+  icon: typeof Brain;
+  duration: number;
+}
+
+const loadingSteps: LoadingStep[] = [
+  { message: "Analyzing your previous responses", icon: Brain, duration: 2000 },
+  { message: "Selecting the right topic to test", icon: Target, duration: 1500 },
+  { message: "Choosing appropriate difficulty level", icon: Gauge, duration: 1500 },
+  { message: "Generating your personalized question", icon: Sparkles, duration: 3000 },
+  { message: "Almost ready", icon: Check, duration: 1000 }
 ];
 
 export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }: DiagnosticDeepDivePhaseProps) {
@@ -76,7 +83,8 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
-  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const [currentLoadingStep, setCurrentLoadingStep] = useState(0);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchNextQuestion = async () => {
@@ -113,16 +121,34 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
     fetchNextQuestion();
   }, []);
 
-  // Cycle through loading messages
+  // Progress through loading steps sequentially
   useEffect(() => {
-    if (!isLoading) return;
+    if (!isLoading || currentQuestion) {
+      setCurrentLoadingStep(0);
+      setLoadingProgress(0);
+      return;
+    }
     
-    const interval = setInterval(() => {
-      setLoadingMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-    }, 2000);
+    let totalElapsed = 0;
+    let currentStep = 0;
+    
+    const progressInterval = setInterval(() => {
+      totalElapsed += 50;
+      const currentStepData = loadingSteps[currentStep];
+      const stepProgress = Math.min((totalElapsed - loadingSteps.slice(0, currentStep).reduce((sum, s) => sum + s.duration, 0)) / currentStepData.duration * 100, 100);
+      
+      setLoadingProgress(stepProgress);
+      
+      if (totalElapsed >= loadingSteps.slice(0, currentStep + 1).reduce((sum, s) => sum + s.duration, 0)) {
+        if (currentStep < loadingSteps.length - 1) {
+          currentStep++;
+          setCurrentLoadingStep(currentStep);
+        }
+      }
+    }, 50);
 
-    return () => clearInterval(interval);
-  }, [isLoading]);
+    return () => clearInterval(progressInterval);
+  }, [isLoading, currentQuestion]);
 
   const handleAnswerSubmit = async () => {
     if (!selectedAnswer || !currentQuestion) return;
@@ -180,13 +206,53 @@ export function DiagnosticDeepDivePhase({ assessmentId, studentId, onComplete }:
   };
 
   if (isLoading && !currentQuestion) {
+    const currentStepData = loadingSteps[currentLoadingStep];
+    const CurrentIcon = currentStepData.icon;
+    const totalSteps = loadingSteps.length;
+    const overallProgress = ((currentLoadingStep + (loadingProgress / 100)) / totalSteps) * 100;
+
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="text-lg font-medium">{LOADING_MESSAGES[loadingMessageIndex]}...</p>
-          <p className="text-sm text-muted-foreground">This won't take long!</p>
-        </div>
+        <Card className="w-full max-w-md border-2">
+          <CardContent className="pt-6 space-y-6">
+            <div className="flex items-center gap-3">
+              <CurrentIcon className="h-6 w-6 text-primary animate-pulse" />
+              <p className="text-lg font-medium">{currentStepData.message}...</p>
+            </div>
+            
+            <Progress value={overallProgress} className="h-2" />
+            
+            <div className="space-y-2">
+              {loadingSteps.map((step, idx) => {
+                const StepIcon = step.icon;
+                const isCompleted = idx < currentLoadingStep;
+                const isCurrent = idx === currentLoadingStep;
+                const isPending = idx > currentLoadingStep;
+                
+                return (
+                  <div
+                    key={idx}
+                    className={cn(
+                      "flex items-center gap-3 text-sm transition-all",
+                      isCompleted && "text-muted-foreground",
+                      isCurrent && "text-foreground font-medium",
+                      isPending && "text-muted-foreground/50"
+                    )}
+                  >
+                    {isCompleted ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : isCurrent ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30" />
+                    )}
+                    <span>{step.message}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
