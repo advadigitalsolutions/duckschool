@@ -75,6 +75,22 @@ serve(async (req) => {
       prereqMap.get(p.standard_code)!.push(p.prerequisite_code);
     });
 
+    // Topic hierarchy: maps easier topics to their harder counterparts
+    // If the harder topic is mastered, skip testing the easier one unless there's a failure
+    const topicHierarchy = new Map<string, string>([
+      ['Addition - Single-digit', 'Addition - Multi-digit'],
+      ['Subtraction - Single-digit', 'Subtraction - Multi-digit'],
+      ['Multiplication - Single-digit', 'Multiplication - Multi-digit'],
+      ['Division - Single-digit', 'Division - Multi-digit'],
+    ]);
+
+    // Track consecutive correct answers
+    const consecutiveCorrect = responses?.filter((r, idx) => 
+      idx < 5 && r.is_correct
+    ).length || 0;
+    
+    console.log('Consecutive correct answers:', consecutiveCorrect);
+
     // Determine next topic and difficulty based on adaptive logic
     let targetTopic = '';
     let targetDifficulty = 0.5;
@@ -117,11 +133,13 @@ serve(async (req) => {
       }
     } else {
       // Student got last question correct OR this is the first question
-      // Priority order for topic selection:
-      // 1. Untested prerequisites of failed topics
-      // 2. Knowledge boundaries (where mastery transitions)
-      // 3. Uncertain topics (mastery 0.3-0.7, low confidence)
-      // 4. Breadth testing (untested topics)
+      // Modified priority order:
+      // 1. Force breadth testing after 3+ consecutive correct answers
+      // 2. Prioritize breadth over uncertain topics after 2+ consecutive correct
+      // 3. Untested prerequisites of failed topics
+      // 4. Knowledge boundaries (where mastery transitions)
+      // 5. Uncertain topics (only if they have conflicting results or aren't easier versions of mastered topics)
+      // 6. Breadth testing (untested topics)
 
       const untestedPrereqs: string[] = [];
       const knowledgeBoundaries: string[] = [];
@@ -156,12 +174,35 @@ serve(async (req) => {
         } else if (estimate.knowledge_boundary) {
           knowledgeBoundaries.push(topic);
         } else if (estimate.mastery >= 0.3 && estimate.mastery <= 0.7 && (estimate.confidence || 0) < 0.85) {
-          uncertainTopics.push(topic);
+          // Check if this is an easier topic with a mastered harder counterpart
+          const harderTopic = topicHierarchy.get(topic);
+          const harderEstimate = harderTopic ? masteryEstimates[harderTopic] : null;
+          
+          // Skip this uncertain topic if the harder version is already mastered (70%+)
+          // unless there's conflicting evidence (some correct, some wrong)
+          if (harderEstimate && harderEstimate.mastery >= 0.70) {
+            console.log(`Skipping ${topic} - harder topic ${harderTopic} already mastered at ${harderEstimate.mastery}`);
+          } else {
+            uncertainTopics.push(topic);
+          }
         }
       });
 
-      // Select topic based on priority
-      if (untestedPrereqs.length > 0) {
+      // Select topic based on adaptive priority
+      // FORCE breadth testing after 3+ consecutive correct answers
+      if (consecutiveCorrect >= 3 && untestedTopics.length > 0) {
+        targetTopic = untestedTopics[0];
+        targetDifficulty = 0.5;
+        rationale = `${consecutiveCorrect} consecutive correct - forcing breadth testing: ${targetTopic}`;
+      } 
+      // PRIORITIZE breadth over uncertain topics after 2+ consecutive correct
+      else if (consecutiveCorrect >= 2 && untestedTopics.length > 0) {
+        targetTopic = untestedTopics[0];
+        targetDifficulty = 0.5;
+        rationale = `${consecutiveCorrect} consecutive correct - prioritizing breadth: ${targetTopic}`;
+      }
+      // Standard priority when not forcing breadth
+      else if (untestedPrereqs.length > 0) {
         targetTopic = untestedPrereqs[0];
         targetDifficulty = 0.5;
         rationale = `Testing untested prerequisite: ${targetTopic}`;
@@ -173,8 +214,17 @@ serve(async (req) => {
       } else if (uncertainTopics.length > 0) {
         targetTopic = uncertainTopics[0];
         const estimate = masteryEstimates[targetTopic];
-        targetDifficulty = estimate.mastery > 0.5 ? 0.6 : 0.4;
-        rationale = `Clarifying uncertain topic: ${targetTopic}`;
+        
+        // Smarter difficulty: if related harder topic is mastered, start at higher difficulty
+        const harderTopic = topicHierarchy.get(targetTopic);
+        const harderEstimate = harderTopic ? masteryEstimates[harderTopic] : null;
+        if (harderEstimate && harderEstimate.mastery >= 0.60) {
+          targetDifficulty = Math.min(0.8, 0.5 + (harderEstimate.mastery - 0.6) / 2);
+          rationale = `Clarifying ${targetTopic} (higher difficulty due to ${harderTopic} mastery)`;
+        } else {
+          targetDifficulty = estimate.mastery > 0.5 ? 0.6 : 0.4;
+          rationale = `Clarifying uncertain topic: ${targetTopic}`;
+        }
       } else if (untestedTopics.length > 0) {
         targetTopic = untestedTopics[0];
         targetDifficulty = 0.5;
