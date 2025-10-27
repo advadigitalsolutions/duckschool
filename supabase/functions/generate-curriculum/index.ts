@@ -165,10 +165,50 @@ serve(async (req) => {
       isCustomFramework, 
       framework, 
       subject: course.subject, 
-      gradeLevel 
+      gradeLevel,
+      courseType 
     });
     
-    if (isCustomFramework) {
+    // Check if this is a bridge mode course
+    const isBridgeMode = course.standards_scope?.[0]?.bridge_mode === true;
+    const prerequisiteBands = course.standards_scope?.[0]?.prerequisite_bands || [];
+    
+    if (isBridgeMode) {
+      // For bridge mode courses, extract standards from existing curriculum items
+      console.log('🌉 Bridge mode detected - using standards from curriculum items');
+      const standardCodesInCurriculum = new Set(
+        course.curriculum_items?.flatMap((item: any) => 
+          Array.isArray(item.standards) ? item.standards : []
+        ) || []
+      );
+      
+      // Query the full standard details from the standards table
+      if (standardCodesInCurriculum.size > 0) {
+        const { data } = await supabaseClient
+          .from('standards')
+          .select('*')
+          .eq('framework', framework)
+          .eq('subject', course.subject)
+          .in('code', Array.from(standardCodesInCurriculum));
+        
+        allStandards = data || [];
+        console.log('📚 Bridge mode standards found:', allStandards?.length || 0);
+      } else {
+        // Fallback: query by prerequisite bands if no curriculum items yet
+        console.log('🔍 No curriculum items yet - querying by prerequisite bands:', prerequisiteBands);
+        if (prerequisiteBands.length > 0) {
+          const { data } = await supabaseClient
+            .from('standards')
+            .select('*')
+            .eq('framework', framework)
+            .eq('subject', course.subject)
+            .in('grade_band', prerequisiteBands.map(String));
+          
+          allStandards = data || [];
+          console.log('📚 Standards from prerequisite bands:', allStandards?.length || 0);
+        }
+      }
+    } else if (isCustomFramework) {
       // Use AI-generated custom standards
       allStandards = course.standards_scope?.[0]?.custom_standards || null;
       console.log('📚 Custom standards found:', allStandards?.length || 0);
