@@ -251,11 +251,15 @@ export default function StudentMasteryJourney() {
                             🎯 Knowledge Edges Identified:
                           </p>
                           <div className="pl-4 space-y-1">
-                            {results.knowledgeBoundaries.slice(0, 3).map((topic: string, idx: number) => {
-                              const mastery = results.masteryByTopic?.[topic];
+                            {results.knowledgeBoundaries.slice(0, 3).map((item: any, idx: number) => {
+                              // Handle both string and object formats
+                              const topicName = typeof item === 'string' ? item : item.topic;
+                              const mastery = typeof item === 'string' 
+                                ? results.masteryByTopic?.[item] 
+                                : item;
                               return (
                                 <p key={idx} className="text-sm text-muted-foreground">
-                                  • {topic} ({Math.round((mastery?.mastery || 0) * 100)}% mastery)
+                                  • {topicName} ({Math.round((mastery?.mastery || 0) * 100)}% mastery)
                                 </p>
                               );
                             })}
@@ -336,12 +340,16 @@ export default function StudentMasteryJourney() {
                   <p className="text-sm font-medium">From Diagnostic Assessments:</p>
                   {diagnosticData.map((assessment) => {
                     const results = assessment.results as any;
-                    return results?.knowledgeBoundaries?.slice(0, 3).map((topic: string, idx: number) => {
-                      const mastery = results.masteryByTopic?.[topic];
+                    return results?.knowledgeBoundaries?.slice(0, 3).map((item: any, idx: number) => {
+                      // Handle both string and object formats
+                      const topicName = typeof item === 'string' ? item : item.topic;
+                      const mastery = typeof item === 'string' 
+                        ? results.masteryByTopic?.[item] 
+                        : item;
                       return (
                         <div key={`${assessment.id}-${idx}`} className="flex items-center justify-between p-4 rounded-lg border border-blue-200/20 bg-blue-50/5 dark:bg-blue-950/10">
                           <div className="flex-1">
-                            <div className="font-medium">{topic}</div>
+                            <div className="font-medium">{topicName}</div>
                             <div className="text-sm text-muted-foreground">
                               {assessment.subject} • Knowledge Edge
                             </div>
