@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Clock, Target, BookOpen, CheckCircle2, Brain, TrendingUp, Sparkles, Palette } from 'lucide-react';
+import { ArrowLeft, Clock, Target, BookOpen, CheckCircle2, Brain, TrendingUp, Sparkles, Palette, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AssignmentQuestions } from '@/components/AssignmentQuestions';
@@ -695,7 +695,50 @@ export default function AssignmentDetail() {
                                   </div>
                                 )}
                                 
-                                {response.time_spent_seconds > 0 && (
+                                {/* Show uploaded files if any */}
+                                {submission.content?.uploadedFiles && submission.content.uploadedFiles.length > 0 && idx === 0 && (
+                                  <div className="pt-3 border-t">
+                                    <span className="font-medium">Student Uploaded Files:</span>
+                                    <div className="mt-2 space-y-2">
+                                      {submission.content.uploadedFiles.map((file: any, fileIdx: number) => (
+                                        <div key={fileIdx} className="flex items-center gap-2 p-2 bg-muted rounded">
+                                          {file.type?.startsWith('image/') ? (
+                                            <img 
+                                              src={file.url} 
+                                              alt={file.name}
+                                              className="h-32 w-auto rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                                              onClick={() => window.open(file.url, '_blank')}
+                                            />
+                                          ) : (
+                                            <>
+                                              <FileText className="h-4 w-4" />
+                                              <a 
+                                                href={file.url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-primary hover:underline"
+                                              >
+                                                {file.name}
+                                              </a>
+                                            </>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                    
+                                    {/* Show AI file analysis if available */}
+                                    {submission.content?.fileAnalysisFeedback && (
+                                      <div className="mt-3 p-3 bg-muted rounded-lg">
+                                        <span className="font-medium">AI Analysis of Uploaded Work:</span>
+                                        <p className="text-muted-foreground mt-1 whitespace-pre-wrap">
+                                          <BionicText>{submission.content.fileAnalysisFeedback}</BionicText>
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                 {response.time_spent_seconds > 0 && (
                                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                     <Clock className="h-3 w-3" />
                                     {response.time_spent_seconds}s spent

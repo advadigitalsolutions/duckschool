@@ -149,9 +149,10 @@ async function performRegrade(submissionId: string, authHeader: string) {
     }
     console.log(`✓ Deleted ${count || 0} old responses`);
 
-    // STEP 5: Get questions and student answers from unique responses
+    // STEP 5: Get questions, student answers, and uploaded files
     const questions = submission.assignment.curriculum_items.body.questions || [];
     const attemptNumber = submission.attempt_no || 1;
+    const uploadedFiles = submission.content?.uploadedFiles || [];
     
     // Build studentAnswers map from unique responses
     const studentAnswers: Record<string, any> = {};
@@ -161,6 +162,7 @@ async function performRegrade(submissionId: string, authHeader: string) {
     
     console.log(`\n[STEP 5] Found ${questions.length} questions to grade`);
     console.log('Student answers:', Object.keys(studentAnswers).length);
+    console.log('Uploaded files:', uploadedFiles.length);
 
     const maxScore = questions.reduce((sum: number, q: any) => sum + (q.points || 1), 0);
     console.log('Maximum possible score:', maxScore);
@@ -345,6 +347,90 @@ async function performRegrade(submissionId: string, authHeader: string) {
 
     console.log(`\n✓ Graded ${gradedResults.length} questions`);
 
+    // STEP 6b: Analyze uploaded files (if any images exist)
+    console.log('\n[STEP 6b] Analyzing uploaded files...');
+    let fileAnalysisFeedback = '';
+    
+    if (uploadedFiles.length > 0) {
+      const imageFiles = uploadedFiles.filter((file: any) => 
+        file.type?.startsWith('image/') || 
+        file.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i)
+      );
+      
+      if (imageFiles.length > 0) {
+        console.log(`Found ${imageFiles.length} image files to analyze`);
+        
+        try {
+          // Get assignment details for context
+          const assignmentTitle = submission.assignment.curriculum_items.body?.title || 
+                                 submission.assignment.curriculum_items.title;
+          const assignmentPrompt = submission.assignment.curriculum_items.body?.prompt || '';
+          
+          // Prepare messages with images for vision API
+          const imageContent = imageFiles.map((file: any) => ({
+            type: 'image_url',
+            image_url: { url: file.url }
+          }));
+          
+          const visionPrompt = `Analyze the uploaded student work for this assignment:
+
+Assignment: ${assignmentTitle}
+Instructions: ${assignmentPrompt}
+
+The student uploaded ${imageFiles.length} image(s). Please:
+1. Describe what you see in the image(s)
+2. Assess if the work meets the assignment requirements
+3. Provide constructive feedback on quality, effort, and completeness
+4. Give a score from 0-1 (where 1.0 is excellent, meeting all requirements)
+
+Be encouraging but honest. Focus on what the student did well and how they can improve.`;
+
+          const aiStart = Date.now();
+          const visionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-5-2025-08-07',
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: visionPrompt },
+                    ...imageContent
+                  ]
+                }
+              ],
+              max_completion_tokens: 500
+            }),
+          });
+          
+          const aiLatency = Date.now() - aiStart;
+          
+          if (visionResponse.ok) {
+            const visionData = await visionResponse.json();
+            fileAnalysisFeedback = visionData.choices[0].message.content;
+            console.log(`✓ File analysis complete (${aiLatency}ms)`);
+            console.log('Analysis preview:', fileAnalysisFeedback.substring(0, 150));
+          } else {
+            const errorText = await visionResponse.text();
+            console.error(`✗ Vision API error ${visionResponse.status}:`, errorText.substring(0, 150));
+            fileAnalysisFeedback = '⚠️ Unable to analyze uploaded images. Your teacher will review them manually.';
+          }
+        } catch (error) {
+          console.error('Error analyzing files:', error);
+          fileAnalysisFeedback = '⚠️ Unable to analyze uploaded images. Your teacher will review them manually.';
+        }
+      } else {
+        console.log('No image files to analyze (files are non-image types)');
+        fileAnalysisFeedback = `${uploadedFiles.length} file(s) uploaded - your teacher will review them.`;
+      }
+    } else {
+      console.log('No files uploaded');
+    }
+
     // STEP 7: Insert ALL new question responses atomically
     console.log('\n[STEP 7] Inserting new question responses...');
     
@@ -411,7 +497,7 @@ async function performRegrade(submissionId: string, authHeader: string) {
       console.log('✓ Grade updated');
     }
 
-    // STEP 10: Update submission and clear grading flag
+    // STEP 10: Update submission with scores and file analysis
     console.log('\n[STEP 10] Updating submission...');
     const { error: updateSubError } = await supabase
       .from('submissions')
@@ -420,7 +506,8 @@ async function performRegrade(submissionId: string, authHeader: string) {
           ...submission.content,
           score: totalScore,
           maxScore: maxScore,
-          grading_in_progress: false
+          grading_in_progress: false,
+          fileAnalysisFeedback: fileAnalysisFeedback || undefined
         }
       })
       .eq('id', submissionId);
