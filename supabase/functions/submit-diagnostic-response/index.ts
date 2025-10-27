@@ -71,10 +71,12 @@ serve(async (req) => {
       }
     }
 
-    // Calculate mastery delta using simplified IRT
+    // Calculate mastery delta using adaptive IRT
+    // Correct answers on hard questions = big boost
+    // Incorrect answers on easy questions = big penalty
     const masteryDelta = isCorrect 
-      ? (1 - difficulty) * 0.15  // Increase mastery more for harder correct answers
-      : -(difficulty) * 0.15;     // Decrease mastery more for easier incorrect answers
+      ? (1 - difficulty) * 0.2  // Max +0.2 for correct easy, +0.04 for correct hard
+      : -(1 - difficulty) * 0.25; // Max -0.25 for incorrect easy, -0.05 for incorrect hard
 
     // Save the response
     const { error: insertError } = await supabaseClient
@@ -99,7 +101,7 @@ serve(async (req) => {
       throw insertError;
     }
 
-    // Update mastery estimates
+    // Update mastery estimates with adaptive tracking
     const { data: assessment } = await supabaseClient
       .from('diagnostic_assessments')
       .select('mastery_estimates, questions_asked')
@@ -107,10 +109,30 @@ serve(async (req) => {
       .single();
 
     const currentEstimates = assessment?.mastery_estimates || {};
-    const currentMastery = (currentEstimates[topic] as number) || 0.5;
+    const topicEstimate = currentEstimates[topic] || { mastery: 0.5, attempts: 0, tested: false };
+    
+    // Update mastery level
+    const currentMastery = topicEstimate.mastery || 0.5;
     const newMastery = Math.max(0, Math.min(1, currentMastery + masteryDelta));
     
-    currentEstimates[topic] = newMastery;
+    // Calculate confidence based on number of attempts and consistency
+    const attempts = (topicEstimate.attempts || 0) + 1;
+    const successfulAttempts = (topicEstimate.successful_attempts || 0) + (isCorrect ? 1 : 0);
+    const consistency = attempts > 1 ? Math.abs(successfulAttempts / attempts - 0.5) * 2 : 0;
+    const confidence = Math.min(0.95, attempts * 0.15 + consistency * 0.3);
+    
+    // Update the estimate with rich tracking data
+    currentEstimates[topic] = {
+      mastery: newMastery,
+      attempts,
+      successful_attempts: successfulAttempts,
+      confidence,
+      tested: true,
+      last_difficulty: difficulty,
+      last_correct: isCorrect,
+      knowledge_boundary: topicEstimate.knowledge_boundary || false,
+      prerequisite_tested: topicEstimate.prerequisite_tested || null
+    };
 
     const { error: updateError } = await supabaseClient
       .from('diagnostic_assessments')

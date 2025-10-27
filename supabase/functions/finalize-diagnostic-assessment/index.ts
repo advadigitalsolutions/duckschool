@@ -23,7 +23,7 @@ serve(async (req) => {
       throw new Error('Assessment ID is required');
     }
 
-    console.log('Finalizing diagnostic assessment:', assessmentId);
+    console.log('Finalizing adaptive diagnostic assessment:', assessmentId);
 
     // Get the assessment with all data
     const { data: assessment, error: fetchError } = await supabaseClient
@@ -41,39 +41,134 @@ serve(async (req) => {
       .eq('assessment_id', assessmentId)
       .order('question_number', { ascending: true });
 
-    const masteryEstimates = assessment.mastery_estimates || {};
-    
-    // Categorize topics into mastered, in-progress, and needs-work
-    const mastered = [];
-    const inProgress = [];
-    const needsWork = [];
-
-    for (const [topic, mastery] of Object.entries(masteryEstimates)) {
-      if ((mastery as number) >= 0.7) {
-        mastered.push({ topic, mastery });
-      } else if ((mastery as number) >= 0.4) {
-        inProgress.push({ topic, mastery });
-      } else {
-        needsWork.push({ topic, mastery });
-      }
-    }
-
-    // Calculate overall metrics
+    // ===== CALCULATE ADAPTIVE RESULTS =====
     const totalQuestions = responses?.length || 0;
     const correctAnswers = responses?.filter(r => r.is_correct).length || 0;
-    const accuracyRate = totalQuestions > 0 ? (correctAnswers / totalQuestions) : 0;
-    const averageMastery = Object.values(masteryEstimates).reduce((sum: number, m) => sum + (m as number), 0) / Object.values(masteryEstimates).length;
+    const accuracyRate = totalQuestions > 0 ? correctAnswers / totalQuestions : 0;
+
+    // Use the detailed mastery estimates from the assessment
+    const detailedEstimates = assessment.mastery_estimates || {};
+    
+    // Categorize topics based on mastery level
+    const masteredTopics: string[] = [];
+    const knowledgeBoundaries: Array<{topic: string, mastery: number, prerequisite?: string}> = [];
+    const strugglingTopics: string[] = [];
+    const untestedTopics: string[] = [];
+
+    // Fetch prerequisites for learning path generation
+    const { data: prerequisites } = await supabaseClient
+      .from('standard_prerequisites')
+      .select('*')
+      .eq('subject', assessment.subject);
+
+    const prereqMap = new Map<string, string[]>();
+    prerequisites?.forEach(p => {
+      if (!prereqMap.has(p.standard_code)) {
+        prereqMap.set(p.standard_code, []);
+      }
+      prereqMap.get(p.standard_code)!.push(p.prerequisite_code);
+    });
+
+    // Analyze each topic
+    Object.entries(detailedEstimates).forEach(([topic, estimate]: [string, any]) => {
+      if (!estimate.tested) {
+        untestedTopics.push(topic);
+      } else if (estimate.knowledge_boundary) {
+        knowledgeBoundaries.push({
+          topic,
+          mastery: estimate.mastery,
+          prerequisite: estimate.prerequisite_tested
+        });
+      } else if (estimate.mastery >= 0.7 && estimate.confidence >= 0.7) {
+        masteredTopics.push(topic);
+      } else if (estimate.mastery < 0.4) {
+        strugglingTopics.push(topic);
+      }
+    });
+
+    // Generate recommended learning path
+    const learningPath: Array<{topic: string, reason: string, priority: number}> = [];
+    
+    // Priority 1: Teach prerequisites of knowledge boundaries
+    knowledgeBoundaries.forEach(boundary => {
+      const prereqs = prereqMap.get(boundary.topic) || [];
+      prereqs.forEach(prereq => {
+        const prereqEstimate = detailedEstimates[prereq];
+        if (!prereqEstimate || prereqEstimate.mastery < 0.7) {
+          learningPath.push({
+            topic: prereq,
+            reason: `Foundation needed for ${boundary.topic}`,
+            priority: 1
+          });
+        }
+      });
+    });
+
+    // Priority 2: Address struggling topics' prerequisites
+    strugglingTopics.forEach(topic => {
+      const prereqs = prereqMap.get(topic) || [];
+      if (prereqs.length > 0) {
+        learningPath.push({
+          topic: prereqs[0],
+          reason: `Essential prerequisite for ${topic}`,
+          priority: 2
+        });
+      } else {
+        learningPath.push({
+          topic,
+          reason: `Needs foundational review`,
+          priority: 2
+        });
+      }
+    });
+
+    // Priority 3: Build on mastered topics
+    masteredTopics.forEach(topic => {
+      // Find topics that have this as a prerequisite
+      prerequisites?.forEach(p => {
+        if (p.prerequisite_code === topic && !masteredTopics.includes(p.standard_code)) {
+          learningPath.push({
+            topic: p.standard_code,
+            reason: `Build on mastery of ${topic}`,
+            priority: 3
+          });
+        }
+      });
+    });
+
+    // Sort learning path by priority and remove duplicates
+    const uniquePath = learningPath
+      .sort((a, b) => a.priority - b.priority)
+      .filter((item, index, self) => 
+        index === self.findIndex((t) => t.topic === item.topic)
+      );
+
+    // Calculate average mastery
+    const testedTopics = Object.entries(detailedEstimates)
+      .filter(([_, e]: [string, any]) => e.tested);
+    const averageMastery = testedTopics.length > 0
+      ? testedTopics.reduce((sum, [_, e]: [string, any]) => sum + e.mastery, 0) / testedTopics.length
+      : 0;
 
     const results = {
       totalQuestions,
       correctAnswers,
       accuracyRate,
       averageMastery,
-      mastered,
-      inProgress,
-      needsWork,
+      masteredTopics,
+      knowledgeBoundaries,
+      strugglingTopics,
+      learningPath: uniquePath.slice(0, 10), // Top 10 recommendations
+      masteryByTopic: detailedEstimates,
       completedAt: new Date().toISOString()
     };
+
+    console.log('Adaptive results:', {
+      mastered: masteredTopics.length,
+      boundaries: knowledgeBoundaries.length,
+      struggling: strugglingTopics.length,
+      pathLength: uniquePath.length
+    });
 
     // Update assessment to completed
     const { error: updateError } = await supabaseClient
@@ -93,7 +188,6 @@ serve(async (req) => {
     }
 
     // Update standard_mastery table with diagnostic results
-    // This gives diagnostic data highest weight in the knowledge profile
     const studentId = assessment.student_id;
     
     // Get or create a course for this subject to link mastery data
@@ -106,19 +200,17 @@ serve(async (req) => {
 
     let courseId = existingCourse?.id;
 
-    // If no course exists, we'll store mastery without course_id
-    // The course generation flow will link it later
-    
-    for (const [topic, mastery] of Object.entries(masteryEstimates)) {
-      const masteryValue = mastery as number;
+    // Update mastery for each tested topic
+    for (const [topic, estimate] of Object.entries(detailedEstimates)) {
+      const est = estimate as any;
+      if (!est.tested) continue;
       
-      // Insert into standard_mastery with high confidence from diagnostic
       const masteryData: any = {
         student_id: studentId,
         standard_code: topic,
-        mastery_level: masteryValue * 100, // Convert to percentage
-        total_attempts: 1,
-        correct_attempts: masteryValue >= 0.7 ? 1 : 0,
+        mastery_level: est.mastery * 100, // Convert to percentage
+        total_attempts: est.attempts || 1,
+        correct_attempts: est.successful_attempts || 0,
         last_attempted_at: new Date().toISOString(),
       };
 
@@ -136,14 +228,14 @@ serve(async (req) => {
         console.error('Error updating standard mastery:', masteryError);
       }
 
-      // Add to progress_gaps if needs work
-      if (masteryValue < 0.4) {
+      // Add to progress_gaps if struggling or at knowledge boundary
+      if (est.mastery < 0.4 || est.knowledge_boundary) {
         const gapData: any = {
           student_id: studentId,
           standard_code: topic,
-          gap_type: 'knowledge',
-          severity: masteryValue < 0.2 ? 'high' : 'medium',
-          confidence_score: Math.abs(masteryValue - 0.5) * 2, // 0-1 scale
+          gap_type: est.knowledge_boundary ? 'knowledge_boundary' : 'knowledge',
+          severity: est.mastery < 0.2 ? 'high' : 'medium',
+          confidence_score: est.confidence || 0.5,
           identified_at: new Date().toISOString()
         };
 
@@ -157,7 +249,7 @@ serve(async (req) => {
       }
     }
 
-    console.log('Assessment finalized successfully');
+    console.log('Adaptive assessment finalized successfully');
 
     return new Response(
       JSON.stringify({ 

@@ -23,117 +23,208 @@ serve(async (req) => {
       throw new Error('Assessment ID is required');
     }
 
-    console.log('Getting next question for assessment:', assessmentId);
+    console.log('Getting next adaptive question for assessment:', assessmentId);
 
-    // Get the assessment with current mastery estimates
-    const { data: assessment, error: fetchError } = await supabaseClient
+    // Fetch assessment with current mastery state
+    const { data: assessment, error: assessmentError } = await supabaseClient
       .from('diagnostic_assessments')
       .select('*')
       .eq('id', assessmentId)
       .single();
 
-    if (fetchError) throw fetchError;
+    if (assessmentError) throw assessmentError;
 
-    // Check if we have a question batch cached
-    const questionBatch = assessment.question_batch || [];
-    if (questionBatch.length > 0) {
-      // Return the next question from the batch
-      const nextQuestion = questionBatch[0];
-      const remainingBatch = questionBatch.slice(1);
-      
-      // Update the batch
-      await supabaseClient
-        .from('diagnostic_assessments')
-        .update({ question_batch: remainingBatch })
-        .eq('id', assessmentId);
-
-      console.log('Returning cached question, remaining in batch:', remainingBatch.length);
-      return new Response(
-        JSON.stringify(nextQuestion),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get previous responses
-    const { data: responses } = await supabaseClient
+    // Get all previous responses
+    const { data: responses, error: responsesError } = await supabaseClient
       .from('diagnostic_question_responses')
       .select('*')
       .eq('assessment_id', assessmentId)
       .order('created_at', { ascending: false });
 
+    if (responsesError) throw responsesError;
+
     const questionsAsked = responses?.length || 0;
-    const masteryEstimates = assessment.mastery_estimates || {};
+    const MAX_QUESTIONS = 20; // Allow for deeper exploration
 
-    // Check if we should complete the assessment
-    // Complete after 10-15 questions or when confidence is high across all topics
-    const shouldComplete = questionsAsked >= 15 || 
-      (questionsAsked >= 10 && Object.values(masteryEstimates).every((m: any) => {
-        const confidence = Math.abs(m - 0.5);
-        return confidence > 0.3; // High confidence in mastery level
-      }));
-
-    if (shouldComplete) {
+    if (questionsAsked >= MAX_QUESTIONS) {
+      console.log('Assessment complete - max questions reached');
       return new Response(
-        JSON.stringify({ 
-          complete: true,
-          questionsAsked,
-          masteryEstimates
-        }),
+        JSON.stringify({ complete: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Generating new batch of questions...');
+    // ===== ADAPTIVE QUESTION SELECTION =====
+    const masteryEstimates = assessment.mastery_estimates || {};
+    const lastResponse = responses && responses.length > 0 ? responses[0] : null;
+    
+    console.log('Current mastery estimates:', masteryEstimates);
+    console.log('Last response:', lastResponse?.standard_code, lastResponse?.is_correct);
 
-    // Generate a batch of 4 questions (targeting different topics for variety)
+    // Fetch prerequisite relationships
+    const { data: prerequisites } = await supabaseClient
+      .from('standard_prerequisites')
+      .select('*')
+      .eq('subject', assessment.subject);
+
+    const prereqMap = new Map<string, string[]>();
+    prerequisites?.forEach(p => {
+      if (!prereqMap.has(p.standard_code)) {
+        prereqMap.set(p.standard_code, []);
+      }
+      prereqMap.get(p.standard_code)!.push(p.prerequisite_code);
+    });
+
+    // Determine next topic and difficulty based on adaptive logic
+    let targetTopic = '';
+    let targetDifficulty = 0.5;
+    let rationale = '';
+
+    if (lastResponse && !lastResponse.is_correct) {
+      // Student got the last question wrong - adaptive response
+      const lastTopic = lastResponse.standard_code;
+      const lastDifficulty = lastResponse.difficulty_level || 0.5;
+      const topicEstimate = masteryEstimates[lastTopic] || {};
+      const attempts = topicEstimate.attempts || 0;
+
+      if (attempts === 1) {
+        // First wrong answer - try easier on same topic
+        targetTopic = lastTopic;
+        targetDifficulty = Math.max(0.2, lastDifficulty - 0.3);
+        rationale = `First incorrect answer on ${lastTopic} - trying easier question`;
+      } else {
+        // Second+ wrong answer - check prerequisite
+        const prereqs = prereqMap.get(lastTopic);
+        if (prereqs && prereqs.length > 0) {
+          // Test the prerequisite
+          const prereq = prereqs[0]; // Take the most direct prerequisite
+          targetTopic = prereq;
+          targetDifficulty = 0.5;
+          rationale = `Multiple failures on ${lastTopic} - testing prerequisite: ${prereq}`;
+          
+          // Mark this as a knowledge boundary
+          masteryEstimates[lastTopic] = {
+            ...topicEstimate,
+            knowledge_boundary: true,
+            prerequisite_tested: prereq
+          };
+        } else {
+          // No prerequisite found - try much easier on same topic
+          targetTopic = lastTopic;
+          targetDifficulty = 0.2;
+          rationale = `No prerequisite found for ${lastTopic} - trying easiest level`;
+        }
+      }
+    } else {
+      // Student got last question correct OR this is the first question
+      // Priority order for topic selection:
+      // 1. Untested prerequisites of failed topics
+      // 2. Knowledge boundaries (where mastery transitions)
+      // 3. Uncertain topics (mastery 0.3-0.7, low confidence)
+      // 4. Breadth testing (untested topics)
+
+      const untestedPrereqs: string[] = [];
+      const knowledgeBoundaries: string[] = [];
+      const uncertainTopics: string[] = [];
+      const untestedTopics: string[] = [];
+
+      // Get all potential topics from prerequisites
+      const allTopics = new Set<string>();
+      prerequisites?.forEach(p => {
+        allTopics.add(p.standard_code);
+        allTopics.add(p.prerequisite_code);
+      });
+
+      allTopics.forEach(topic => {
+        const estimate = masteryEstimates[topic];
+        
+        if (!estimate || !estimate.tested) {
+          // Check if this is a prerequisite of a failed topic
+          let isPrereqOfFailed = false;
+          for (const [failedTopic, failedEstimate] of Object.entries(masteryEstimates)) {
+            if ((failedEstimate as any).mastery < 0.4 && prereqMap.get(failedTopic)?.includes(topic)) {
+              isPrereqOfFailed = true;
+              break;
+            }
+          }
+          
+          if (isPrereqOfFailed) {
+            untestedPrereqs.push(topic);
+          } else {
+            untestedTopics.push(topic);
+          }
+        } else if (estimate.knowledge_boundary) {
+          knowledgeBoundaries.push(topic);
+        } else if (estimate.mastery >= 0.3 && estimate.mastery <= 0.7 && (estimate.confidence || 0) < 0.85) {
+          uncertainTopics.push(topic);
+        }
+      });
+
+      // Select topic based on priority
+      if (untestedPrereqs.length > 0) {
+        targetTopic = untestedPrereqs[0];
+        targetDifficulty = 0.5;
+        rationale = `Testing untested prerequisite: ${targetTopic}`;
+      } else if (knowledgeBoundaries.length > 0) {
+        targetTopic = knowledgeBoundaries[0];
+        const estimate = masteryEstimates[targetTopic];
+        targetDifficulty = estimate.last_difficulty ? estimate.last_difficulty - 0.2 : 0.4;
+        rationale = `Refining knowledge boundary: ${targetTopic}`;
+      } else if (uncertainTopics.length > 0) {
+        targetTopic = uncertainTopics[0];
+        const estimate = masteryEstimates[targetTopic];
+        targetDifficulty = estimate.mastery > 0.5 ? 0.6 : 0.4;
+        rationale = `Clarifying uncertain topic: ${targetTopic}`;
+      } else if (untestedTopics.length > 0) {
+        targetTopic = untestedTopics[0];
+        targetDifficulty = 0.5;
+        rationale = `Breadth testing: ${targetTopic}`;
+      } else {
+        // All topics tested - pick lowest mastery for refinement
+        const lowestMastery = Object.entries(masteryEstimates)
+          .filter(([_, e]: [string, any]) => e.tested)
+          .sort(([_, a]: [string, any], [__, b]: [string, any]) => a.mastery - b.mastery)[0];
+        
+        if (lowestMastery) {
+          targetTopic = lowestMastery[0];
+          targetDifficulty = 0.3;
+          rationale = `Refining lowest mastery topic: ${targetTopic}`;
+        } else {
+          // Fallback - assessment should be complete
+          return new Response(
+            JSON.stringify({ complete: true }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    }
+
+    console.log('Adaptive selection:', { targetTopic, targetDifficulty, rationale });
+
+    // ===== GENERATE SINGLE QUESTION =====
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY not configured');
+      throw new Error('OpenAI API key not configured');
     }
 
-    // Find topics sorted by confidence (lowest confidence = most uncertainty = need more questions)
-    const topicsByConfidence = Object.entries(masteryEstimates)
-      .map(([topic, mastery]) => ({
-        topic,
-        mastery: mastery as number,
-        confidence: Math.abs((mastery as number) - 0.5)
-      }))
-      .sort((a, b) => a.confidence - b.confidence);
-
-    // If no topics yet, use warmup data
-    if (topicsByConfidence.length === 0) {
-      const warmupTopics = Object.keys(assessment.warmup_data || {});
-      warmupTopics.forEach(topic => {
-        topicsByConfidence.push({
-          topic,
-          mastery: 0.5,
-          confidence: 0
-        });
-      });
-    }
-
-    // Select 4 topics to generate questions for (or fewer if we don't have enough)
-    const targetTopics = topicsByConfidence.slice(0, Math.min(4, topicsByConfidence.length));
-    
     const subjectContext = assessment.subject === 'Home Economics' || assessment.subject === 'Life Skills'
       ? 'real-world practical life skills like cooking, budgeting, household management, nutrition, sewing, cleaning, time management, etc.'
       : assessment.subject;
 
-    const batchPrompt = `Generate ${targetTopics.length} ${subjectContext} questions for a diagnostic assessment. 
+    const prompt = `Generate 1 diagnostic question for ${subjectContext} (${assessment.grade_level || 'middle school'}).
 
-For each question, target these topics and difficulty levels:
-${targetTopics.map((t, i) => `${i + 1}. Topic: "${t.topic}", Difficulty: ${t.mastery.toFixed(2)}`).join('\n')}
+Topic: ${targetTopic}
+Difficulty: ${targetDifficulty.toFixed(2)} (0=easiest, 1=hardest)
+Context: ${rationale}
 
-Each question should:
-- Test understanding of the specified topic in the context of ${assessment.subject}
-- Be appropriate for ${assessment.grade_level || 'middle school'} level
-- Be practical and relatable to real-life situations
-- Have a clear correct answer
-- Include 4 multiple choice options (A, B, C, D)
-- Be engaging, friendly, and non-intimidating
-- Focus on practical knowledge students would actually use in daily life
+Create a clear, grade-appropriate multiple-choice question that:
+1. Accurately assesses understanding of ${targetTopic}
+2. Matches the ${targetDifficulty.toFixed(2)} difficulty level
+3. Has 4 answer options (A, B, C, D)
+4. Includes a brief explanation of the correct answer
+5. Is practical and relatable to real-life situations
 
-Return ${targetTopics.length} questions.`;
+Return exactly 1 question.`;
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -145,13 +236,13 @@ Return ${targetTopics.length} questions.`;
         model: 'gpt-5-mini-2025-08-07',
         messages: [
           { role: 'system', content: 'You are an educational assessment expert. Generate clear, appropriate questions.' },
-          { role: 'user', content: batchPrompt }
+          { role: 'user', content: prompt }
         ],
         tools: [{
           type: 'function',
           function: {
             name: 'generate_questions',
-            description: 'Generate multiple diagnostic questions',
+            description: 'Generate diagnostic questions',
             parameters: {
               type: 'object',
               properties: {
@@ -187,7 +278,9 @@ Return ${targetTopics.length} questions.`;
     });
 
     if (!aiResponse.ok) {
-      throw new Error(`AI request failed: ${aiResponse.status}`);
+      const errorText = await aiResponse.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
@@ -195,34 +288,41 @@ Return ${targetTopics.length} questions.`;
     const batchData = toolCall ? JSON.parse(toolCall.function.arguments) : null;
 
     if (!batchData || !batchData.questions || batchData.questions.length === 0) {
-      throw new Error('Failed to generate question batch');
+      throw new Error('Failed to generate question');
     }
 
-    // Format the questions with metadata
-    const formattedBatch = batchData.questions.map((q: any, index: number) => ({
+    const q = batchData.questions[0];
+    const question = {
       complete: false,
-      questionNumber: questionsAsked + index + 1,
-      topic: targetTopics[index]?.topic || 'General',
-      difficulty: targetTopics[index]?.mastery || 0.5,
+      questionNumber: questionsAsked + 1,
+      topic: targetTopic,
+      difficulty: targetDifficulty,
       question: q.question,
       options: q.options,
       correctAnswer: q.correct_answer,
       explanation: q.explanation
-    }));
+    };
 
-    // Return first question, cache the rest
-    const firstQuestion = formattedBatch[0];
-    const remainingBatch = formattedBatch.slice(1);
+    console.log('Generated adaptive question for topic:', question.topic);
+
+    // Update mastery estimates with new question info
+    if (!masteryEstimates[targetTopic]) {
+      masteryEstimates[targetTopic] = {};
+    }
+    masteryEstimates[targetTopic].last_difficulty = targetDifficulty;
+    masteryEstimates[targetTopic].attempts = (masteryEstimates[targetTopic].attempts || 0) + 1;
 
     await supabaseClient
       .from('diagnostic_assessments')
-      .update({ question_batch: remainingBatch })
+      .update({ 
+        mastery_estimates: masteryEstimates,
+        question_batch: [] // Clear any old cached questions
+      })
       .eq('id', assessmentId);
 
-    console.log('Generated batch of', formattedBatch.length, 'questions, cached', remainingBatch.length);
-
+    // Return the question
     return new Response(
-      JSON.stringify(firstQuestion),
+      JSON.stringify(question),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

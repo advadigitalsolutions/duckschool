@@ -2238,6 +2238,33 @@ export type Database = {
           },
         ]
       }
+      standard_prerequisites: {
+        Row: {
+          created_at: string | null
+          id: string
+          prerequisite_code: string
+          sequence_order: number
+          standard_code: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          prerequisite_code: string
+          sequence_order?: number
+          standard_code: string
+          subject: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          prerequisite_code?: string
+          sequence_order?: number
+          standard_code?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       standards: {
         Row: {
           code: string
