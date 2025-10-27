@@ -102,6 +102,13 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
         // Use the custom standards generated from goals
         standards = customStandards;
       } else if (!isCustomFramework) {
+        // Normalize framework names - handle both "CA-CCSS" and "CA CCSS" formats
+        const frameworkVariations = [
+          courseFramework,
+          courseFramework.replace(/-/g, ' '), // "CA-CCSS" -> "CA CCSS"
+          courseFramework.replace(/ /g, '-'), // "CA CCSS" -> "CA-CCSS"
+        ];
+        
         // Normalize subject names for flexible matching
         const subjectVariations = [
           course.subject,
@@ -109,50 +116,56 @@ export function useCoursePacing(courseId: string, targetDate?: Date) {
           course.subject.replace(/ /g, '/'),   // "English Language Arts" -> "English/Language Arts"
         ];
         
-        // Try to find standards with flexible subject and grade matching
-        for (const subjectVariant of subjectVariations) {
-          const { data } = await supabase
-            .from('standards')
-            .select('*')
-            .eq('framework', courseFramework)
-            .eq('subject', subjectVariant)
-            .eq('grade_band', course.grade_level);
-          
-          if (data && data.length > 0) {
-            standards = data;
-            break;
+        // Try to find standards with flexible framework, subject, and grade matching
+        for (const frameworkVariant of frameworkVariations) {
+          for (const subjectVariant of subjectVariations) {
+            const { data } = await supabase
+              .from('standards')
+              .select('*')
+              .eq('framework', frameworkVariant)
+              .eq('subject', subjectVariant)
+              .eq('grade_band', course.grade_level);
+            
+            if (data && data.length > 0) {
+              standards = data;
+              break;
+            }
           }
+          if (standards && standards.length > 0) break;
         }
         
         // If no exact grade match, try grade ranges that include this grade
         if (!standards || standards.length === 0) {
           const gradeNum = parseInt(course.grade_level) || 12;
-          for (const subjectVariant of subjectVariations) {
-            const { data } = await supabase
-              .from('standards')
-              .select('*')
-              .eq('framework', courseFramework)
-              .eq('subject', subjectVariant);
-            
-            if (data && data.length > 0) {
-              // Filter for grade ranges that include our grade
-              const filtered = data.filter((s: any) => {
-                const gradeBand = s.grade_band;
-                if (gradeBand.includes('-')) {
-                  const [startStr, endStr] = gradeBand.split('-');
-                  // Handle 'K' as kindergarten (grade 0)
-                  const start = startStr.toUpperCase() === 'K' ? 0 : parseInt(startStr);
-                  const end = parseInt(endStr);
-                  return gradeNum >= start && gradeNum <= end;
-                }
-                return parseInt(gradeBand) === gradeNum;
-              });
+          for (const frameworkVariant of frameworkVariations) {
+            for (const subjectVariant of subjectVariations) {
+              const { data } = await supabase
+                .from('standards')
+                .select('*')
+                .eq('framework', frameworkVariant)
+                .eq('subject', subjectVariant);
               
-              if (filtered.length > 0) {
-                standards = filtered;
-                break;
+              if (data && data.length > 0) {
+                // Filter for grade ranges that include our grade
+                const filtered = data.filter((s: any) => {
+                  const gradeBand = s.grade_band;
+                  if (gradeBand.includes('-')) {
+                    const [startStr, endStr] = gradeBand.split('-');
+                    // Handle 'K' as kindergarten (grade 0)
+                    const start = startStr.toUpperCase() === 'K' ? 0 : parseInt(startStr);
+                    const end = parseInt(endStr);
+                    return gradeNum >= start && gradeNum <= end;
+                  }
+                  return parseInt(gradeBand) === gradeNum;
+                });
+                
+                if (filtered.length > 0) {
+                  standards = filtered;
+                  break;
+                }
               }
             }
+            if (standards && standards.length > 0) break;
           }
         }
       }
