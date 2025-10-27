@@ -1281,6 +1281,55 @@ export type Database = {
           },
         ]
       }
+      diagnostic_derived_courses: {
+        Row: {
+          assessment_id: string
+          course_id: string
+          created_at: string
+          gap_areas_addressed: string[]
+          id: string
+          student_id: string
+        }
+        Insert: {
+          assessment_id: string
+          course_id: string
+          created_at?: string
+          gap_areas_addressed?: string[]
+          id?: string
+          student_id: string
+        }
+        Update: {
+          assessment_id?: string
+          course_id?: string
+          created_at?: string
+          gap_areas_addressed?: string[]
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostic_derived_courses_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostic_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostic_derived_courses_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostic_derived_courses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diagnostic_question_responses: {
         Row: {
           ai_feedback: string | null
