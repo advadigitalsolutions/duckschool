@@ -223,7 +223,10 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
         .delete()
         .eq('id', course.id);
 
-      if (courseError) throw courseError;
+      if (courseError) {
+        console.error('Course deletion error:', courseError);
+        throw new Error(courseError.message || 'Failed to delete course');
+      }
 
       // Show success toast with undo button
       const toastId = toast.success(
@@ -243,8 +246,9 @@ export function DeleteCourseDialog({ course, onCourseDeleted, trigger }: DeleteC
       setOpen(false);
       onCourseDeleted();
     } catch (error: any) {
-      toast.error('Failed to delete course');
-      console.error(error);
+      console.error('Delete course error:', error);
+      const errorMessage = error.message || error.details || 'Failed to delete course';
+      toast.error(`Failed to delete course: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

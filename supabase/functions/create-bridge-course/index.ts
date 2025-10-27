@@ -110,6 +110,13 @@ serve(async (req) => {
     const gradeRange = minGrade <= maxGrade ? `${minGrade}-${maxGrade}` : assessment.grade_level || '5';
     const defaultTitle = courseTitle || `${assessment.subject} Foundations`;
 
+    // Get the user_id from the student record for initiated_by
+    const { data: studentData } = await supabaseClient
+      .from('students')
+      .select('user_id')
+      .eq('id', studentId)
+      .single();
+
     // Create the bridge course
     const { data: course, error: courseError } = await supabaseClient
       .from('courses')
@@ -130,8 +137,8 @@ serve(async (req) => {
         }],
         auto_generate_weekly: false,
         archived: false,
-        initiated_by: null,
-        initiated_by_role: null
+        initiated_by: studentData?.user_id || null,
+        initiated_by_role: 'student'
       })
       .select()
       .single();
