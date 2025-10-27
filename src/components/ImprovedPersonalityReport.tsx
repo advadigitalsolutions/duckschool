@@ -31,29 +31,33 @@ export function ImprovedPersonalityReport({ student, onRetake }: ImprovedPersona
   }
 
   // Extract scores from the text strings in core_dimensions
+  // Format: "60 - Description text" or "Score: 60"
   const extractScore = (text: string | number): number => {
-    if (!text) {
-      console.log('No text provided to extractScore');
-      return 50;
-    }
+    if (!text) return 50;
     if (typeof text === 'number') return text;
+    
     const textStr = String(text);
-    console.log('Extracting from:', textStr.substring(0, 100));
-    const match = textStr.match(/Score:\s*(\d+)/);
-    const score = match ? parseInt(match[1]) : 50;
-    console.log('Extracted score:', score);
-    return score;
+    
+    // Try format: "60 - Description"
+    const leadingNumberMatch = textStr.match(/^(\d+)\s*-/);
+    if (leadingNumberMatch) {
+      return parseInt(leadingNumberMatch[1]);
+    }
+    
+    // Try format: "Score: 60"
+    const scoreMatch = textStr.match(/Score:\s*(\d+)/);
+    if (scoreMatch) {
+      return parseInt(scoreMatch[1]);
+    }
+    
+    // Default to 50 if no pattern matches
+    return 50;
   };
-
-  console.log('Full profile:', profile);
-  console.log('Core dimensions:', profile.core_dimensions);
 
   const extraversionScore = extractScore(profile.core_dimensions?.introversion_extraversion);
   const intuitionScore = extractScore(profile.core_dimensions?.sensing_intuition);
   const feelingScore = extractScore(profile.core_dimensions?.thinking_feeling);
   const perceivingScore = extractScore(profile.core_dimensions?.judging_perceiving);
-
-  console.log('Final scores:', { extraversionScore, intuitionScore, feelingScore, perceivingScore });
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
