@@ -32,6 +32,28 @@ export function useXP(studentId?: string) {
   useEffect(() => {
     if (studentId) {
       fetchXPData();
+
+      // Subscribe to realtime changes for XP events
+      const channel = supabase
+        .channel('xp-events-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'xp_events',
+            filter: `student_id=eq.${studentId}`,
+          },
+          () => {
+            // Refresh XP data when any XP event changes
+            fetchXPData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [studentId]);
 
