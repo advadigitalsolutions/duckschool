@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { RewardsShop } from '@/components/RewardsShop';
 import { FocusDuckCosmetics } from '@/components/FocusDuckCosmetics';
 import { AnimatedXPCounter } from '@/components/AnimatedXPCounter';
+import { Button } from '@/components/ui/button';
 import { Gift, ShoppingBag } from 'lucide-react';
 import { format } from 'date-fns';
 import { useXP } from '@/hooks/useXP';
@@ -12,7 +13,7 @@ export default function StudentRewards() {
   const [studentId, setStudentId] = useState<string | null>(null);
   const [redemptions, setRedemptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { totalXP } = useXP(studentId || '');
+  const { totalXP, awardXP } = useXP(studentId || '');
 
   useEffect(() => {
     fetchData();
@@ -69,7 +70,14 @@ export default function StudentRewards() {
         </div>
 
         {/* Total XP Display with Animation */}
-        <AnimatedXPCounter value={totalXP} />
+        <div className="flex items-center gap-3">
+          <AnimatedXPCounter value={totalXP} />
+          {import.meta.env.DEV && studentId && (
+            <Button variant="secondary" onClick={() => awardXP(10, 'manual_bonus', 'Manual XP bonus')}>
+              +10 XP
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Rewards Shop */}
