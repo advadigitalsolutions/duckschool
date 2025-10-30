@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe area insets for mobile devices */
+@supports (padding: max(0px)) {
+  .safe-area-inset-bottom {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
 /* Print styles for PersonalityReport */
 @media print {
   body * {

@@ -339,75 +339,76 @@ export default function StudentDashboard() {
   const demoRole = localStorage.getItem('demoRole');
   return <PomodoroProvider studentId={studentDbId || undefined}>
       {isDemoUser && demoRole === 'student' && <DemoWizard role="student" />}
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pb-20 md:pb-8">
         <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
 
-        <div className="container mx-auto p-4 md:p-8 max-w-4xl">
+        <div className="container mx-auto p-3 sm:p-4 md:p-8 max-w-4xl">
           {/* Stats Grid */}
-          <div className="grid gap-4 md:grid-cols-3 mb-6">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-4 sm:mb-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Today's Progress</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">Today's Progress</CardTitle>
                 <Target className="h-4 w-4 text-primary" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{completedToday}</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="text-xl sm:text-2xl font-bold">{completedToday}</div>
                 <p className="text-xs text-muted-foreground">Tasks completed</p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">Current Streak</CardTitle>
                 <TrendingUp className="h-4 w-4 text-secondary" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{streak} days</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="text-xl sm:text-2xl font-bold">{streak} days</div>
                 <p className="text-xs text-muted-foreground">Keep it going!</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">XP Earned</CardTitle>
+            <Card className="sm:col-span-2 md:col-span-1">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">XP Earned</CardTitle>
                 <Award className="h-4 w-4 text-accent" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{completedToday * 50}</div>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <div className="text-xl sm:text-2xl font-bold">{completedToday * 50}</div>
                 <p className="text-xs text-muted-foreground">This week</p>
               </CardContent>
             </Card>
           </div>
 
           {/* Daily Goals */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Today's Micro-Goals 🎯</CardTitle>
-              <CardDescription>Quick wins to keep you motivated</CardDescription>
+          <Card className="mb-4 sm:mb-6">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Today's Micro-Goals 🎯</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Quick wins to keep you motivated</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {dailyGoals.map(goal => <div key={goal.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+            <CardContent className="p-4 sm:p-6">
+              <div className="space-y-2 sm:space-y-3">
+                {dailyGoals.map(goal => <div key={goal.id} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                     <Checkbox checked={goal.completed} onCheckedChange={checked => toggleGoalComplete(goal.id, checked as boolean)} />
-                    <span className={`flex-1 ${goal.completed ? 'line-through text-muted-foreground' : ''}`}>
+                    <span className={`flex-1 text-sm sm:text-base ${goal.completed ? 'line-through text-muted-foreground' : ''}`}>
                       {goal.goal_text}
                     </span>
                     {isEditMode && (
-                      <Button variant="ghost" size="icon" onClick={() => deleteGoal(goal.id)}>
-                        <Trash2 className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => deleteGoal(goal.id)}>
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     )}
                   </div>)}
-                <div className="flex gap-2 mt-4">
+                <div className="flex gap-2 mt-3 sm:mt-4">
                   <Input 
                     placeholder="Add a new goal..." 
                     value={newGoalText} 
                     onChange={e => setNewGoalText(e.target.value)} 
                     onFocus={() => setIsEditMode(true)}
                     onBlur={() => setTimeout(() => setIsEditMode(false), 150)}
-                    onKeyPress={e => e.key === 'Enter' && addDailyGoal()} 
+                    onKeyPress={e => e.key === 'Enter' && addDailyGoal()}
+                    className="text-sm sm:text-base"
                   />
-                  <Button onClick={addDailyGoal} disabled={!newGoalText.trim()}>
+                  <Button onClick={addDailyGoal} disabled={!newGoalText.trim()} className="h-10 w-10 sm:h-auto sm:w-auto sm:px-4">
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
@@ -419,7 +420,7 @@ export default function StudentDashboard() {
           {todaysChores.length > 0}
 
           {/* Exciting Agenda Button */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <ExcitingAgendaButton />
           </div>
         </div>

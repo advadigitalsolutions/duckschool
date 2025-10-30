@@ -143,7 +143,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
   return (
     <FocusJourneyProvider studentId={student?.id}>
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 pb-16 md:pb-0">
         <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
         
         {headerSettings && student && (

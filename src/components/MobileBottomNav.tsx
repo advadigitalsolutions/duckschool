@@ -21,8 +21,8 @@ export function MobileBottomNav() {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t">
-      <div className="grid grid-cols-4 gap-1 p-2">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t shadow-lg">
+      <div className="grid grid-cols-4 gap-1 p-2 safe-area-inset-bottom">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -30,14 +30,14 @@ export function MobileBottomNav() {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                'flex flex-col items-center gap-1 p-2 rounded-lg transition-colors',
+                'flex flex-col items-center gap-0.5 sm:gap-1 p-2 rounded-lg transition-all active:scale-95',
                 isActive(item.path)
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:bg-accent/50'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-accent/50 active:bg-accent'
               )}
             >
-              <Icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{item.label}</span>
+              <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-[10px] sm:text-xs font-medium">{item.label}</span>
             </button>
           );
         })}
