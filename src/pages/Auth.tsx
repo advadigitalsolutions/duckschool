@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import duckGraduation from '@/assets/duck-graduation.png';
+import { SmartCoreLogo } from '@/components/SmartCoreLogo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -73,8 +73,8 @@ export default function Auth() {
       </div>
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_0_40px_hsl(var(--primary)/0.6)]">
-            <img src={duckGraduation} alt="Duck with graduation cap" className="h-10 w-10" />
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-background border-2 border-primary/20">
+            <SmartCoreLogo className="h-14 w-14" />
           </div>
           <CardTitle className="text-2xl">SmartCore</CardTitle>
           <CardDescription>Innovation in Education</CardDescription>

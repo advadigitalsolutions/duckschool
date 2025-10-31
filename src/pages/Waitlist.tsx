@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Mail, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import duckGraduation from '@/assets/duck-graduation.png';
+import { SmartCoreLogo } from '@/components/SmartCoreLogo';
 
 export default function Waitlist() {
   const navigate = useNavigate();
@@ -11,8 +11,8 @@ export default function Waitlist() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
       <Card className="w-full max-w-2xl shadow-lg">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_0_40px_hsl(var(--primary)/0.6)]">
-            <img src={duckGraduation} alt="Duck with graduation cap" className="h-12 w-12" />
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-background border-2 border-primary/20">
+            <SmartCoreLogo className="h-14 w-14" />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-center gap-2">
