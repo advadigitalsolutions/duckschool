@@ -22,7 +22,7 @@ export function MarketingNav() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
           <SmartCoreLogo className="h-10 w-10" />
-          <span className="text-xl font-bold">SmartCore</span>
+          <span className="text-xl font-bold">SmartCore Education</span>
         </div>
 
         {/* Desktop Nav */}

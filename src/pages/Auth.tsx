@@ -76,7 +76,7 @@ export default function Auth() {
           <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-background border-2 border-primary/20">
             <SmartCoreLogo className="h-14 w-14" />
           </div>
-          <CardTitle className="text-2xl">SmartCore</CardTitle>
+          <CardTitle className="text-2xl">SmartCore Education</CardTitle>
           <CardDescription>Innovation in Education</CardDescription>
         </CardHeader>
         <CardContent>

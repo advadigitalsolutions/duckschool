@@ -101,7 +101,7 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
 
   const parentSteps = [
     {
-      title: "Welcome to SmartCore!",
+      title: "Welcome to SmartCore Education!",
       description: "Let's get started with your information",
       icon: GraduationCap,
       content: (
@@ -232,7 +232,7 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
 
   const studentSteps = [
     {
-      title: "Welcome to SmartCore!",
+      title: "Welcome to SmartCore Education!",
       description: "Let's get to know you",
       icon: GraduationCap,
       content: (
