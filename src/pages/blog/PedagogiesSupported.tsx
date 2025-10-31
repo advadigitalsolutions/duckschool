@@ -34,7 +34,7 @@ export default function PedagogiesSupported() {
               </div>
               
               <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                One Platform, Every Pedagogy: How Masterymode.ai Adapts to Your Teaching Philosophy
+                One Platform, Every Pedagogy: How SmartCore Adapts to Your Teaching Philosophy
               </h1>
             </div>
 
@@ -52,7 +52,7 @@ export default function PedagogiesSupported() {
                 Traditional curriculum platforms force you into their box. They assume every child learns the same way, at the same pace, with the same materials. But you know your child better than that.
               </p>
 
-              <h2 className="text-2xl font-bold mt-8">How Masterymode.ai Supports Multiple Pedagogies</h2>
+              <h2 className="text-2xl font-bold mt-8">How SmartCore Supports Multiple Pedagogies</h2>
 
               <h3 className="text-xl font-bold mt-6">Classical Education</h3>
               <p>
@@ -99,7 +99,7 @@ export default function PedagogiesSupported() {
 
               <h2 className="text-2xl font-bold mt-8">The Secret: Separating Standards from Methodology</h2>
               <p>
-                Here's what makes Masterymode.ai unique: we separate <strong>what</strong> needs to be learned (state standards) from <strong>how</strong> it's learned (your pedagogy).
+                Here's what makes SmartCore unique: we separate <strong>what</strong> needs to be learned (state standards) from <strong>how</strong> it's learned (your pedagogy).
               </p>
 
               <p>
@@ -147,7 +147,7 @@ export default function PedagogiesSupported() {
 
               <h2 className="text-2xl font-bold mt-8">The Bottom Line</h2>
               <p>
-                Your pedagogy shouldn't be dictated by your software. Masterymode.ai is the first platform that truly adapts to <em>your</em> teaching philosophy while maintaining the academic accountability required by states, colleges, and testing agencies.
+                Your pedagogy shouldn't be dictated by your software. SmartCore is the first platform that truly adapts to <em>your</em> teaching philosophy while maintaining the academic accountability required by states, colleges, and testing agencies.
               </p>
 
               <p>

@@ -34,13 +34,13 @@ export default function SchoolsAndCharters() {
               </div>
               
               <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                Scaling Personalized Learning: How Masterymode.ai Serves Private Schools, Charters, and Pods
+                Scaling Personalized Learning: How SmartCore Serves Private Schools, Charters, and Pods
               </h1>
             </div>
 
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
-                Personalized, AI-powered education isn't just for homeschoolers. Discover how schools are using Masterymode.ai to differentiate instruction at scale—without hiring 100 teachers.
+                Personalized, AI-powered education isn't just for homeschoolers. Discover how schools are using SmartCore to differentiate instruction at scale—without hiring 100 teachers.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">The Differentiation Impossibility</h2>
@@ -62,11 +62,11 @@ export default function SchoolsAndCharters() {
                 So most teachers teach to the middle and hope for the best. Advanced students get bored. Struggling students fall further behind. Everyone loses.
               </p>
 
-              <h2 className="text-2xl font-bold mt-8">How Schools Are Using Masterymode.ai</h2>
+              <h2 className="text-2xl font-bold mt-8">How Schools Are Using SmartCore</h2>
 
               <h3 className="text-xl font-bold mt-6">1. Microschools & Learning Pods (5-15 Students)</h3>
               <p>
-                Small educational environments are exploding in popularity. A single teacher facilitates 10 mixed-age students. With Masterymode.ai:
+                Small educational environments are exploding in popularity. A single teacher facilitates 10 mixed-age students. With SmartCore:
               </p>
               <ul className="space-y-2">
                 <li>Each student gets personalized curriculum auto-generated daily</li>
@@ -84,7 +84,7 @@ export default function SchoolsAndCharters() {
 
               <h3 className="text-xl font-bold mt-6">2. Private Schools (Small Class Sizes)</h3>
               <p>
-                Private schools promise differentiation but often can't deliver it at scale. Masterymode.ai becomes:
+                Private schools promise differentiation but often can't deliver it at scale. SmartCore becomes:
               </p>
               <ul className="space-y-2">
                 <li><strong>Intervention support:</strong> Struggling students get AI-generated remedial work</li>
@@ -95,7 +95,7 @@ export default function SchoolsAndCharters() {
 
               <h3 className="text-xl font-bold mt-6">3. Charter Schools (Flexibility with Accountability)</h3>
               <p>
-                Charters have autonomy to innovate but must still show standards mastery. Masterymode.ai provides:
+                Charters have autonomy to innovate but must still show standards mastery. SmartCore provides:
               </p>
               <ul className="space-y-2">
                 <li>Standards alignment for state testing prep</li>
@@ -105,12 +105,12 @@ export default function SchoolsAndCharters() {
               </ul>
 
               <p>
-                Several charter networks are piloting Duckschool as their core academic platform, allowing teachers to focus on mentorship and social-emotional learning while AI handles content delivery.
+                Several charter networks are piloting SmartCore as their core academic platform, allowing teachers to focus on mentorship and social-emotional learning while AI handles content delivery.
               </p>
 
               <h3 className="text-xl font-bold mt-6">4. Hybrid Homeschool Co-ops</h3>
               <p>
-                Students meet 2-3 days per week for group activities, then work independently at home. Duckschool:
+                Students meet 2-3 days per week for group activities, then work independently at home. SmartCore:
               </p>
               <ul className="space-y-2">
                 <li>Generates individualized assignments for home days</li>
@@ -146,7 +146,7 @@ export default function SchoolsAndCharters() {
 
               <h2 className="text-2xl font-bold mt-8">Supplementing Public Schools</h2>
               <p>
-                Public school families are using Duckschool as:
+                Public school families are using SmartCore as:
               </p>
 
               <h3 className="text-xl font-bold mt-6">After-School Enrichment</h3>
@@ -177,7 +177,7 @@ export default function SchoolsAndCharters() {
 
               <h2 className="text-2xl font-bold mt-8">Data Privacy and Compliance</h2>
               <p>
-                Schools need FERPA-compliant systems. Duckschool provides:
+                Schools need FERPA-compliant systems. SmartCore provides:
               </p>
               <ul className="space-y-2">
                 <li>FERPA and COPPA compliant data handling</li>
@@ -192,7 +192,7 @@ export default function SchoolsAndCharters() {
               </p>
 
               <p>
-                "Our microschool has 8 students across 3 grade levels. Before Duckschool, I was drowning in lesson planning. Now each kid gets personalized curriculum, and I facilitate rather than lecture."
+                "Our microschool has 8 students across 3 grade levels. Before SmartCore, I was drowning in lesson planning. Now each kid gets personalized curriculum, and I facilitate rather than lecture."
               </p>
 
               <p>
@@ -201,7 +201,7 @@ export default function SchoolsAndCharters() {
 
               <h2 className="text-2xl font-bold mt-8">Scaling Beyond Homeschool</h2>
               <p>
-                Duckschool started with homeschool families—and that remains our core. But the technology scales beautifully to:
+                SmartCore started with homeschool families—and that remains our core. But the technology scales beautifully to:
               </p>
               <ul className="space-y-2">
                 <li>Microschools and pods</li>
@@ -213,7 +213,7 @@ export default function SchoolsAndCharters() {
               </ul>
 
               <p>
-                Anywhere educators want to deliver truly personalized learning at scale, Duckschool makes it possible.
+                Anywhere educators want to deliver truly personalized learning at scale, SmartCore makes it possible.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">The Bottom Line</h2>
@@ -227,7 +227,7 @@ export default function SchoolsAndCharters() {
 
               <div className="border-t pt-8 mt-12">
                 <p className="text-muted-foreground italic">
-                  Interested in bringing Duckschool to your school or pod?
+                  Interested in bringing SmartCore to your school or pod?
                 </p>
                 <Button 
                   size="lg" 

@@ -38,7 +38,7 @@ export default function StateStandards() {
             />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
-                From Alabama to Wyoming, Masterymode.ai aligns with your state's exact standards—giving you the freedom of homeschooling without curriculum guesswork.
+                From Alabama to Wyoming, SmartCore aligns with your state's exact standards—giving you the freedom of homeschooling without curriculum guesswork.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">The State Standards Problem</h2>
@@ -83,7 +83,7 @@ export default function StateStandards() {
                 Sound familiar?
               </p>
 
-              <h2 className="text-2xl font-bold mt-8">How Masterymode.ai Handles State Standards</h2>
+              <h2 className="text-2xl font-bold mt-8">How SmartCore Handles State Standards</h2>
 
               <h3 className="text-xl font-bold mt-6">1. All 50 States, Built In</h3>
               <p>
@@ -116,7 +116,7 @@ export default function StateStandards() {
                 <li>4th grade writing mechanics</li>
               </ul>
               <p>
-                Masterymode.ai's diagnostic assessments find their actual mastery level in each subject and teach to that level—while still ensuring they hit all required grade-level standards by year's end.
+                SmartCore's diagnostic assessments find their actual mastery level in each subject and teach to that level—while still ensuring they hit all required grade-level standards by year's end.
               </p>
 
               <h3 className="text-xl font-bold mt-6">4. Standards-Based Progress Tracking</h3>
@@ -151,7 +151,7 @@ export default function StateStandards() {
                 Military families, expats returning to the US, and frequent movers face a unique challenge: curriculum continuity across state lines.
               </p>
               <p>
-                With Masterymode.ai:
+                With SmartCore:
               </p>
               <ul className="space-y-2">
                 <li>Change your state in settings</li>
@@ -166,7 +166,7 @@ export default function StateStandards() {
 
               <h2 className="text-2xl font-bold mt-8">Beyond Standards: Enrichment and Passion Projects</h2>
               <p>
-                Meeting state standards is the floor, not the ceiling. Once core standards are covered, Masterymode.ai supports:
+                Meeting state standards is the floor, not the ceiling. Once core standards are covered, SmartCore supports:
               </p>
               <ul className="space-y-2">
                 <li>Advanced work beyond grade level</li>
@@ -189,7 +189,7 @@ export default function StateStandards() {
                 <li>Proof of standards-aligned instruction</li>
               </ul>
               <p>
-                Masterymode.ai generates documentation that satisfies most state requirements:
+                SmartCore generates documentation that satisfies most state requirements:
               </p>
               <ul className="space-y-2">
                 <li>Standards coverage reports</li>
@@ -203,10 +203,10 @@ export default function StateStandards() {
 
               <h2 className="text-2xl font-bold mt-8">What Parents Tell Us</h2>
               <blockquote className="border-l-4 border-primary pl-4 italic my-6">
-                "I was terrified about making sure I covered everything Florida requires. Masterymode.ai took that weight off my shoulders completely. I know my daughter is hitting every standard, and I have the documentation to prove it."
+                "I was terrified about making sure I covered everything Florida requires. SmartCore took that weight off my shoulders completely. I know my daughter is hitting every standard, and I have the documentation to prove it."
               </blockquote>
               <blockquote className="border-l-4 border-primary pl-4 italic my-6">
-                "We moved from California to Texas mid-year. Instead of curriculum chaos, Masterymode.ai adjusted to TEKS automatically and filled the gaps. My son didn't miss a beat."
+                "We moved from California to Texas mid-year. Instead of curriculum chaos, SmartCore adjusted to TEKS automatically and filled the gaps. My son didn't miss a beat."
               </blockquote>
               <blockquote className="border-l-4 border-primary pl-4 italic my-6">
                 "I used to spend weekends trying to figure out if the curriculum I bought actually covered Common Core. Now I spend that time doing literally anything else. The AI handles it perfectly."
@@ -217,7 +217,7 @@ export default function StateStandards() {
                 State standards aren't the enemy—they're a roadmap. They ensure your child develops age-appropriate skills across all subjects and stays on track for college and career readiness.
               </p>
               <p>
-                But standards shouldn't require 40 hours of research and hundreds of dollars in curriculum shopping. Masterymode.ai takes care of standards alignment automatically—for all 50 states—so you can focus on what matters: supporting your child's learning journey.
+                But standards shouldn't require 40 hours of research and hundreds of dollars in curriculum shopping. SmartCore takes care of standards alignment automatically—for all 50 states—so you can focus on what matters: supporting your child's learning journey.
               </p>
               <p className="text-xl font-semibold">
                 Standards coverage, handled. Learning, personalized. Stress, eliminated.
@@ -227,7 +227,7 @@ export default function StateStandards() {
                 <div className="bg-muted/50 rounded-lg p-6 mb-6">
                   <h3 className="text-xl font-semibold mb-3">Your State, Your Standards, Zero Guesswork</h3>
                   <p className="mb-4">
-                    Select your state, and Masterymode.ai instantly configures a complete, standards-aligned curriculum for every grade level. Diagnostic assessments place your child exactly where they need to be, and progress tracking shows mastery of every required standard.
+                    Select your state, and SmartCore instantly configures a complete, standards-aligned curriculum for every grade level. Diagnostic assessments place your child exactly where they need to be, and progress tracking shows mastery of every required standard.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Meets state requirements. Exceeds educational expectations. Try it free.

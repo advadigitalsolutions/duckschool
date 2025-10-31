@@ -60,7 +60,7 @@ export default function MostAutomated() {
 
               <h2 className="text-2xl font-bold mt-8">What if AI Did 80% of That Work?</h2>
               <p>
-                Masterymode.ai automates nearly every administrative and instructional task in homeschooling—leaving you free to focus on what actually matters: being a parent who encourages, supports, and celebrates your child's learning journey.
+                SmartCore automates nearly every administrative and instructional task in homeschooling—leaving you free to focus on what actually matters: being a parent who encourages, supports, and celebrates your child's learning journey.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">Automated Feature #1: Diagnostic Assessment</h2>
