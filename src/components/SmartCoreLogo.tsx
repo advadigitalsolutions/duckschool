@@ -3,9 +3,10 @@ import smartcoreLogo from '@/assets/smartcore-logo.png';
 export function SmartCoreLogo({ className = "h-10 w-10" }: { className?: string }) {
   return (
     <img 
-      src={smartcoreLogo} 
+      src={smartcoreLogo}
       alt="SmartCore Education" 
       className={className}
+      key="smartcore-logo-updated"
     />
   );
 }
