@@ -5,7 +5,7 @@ export function SmartCoreLogo({ className = "h-10 w-10" }: { className?: string 
     <img 
       src={smartcoreLogo} 
       alt="SmartCore Education" 
-      className={`${className} dark:brightness-0 dark:invert`}
+      className={`${className} dark:brightness-125 dark:contrast-125`}
     />
   );
 }
