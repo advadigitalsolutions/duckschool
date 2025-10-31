@@ -101,7 +101,7 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
 
   const parentSteps = [
     {
-      title: "Welcome to Duckschool!",
+      title: "Welcome to SmartCore!",
       description: "Let's get started with your information",
       icon: GraduationCap,
       content: (
@@ -147,7 +147,7 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
       content: (
         <div className="space-y-4">
           <p className="font-semibold text-lg">Welcome to the most revolutionary approach to education available today.</p>
-          <p>Duckschool isn't just a robust automated platform—it's an embodiment of mastery-based learning and lifelong education philosophy, powered by modern technology to deliver something previously impossible: <strong>Just-In-Time Curriculum</strong>.</p>
+          <p>SmartCore isn't just a robust automated platform—it's an embodiment of mastery-based learning and lifelong education philosophy, powered by modern technology to deliver something previously impossible: <strong>Just-In-Time Curriculum</strong>.</p>
           <div className="bg-primary/5 p-4 rounded-lg space-y-3">
             <p className="text-sm font-medium">Every single lesson reconfigures itself based on:</p>
             <ul className="text-sm space-y-1.5 pl-4">
@@ -232,7 +232,7 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
 
   const studentSteps = [
     {
-      title: "Welcome to Duckschool!",
+      title: "Welcome to SmartCore!",
       description: "Let's get to know you",
       icon: GraduationCap,
       content: (
@@ -269,7 +269,7 @@ export const DemoWizard = ({ role }: DemoWizardProps) => {
       content: (
         <div className="space-y-4">
           <p className="font-semibold text-lg">Experience the most modern, supportive learning platform available.</p>
-          <p>Duckschool uses cutting-edge AI to create <strong>Just-In-Time Curriculum</strong>—lessons that adapt to your exact needs, learning style, and pace.</p>
+          <p>SmartCore uses cutting-edge AI to create <strong>Just-In-Time Curriculum</strong>—lessons that adapt to your exact needs, learning style, and pace.</p>
           <div className="bg-primary/5 p-4 rounded-lg space-y-3">
             <p className="text-sm font-medium">Your learning experience automatically adjusts based on:</p>
             <ul className="text-sm space-y-1.5 pl-4">

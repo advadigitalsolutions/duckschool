@@ -143,7 +143,7 @@ export default function StateStandards() {
                 <li><strong>Science/Social Studies:</strong> Almost always state-specific (no national standards)</li>
               </ul>
               <p>
-                Masterymode.ai handles both—whether your state uses Common Core, TEKS, Virginia SOLs, or any other framework.
+                SmartCore handles both—whether your state uses Common Core, TEKS, Virginia SOLs, or any other framework.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">What If You Move?</h2>
