@@ -76,7 +76,7 @@ export default function Auth() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_0_40px_hsl(var(--primary)/0.6)]">
             <img src={duckGraduation} alt="Duck with graduation cap" className="h-10 w-10" />
           </div>
-          <CardTitle className="text-2xl">Duck School</CardTitle>
+          <CardTitle className="text-2xl">SmartCore</CardTitle>
           <CardDescription>Innovation in Education</CardDescription>
         </CardHeader>
         <CardContent>
