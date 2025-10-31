@@ -13,6 +13,7 @@ export function MarketingNav() {
   const navItems = [
     { label: 'Features', path: '/#features' },
     { label: 'Our Approach', path: '/about' },
+    { label: 'About Us', path: '/about-us' },
     { label: 'Pricing', path: '/pricing' },
     { label: 'Blog', path: '/blog' },
   ];

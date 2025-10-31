@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import Marketing from "./pages/Marketing";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
+import AboutUs from "./pages/AboutUs";
 import Blog from "./pages/Blog";
 import WhyDiagnosticsArentTests from "./pages/blog/WhyDiagnosticsArentTests";
 import PedagogiesSupported from "./pages/blog/PedagogiesSupported";
@@ -101,7 +102,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const navigate = useNavigate();
   
-  const isPublicRoute = ['/', '/pricing', '/about', '/blog', '/auth', '/dashboard'].some(route => 
+  const isPublicRoute = ['/', '/pricing', '/about', '/about-us', '/blog', '/auth', '/dashboard'].some(route => 
     location.pathname === route || location.pathname.startsWith('/blog/')
   );
   
@@ -251,6 +252,7 @@ const App = () => (
                       <Route path="/" element={<Marketing />} />
                       <Route path="/pricing" element={<Pricing />} />
                       <Route path="/about" element={<About />} />
+                      <Route path="/about-us" element={<AboutUs />} />
                       <Route path="/blog" element={<Blog />} />
                       <Route path="/blog/why-diagnostics-arent-tests" element={<WhyDiagnosticsArentTests />} />
                       <Route path="/blog/pedagogies-supported" element={<PedagogiesSupported />} />
