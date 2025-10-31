@@ -101,7 +101,7 @@ export default function MultipleChildren() {
 
               <h2 className="text-2xl font-bold mt-8">How AI Changes Everything</h2>
               <p>
-                Masterymode.ai doesn't just provide different content for different ages. It creates genuinely personalized learning paths that adapt in real-time to each child's pace, style, and needs—while drastically reducing your planning and management burden.
+                SmartCore doesn't just provide different content for different ages. It creates genuinely personalized learning paths that adapt in real-time to each child's pace, style, and needs—while drastically reducing your planning and management burden.
               </p>
 
               <h3 className="text-xl font-semibold mt-6">1. Automated Differentiation</h3>
@@ -120,7 +120,7 @@ export default function MultipleChildren() {
 
               <h3 className="text-xl font-semibold mt-6">2. True Independent Learning</h3>
               <p>
-                Younger children need more support, but Masterymode.ai provides scaffolding that makes genuine independence possible earlier:
+                Younger children need more support, but SmartCore provides scaffolding that makes genuine independence possible earlier:
               </p>
               <ul>
                 <li><strong>Text-to-speech:</strong> Non-readers can access content independently</li>
@@ -154,7 +154,7 @@ export default function MultipleChildren() {
 
               <h3 className="text-xl font-semibold mt-6">4. Addressing Sibling Dynamics</h3>
               <p>
-                Masterymode.ai reduces comparison and competition because:
+                SmartCore reduces comparison and competition because:
               </p>
               <ul>
                 <li><strong>Progress is individualized:</strong> Each child sees their own growth, not their ranking against siblings</li>
@@ -165,13 +165,13 @@ export default function MultipleChildren() {
 
               <h2 className="text-2xl font-bold mt-8">Real Family Example</h2>
               <blockquote className="border-l-4 border-primary pl-4 italic my-6">
-                "Before Masterymode.ai, I was spending 3-4 hours every evening planning for the next day. Now I spend maybe 20 minutes reviewing their progress and adjusting if needed. My 7-year-old, 10-year-old, and 13-year-old are all thriving at their own pace, and I'm not constantly playing referee or feeling guilty about whoever I'm not helping in that moment."
+                "Before SmartCore, I was spending 3-4 hours every evening planning for the next day. Now I spend maybe 20 minutes reviewing their progress and adjusting if needed. My 7-year-old, 10-year-old, and 13-year-old are all thriving at their own pace, and I'm not constantly playing referee or feeling guilty about whoever I'm not helping in that moment."
                 <footer className="text-sm mt-2">— Sarah M., Michigan, homeschools 3 children</footer>
               </blockquote>
 
               <h2 className="text-2xl font-bold mt-8">What About Subjects You Want to Teach Together?</h2>
               <p>
-                Masterymode.ai handles the subjects that need individualization (math, reading, writing). This frees you to enjoy teaching together:
+                SmartCore handles the subjects that need individualization (math, reading, writing). This frees you to enjoy teaching together:
               </p>
               <ul>
                 <li>Science experiments everyone can participate in at their level</li>
@@ -199,7 +199,7 @@ export default function MultipleChildren() {
 
               <h2 className="text-2xl font-bold mt-8">Getting Started with Multiple Children</h2>
               <p>
-                When you sign up for Masterymode.ai:
+                When you sign up for SmartCore:
               </p>
               <ol>
                 <li><strong>Each child takes a diagnostic:</strong> The system assesses where each child is across all subjects (takes 30-60 minutes per child)</li>
@@ -213,7 +213,7 @@ export default function MultipleChildren() {
                 <div className="bg-muted/50 rounded-lg p-6 mb-6">
                   <h3 className="text-xl font-semibold mb-3">Teach Multiple Children Without Multiplying Yourself</h3>
                   <p className="mb-4">
-                    Sign up for Masterymode.ai and give each child personalized, adaptive learning at their exact level and pace. Our AI creates individualized lesson plans, provides scaffolded independent work, and generates smart schedules that coordinate multiple students—so you can stop juggling and start teaching.
+                    Sign up for SmartCore and give each child personalized, adaptive learning at their exact level and pace. Our AI creates individualized lesson plans, provides scaffolded independent work, and generates smart schedules that coordinate multiple students—so you can stop juggling and start teaching.
                   </p>
                   <p className="text-sm text-muted-foreground mb-4">
                     During setup, each child takes a comprehensive diagnostic that identifies their strengths, gaps, and learning preferences. The system then generates personalized learning paths and coordinates them into a realistic daily schedule that minimizes stress and maximizes learning for everyone.

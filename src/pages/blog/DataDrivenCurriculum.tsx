@@ -60,7 +60,7 @@ export default function DataDrivenCurriculum() {
 
               <h2 className="text-2xl font-bold mt-8">How AI Diagnostics Work</h2>
               <p>
-                Masterymode.ai uses adaptive diagnostics that adjust in real-time based on your child's responses. Instead of forcing them through 100 questions they already know, the system quickly identifies:
+                SmartCore uses adaptive diagnostics that adjust in real-time based on your child's responses. Instead of forcing them through 100 questions they already know, the system quickly identifies:
               </p>
               <ul>
                 <li><strong>Zone of Mastery:</strong> Skills they've got locked down</li>
@@ -70,12 +70,12 @@ export default function DataDrivenCurriculum() {
 
               <h2 className="text-2xl font-bold mt-8">Beyond One-Time Testing</h2>
               <p>
-                Traditional placement tests tell you where your child is on Day 1. Masterymode.ai continuously monitors progress, automatically adjusting the curriculum as they grow. When they master a skill, the system moves them forward. When they struggle, it fills the gaps.
+                Traditional placement tests tell you where your child is on Day 1. SmartCore continuously monitors progress, automatically adjusting the curriculum as they grow. When they master a skill, the system moves them forward. When they struggle, it fills the gaps.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">Real Results</h2>
               <blockquote className="border-l-4 border-primary pl-4 italic my-6">
-                "We spent two years using a popular boxed curriculum that was supposedly 'at grade level.' Masterymode.ai's diagnostic revealed my daughter was actually 2 years ahead in reading but missing critical math fundamentals. We would never have known without data."
+                "We spent two years using a popular boxed curriculum that was supposedly 'at grade level.' SmartCore's diagnostic revealed my daughter was actually 2 years ahead in reading but missing critical math fundamentals. We would never have known without data."
                 <footer className="text-sm mt-2">— Sarah M., California homeschool parent</footer>
               </blockquote>
 

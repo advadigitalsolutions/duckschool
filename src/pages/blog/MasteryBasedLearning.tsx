@@ -38,7 +38,7 @@ export default function MasteryBasedLearning() {
             />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
-                Research shows mastery-based learning produces better outcomes than time-based education. Here's the neuroscience and data that proves it—and how Masterymode.ai implements it.
+                Research shows mastery-based learning produces better outcomes than time-based education. Here's the neuroscience and data that proves it—and how SmartCore implements it.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">The Problem with Time-Based Learning</h2>
@@ -95,7 +95,7 @@ export default function MasteryBasedLearning() {
                 AI solves all three problems.
               </p>
 
-              <h2 className="text-2xl font-bold mt-8">How Masterymode.ai Implements Mastery-Based Learning</h2>
+              <h2 className="text-2xl font-bold mt-8">How SmartCore Implements Mastery-Based Learning</h2>
 
               <h3 className="text-xl font-semibold mt-6">1. Adaptive Diagnostics</h3>
               <p>
@@ -134,7 +134,7 @@ export default function MasteryBasedLearning() {
 
               <h2 className="text-2xl font-bold mt-8">Real Results</h2>
               <blockquote className="border-l-4 border-primary pl-4 italic my-6">
-                "My son went from failing pre-algebra to scoring in the 95th percentile on standardized tests in one year. The difference? Masterymode.ai didn't let him move forward until he truly understood each concept. No more faking it."
+                "My son went from failing pre-algebra to scoring in the 95th percentile on standardized tests in one year. The difference? SmartCore didn't let him move forward until he truly understood each concept. No more faking it."
                 <footer className="text-sm mt-2">— Jennifer K., Texas homeschool parent</footer>
               </blockquote>
 
@@ -147,7 +147,7 @@ export default function MasteryBasedLearning() {
                 <li><strong>Mastery:</strong> "I understand why these steps work and can adapt them to novel situations"</li>
               </ul>
               <p>
-                Masterymode.ai tests for mastery through varied problem types, conceptual questions, and transfer tasks—not just procedural repetition.
+                SmartCore tests for mastery through varied problem types, conceptual questions, and transfer tasks—not just procedural repetition.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">The Bottom Line</h2>
@@ -159,7 +159,7 @@ export default function MasteryBasedLearning() {
                 <div className="bg-muted/50 rounded-lg p-6 mb-6">
                   <h3 className="text-xl font-semibold mb-3">Experience Mastery-Based Learning</h3>
                   <p className="mb-4">
-                    Join Masterymode.ai and give your child an education based on proven science, not arbitrary time limits. Our platform ensures every student builds a rock-solid foundation before advancing—with AI handling all the complexity of personalized pacing, adaptive assessment, and spaced repetition.
+                    Join SmartCore and give your child an education based on proven science, not arbitrary time limits. Our platform ensures every student builds a rock-solid foundation before advancing—with AI handling all the complexity of personalized pacing, adaptive assessment, and spaced repetition.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Start with a free diagnostic assessment that shows you exactly where your child is and creates a personalized mastery-based learning path.

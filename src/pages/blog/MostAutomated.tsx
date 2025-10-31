@@ -68,7 +68,7 @@ export default function MostAutomated() {
                 Traditional homeschooling: You spend weeks testing your child across subjects, trying to figure out what they know and don't know. You guess at grade level. You hope you're starting in the right place.
               </p>
               <p>
-                <strong>Masterymode.ai:</strong> 30-minute adaptive diagnostic per subject. The AI identifies exact mastery levels, knowledge gaps, and prerequisite skills. Your child starts exactly where they need to be—no guessing required.
+                <strong>SmartCore:</strong> 30-minute adaptive diagnostic per subject. The AI identifies exact mastery levels, knowledge gaps, and prerequisite skills. Your child starts exactly where they need to be—no guessing required.
               </p>
               <p className="italic text-muted-foreground">
                 Time saved: 20+ hours at start of year, ongoing diagnostic refinement happens automatically
@@ -79,7 +79,7 @@ export default function MostAutomated() {
                 Traditional homeschooling: Research dozens of curriculum options. Read reviews. Buy expensive materials. Realize three months in it doesn't fit your child's learning style. Start over.
               </p>
               <p>
-                <strong>Masterymode.ai:</strong> AI generates a complete, standards-aligned curriculum customized to your child's level, learning style, pace, and state requirements. Updates automatically as they progress.
+                <strong>SmartCore:</strong> AI generates a complete, standards-aligned curriculum customized to your child's level, learning style, pace, and state requirements. Updates automatically as they progress.
               </p>
               <p className="italic text-muted-foreground">
                 Time saved: 40+ hours of research, $500-$1000 in trial-and-error curriculum purchases
@@ -90,7 +90,7 @@ export default function MostAutomated() {
                 Traditional homeschooling: You teach the lesson. Child doesn't get it. You try explaining differently. Still doesn't click. You search YouTube for better explanations. Spend an hour on a concept that was supposed to take 20 minutes.
               </p>
               <p>
-                <strong>Masterymode.ai:</strong> AI delivers lessons through multiple modalities (visual, auditory, kinesthetic). Detects confusion in real-time and adjusts approach automatically. Provides hints, examples, and scaffolding exactly when needed.
+                <strong>SmartCore:</strong> AI delivers lessons through multiple modalities (visual, auditory, kinesthetic). Detects confusion in real-time and adjusts approach automatically. Provides hints, examples, and scaffolding exactly when needed.
               </p>
               <p className="italic text-muted-foreground">
                 Time saved: 10-15 hours per week of active teaching
@@ -101,7 +101,7 @@ export default function MostAutomated() {
                 Traditional homeschooling: Child finishes math worksheet. You grade it later (if you remember). Child has moved on and doesn't care anymore. You spend evenings grading instead of relaxing.
               </p>
               <p>
-                <strong>Masterymode.ai:</strong> Instant grading with detailed explanations. Child sees immediately if they understood the concept. AI identifies patterns in mistakes and adjusts future lessons accordingly.
+                <strong>SmartCore:</strong> Instant grading with detailed explanations. Child sees immediately if they understood the concept. AI identifies patterns in mistakes and adjusts future lessons accordingly.
               </p>
               <p className="italic text-muted-foreground">
                 Time saved: 10+ hours per week of grading
@@ -112,7 +112,7 @@ export default function MostAutomated() {
                 Traditional homeschooling: You manually plan what to teach each day. Try to balance subjects. Forget what you taught last week. Realize you've been doing math for three hours and forgot science entirely.
               </p>
               <p>
-                <strong>Masterymode.ai:</strong> AI generates optimized daily schedules based on your family's availability, your child's energy patterns, and curriculum pacing. Automatically adjusts if you miss a day or need to slow down.
+                <strong>SmartCore:</strong> AI generates optimized daily schedules based on your family's availability, your child's energy patterns, and curriculum pacing. Automatically adjusts if you miss a day or need to slow down.
               </p>
               <p className="italic text-muted-foreground">
                 Time saved: 5+ hours per week of planning and schedule management
@@ -123,7 +123,7 @@ export default function MostAutomated() {
                 Traditional homeschooling: Manually log what your child completed. Try to remember what they struggled with. Compile documentation for your state. Panic because you didn't keep good records.
               </p>
               <p>
-                <strong>Masterymode.ai:</strong> Comprehensive progress dashboard showing exactly what's been mastered, what's in progress, and what's coming next. State-compliant reports generated automatically. No manual tracking required.
+                <strong>SmartCore:</strong> Comprehensive progress dashboard showing exactly what's been mastered, what's in progress, and what's coming next. State-compliant reports generated automatically. No manual tracking required.
               </p>
               <p className="italic text-muted-foreground">
                 Time saved: 5+ hours per week of record-keeping and documentation
@@ -134,7 +134,7 @@ export default function MostAutomated() {
                 Traditional homeschooling: Child aces fractions but struggles with word problems. You're not sure if you should move forward or review. You make your best guess and hope it works out.
               </p>
               <p>
-                <strong>Masterymode.ai:</strong> AI analyzes performance patterns and automatically adjusts the learning path. Advances in areas of strength. Provides additional practice and alternative approaches in areas of struggle.
+                <strong>SmartCore:</strong> AI analyzes performance patterns and automatically adjusts the learning path. Advances in areas of strength. Provides additional practice and alternative approaches in areas of struggle.
               </p>
               <p className="italic text-muted-foreground">
                 Time saved: Ongoing instructional decisions made automatically
@@ -145,7 +145,7 @@ export default function MostAutomated() {
                 Traditional homeschooling: Spend hours searching for supplementary materials. Bookmark 47 websites you'll never look at again. Buy books that sit unread.
               </p>
               <p>
-                <strong>Masterymode.ai:</strong> AI curates relevant videos, articles, interactive simulations, and practice materials for each lesson. Everything your child needs is included—no hunting required.
+                <strong>SmartCore:</strong> AI curates relevant videos, articles, interactive simulations, and practice materials for each lesson. Everything your child needs is included—no hunting required.
               </p>
               <p className="italic text-muted-foreground">
                 Time saved: 5+ hours per week of resource hunting
@@ -153,7 +153,7 @@ export default function MostAutomated() {
 
               <h2 className="text-2xl font-bold mt-8">What's Left for You to Do?</h2>
               <p>
-                With 80% of instructional and administrative work automated, here's what homeschool parents using Masterymode.ai actually spend time on:
+                With 80% of instructional and administrative work automated, here's what homeschool parents using SmartCore actually spend time on:
               </p>
               <ul className="space-y-2">
                 <li><strong>Encouragement:</strong> "I'm so proud of how hard you're working on this!"</li>
@@ -190,7 +190,7 @@ export default function MostAutomated() {
                 "I was spending 6 hours a day teaching and grading. Now I spend 30 minutes checking in and encouraging my kids. The rest of my day is mine again. And my kids are learning MORE, not less."
               </blockquote>
               <blockquote className="border-l-4 border-primary pl-4 italic my-6">
-                "I almost quit homeschooling because I was so overwhelmed. Masterymode.ai saved us. The AI handles everything I was drowning in, and I get to actually enjoy learning alongside my children."
+                "I almost quit homeschooling because I was so overwhelmed. SmartCore saved us. The AI handles everything I was drowning in, and I get to actually enjoy learning alongside my children."
               </blockquote>
               <blockquote className="border-l-4 border-primary pl-4 italic my-6">
                 "I used to feel guilty on days I was too tired to teach effectively. Now the AI delivers consistent, high-quality instruction every day. I can be the encourager and guide instead of the exhausted teacher."
@@ -211,7 +211,7 @@ export default function MostAutomated() {
                 <div className="bg-muted/50 rounded-lg p-6 mb-6">
                   <h3 className="text-xl font-semibold mb-3">Homeschool Without the Burnout</h3>
                   <p className="mb-4">
-                    Join thousands of families who are homeschooling successfully without sacrificing their sanity. Masterymode.ai automates the overwhelming parts so you can focus on being the parent, not the overworked teacher.
+                    Join thousands of families who are homeschooling successfully without sacrificing their sanity. SmartCore automates the overwhelming parts so you can focus on being the parent, not the overworked teacher.
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Start with a free trial. Cancel anytime. Reclaim your time immediately.

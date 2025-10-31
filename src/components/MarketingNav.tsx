@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Brain, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import smartcoreLogo from '@/assets/smartcore-logo.png';
 
 export function MarketingNav() {
   const navigate = useNavigate();
@@ -20,10 +21,8 @@ export function MarketingNav() {
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary">
-            <Brain className="h-6 w-6 text-white" />
-          </div>
-          <span className="text-xl font-bold">MasteryPath</span>
+          <img src={smartcoreLogo} alt="SmartCore Education" className="h-10 w-10" />
+          <span className="text-xl font-bold">SmartCore</span>
         </div>
 
         {/* Desktop Nav */}

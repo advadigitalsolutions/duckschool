@@ -60,7 +60,7 @@ export default function BridgingLearningGaps() {
 
               <h2 className="text-2xl font-bold mt-8">How AI Finds the Gaps</h2>
               <p>
-                Masterymode.ai uses diagnostic branching to trace learning gaps back to their root cause:
+                SmartCore uses diagnostic branching to trace learning gaps back to their root cause:
               </p>
               
               <h3 className="text-xl font-semibold mt-6">1. Initial Assessment</h3>
@@ -85,7 +85,7 @@ export default function BridgingLearningGaps() {
 
               <h3 className="text-xl font-semibold mt-6">4. Targeted Intervention</h3>
               <p>
-                Instead of marching forward with grade-level curriculum, Masterymode.ai automatically generates lessons to fill identified gaps—starting with the deepest foundational issues and working forward.
+                Instead of marching forward with grade-level curriculum, SmartCore automatically generates lessons to fill identified gaps—starting with the deepest foundational issues and working forward.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">Real Example: The Fraction Mystery</h2>
@@ -93,7 +93,7 @@ export default function BridgingLearningGaps() {
                 Nine-year-old Marcus was "bad at math." His parents hired tutors, bought workbooks, watched YouTube videos—nothing worked. Traditional assessments said he was "on grade level" (because he could pass multiple-choice tests by guessing).
               </p>
               <p>
-                Masterymode.ai's diagnostic revealed:
+                SmartCore's diagnostic revealed:
               </p>
               <ul>
                 <li>Strong number sense and pattern recognition</li>
@@ -121,7 +121,7 @@ export default function BridgingLearningGaps() {
                 A child can memorize "cross multiply and divide" for fraction division without understanding what division means, what fractions represent, or why the procedure works. Then when they hit algebra, it all falls apart.
               </p>
 
-              <h2 className="text-2xl font-bold mt-8">The Masterymode.ai Difference</h2>
+              <h2 className="text-2xl font-bold mt-8">The SmartCore Difference</h2>
               <p>
                 Our platform doesn't just identify gaps—it automatically creates the learning pathway to fill them:
               </p>
@@ -134,7 +134,7 @@ export default function BridgingLearningGaps() {
 
               <h2 className="text-2xl font-bold mt-8">Stop Guessing. Start Knowing.</h2>
               <p>
-                When you sign up for Masterymode.ai, here's what happens:
+                When you sign up for SmartCore, here's what happens:
               </p>
               <ol>
                 <li><strong>Comprehensive diagnostic:</strong> Your child takes an adaptive assessment that identifies their exact skill level across all academic areas</li>
@@ -150,7 +150,7 @@ export default function BridgingLearningGaps() {
                 <div className="bg-muted/50 rounded-lg p-6 mb-6">
                   <h3 className="text-xl font-semibold mb-3">Ready to Identify Your Child's Learning Gaps?</h3>
                   <p className="mb-4">
-                    Sign up for Masterymode.ai and get instant access to our comprehensive diagnostic assessment. In under an hour, you'll have a complete picture of your child's academic strengths and the specific gaps holding them back—with a personalized learning plan ready to go.
+                    Sign up for SmartCore and get instant access to our comprehensive diagnostic assessment. In under an hour, you'll have a complete picture of your child's academic strengths and the specific gaps holding them back—with a personalized learning plan ready to go.
                   </p>
                 </div>
                 <Button size="lg" className="w-full" onClick={() => navigate('/auth')}>

@@ -34,7 +34,7 @@ export default function ExpatFamilies() {
               </div>
               
               <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                World-Schooling Made Easy: How Masterymode.ai Supports Expat and Traveling Families
+                World-Schooling Made Easy: How SmartCore Supports Expat and Traveling Families
               </h1>
             </div>
 
@@ -62,7 +62,7 @@ export default function ExpatFamilies() {
                 You want your kids to experience the world <em>and</em> stay academically competitive. Why should you have to choose?
               </p>
 
-              <h2 className="text-2xl font-bold mt-8">How Masterymode.ai Supports Global Families</h2>
+              <h2 className="text-2xl font-bold mt-8">How SmartCore Supports Global Families</h2>
 
               <h3 className="text-xl font-bold mt-6">1. Cloud-Based, Zero Equipment</h3>
               <p>
@@ -135,7 +135,7 @@ export default function ExpatFamilies() {
 
               <h2 className="text-2xl font-bold mt-8">Military Families: Finally, Continuity</h2>
               <p>
-                PCS every 2-3 years? Each new base means new schools, new curricula, new gaps. With Masterymode.ai:
+                PCS every 2-3 years? Each new base means new schools, new curricula, new gaps. With SmartCore:
               </p>
               <ul className="space-y-2">
                 <li>Curriculum stays consistent across moves</li>
@@ -146,7 +146,7 @@ export default function ExpatFamilies() {
 
               <h2 className="text-2xl font-bold mt-8">What Expat and Traveling Families Tell Us</h2>
               <p>
-                "We've lived in 5 countries in 7 years. Masterymode.ai is the first solution that actually traveled with us without losing continuity."
+                "We've lived in 5 countries in 7 years. SmartCore is the first solution that actually traveled with us without losing continuity."
               </p>
 
               <p>
@@ -158,7 +158,7 @@ export default function ExpatFamilies() {
               </p>
 
               <p>
-                "As military parents, we've done seven school transitions. Never again. Masterymode.ai stays consistent no matter where the Air Force sends us."
+                "As military parents, we've done seven school transitions. Never again. SmartCore stays consistent no matter where the Air Force sends us."
               </p>
 
               <h2 className="text-2xl font-bold mt-8">The Language Advantage</h2>
@@ -182,7 +182,7 @@ export default function ExpatFamilies() {
               </p>
 
               <p>
-                Masterymode.ai travels with you—lightweight, flexible, rigorous, and fully aligned with US standards. Whether you're expats, digital nomads, military families, or extended travelers, your kids can thrive academically while embracing the world.
+                SmartCore travels with you—lightweight, flexible, rigorous, and fully aligned with US standards. Whether you're expats, digital nomads, military families, or extended travelers, your kids can thrive academically while embracing the world.
               </p>
 
               <p className="text-xl font-semibold">

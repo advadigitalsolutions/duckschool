@@ -40,7 +40,7 @@ export default function BusyFamilies() {
               <p className="text-xl text-muted-foreground">
                 Working from home, managing multiple kids, running a household—and somehow teaching school too? AI makes it possible without the mental load.
               </p>
-              <p>Busy homeschool parents report saving 15-20 hours per week on lesson planning, grading, and curriculum research with Masterymode.ai's automated systems.</p>
+              <p>Busy homeschool parents report saving 15-20 hours per week on lesson planning, grading, and curriculum research with SmartCore's automated systems.</p>
               <div className="border-t pt-8 mt-12">
                 <Button size="lg" className="mt-4" onClick={() => navigate('/auth')}>
                   Reclaim Your Time

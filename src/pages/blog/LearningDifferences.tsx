@@ -40,7 +40,7 @@ export default function LearningDifferences() {
             />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
-                Dyscalculia, dysgraphia, processing disorders—Masterymode.ai's accessibility features and adaptive pacing turn learning differences into learning opportunities.
+                Dyscalculia, dysgraphia, processing disorders—SmartCore's accessibility features and adaptive pacing turn learning differences into learning opportunities.
               </p>
 
               <h2 className="text-2xl font-bold mt-8">When "Just Try Harder" Isn't the Answer</h2>
@@ -104,7 +104,7 @@ export default function LearningDifferences() {
                 <li>Hyperfocus on interests, difficulty shifting attention</li>
               </ul>
 
-              <h2 className="text-2xl font-bold mt-8">How Masterymode.ai Supports Learning Differences</h2>
+              <h2 className="text-2xl font-bold mt-8">How SmartCore Supports Learning Differences</h2>
 
               <h3 className="text-xl font-semibold mt-6">1. Multimodal Presentation</h3>
               <p>
@@ -128,7 +128,7 @@ export default function LearningDifferences() {
 
               <h3 className="text-xl font-semibold mt-6">2. Adaptive Pacing Without Pressure</h3>
               <p>
-                Learning differences don't mean less capable—they mean needing a different pace or approach. Masterymode.ai adjusts:
+                Learning differences don't mean less capable—they mean needing a different pace or approach. SmartCore adjusts:
               </p>
               <ul>
                 <li><strong>Time expectations:</strong> No arbitrary "this should take 20 minutes." Work until mastery is achieved.</li>
@@ -139,7 +139,7 @@ export default function LearningDifferences() {
 
               <h3 className="text-xl font-semibold mt-6">3. Executive Function Scaffolding</h3>
               <p>
-                Many learning differences come with executive function challenges. Masterymode.ai provides the organizational structure students need:
+                Many learning differences come with executive function challenges. SmartCore provides the organizational structure students need:
               </p>
               <ul>
                 <li><strong>Clear daily agenda:</strong> Student logs in and knows exactly what to do</li>
@@ -175,12 +175,12 @@ export default function LearningDifferences() {
 
               <h2 className="text-2xl font-bold mt-8">Real Impact: From Anxiety to Achievement</h2>
               <blockquote className="border-l-4 border-primary pl-4 italic my-6">
-                "My daughter has dysgraphia and ADHD. Writing a single paragraph would end in tears. Masterymode.ai lets her verbally discuss ideas, then type responses (which is easier than handwriting), and breaks assignments into small chunks. She went from avoiding writing entirely to voluntarily working on her autobiography project. The AI paces everything to her abilities, so she's challenged but not overwhelmed."
+                "My daughter has dysgraphia and ADHD. Writing a single paragraph would end in tears. SmartCore lets her verbally discuss ideas, then type responses (which is easier than handwriting), and breaks assignments into small chunks. She went from avoiding writing entirely to voluntarily working on her autobiography project. The AI paces everything to her abilities, so she's challenged but not overwhelmed."
                 <footer className="text-sm mt-2">— Michael R., Oregon, father of 12-year-old with learning differences</footer>
               </blockquote>
 
               <blockquote className="border-l-4 border-primary pl-4 italic my-6">
-                "Dyscalculia made traditional math curricula torture for my son. He'd understand concepts but couldn't do the algorithms. Masterymode.ai uses multiple representations—he can solve problems visually, then learn the procedures once he understands WHY they work. His confidence has completely transformed."
+                "Dyscalculia made traditional math curricula torture for my son. He'd understand concepts but couldn't do the algorithms. SmartCore uses multiple representations—he can solve problems visually, then learn the procedures once he understands WHY they work. His confidence has completely transformed."
                 <footer className="text-sm mt-2">— Amanda K., Virginia, homeschools child with dyscalculia</footer>
               </blockquote>
 
@@ -196,7 +196,7 @@ export default function LearningDifferences() {
 
               <h2 className="text-2xl font-bold mt-8">What This Means for Your Child</h2>
               <p>
-                With Masterymode.ai, your child with learning differences can:
+                With SmartCore, your child with learning differences can:
               </p>
               <ul>
                 <li><strong>Learn at grade level or above:</strong> Learning differences don't mean settling for less rigorous education</li>
@@ -211,7 +211,7 @@ export default function LearningDifferences() {
                 One of the biggest homeschool fears: "I don't know how to teach a child with dyscalculia/dyslexia/ADHD/processing issues."
               </p>
               <p>
-                With Masterymode.ai, you don't need specialized training. The system applies evidence-based strategies automatically:
+                With SmartCore, you don't need specialized training. The system applies evidence-based strategies automatically:
               </p>
               <ul>
                 <li>Orton-Gillingham principles for dyslexia</li>
@@ -227,7 +227,7 @@ export default function LearningDifferences() {
                 <div className="bg-muted/50 rounded-lg p-6 mb-6">
                   <h3 className="text-xl font-semibold mb-3">Turn Learning Differences into Learning Opportunities</h3>
                   <p className="mb-4">
-                    Sign up for Masterymode.ai and give your child with learning differences the adaptive, multimodal, strength-based education they deserve. Our platform provides text-to-speech, visual representations, executive function scaffolding, and adaptive pacing that adjusts to your child's needs—without requiring you to become a special education expert.
+                    Sign up for SmartCore and give your child with learning differences the adaptive, multimodal, strength-based education they deserve. Our platform provides text-to-speech, visual representations, executive function scaffolding, and adaptive pacing that adjusts to your child's needs—without requiring you to become a special education expert.
                   </p>
                   <p className="text-sm text-muted-foreground mb-4">
                     During the diagnostic assessment, the system identifies not just gaps but also learning strengths and preferences. Instruction is then personalized to leverage your child's strengths while providing targeted support for challenges. Built-in accessibility features and executive function scaffolding help your child work independently and build confidence.

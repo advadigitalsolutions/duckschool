@@ -34,7 +34,7 @@ export default function DyslexiaSupport() {
               </div>
               
               <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                Reading Shouldn't Be a Barrier to Learning: How Masterymode.ai Supports Dyslexic Students
+                Reading Shouldn't Be a Barrier to Learning: How SmartCore Supports Dyslexic Students
               </h1>
             </div>
 
@@ -62,7 +62,7 @@ export default function DyslexiaSupport() {
                 Traditional education punishes dyslexia as if reading speed equals intelligence. It doesn't. But without accommodations, dyslexic students get left behind—not because they can't learn, but because they can't access the material.
               </p>
 
-              <h2 className="text-2xl font-bold mt-8">How Masterymode.ai Levels the Playing Field</h2>
+              <h2 className="text-2xl font-bold mt-8">How SmartCore Levels the Playing Field</h2>
 
               <h3 className="text-xl font-bold mt-6">1. Universal Text-to-Speech</h3>
               <p>
@@ -199,7 +199,7 @@ export default function DyslexiaSupport() {
               </p>
 
               <p>
-                Masterymode.ai offers infinite input options and flexible output options. We assess understanding, not reading speed.
+                SmartCore offers infinite input options and flexible output options. We assess understanding, not reading speed.
               </p>
 
               <p className="text-xl font-semibold">
