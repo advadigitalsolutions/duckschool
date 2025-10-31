@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MarketingNav } from "@/components/MarketingNav";
 import { useNavigate } from "react-router-dom";
 import teamPhoto from "@/assets/team-photo.jpg";
+import familyPhoto from "@/assets/family-photo.jpg";
 import { Sparkles, Users, Code, Shield, Globe, Heart } from "lucide-react";
 
 const AboutUs = () => {
@@ -67,6 +68,18 @@ const AboutUs = () => {
 
               <p className="text-lg leading-relaxed">
                 What began as an internal tool quickly evolved. After their father built the initial design, Jasmine and Isaiah took over — they now handle all coding, debugging, and design decisions. At 18, Jasmine serves as CEO, leading the company alongside her brother. Their father lends his expertise in AI security, ensuring SmartCore is built on a world-class, secure foundation.
+              </p>
+
+              <div className="relative rounded-xl overflow-hidden shadow-xl my-8">
+                <img 
+                  src={familyPhoto} 
+                  alt="The SmartCore Education family team traveling together"
+                  className="w-full h-auto"
+                />
+              </div>
+
+              <p className="text-lg leading-relaxed">
+                Today, SmartCore Education represents more than just a product — it's proof that the most powerful educational solutions come from those who've lived the challenges they're solving.
               </p>
             </div>
           </div>
