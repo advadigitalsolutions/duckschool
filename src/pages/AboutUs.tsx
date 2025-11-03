@@ -54,7 +54,7 @@ const AboutUs = () => {
               </p>
 
               <p className="text-lg leading-relaxed">
-                What began as an internal family tool evolved into a comprehensive platform. Today, Jasmine serves as CEO at 18, while Isaiah leads technical development at 16. Together, they've built a student-centric system that delivers measurable outcomes: improved engagement, standards-aligned progress tracking, and authentic mastery-based learning.
+                What began as an internal family tool evolved into a comprehensive platform. Today, Jasmine serves as Founder and Software Developer at 18, while Isaiah handles QA testing and debugging at 16. Together, they've built a student-centric system that delivers measurable outcomes: improved engagement, standards-aligned progress tracking, and authentic mastery-based learning.
               </p>
 
               <p className="text-lg leading-relaxed">
