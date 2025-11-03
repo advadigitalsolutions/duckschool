@@ -33,7 +33,7 @@ const AboutUs = () => {
             />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent p-6 md:p-8">
               <p className="text-lg md:text-xl font-semibold text-foreground">
-                Jasmine (18) and Isaiah (16) — CEO and Lead Developer
+                Jasmine (18) - Founder & Developer and Isaiah (16) - QA & Debugging
               </p>
             </div>
           </div>
