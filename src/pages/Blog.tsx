@@ -4,31 +4,52 @@ import { Calendar, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
 
+// Blog images
+import studentLearningHeadphones from '@/assets/blog/student-learning-headphones.jpg';
+import parentChildLearning from '@/assets/blog/parent-child-learning.jpg';
+import childExploringRuins from '@/assets/blog/child-exploring-ruins.jpeg';
+import girlIndependentLearning from '@/assets/blog/girl-independent-learning.png';
+import studentFocusedLearning from '@/assets/blog/student-focused-learning.jpg';
+import happyStudentTablet from '@/assets/blog/happy-student-tablet.jpg';
+import busyFamily from '@/assets/blog/busy-family.jpg';
+import portugalCityscape from '@/assets/blog/portugal-cityscape.jpg';
+import parentChildBonding from '@/assets/blog/parent-child-bonding.jpg';
+import modernReportCard from '@/assets/blog/modern-report-card.jpg';
+import siblingSilhouette from '@/assets/blog/siblings-silhouette.jpg';
+import homeschoolParentLaptop from '@/assets/blog/homeschool-parent-laptop.jpg';
+import studentTakingNotes from '@/assets/blog/student-taking-notes.jpg';
+import exhaustedParent from '@/assets/blog/exhausted-parent.webp';
+import studentViolinPractice from '@/assets/blog/student-violin-practice.jpg';
+import tiredParentHomeschool from '@/assets/blog/tired-parent-homeschool.jpeg';
+import fatherTwoChildrenLaptop from '@/assets/blog/father-two-children-laptop.jpg';
+import parentChildLearningTogether from '@/assets/blog/parent-child-learning-together.webp';
+import vintageReportCard from '@/assets/blog/vintage-report-card.jpg';
+
 export default function Blog() {
   const navigate = useNavigate();
 
   const posts = [
-    { slug: 'data-driven-curriculum', title: 'How to Choose the Right Homeschool Curriculum: A Data-Driven Approach', excerpt: 'Stop guessing and start knowing: AI-powered diagnostics reveal exactly where your child is, what they need, and how to get them there.', date: 'January 15, 2025', category: 'Curriculum Planning', readTime: '9 min read' },
-    { slug: 'pedagogies-supported', title: 'One Platform, Every Pedagogy: How SmartCore Adapts to Your Teaching Philosophy', excerpt: 'From Montessori to Classical, Charlotte Mason to unschooling—discover how our AI-powered platform supports any approach.', date: 'January 15, 2025', category: 'Philosophy', readTime: '10 min read' },
-    { slug: 'bridging-learning-gaps', title: 'Bridging Learning Gaps: How AI Identifies and Fills Knowledge Holes', excerpt: 'Your child struggles with fractions but you\'re not sure why. AI diagnostics pinpoint the exact prerequisite skills they\'re missing.', date: 'January 12, 2025', category: 'Academic Support', readTime: '8 min read' },
-    { slug: 'adhd-support', title: 'Built for ADHD Brains: How SmartCore Turns Executive Function Challenges into Strengths', excerpt: 'ADHD brains are brilliantly wired for depth, creativity, and hyperfocus—when the environment supports them.', date: 'January 12, 2025', category: 'Neurodivergence', readTime: '8 min read' },
-    { slug: 'mastery-based-learning', title: 'The Science Behind Mastery-Based Learning: Why It Works Better Than Traditional Education', excerpt: 'Research shows mastery-based learning produces better outcomes. Here\'s the neuroscience and data that proves it.', date: 'January 10, 2025', category: 'Educational Research', readTime: '10 min read' },
-    { slug: 'dyslexia-support', title: 'Reading Shouldn\'t Be a Barrier to Learning: How SmartCore Supports Dyslexic Students', excerpt: 'Dyslexic students are often brilliant thinkers trapped behind a reading barrier. When we remove it, they shine.', date: 'January 10, 2025', category: 'Accessibility', readTime: '9 min read' },
-    { slug: 'multiple-children', title: 'Homeschooling Multiple Children: Managing Different Ages, Abilities, and Learning Styles', excerpt: 'Teaching a kindergartener, fourth grader, and high schooler simultaneously? AI personalization helps without multiplying yourself.', date: 'January 8, 2025', category: 'Multi-Child Homeschooling', readTime: '7 min read' },
-    { slug: 'expat-families', title: 'World-Schooling Made Easy: How SmartCore Supports Expat and Traveling Families', excerpt: 'From Tokyo to Tanzania, maintain US educational standards while embracing the world as your classroom.', date: 'January 8, 2025', category: 'Lifestyle', readTime: '7 min read' },
-    { slug: 'learning-differences', title: 'From Anxiety to Achievement: Supporting Students with Learning Differences', excerpt: 'Dyscalculia, dysgraphia, processing disorders—SmartCore\'s accessibility features turn learning differences into opportunities.', date: 'January 5, 2025', category: 'Special Education', readTime: '8 min read' },
-    { slug: 'just-in-time-curriculum', title: 'Just-In-Time Curriculum: Teaching What Your Child Needs, Exactly When They Need It', excerpt: 'AI-powered learning delivers personalized instruction based on daily diagnostic data.', date: 'January 5, 2025', category: 'Innovation', readTime: '8 min read' },
-    { slug: 'independent-learners', title: 'Creating Independent Learners: Building Self-Directed Study Skills That Last a Lifetime', excerpt: 'The goal isn\'t to homeschool forever—it\'s to create learners who don\'t need you hovering.', date: 'January 3, 2025', category: 'Student Development', readTime: '7 min read' },
-    { slug: 'schools-and-charters', title: 'Scaling Personalized Learning: How SmartCore Serves Private Schools, Charters, and Pods', excerpt: 'Personalized, AI-powered education for schools—differentiating instruction at scale.', date: 'January 3, 2025', category: 'Scaling Education', readTime: '9 min read' },
-    { slug: 'ai-personalization', title: 'The Future of Homeschooling: AI-Powered Personalization at Scale', excerpt: 'What if every child had a world-class tutor available 24/7? AI makes truly personalized education possible.', date: 'January 1, 2025', category: 'Future of Education', readTime: '9 min read' },
-    { slug: 'rigor-and-wellbeing', title: 'Balancing Rigor and Well-Being: Academic Excellence Without the Burnout', excerpt: 'High standards don\'t mean high stress. Learn how to keep learning rigorous but sustainable.', date: 'December 30, 2024', category: 'Holistic Education', readTime: '8 min read' },
-    { slug: 'portfolio-assessment', title: 'Portfolio-Based Assessment: Capturing Real Learning Beyond Traditional Tests', excerpt: 'Multiple-choice tests can\'t capture creativity or critical thinking. Portfolio systems document learning that matters.', date: 'December 28, 2024', category: 'Assessment Methods', readTime: '7 min read' },
-    { slug: 'busy-families', title: 'Homeschooling Without the Burnout: For Busy Families Who Need More Hours in the Day', excerpt: 'Working from home, managing multiple kids—and teaching school? AI makes it possible.', date: 'December 28, 2024', category: 'Homeschooling', readTime: '7 min read' },
-    { slug: 'project-based-learning', title: 'Teaching Critical Thinking: Project-Based Learning Made Easy with AI', excerpt: 'Project-based learning is powerful but time-intensive. AI generates custom projects aligned to standards.', date: 'December 26, 2024', category: 'Teaching Methods', readTime: '8 min read' },
-    { slug: 'most-automated', title: 'The Most Automated Homeschool Platform in Existence', excerpt: 'Curriculum generation, grading, scheduling—all automated. The human connection? Still yours.', date: 'December 25, 2024', category: 'Technology', readTime: '6 min read' },
-    { slug: 'state-standards', title: 'From California to Coast-to-Coast: Bringing Standards-Aligned AI to All 50 States', excerpt: 'We started with California Common Core. Now we support every US state.', date: 'December 20, 2024', category: 'Standards', readTime: '8 min read' },
-    { slug: 'public-school-supplement', title: 'Supplementing Public School: Enrichment and Intervention That Actually Works', excerpt: 'Your child attends public school but needs extra support or challenge? We fill gaps and extend learning.', date: 'December 18, 2024', category: 'Hybrid Learning', readTime: '6 min read' },
-    { slug: 'why-diagnostics-arent-tests', title: 'Why Diagnostics Aren\'t Tests (And Why That Changes Everything)', excerpt: 'Understanding the difference between discovery and judgment.', date: 'December 15, 2024', category: 'Philosophy', readTime: '5 min read' }
+    { slug: 'data-driven-curriculum', title: 'How to Choose the Right Homeschool Curriculum: A Data-Driven Approach', excerpt: 'Stop guessing and start knowing: AI-powered diagnostics reveal exactly where your child is, what they need, and how to get them there.', date: 'January 15, 2025', category: 'Curriculum Planning', readTime: '9 min read', image: studentLearningHeadphones },
+    { slug: 'pedagogies-supported', title: 'One Platform, Every Pedagogy: How SmartCore Adapts to Your Teaching Philosophy', excerpt: 'From Montessori to Classical, Charlotte Mason to unschooling—discover how our AI-powered platform supports any approach.', date: 'January 15, 2025', category: 'Philosophy', readTime: '10 min read', image: parentChildLearning },
+    { slug: 'bridging-learning-gaps', title: 'Bridging Learning Gaps: How AI Identifies and Fills Knowledge Holes', excerpt: 'Your child struggles with fractions but you\'re not sure why. AI diagnostics pinpoint the exact prerequisite skills they\'re missing.', date: 'January 12, 2025', category: 'Academic Support', readTime: '8 min read', image: childExploringRuins },
+    { slug: 'adhd-support', title: 'Built for ADHD Brains: How SmartCore Turns Executive Function Challenges into Strengths', excerpt: 'ADHD brains are brilliantly wired for depth, creativity, and hyperfocus—when the environment supports them.', date: 'January 12, 2025', category: 'Neurodivergence', readTime: '8 min read', image: studentFocusedLearning },
+    { slug: 'mastery-based-learning', title: 'The Science Behind Mastery-Based Learning: Why It Works Better Than Traditional Education', excerpt: 'Research shows mastery-based learning produces better outcomes. Here\'s the neuroscience and data that proves it.', date: 'January 10, 2025', category: 'Educational Research', readTime: '10 min read', image: girlIndependentLearning },
+    { slug: 'dyslexia-support', title: 'Reading Shouldn\'t Be a Barrier to Learning: How SmartCore Supports Dyslexic Students', excerpt: 'Dyslexic students are often brilliant thinkers trapped behind a reading barrier. When we remove it, they shine.', date: 'January 10, 2025', category: 'Accessibility', readTime: '9 min read', image: happyStudentTablet },
+    { slug: 'multiple-children', title: 'Homeschooling Multiple Children: Managing Different Ages, Abilities, and Learning Styles', excerpt: 'Teaching a kindergartener, fourth grader, and high schooler simultaneously? AI personalization helps without multiplying yourself.', date: 'January 8, 2025', category: 'Multi-Child Homeschooling', readTime: '7 min read', image: siblingSilhouette },
+    { slug: 'expat-families', title: 'World-Schooling Made Easy: How SmartCore Supports Expat and Traveling Families', excerpt: 'From Tokyo to Tanzania, maintain US educational standards while embracing the world as your classroom.', date: 'January 8, 2025', category: 'Lifestyle', readTime: '7 min read', image: portugalCityscape },
+    { slug: 'learning-differences', title: 'From Anxiety to Achievement: Supporting Students with Learning Differences', excerpt: 'Dyscalculia, dysgraphia, processing disorders—SmartCore\'s accessibility features turn learning differences into opportunities.', date: 'January 5, 2025', category: 'Special Education', readTime: '8 min read', image: parentChildBonding },
+    { slug: 'just-in-time-curriculum', title: 'Just-In-Time Curriculum: Teaching What Your Child Needs, Exactly When They Need It', excerpt: 'AI-powered learning delivers personalized instruction based on daily diagnostic data.', date: 'January 5, 2025', category: 'Innovation', readTime: '8 min read', image: studentTakingNotes },
+    { slug: 'independent-learners', title: 'Creating Independent Learners: Building Self-Directed Study Skills That Last a Lifetime', excerpt: 'The goal isn\'t to homeschool forever—it\'s to create learners who don\'t need you hovering.', date: 'January 3, 2025', category: 'Student Development', readTime: '7 min read', image: girlIndependentLearning },
+    { slug: 'schools-and-charters', title: 'Scaling Personalized Learning: How SmartCore Serves Private Schools, Charters, and Pods', excerpt: 'Personalized, AI-powered education for schools—differentiating instruction at scale.', date: 'January 3, 2025', category: 'Scaling Education', readTime: '9 min read', image: homeschoolParentLaptop },
+    { slug: 'ai-personalization', title: 'The Future of Homeschooling: AI-Powered Personalization at Scale', excerpt: 'What if every child had a world-class tutor available 24/7? AI makes truly personalized education possible.', date: 'January 1, 2025', category: 'Future of Education', readTime: '9 min read', image: happyStudentTablet },
+    { slug: 'rigor-and-wellbeing', title: 'Balancing Rigor and Well-Being: Academic Excellence Without the Burnout', excerpt: 'High standards don\'t mean high stress. Learn how to keep learning rigorous but sustainable.', date: 'December 30, 2024', category: 'Holistic Education', readTime: '8 min read', image: parentChildLearningTogether },
+    { slug: 'portfolio-assessment', title: 'Portfolio-Based Assessment: Capturing Real Learning Beyond Traditional Tests', excerpt: 'Multiple-choice tests can\'t capture creativity or critical thinking. Portfolio systems document learning that matters.', date: 'December 28, 2024', category: 'Assessment Methods', readTime: '7 min read', image: modernReportCard },
+    { slug: 'busy-families', title: 'Homeschooling Without the Burnout: For Busy Families Who Need More Hours in the Day', excerpt: 'Working from home, managing multiple kids—and teaching school? AI makes it possible.', date: 'December 28, 2024', category: 'Homeschooling', readTime: '7 min read', image: busyFamily },
+    { slug: 'project-based-learning', title: 'Teaching Critical Thinking: Project-Based Learning Made Easy with AI', excerpt: 'Project-based learning is powerful but time-intensive. AI generates custom projects aligned to standards.', date: 'December 26, 2024', category: 'Teaching Methods', readTime: '8 min read', image: studentViolinPractice },
+    { slug: 'most-automated', title: 'The Most Automated Homeschool Platform in Existence', excerpt: 'Curriculum generation, grading, scheduling—all automated. The human connection? Still yours.', date: 'December 25, 2024', category: 'Technology', readTime: '6 min read', image: fatherTwoChildrenLaptop },
+    { slug: 'state-standards', title: 'From California to Coast-to-Coast: Bringing Standards-Aligned AI to All 50 States', excerpt: 'We started with California Common Core. Now we support every US state.', date: 'December 20, 2024', category: 'Standards', readTime: '8 min read', image: modernReportCard },
+    { slug: 'public-school-supplement', title: 'Supplementing Public School: Enrichment and Intervention That Actually Works', excerpt: 'Your child attends public school but needs extra support or challenge? We fill gaps and extend learning.', date: 'December 18, 2024', category: 'Hybrid Learning', readTime: '6 min read', image: homeschoolParentLaptop },
+    { slug: 'why-diagnostics-arent-tests', title: 'Why Diagnostics Aren\'t Tests (And Why That Changes Everything)', excerpt: 'Understanding the difference between discovery and judgment.', date: 'December 15, 2024', category: 'Philosophy', readTime: '5 min read', image: vintageReportCard }
   ];
 
   return (
@@ -50,31 +71,42 @@ export default function Blog() {
             {posts.map((post) => (
               <Card 
                 key={post.slug}
-                className="cursor-pointer hover:border-primary/50 transition-colors"
+                className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden"
                 onClick={() => navigate(`/blog/${post.slug}`)}
               >
-                <CardHeader>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="secondary">{post.category}</Badge>
-                    <span className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {post.date}
-                    </span>
-                    <span className="text-sm text-muted-foreground">• {post.readTime}</span>
+                <div className="flex flex-col md:flex-row">
+                  <div className="md:w-1/3 aspect-video md:aspect-square overflow-hidden">
+                    <img 
+                      src={post.image} 
+                      alt={post.title}
+                      className="w-full h-full object-cover transition-transform hover:scale-105"
+                    />
                   </div>
-                  <CardTitle className="text-2xl hover:text-primary transition-colors">
-                    {post.title}
-                  </CardTitle>
-                  <CardDescription className="text-base">
-                    {post.excerpt}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center text-primary font-medium">
-                    Read More
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                  <div className="md:w-2/3 flex flex-col">
+                    <CardHeader>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="secondary">{post.category}</Badge>
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {post.date}
+                        </span>
+                        <span className="text-sm text-muted-foreground">• {post.readTime}</span>
+                      </div>
+                      <CardTitle className="text-2xl hover:text-primary transition-colors">
+                        {post.title}
+                      </CardTitle>
+                      <CardDescription className="text-base">
+                        {post.excerpt}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center text-primary font-medium">
+                        Read More
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </div>
+                    </CardContent>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>
