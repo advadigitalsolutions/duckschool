@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MarketingNav } from "@/components/MarketingNav";
 import { useNavigate } from "react-router-dom";
 import teamPhoto from "@/assets/team-photo.jpg";
-import familyPhoto from "@/assets/family-photo.jpg";
 import { Sparkles, Users, Code, Shield, Globe, Heart } from "lucide-react";
 
 const AboutUs = () => {
@@ -47,39 +46,19 @@ const AboutUs = () => {
             
             <div className="prose prose-lg dark:prose-invert max-w-none space-y-6">
               <p className="text-lg leading-relaxed">
-                SmartCore Education was born from necessity, built by a family who experienced firsthand the challenges of finding an educational approach that actually works.
+                SmartCore Education emerged from a fundamental gap in the market: education systems that fail to accommodate neurodivergent learners and location-independent families.
               </p>
               
               <p className="text-lg leading-relaxed">
-                Jasmine and Isaiah have navigated every educational landscape imaginable — private schools, public schools, and homeschooling. Both diagnosed with ADHD, Jasmine with school-based trauma, and Isaiah on the autism spectrum, they've experienced the limitations of one-size-fits-all education systems. Traditional schooling didn't just fail them; it actively worked against how their brains were wired to learn.
+                Founded in Fall 2025 by neurodivergent students Jasmine and Isaiah, SmartCore transforms the traditional one-size-fits-all model into a personalized, adaptive learning experience. Both founders navigated private, public, and homeschool environments before recognizing that existing solutions weren't built for learners like them.
               </p>
 
               <p className="text-lg leading-relaxed">
-                Their father, a software developer and former Montessori-inspired nature-based daycare owner, became a single dad juggling homeschooling and running a security-focused AI startup. When the family embraced digital nomad life, traveling the world while learning, K12 couldn't accommodate their lifestyle. The system that was supposed to support them instead became a barrier.
+                What began as an internal family tool evolved into a comprehensive platform. Today, Jasmine serves as CEO at 18, while Isaiah leads technical development at 16. Together, they've built a student-centric system that delivers measurable outcomes: improved engagement, standards-aligned progress tracking, and authentic mastery-based learning.
               </p>
 
               <p className="text-lg leading-relaxed">
-                So they did what innovators do: they built the solution themselves.
-              </p>
-
-              <p className="text-lg leading-relaxed">
-                Founded in Fall 2025, SmartCore Education started as a family project — an app designed specifically for Jasmine and Isaiah's unique learning needs. The results were transformative. The teens went from struggling with engagement to genuinely loving learning. Their father reclaimed his time while maintaining visibility into their progress against California Core State Standards, with the ability to print transcripts on demand.
-              </p>
-
-              <p className="text-lg leading-relaxed">
-                What began as an internal tool quickly evolved. After their father built the initial design, Jasmine and Isaiah took over — they now handle all coding, debugging, and design decisions. At 18, Jasmine serves as CEO, leading the company alongside her brother. Their father lends his expertise in AI security, ensuring SmartCore is built on a world-class, secure foundation.
-              </p>
-
-              <div className="relative rounded-xl overflow-hidden shadow-xl my-8">
-                <img 
-                  src={familyPhoto} 
-                  alt="The SmartCore Education family team traveling together"
-                  className="w-full h-auto"
-                />
-              </div>
-
-              <p className="text-lg leading-relaxed">
-                Today, SmartCore Education represents more than just a product — it's proof that the most powerful educational solutions come from those who've lived the challenges they're solving.
+                Backed by enterprise-grade AI security expertise and purpose-built for neurodivergent learners, SmartCore represents the next generation of educational technology — designed not in boardrooms, but by the students it serves.
               </p>
             </div>
           </div>
