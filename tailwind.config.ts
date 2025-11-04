@@ -114,12 +114,32 @@ export default {
             transform: "translateX(100%)",
           },
         },
+        "gradient-flow": {
+          "0%, 100%": {
+            backgroundPosition: "0% 50%",
+          },
+          "50%": {
+            backgroundPosition: "100% 50%",
+          },
+        },
+        "glow-pulse": {
+          "0%, 100%": {
+            boxShadow: "0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3), 0 0 60px rgba(59, 130, 246, 0.2)",
+            transform: "scale(1)",
+          },
+          "50%": {
+            boxShadow: "0 0 30px rgba(59, 130, 246, 0.7), 0 0 60px rgba(59, 130, 246, 0.5), 0 0 90px rgba(59, 130, 246, 0.3)",
+            transform: "scale(1.02)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 2s ease-in-out infinite",
         "slide-shine": "slide-shine 3s ease-in-out infinite",
+        "gradient-flow": "gradient-flow 8s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 4s ease-in-out infinite",
       },
     },
   },

@@ -41,7 +41,10 @@ export default function Marketing() {
             
             <h1 className="text-5xl md:text-7xl font-bold leading-tight">
               Learning That Adapts to{' '}
-              <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+              <span 
+                className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent animate-gradient-flow"
+                style={{ backgroundSize: '200% 200%' }}
+              >
                 Your Brain
               </span>
             </h1>
@@ -52,7 +55,11 @@ export default function Marketing() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button size="lg" className="text-lg px-8 py-6" onClick={() => navigate('/auth')}>
+              <Button 
+                size="lg" 
+                className="text-lg px-8 py-6 animate-glow-pulse" 
+                onClick={() => navigate('/auth')}
+              >
                 Start Your Journey
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
