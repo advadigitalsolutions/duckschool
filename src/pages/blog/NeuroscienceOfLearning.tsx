@@ -49,12 +49,12 @@ export default function NeuroscienceOfLearning() {
               Brain imaging technology reveals profound insights into how dyslexic, ADHD, autistic, and other neurodivergent brains process information differently. These aren't deficits—they're variations. Understanding the neuroscience helps us design education that works with these brains, not against them.
             </p>
 
-            <h2>What Brain Imaging Teaches Us About Learning Differences</h2>
+            <h2 className="text-3xl font-bold mt-12">What Brain Imaging Teaches Us About Learning Differences</h2>
             <p>
               Modern neuroimaging (fMRI, PET scans, diffusion tensor imaging) shows that learning differences have clear neurological signatures. These aren't "behavioral problems" or "not trying hard enough"—they're fundamental differences in how neural pathways are wired and function.
             </p>
 
-            <h2>The Dyslexic Brain: Different Pathways to Reading</h2>
+            <h2 className="text-3xl font-bold mt-12">The Dyslexic Brain: Different Pathways to Reading</h2>
             <p>
               Brain imaging of dyslexic readers shows:
             </p>
@@ -68,7 +68,7 @@ export default function NeuroscienceOfLearning() {
               Educational implications: Dyslexic students often thrive with multisensory approaches that leverage their stronger visual-spatial pathways. Heavy phonics-only instruction fights against their brain's natural processing style.
             </p>
 
-            <h2>The ADHD Brain: Executive Function Architecture</h2>
+            <h2 className="text-3xl font-bold mt-12">The ADHD Brain: Executive Function Architecture</h2>
             <p>
               ADHD brains show distinct patterns:
             </p>
@@ -82,7 +82,7 @@ export default function NeuroscienceOfLearning() {
               Educational implications: ADHD students need external structure for executive function, frequent novelty to maintain dopamine engagement, and shorter work intervals with clear transitions.
             </p>
 
-            <h2>The Autistic Brain: Different Connectivity Patterns</h2>
+            <h2 className="text-3xl font-bold mt-12">The Autistic Brain: Different Connectivity Patterns</h2>
             <p>
               Autism involves distinct neural connectivity:
             </p>
@@ -96,7 +96,7 @@ export default function NeuroscienceOfLearning() {
               Educational implications: Autistic students often excel in systematic, predictable environments with clear rules and patterns. They may need explicit instruction in skills that neurotypical students pick up implicitly.
             </p>
 
-            <h2>Dyscalculia: The Math-Processing Brain</h2>
+            <h2 className="text-3xl font-bold mt-12">Dyscalculia: The Math-Processing Brain</h2>
             <p>
               Math learning differences show specific neural patterns:
             </p>
@@ -109,7 +109,7 @@ export default function NeuroscienceOfLearning() {
               Educational implications: Visual-spatial approaches, manipulatives, and reduced working memory load during math instruction help dyscalculic students access concepts.
             </p>
 
-            <h2>Processing Speed Variations</h2>
+            <h2 className="text-3xl font-bold mt-12">Processing Speed Variations</h2>
             <p>
               Many learning differences involve processing speed—not intelligence, but the rate at which the brain manipulates information:
             </p>
@@ -122,7 +122,7 @@ export default function NeuroscienceOfLearning() {
               Processing speed is like computer clock speed—it affects performance but doesn't determine capability.
             </p>
 
-            <h2>Why Traditional Education Fails These Brains</h2>
+            <h2 className="text-3xl font-bold mt-12">Why Traditional Education Fails These Brains</h2>
             <p>
               Standard classroom instruction is optimized for one brain type:
             </p>
@@ -137,7 +137,7 @@ export default function NeuroscienceOfLearning() {
               These students aren't failing—the instructional design fails to accommodate their neural architecture.
             </p>
 
-            <h2>Neuroplasticity: Brains Can Adapt</h2>
+            <h2 className="text-3xl font-bold mt-12">Neuroplasticity: Brains Can Adapt</h2>
             <p>
               The exciting news: brains are plastic. With appropriate intervention:
             </p>
@@ -150,7 +150,7 @@ export default function NeuroscienceOfLearning() {
               But plasticity requires the right environmental support. Forcing struggling students through methods that don't match their brain architecture wastes time and damages confidence.
             </p>
 
-            <h2>Designing Education for Neurodiversity</h2>
+            <h2 className="text-3xl font-bold mt-12">Designing Education for Neurodiversity</h2>
             <p>
               Understanding neuroscience leads to better instructional design:
             </p>
@@ -163,7 +163,7 @@ export default function NeuroscienceOfLearning() {
               <li><strong>Strength-based approaches:</strong> Build on what each brain does well rather than remediating weaknesses endlessly</li>
             </ul>
 
-            <h2>SmartCore's Neuroscience-Based Design</h2>
+            <h2 className="text-3xl font-bold mt-12">SmartCore's Neuroscience-Based Design</h2>
             <p>
               Our platform incorporates neuroscience research:
             </p>
@@ -175,7 +175,7 @@ export default function NeuroscienceOfLearning() {
               <li><strong>Explicit instruction:</strong> Nothing left to implicit inference for students who need systematic teaching</li>
             </ul>
 
-            <h2>The Future: Personalized Neuropedagogy</h2>
+            <h2 className="text-3xl font-bold mt-12">The Future: Personalized Neuropedagogy</h2>
             <p>
               As we understand more about neural diversity, education can become truly personalized—not just by content, but by matching instructional methods to individual brain architecture.
             </p>
@@ -184,7 +184,7 @@ export default function NeuroscienceOfLearning() {
             </p>
 
             <div className="mt-12 p-6 bg-muted rounded-lg">
-              <h3 className="text-xl font-semibold mb-4">Education That Honors Neural Diversity</h3>
+              <h3 className="text-2xl font-semibold mb-4">Education That Honors Neural Diversity</h3>
               <p className="mb-4">
                 SmartCore's neuroscience-based approach adapts to how your child's brain actually processes information.
               </p>
