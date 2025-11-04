@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
+import happyLibrary from '@/assets/blog/happy-library-student.jpg';
 
 export default function WhyDiagnosticsArentTests() {
   const navigate = useNavigate();
@@ -37,6 +38,12 @@ export default function WhyDiagnosticsArentTests() {
                 Why Diagnostics Aren't Tests (And Why That Changes Everything)
               </h1>
             </div>
+            
+            <img 
+              src={happyLibrary} 
+              alt="Happy student in library - diagnostics as discovery not judgment" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
 
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">

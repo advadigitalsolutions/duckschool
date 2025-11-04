@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
+import studentTablet from '@/assets/blog/happy-student-tablet.jpg';
 
 export default function ExpatFamilies() {
   const navigate = useNavigate();
@@ -37,6 +38,12 @@ export default function ExpatFamilies() {
                 World-Schooling Made Easy: How SmartCore Supports Expat and Traveling Families
               </h1>
             </div>
+            
+            <img 
+              src={studentTablet} 
+              alt="Happy student learning anywhere - world-schooling with SmartCore" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
 
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">

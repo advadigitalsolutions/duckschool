@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
+import portugalCityscape from '@/assets/blog/portugal-cityscape.jpg';
 
 export default function JustInTimeCurriculum() {
   const navigate = useNavigate();
@@ -37,6 +38,12 @@ export default function JustInTimeCurriculum() {
                 Just-In-Time Curriculum: Teaching What Your Child Needs, Exactly When They Need It
               </h1>
             </div>
+            
+            <img 
+              src={portugalCityscape} 
+              alt="Beautiful cityscape - learning can happen anywhere with just-in-time curriculum" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
 
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">

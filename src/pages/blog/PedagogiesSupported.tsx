@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
+import studentHeadphones from '@/assets/blog/student-learning-headphones.jpg';
 
 export default function PedagogiesSupported() {
   const navigate = useNavigate();
@@ -37,6 +38,12 @@ export default function PedagogiesSupported() {
                 One Platform, Every Pedagogy: How SmartCore Adapts to Your Teaching Philosophy
               </h1>
             </div>
+            
+            <img 
+              src={studentHeadphones} 
+              alt="Student learning with headphones - personalized education for any teaching philosophy" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
 
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
