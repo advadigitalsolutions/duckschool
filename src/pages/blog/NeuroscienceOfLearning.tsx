@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, ArrowLeft } from 'lucide-react';
 import { MarketingNav } from '@/components/MarketingNav';
 import brainScience from '@/assets/blog/brain-science.jpg';
 
@@ -11,37 +12,39 @@ export default function NeuroscienceOfLearning() {
     <div className="min-h-screen bg-background">
       <MarketingNav />
       
-      <article className="py-16">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/blog')}
-            className="mb-8"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Blog
-          </Button>
+      <article className="py-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto space-y-8">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/blog')}
+              className="mb-4"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Blog
+            </Button>
 
-          <header className="mb-8 space-y-4">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Neuroscience</span>
-              <span>•</span>
-              <span>January 13, 2025</span>
-              <span>•</span>
-              <span>10 min read</span>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">Neuroscience</Badge>
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  January 13, 2025
+                </span>
+                <span className="text-sm text-muted-foreground">• 10 min read</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                The Neuroscience of Learning Differences: Understanding How Unique Brains Process Information
+              </h1>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold">
-              The Neuroscience of Learning Differences: Understanding How Unique Brains Process Information
-            </h1>
-          </header>
 
-          <img 
-            src={brainScience}
-            alt="Medical professional reviewing brain imaging scans" 
-            className="w-full h-auto rounded-lg mb-8"
-          />
+            <img 
+              src={brainScience}
+              alt="Medical professional reviewing brain imaging scans" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
 
-          <div className="prose prose-lg max-w-none">
+            <div className="prose prose-lg max-w-none space-y-6 text-foreground">
             <p className="text-xl text-muted-foreground mb-6">
               Brain imaging technology reveals profound insights into how dyslexic, ADHD, autistic, and other neurodivergent brains process information differently. These aren't deficits—they're variations. Understanding the neuroscience helps us design education that works with these brains, not against them.
             </p>
@@ -191,6 +194,7 @@ export default function NeuroscienceOfLearning() {
             </div>
           </div>
         </div>
+      </div>
       </article>
     </div>
   );

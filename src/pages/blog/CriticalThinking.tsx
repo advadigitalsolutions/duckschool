@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, ArrowLeft } from 'lucide-react';
 import { MarketingNav } from '@/components/MarketingNav';
 import thoughtfulLearner from '@/assets/blog/thoughtful-learner.jpg';
 
@@ -11,37 +12,39 @@ export default function CriticalThinking() {
     <div className="min-h-screen bg-background">
       <MarketingNav />
       
-      <article className="py-16">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/blog')}
-            className="mb-8"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Blog
-          </Button>
+      <article className="py-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto space-y-8">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/blog')}
+              className="mb-4"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Blog
+            </Button>
 
-          <header className="mb-8 space-y-4">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Cognitive Skills</span>
-              <span>•</span>
-              <span>January 11, 2025</span>
-              <span>•</span>
-              <span>9 min read</span>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">Cognitive Skills</Badge>
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  January 11, 2025
+                </span>
+                <span className="text-sm text-muted-foreground">• 9 min read</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                Building Critical Thinking Skills: Moving Beyond Memorization to Deep Understanding
+              </h1>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold">
-              Building Critical Thinking Skills: Moving Beyond Memorization to Deep Understanding
-            </h1>
-          </header>
 
-          <img 
-            src={thoughtfulLearner}
-            alt="Student engaged in thoughtful contemplation while studying" 
-            className="w-full h-auto rounded-lg mb-8"
-          />
+            <img 
+              src={thoughtfulLearner}
+              alt="Student engaged in thoughtful contemplation while studying" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
 
-          <div className="prose prose-lg max-w-none">
+            <div className="prose prose-lg max-w-none space-y-6 text-foreground">
             <p className="text-xl text-muted-foreground mb-6">
               Critical thinking isn't a separate subject you teach on Thursdays—it's a habit of mind developed through thoughtful questions, authentic problem-solving, and space to grapple with complexity. Here's how to build genuine critical thinking capacity.
             </p>
@@ -279,6 +282,7 @@ export default function CriticalThinking() {
             </div>
           </div>
         </div>
+      </div>
       </article>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, ArrowLeft } from 'lucide-react';
 import { MarketingNav } from '@/components/MarketingNav';
 import studentStress from '@/assets/blog/student-stress.jpg';
 
@@ -11,37 +12,39 @@ export default function StudentBurnout() {
     <div className="min-h-screen bg-background">
       <MarketingNav />
       
-      <article className="py-16">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/blog')}
-            className="mb-8"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Blog
-          </Button>
+      <article className="py-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto space-y-8">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/blog')}
+              className="mb-4"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Blog
+            </Button>
 
-          <header className="mb-8 space-y-4">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Student Wellbeing</span>
-              <span>•</span>
-              <span>January 14, 2025</span>
-              <span>•</span>
-              <span>8 min read</span>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">Student Wellbeing</Badge>
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  January 14, 2025
+                </span>
+                <span className="text-sm text-muted-foreground">• 8 min read</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                Preventing Student Burnout: Recognizing Warning Signs and Creating Sustainable Learning
+              </h1>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold">
-              Preventing Student Burnout: Recognizing Warning Signs and Creating Sustainable Learning
-            </h1>
-          </header>
 
-          <img 
-            src={studentStress}
-            alt="Student experiencing stress and overwhelm" 
-            className="w-full h-auto rounded-lg mb-8"
-          />
+            <img 
+              src={studentStress}
+              alt="Student experiencing stress and overwhelm" 
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
 
-          <div className="prose prose-lg max-w-none">
+            <div className="prose prose-lg max-w-none space-y-6 text-foreground">
             <p className="text-xl text-muted-foreground mb-6">
               Academic pressure without adequate recovery leads to burnout—even in homeschool settings where we have more control over pace and environment. Learn to spot the early warning signs and build a learning rhythm that protects your child's mental health while maintaining academic progress.
             </p>
@@ -166,6 +169,7 @@ export default function StudentBurnout() {
             </div>
           </div>
         </div>
+      </div>
       </article>
     </div>
   );

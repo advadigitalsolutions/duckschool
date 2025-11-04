@@ -1,45 +1,37 @@
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
 import familyHomeschool from '@/assets/blog/pexels-ron-lach-9783353.jpg';
 
 export default function HomeschoolRoutines() {
   const navigate = useNavigate();
-
   return (
     <div className="min-h-screen bg-background">
       <MarketingNav />
-      
-      <article className="py-12">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/blog')}
-            className="mb-8"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Blog
-          </Button>
-
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="bg-primary/10 text-primary px-3 py-1 rounded-full">Organization</span>
-              <span>December 8, 2024</span>
-              <span>7 min read</span>
+      <article className="py-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto space-y-8">
+            <Button variant="ghost" onClick={() => navigate('/blog')} className="mb-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Blog
+            </Button>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">Organization</Badge>
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  December 8, 2024
+                </span>
+                <span className="text-sm text-muted-foreground">• 7 min read</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                Building Sustainable Homeschool Routines: Structure That Supports, Not Restricts
+              </h1>
             </div>
-
-            <h1 className="text-4xl md:text-5xl font-bold">
-              Building Sustainable Homeschool Routines: Structure That Supports, Not Restricts
-            </h1>
-
-            <img 
-              src={familyHomeschool} 
-              alt="Family homeschooling together"
-              className="w-full rounded-lg"
-            />
-
-            <div className="prose prose-lg max-w-none space-y-6">
+            <img src={familyHomeschool} alt="Family homeschooling together" className="w-full h-[400px] object-cover rounded-lg" />
+            <div className="prose prose-lg max-w-none space-y-6 text-foreground">
               <p className="text-xl text-muted-foreground">
                 One of the great ironies of homeschooling: you choose it for flexibility, then spend months trying to create a schedule that works. The truth? The best homeschool routine isn't one you copied from Pinterest—it's one that fits your actual family, not an idealized version of it.
               </p>
@@ -205,8 +197,11 @@ export default function HomeschoolRoutines() {
                 </Button>
               </div>
             </div>
+              </Button>
+            </div>
           </div>
         </div>
+      </div>
       </article>
     </div>
   );
