@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketingNav } from '@/components/MarketingNav';
-import busyFamily from '@/assets/blog/busy-family.jpg';
+import happyFamilyCouch from '@/assets/blog/happy-family-couch.jpg';
 
 export default function MostAutomated() {
   const navigate = useNavigate();
@@ -32,8 +32,8 @@ export default function MostAutomated() {
               </h1>
             </div>
             <img 
-              src={busyFamily} 
-              alt="Parent working on laptop while managing multiple children at home - illustrating the need for automation in homeschooling" 
+              src={happyFamilyCouch} 
+              alt="Happy family together on couch - homeschooling with balance and connection" 
               className="w-full h-[400px] object-cover rounded-lg"
             />
             <div className="prose prose-lg max-w-none space-y-6 text-foreground">
