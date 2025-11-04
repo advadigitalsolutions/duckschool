@@ -57,6 +57,14 @@ import AIPersonalization from "./pages/blog/AIPersonalization";
 import RigorAndWellBeing from "./pages/blog/RigorAndWellBeing";
 import PortfolioAssessment from "./pages/blog/PortfolioAssessment";
 import ProjectBasedLearning from "./pages/blog/ProjectBasedLearning";
+import StudentBurnout from "./pages/blog/StudentBurnout";
+import NeuroscienceOfLearning from "./pages/blog/NeuroscienceOfLearning";
+import CriticalThinking from "./pages/blog/CriticalThinking";
+import SchoolOverwhelm from "./pages/blog/SchoolOverwhelm";
+import CollaborativeLearning from "./pages/blog/CollaborativeLearning";
+import ParentTeacherPartnership from "./pages/blog/ParentTeacherPartnership";
+import CreativeLearning from "./pages/blog/CreativeLearning";
+import HomeschoolRoutines from "./pages/blog/HomeschoolRoutines";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Waitlist from "./pages/Waitlist";
@@ -275,6 +283,14 @@ const App = () => (
                       <Route path="/blog/rigor-and-wellbeing" element={<RigorAndWellBeing />} />
                       <Route path="/blog/portfolio-assessment" element={<PortfolioAssessment />} />
                       <Route path="/blog/project-based-learning" element={<ProjectBasedLearning />} />
+                      <Route path="/blog/student-burnout" element={<StudentBurnout />} />
+                      <Route path="/blog/neuroscience-of-learning" element={<NeuroscienceOfLearning />} />
+                      <Route path="/blog/critical-thinking" element={<CriticalThinking />} />
+                      <Route path="/blog/school-overwhelm" element={<SchoolOverwhelm />} />
+                      <Route path="/blog/collaborative-learning" element={<CollaborativeLearning />} />
+                      <Route path="/blog/parent-teacher-partnership" element={<ParentTeacherPartnership />} />
+                      <Route path="/blog/creative-learning" element={<CreativeLearning />} />
+                      <Route path="/blog/homeschool-routines" element={<HomeschoolRoutines />} />
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/waitlist" element={<Waitlist />} />
                       <Route path="/dashboard" element={<Index />} />
