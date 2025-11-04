@@ -197,11 +197,8 @@ export default function HomeschoolRoutines() {
                 </Button>
               </div>
             </div>
-              </Button>
-            </div>
           </div>
         </div>
-      </div>
       </article>
     </div>
   );
