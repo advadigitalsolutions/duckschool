@@ -49,7 +49,7 @@ export default function StudentBurnout() {
               Academic pressure without adequate recovery leads to burnout—even in homeschool settings where we have more control over pace and environment. Learn to spot the early warning signs and build a learning rhythm that protects your child's mental health while maintaining academic progress.
             </p>
 
-            <h2>What Student Burnout Actually Looks Like</h2>
+            <h2 className="text-3xl font-bold mt-12">What Student Burnout Actually Looks Like</h2>
             <p>
               Burnout isn't just "being tired." It's a specific pattern of emotional, physical, and cognitive exhaustion that happens when demands consistently exceed available resources for recovery.
             </p>
@@ -64,7 +64,7 @@ export default function StudentBurnout() {
               <li><strong>Loss of motivation:</strong> "I don't care anymore" becoming a daily refrain</li>
             </ul>
 
-            <h2>The Homeschool Burnout Paradox</h2>
+            <h2 className="text-3xl font-bold mt-12">The Homeschool Burnout Paradox</h2>
             <p>
               Homeschooling should protect against burnout—we control the schedule, we know our children intimately, we can adjust on the fly. So why do homeschool students still burn out?
             </p>
@@ -79,12 +79,12 @@ export default function StudentBurnout() {
               <li><strong>Parent anxiety transmission:</strong> When parents stress about outcomes, children absorb that pressure</li>
             </ul>
 
-            <h2>Building Sustainable Learning Rhythms</h2>
+            <h2 className="text-3xl font-bold mt-12">Building Sustainable Learning Rhythms</h2>
             <p>
               Sustainable learning isn't about lowering standards—it's about matching intensity with adequate recovery.
             </p>
 
-            <h3>The 70% Rule</h3>
+            <h3 className="text-2xl font-semibold mt-8">The 70% Rule</h3>
             <p>
               Plan your week to operate at 70% capacity, not 100%. This creates buffer space for:
             </p>
@@ -95,7 +95,7 @@ export default function StudentBurnout() {
               <li>True rest without guilt or falling behind</li>
             </ul>
 
-            <h3>Cyclic Learning Patterns</h3>
+            <h3 className="text-2xl font-semibold mt-8">Cyclic Learning Patterns</h3>
             <p>
               Instead of steady-state learning year-round, consider natural cycles:
             </p>
@@ -106,7 +106,7 @@ export default function StudentBurnout() {
               <li><strong>Project seasons:</strong> Deep dives into engaging topics with built-in conclusion points</li>
             </ul>
 
-            <h2>Recovery Is Not Optional</h2>
+            <h2 className="text-3xl font-bold mt-12">Recovery Is Not Optional</h2>
             <p>
               Rest isn't a reward for productivity—it's a biological requirement for learning. During recovery periods, the brain:
             </p>
@@ -120,7 +120,7 @@ export default function StudentBurnout() {
               Without adequate recovery, learning efficiency drops dramatically. You end up spending more time achieving less.
             </p>
 
-            <h2>When to Hit Pause</h2>
+            <h2 className="text-3xl font-bold mt-12">When to Hit Pause</h2>
             <p>
               Sometimes the best academic decision is to stop. Indicators it's time for a real break:
             </p>
@@ -135,7 +135,7 @@ export default function StudentBurnout() {
               A two-week complete pause to reset often accomplishes more than grinding through burnout for months.
             </p>
 
-            <h2>Creating Burnout-Resistant Systems</h2>
+            <h2 className="text-3xl font-bold mt-12">Creating Burnout-Resistant Systems</h2>
             <p>
               SmartCore's design specifically addresses burnout risk:
             </p>
@@ -147,7 +147,7 @@ export default function StudentBurnout() {
               <li><strong>Progress visibility:</strong> Students see concrete evidence of growth, combating "I'm not learning anything" despair</li>
             </ul>
 
-            <h2>The Long Game</h2>
+            <h2 className="text-3xl font-bold mt-12">The Long Game</h2>
             <p>
               Education is a marathon, not a sprint. Protecting your child's love of learning, mental health, and intrinsic motivation matters more than covering every standard this particular year.
             </p>

@@ -49,7 +49,7 @@ export default function SchoolOverwhelm() {
               For sensitive, perfectionistic, or neurodivergent learners, school overwhelm isn't about lacking effort—it's about processing capacity, pace mismatches, and environmental demands exceeding available coping resources. Here's how to recognize and address academic overwhelm before it becomes crisis.
             </p>
 
-            <h2>What School Overwhelm Looks Like</h2>
+            <h2 className="text-3xl font-bold mt-12">What School Overwhelm Looks Like</h2>
             <p>
               Overwhelm manifests differently than simple stress:
             </p>
@@ -62,12 +62,12 @@ export default function SchoolOverwhelm() {
               <li><strong>Avoidance:</strong> Elaborate procrastination strategies or school refusal</li>
             </ul>
 
-            <h2>Why Sensitive Learners Experience More Overwhelm</h2>
+            <h2 className="text-3xl font-bold mt-12">Why Sensitive Learners Experience More Overwhelm</h2>
             <p>
               Some students are neurologically wired to experience school differently:
             </p>
 
-            <h3>Sensory Processing Sensitivity</h3>
+            <h3 className="text-2xl font-semibold mt-8">Sensory Processing Sensitivity</h3>
             <p>
               Highly sensitive students process sensory and emotional information more deeply:
             </p>
@@ -77,7 +77,7 @@ export default function SchoolOverwhelm() {
               <li>Subtle environmental stimuli others ignore consume processing bandwidth</li>
             </ul>
 
-            <h3>Perfectionism and High Standards</h3>
+            <h3 className="text-2xl font-semibold mt-8">Perfectionism and High Standards</h3>
             <p>
               Gifted or high-achieving students may overwhelm themselves:
             </p>
@@ -88,7 +88,7 @@ export default function SchoolOverwhelm() {
               <li>Comparing their behind-the-scenes struggles to others' polished outcomes</li>
             </ul>
 
-            <h3>Executive Function Challenges</h3>
+            <h3 className="text-2xl font-semibold mt-8">Executive Function Challenges</h3>
             <p>
               ADHD and autistic students face systematic overwhelm:
             </p>
@@ -99,7 +99,7 @@ export default function SchoolOverwhelm() {
               <li><strong>Transition difficulty:</strong> Switching between subjects or activities is cognitively expensive</li>
             </ul>
 
-            <h3>Processing Speed Mismatches</h3>
+            <h3 className="text-2xl font-semibold mt-8">Processing Speed Mismatches</h3>
             <p>
               When instruction pace exceeds processing speed:
             </p>
@@ -109,7 +109,7 @@ export default function SchoolOverwhelm() {
               <li>Having to rush prevents deep understanding, triggering anxiety</li>
             </ul>
 
-            <h2>The Overwhelm Spiral</h2>
+            <h2 className="text-3xl font-bold mt-12">The Overwhelm Spiral</h2>
             <p>
               Overwhelm tends to compound:
             </p>
@@ -126,9 +126,9 @@ export default function SchoolOverwhelm() {
               Breaking this cycle requires intervention early, before the spiral accelerates.
             </p>
 
-            <h2>Immediate Strategies for Overwhelm Episodes</h2>
+            <h2 className="text-3xl font-bold mt-12">Immediate Strategies for Overwhelm Episodes</h2>
 
-            <h3>In-the-Moment Nervous System Regulation</h3>
+            <h3 className="text-2xl font-semibold mt-8">In-the-Moment Nervous System Regulation</h3>
             <p>
               When your child is actively overwhelmed:
             </p>
@@ -142,7 +142,7 @@ export default function SchoolOverwhelm() {
               You cannot problem-solve when the nervous system is in fight/flight/freeze. Regulation comes first.
             </p>
 
-            <h3>Task Breakdown</h3>
+            <h3 className="text-2xl font-semibold mt-8">Task Breakdown</h3>
             <p>
               Overwhelming tasks need chunking:
             </p>
@@ -153,7 +153,7 @@ export default function SchoolOverwhelm() {
               <li>Use timers: short work sprints (10-15 min) with breaks</li>
             </ul>
 
-            <h3>Lower the Stakes</h3>
+            <h3 className="text-2xl font-semibold mt-8">Lower the Stakes</h3>
             <p>
               Perfectionism creates artificial pressure:
             </p>
@@ -164,9 +164,9 @@ export default function SchoolOverwhelm() {
               <li>Remove grade pressure if possible—focus on learning</li>
             </ul>
 
-            <h2>Long-Term Overwhelm Prevention</h2>
+            <h2 className="text-3xl font-bold mt-12">Long-Term Overwhelm Prevention</h2>
 
-            <h3>Environmental Modifications</h3>
+            <h3 className="text-2xl font-semibold mt-8">Environmental Modifications</h3>
             <p>
               Design learning environments to reduce overwhelm triggers:
             </p>
@@ -177,7 +177,7 @@ export default function SchoolOverwhelm() {
               <li><strong>Clear work/rest boundaries:</strong> Defined school hours prevent chronic activation</li>
             </ul>
 
-            <h3>Capacity Building</h3>
+            <h3 className="text-2xl font-semibold mt-8">Capacity Building</h3>
             <p>
               Gradually increase stress tolerance (with support):
             </p>
@@ -188,7 +188,7 @@ export default function SchoolOverwhelm() {
               <li>Teach self-advocacy: "I need a break" is legitimate</li>
             </ul>
 
-            <h3>Metacognitive Skills</h3>
+            <h3 className="text-2xl font-semibold mt-8">Metacognitive Skills</h3>
             <p>
               Help students understand their own patterns:
             </p>
@@ -199,7 +199,7 @@ export default function SchoolOverwhelm() {
               <li>"What warning signs appear before full overwhelm?"</li>
             </ul>
 
-            <h2>When Overwhelm Signals Deeper Issues</h2>
+            <h2 className="text-3xl font-bold mt-12">When Overwhelm Signals Deeper Issues</h2>
             <p>
               Sometimes academic overwhelm indicates:
             </p>
@@ -213,7 +213,7 @@ export default function SchoolOverwhelm() {
               If overwhelm persists despite environmental modifications and support, professional evaluation may help.
             </p>
 
-            <h2>SmartCore's Overwhelm-Reducing Design</h2>
+            <h2 className="text-3xl font-bold mt-12">SmartCore's Overwhelm-Reducing Design</h2>
             <p>
               Our platform specifically addresses overwhelm triggers:
             </p>
@@ -226,7 +226,7 @@ export default function SchoolOverwhelm() {
               <li><strong>Multiple assessment formats:</strong> Not all evaluation is high-stakes testing</li>
             </ul>
 
-            <h2>Protecting Long-Term Mental Health</h2>
+            <h2 className="text-3xl font-bold mt-12">Protecting Long-Term Mental Health</h2>
             <p>
               The goal isn't just managing overwhelm—it's building resilient, sustainable learning patterns:
             </p>

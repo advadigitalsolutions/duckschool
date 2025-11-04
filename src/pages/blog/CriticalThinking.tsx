@@ -49,7 +49,7 @@ export default function CriticalThinking() {
               Critical thinking isn't a separate subject you teach on Thursdays—it's a habit of mind developed through thoughtful questions, authentic problem-solving, and space to grapple with complexity. Here's how to build genuine critical thinking capacity.
             </p>
 
-            <h2>What Critical Thinking Actually Means</h2>
+            <h2 className="text-3xl font-bold mt-12">What Critical Thinking Actually Means</h2>
             <p>
               Critical thinking is the ability to:
             </p>
@@ -65,7 +65,7 @@ export default function CriticalThinking() {
               It's not about being critical in the negative sense—it's about thinking carefully, thoroughly, and independently.
             </p>
 
-            <h2>Why Traditional Education Undermines Critical Thinking</h2>
+            <h2 className="text-3xl font-bold mt-12">Why Traditional Education Undermines Critical Thinking</h2>
             <p>
               Standard classroom practices often work against critical thinking development:
             </p>
@@ -77,9 +77,9 @@ export default function CriticalThinking() {
               <li><strong>Risk-averse environment:</strong> Wrong answers penalized, so students learn to avoid intellectual risks</li>
             </ul>
 
-            <h2>The Building Blocks of Critical Thinking</h2>
+            <h2 className="text-3xl font-bold mt-12">The Building Blocks of Critical Thinking</h2>
 
-            <h3>1. Question Formation</h3>
+            <h3 className="text-2xl font-semibold mt-8">1. Question Formation</h3>
             <p>
               Critical thinkers ask good questions. Teach your child to:
             </p>
@@ -93,7 +93,7 @@ export default function CriticalThinking() {
               Instead of always providing answers, model asking progressively better questions.
             </p>
 
-            <h3>2. Evidence Evaluation</h3>
+            <h3 className="text-2xl font-semibold mt-8">2. Evidence Evaluation</h3>
             <p>
               In an age of misinformation, evaluating sources is critical:
             </p>
@@ -104,7 +104,7 @@ export default function CriticalThinking() {
               <li><strong>Competing evidence:</strong> What do alternative sources say?</li>
             </ul>
 
-            <h3>3. Perspective Taking</h3>
+            <h3 className="text-2xl font-semibold mt-8">3. Perspective Taking</h3>
             <p>
               Critical thinking requires seeing beyond your own viewpoint:
             </p>
@@ -115,7 +115,7 @@ export default function CriticalThinking() {
               <li>Recognize that complex issues rarely have simple solutions</li>
             </ul>
 
-            <h3>4. Logical Reasoning</h3>
+            <h3 className="text-2xl font-semibold mt-8">4. Logical Reasoning</h3>
             <p>
               Understanding how arguments work and fail:
             </p>
@@ -126,9 +126,9 @@ export default function CriticalThinking() {
               <li>Spot emotional manipulation versus logical persuasion</li>
             </ul>
 
-            <h2>Teaching Critical Thinking Through Subjects</h2>
+            <h2 className="text-3xl font-bold mt-12">Teaching Critical Thinking Through Subjects</h2>
 
-            <h3>History: More Than Dates and Names</h3>
+            <h3 className="text-2xl font-semibold mt-8">History: More Than Dates and Names</h3>
             <p>
               History class should develop critical thinking:
             </p>
@@ -139,7 +139,7 @@ export default function CriticalThinking() {
               <li>Examine how current events shape historical interpretation</li>
             </ul>
 
-            <h3>Science: Questioning and Testing</h3>
+            <h3 className="text-2xl font-semibold mt-8">Science: Questioning and Testing</h3>
             <p>
               Science embodies critical thinking when taught well:
             </p>
@@ -150,7 +150,7 @@ export default function CriticalThinking() {
               <li>Distinguish correlation studies from causal research</li>
             </ul>
 
-            <h3>Literature: Interpretation and Analysis</h3>
+            <h3 className="text-2xl font-semibold mt-8">Literature: Interpretation and Analysis</h3>
             <p>
               Literature develops sophisticated analytical skills:
             </p>
@@ -161,7 +161,7 @@ export default function CriticalThinking() {
               <li>Recognize how reader identity shapes interpretation</li>
             </ul>
 
-            <h3>Math: Logic and Problem-Solving</h3>
+            <h3 className="text-2xl font-semibold mt-8">Math: Logic and Problem-Solving</h3>
             <p>
               Math teaches structured thinking:
             </p>
@@ -172,9 +172,9 @@ export default function CriticalThinking() {
               <li>Critique statistical claims and data visualization</li>
             </ul>
 
-            <h2>Practical Activities for Building Critical Thinking</h2>
+            <h2 className="text-3xl font-bold mt-12">Practical Activities for Building Critical Thinking</h2>
 
-            <h3>The Devil's Advocate Exercise</h3>
+            <h3 className="text-2xl font-semibold mt-8">The Devil's Advocate Exercise</h3>
             <p>
               Choose an issue your child has an opinion on. Have them:
             </p>
@@ -185,7 +185,7 @@ export default function CriticalThinking() {
               <li>Revise their view based on this analysis</li>
             </ul>
 
-            <h3>Source Comparison Project</h3>
+            <h3 className="text-2xl font-semibold mt-8">Source Comparison Project</h3>
             <p>
               Select a current event. Have your child:
             </p>
@@ -197,7 +197,7 @@ export default function CriticalThinking() {
               <li>Construct their own balanced understanding</li>
             </ul>
 
-            <h3>The "What If?" Game</h3>
+            <h3 className="text-2xl font-semibold mt-8">The "What If?" Game</h3>
             <p>
               Historical counterfactuals develop causal reasoning:
             </p>
@@ -210,7 +210,7 @@ export default function CriticalThinking() {
               Require evidence-based speculation, not fantasy.
             </p>
 
-            <h3>Logical Fallacy Hunt</h3>
+            <h3 className="text-2xl font-semibold mt-8">Logical Fallacy Hunt</h3>
             <p>
               Watch political debates, advertisements, or opinion pieces together:
             </p>
@@ -220,7 +220,7 @@ export default function CriticalThinking() {
               <li>Reconstruct stronger versions of weak arguments</li>
             </ul>
 
-            <h2>Creating Space for Critical Thinking</h2>
+            <h2 className="text-3xl font-bold mt-12">Creating Space for Critical Thinking</h2>
             <p>
               Critical thinking requires cognitive space:
             </p>
@@ -231,7 +231,7 @@ export default function CriticalThinking() {
               <li><strong>Iterative thinking:</strong> Ideas develop over time; first thoughts rarely final</li>
             </ul>
 
-            <h2>When Critical Thinking Looks Like Defiance</h2>
+            <h2 className="text-3xl font-bold mt-12">When Critical Thinking Looks Like Defiance</h2>
             <p>
               Students developing critical thinking skills may:
             </p>
@@ -244,7 +244,7 @@ export default function CriticalThinking() {
               This isn't disrespect—it's exactly what we're trying to develop. The goal is thoughtful people who question authority appropriately.
             </p>
 
-            <h2>SmartCore's Critical Thinking Integration</h2>
+            <h2 className="text-3xl font-bold mt-12">SmartCore's Critical Thinking Integration</h2>
             <p>
               Our platform develops critical thinking systematically:
             </p>
@@ -256,7 +256,7 @@ export default function CriticalThinking() {
               <li><strong>Metacognitive reflection:</strong> Students analyze their own thinking processes</li>
             </ul>
 
-            <h2>The Long-Term Payoff</h2>
+            <h2 className="text-3xl font-bold mt-12">The Long-Term Payoff</h2>
             <p>
               Critical thinking capacity is the ultimate transferable skill. It enables:
             </p>
