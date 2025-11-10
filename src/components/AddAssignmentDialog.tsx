@@ -103,7 +103,13 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
         }
       );
 
-      if (generateError) throw generateError;
+      if (generateError) {
+        console.error('Edge function error:', generateError);
+        throw generateError;
+      }
+
+      console.log('Generated content:', generatedContent);
+      toast.info('Saving assignment to database...');
 
       // Create curriculum items for each course
       const createdAssignments = [];
@@ -140,7 +146,20 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
           .select()
           .single();
 
-        if (curriculumError) throw curriculumError;
+        if (curriculumError) {
+          console.error('Curriculum item creation error:', curriculumError);
+          console.error('Failed insert data:', {
+            course_id: courseData.id,
+            title: selectedCourses.length > 1 
+              ? `${generatedContent.title} (${courseData.subject})`
+              : generatedContent.title,
+            standards: finalStandards
+          });
+          toast.error(`Database error: ${curriculumError.message}`);
+          throw curriculumError;
+        }
+
+        console.log('Created curriculum item:', curriculumItem);
 
         // Create the assignment
         const { error: assignmentError } = await supabase
@@ -153,7 +172,15 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
             rubric: generatedContent.rubric || null
           } as any);
 
-        if (assignmentError) throw assignmentError;
+        if (assignmentError) {
+          console.error('Assignment creation error:', assignmentError);
+          console.error('Failed insert data:', {
+            curriculum_item_id: curriculumItem.id,
+            status: 'draft'
+          });
+          toast.error(`Database error: ${assignmentError.message}`);
+          throw assignmentError;
+        }
         
         createdAssignments.push({ course: courseData.title, id: curriculumItem.id });
       }
