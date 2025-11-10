@@ -51,6 +51,7 @@ export function CurriculumGenerationDialog({
   const [createdCount, setCreatedCount] = useState(0);
   const [isBridgeMode, setIsBridgeMode] = useState(false);
   const [diagnosticTopics, setDiagnosticTopics] = useState<string[]>([]);
+  const [showApiKeyError, setShowApiKeyError] = useState(false);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -94,7 +95,7 @@ export function CurriculumGenerationDialog({
                           errorMessage.includes('rate_limit');
       
       if (isQuotaError) {
-        toast.error('OpenAI API credits have been exhausted. Please update your API key with available credits.');
+        setShowApiKeyError(true);
       } else {
         toast.error('Failed to generate curriculum suggestions');
       }
@@ -126,7 +127,7 @@ export function CurriculumGenerationDialog({
                             errorMessage.includes('rate_limit');
         
         if (isQuotaError) {
-          toast.error('OpenAI API credits have been exhausted. Please update your API key.');
+          setShowApiKeyError(true);
           setCreatingIndex(null);
           return;
         }
@@ -219,7 +220,7 @@ export function CurriculumGenerationDialog({
                                 errorMessage.includes('rate_limit');
             
             if (isQuotaError) {
-              toast.error('OpenAI API credits exhausted. Cannot create remaining assignments.');
+              setShowApiKeyError(true);
               setCreatingAll(false);
               return;
             }
@@ -302,7 +303,34 @@ export function CurriculumGenerationDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {showCompletion ? (
+          {showApiKeyError ? (
+            <div className="text-center py-8 space-y-6">
+              <div className="flex justify-center">
+                <div className="rounded-full bg-destructive/10 p-4">
+                  <Info className="h-12 w-12 text-destructive" />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">OpenAI API Credits Exhausted</h3>
+                <p className="text-muted-foreground">
+                  Your OpenAI API key has run out of credits. Please update your API key with one that has available credits to continue generating curriculum.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button 
+                  onClick={() => {
+                    setShowApiKeyError(false);
+                    onOpenChange(false);
+                  }}
+                  variant="outline"
+                  size="lg"
+                  className="min-w-[200px]"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          ) : showCompletion ? (
             <div className="text-center py-8 space-y-6">
               <div className="flex justify-center">
                 <div className="rounded-full bg-primary/10 p-4">
