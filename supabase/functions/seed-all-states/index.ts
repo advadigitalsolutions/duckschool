@@ -101,7 +101,7 @@ Return ONLY a JSON object with this structure:
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                model: 'gpt-5-mini-2025-08-07',
+                model: 'gpt-4o-mini',
                 messages: [
                   { role: 'system', content: 'You are a research assistant. Always return valid JSON.' },
                   { role: 'user', content: sourcePrompt }
@@ -170,7 +170,7 @@ Return a JSON object categorizing requirements like:
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  model: 'gpt-5-mini-2025-08-07',
+                  model: 'gpt-4o-mini',
                   messages: [
                     { role: 'system', content: 'Extract legal requirements. Return valid JSON only.' },
                     { role: 'user', content: legalPrompt }
@@ -216,7 +216,7 @@ Extract as many relevant standards as you can find. Return ONLY the JSON array.`
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                model: 'gpt-5-2025-08-07',
+                model: 'gpt-4o',
                 messages: [
                   { role: 'system', content: 'You are a standards extraction expert. Return valid JSON only.' },
                   { role: 'user', content: standardsPrompt }

@@ -59,7 +59,7 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-5-mini-2025-08-07',
+            model: 'gpt-4o-mini',
             messages: [
               { role: 'system', content: 'You are an encouraging tutor providing brief, positive feedback.' },
               { role: 'user', content: feedbackPrompt }

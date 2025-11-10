@@ -52,7 +52,7 @@ Format as JSON:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: 'You are an expert on US state education departments and official standards repositories. Provide real, scrapable URLs.' },
           { role: 'user', content: sourcePrompt }
@@ -135,7 +135,7 @@ Format as JSON:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: 'Extract structured legal requirements from homeschool regulation documents.' },
           { role: 'user', content: legalPrompt }
@@ -180,7 +180,7 @@ Return as JSON array with ALL standards found.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-5-2025-08-07',
+          model: 'gpt-4o',
           messages: [
             { role: 'system', content: 'Extract ALL standards from educational documents. Be comprehensive - extract every single standard you find.' },
             { role: 'user', content: extractPrompt }

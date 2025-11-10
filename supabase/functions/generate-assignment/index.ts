@@ -680,7 +680,7 @@ CRITICAL:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -781,7 +781,7 @@ Follow these constraints STRICTLY. Do not include any banned codes or terms in c
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-5-mini-2025-08-07',
+            model: 'gpt-4o-mini',
             messages: [
               { role: 'system', content: fixesInstruction + '\n\n' + systemPrompt },
               { role: 'user', content: userPrompt }

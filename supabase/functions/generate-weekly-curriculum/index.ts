@@ -108,7 +108,7 @@ Theme the week around: ${progressData.recommendations.focusAreas.slice(0, 2).joi
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }

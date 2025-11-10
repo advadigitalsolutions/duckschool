@@ -136,8 +136,8 @@ Keep it concise, actionable, and friendly.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
-        max_completion_tokens: 500, // GPT-5 uses max_completion_tokens, not max_tokens
+        model: 'gpt-4o-mini',
+        max_tokens: 500,
         messages: [
           { role: 'system', content: 'You are a helpful scheduling assistant that provides concise, friendly analysis.' },
           { role: 'user', content: prompt }

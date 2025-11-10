@@ -255,7 +255,7 @@ async function performRegrade(submissionId: string, authHeader: string) {
                 },
                 signal: controller.signal,
                 body: JSON.stringify({
-                  model: 'gpt-5-mini-2025-08-07',
+                  model: 'gpt-4o-mini',
                   messages: [
                     { 
                       role: 'system', 
@@ -393,7 +393,7 @@ Be encouraging but honest. Focus on what the student did well and how they can i
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'gpt-5-2025-08-07',
+              model: 'gpt-4o',
               messages: [
                 {
                   role: 'user',

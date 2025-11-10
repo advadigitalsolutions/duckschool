@@ -158,7 +158,7 @@ Please provide comprehensive feedback in the following JSON format:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07', // Use flagship for deep reasoning and coaching
+        model: 'gpt-4o', // Use flagship for deep reasoning and coaching
         messages: [
           {
             role: 'system',
