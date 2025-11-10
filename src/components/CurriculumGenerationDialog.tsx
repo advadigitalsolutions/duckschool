@@ -131,17 +131,21 @@ export function CurriculumGenerationDialog({
           setCreatingIndex(null);
           return;
         }
+        toast.error(`Generation failed: ${errorMessage}`);
         throw generateError;
       }
       
       if (!generatedAssignment) {
         console.error('No assignment data returned');
-        throw new Error('No assignment data returned from edge function');
+        const errorMsg = 'No assignment data returned from edge function';
+        toast.error(errorMsg);
+        throw new Error(errorMsg);
       }
       
       console.log('Generated assignment data:', generatedAssignment);
 
       // Create curriculum item with generated content
+      toast.info('Saving assignment...');
       const { data: curriculumItem, error: curriculumError } = await supabase
         .from('curriculum_items')
         .insert({
@@ -155,7 +159,11 @@ export function CurriculumGenerationDialog({
         .select()
         .single();
 
-      if (curriculumError) throw curriculumError;
+      if (curriculumError) {
+        console.error('Curriculum item creation error:', curriculumError);
+        toast.error(`Failed to save curriculum item: ${curriculumError.message}`);
+        throw curriculumError;
+      }
 
       // Then create an assignment for this curriculum item
       const { error: assignmentError } = await supabase
@@ -165,7 +173,11 @@ export function CurriculumGenerationDialog({
           status: 'assigned'
         });
 
-      if (assignmentError) throw assignmentError;
+      if (assignmentError) {
+        console.error('Assignment creation error:', assignmentError);
+        toast.error(`Failed to create assignment: ${assignmentError.message}`);
+        throw assignmentError;
+      }
 
       toast.success('Assignment created successfully');
       
@@ -182,7 +194,7 @@ export function CurriculumGenerationDialog({
       }
     } catch (error: any) {
       console.error('Error creating assignment:', error);
-      toast.error('Failed to create assignment');
+      // Error message already shown via toast in specific error handlers above
     } finally {
       setCreatingIndex(null);
     }
@@ -202,6 +214,7 @@ export function CurriculumGenerationDialog({
 
         try {
           // Generate actual lesson questions
+          toast.info(`Generating ${suggestion.title}...`);
           const { data: generatedAssignment, error: generateError } = await supabase.functions.invoke('generate-assignment', {
             body: {
               courseId: courseId,
@@ -224,12 +237,15 @@ export function CurriculumGenerationDialog({
               setCreatingAll(false);
               return;
             }
+            toast.error(`Failed to generate "${suggestion.title}": ${errorMessage}`);
             throw generateError;
           }
           
           if (!generatedAssignment) {
             console.error('No assignment data returned');
-            throw new Error('No assignment data returned from edge function');
+            const errorMsg = 'No assignment data returned from edge function';
+            toast.error(`Failed to generate "${suggestion.title}": ${errorMsg}`);
+            throw new Error(errorMsg);
           }
           
           console.log('Generated assignment data:', generatedAssignment);
@@ -247,7 +263,11 @@ export function CurriculumGenerationDialog({
             .select()
             .single();
 
-          if (curriculumError) throw curriculumError;
+          if (curriculumError) {
+            console.error('Curriculum item creation error:', curriculumError);
+            toast.error(`Failed to save "${suggestion.title}": ${curriculumError.message}`);
+            throw curriculumError;
+          }
 
           const { error: assignmentError } = await supabase
             .from('assignments')
@@ -256,18 +276,30 @@ export function CurriculumGenerationDialog({
               status: 'assigned'
             });
 
-          if (assignmentError) throw assignmentError;
+          if (assignmentError) {
+            console.error('Assignment creation error:', assignmentError);
+            toast.error(`Failed to create assignment for "${suggestion.title}": ${assignmentError.message}`);
+            throw assignmentError;
+          }
 
           successCount++;
+          toast.success(`Created "${suggestion.title}"`);
           setSuggestions(prev => prev.map((s, idx) => 
             idx === i ? { ...s, created: true } : s
           ));
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Error creating assignment ${i}:`, error);
+          // Error messages already shown via toasts above
         }
       }
 
-      toast.success(`Created ${successCount} of ${uncreatedSuggestions.length} assignments`);
+      if (successCount === uncreatedSuggestions.length) {
+        toast.success(`All ${successCount} assignments created successfully`);
+      } else if (successCount > 0) {
+        toast.warning(`Created ${successCount} of ${uncreatedSuggestions.length} assignments`);
+      } else {
+        toast.error('Failed to create any assignments');
+      }
       
       if (successCount > 0) {
         onGenerated?.();
