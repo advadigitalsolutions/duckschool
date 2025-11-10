@@ -85,7 +85,19 @@ export function CurriculumGenerationDialog({
       }
     } catch (error: any) {
       console.error('Error generating curriculum:', error);
-      toast.error('Failed to generate curriculum suggestions');
+      
+      // Check if it's an OpenAI quota/credit error
+      const errorMessage = error?.message || '';
+      const isQuotaError = errorMessage.includes('429') || 
+                          errorMessage.includes('quota') || 
+                          errorMessage.includes('insufficient_quota') ||
+                          errorMessage.includes('rate_limit');
+      
+      if (isQuotaError) {
+        toast.error('OpenAI API credits have been exhausted. Please update your API key with available credits.');
+      } else {
+        toast.error('Failed to generate curriculum suggestions');
+      }
     } finally {
       setGenerating(false);
     }
@@ -107,6 +119,17 @@ export function CurriculumGenerationDialog({
 
       if (generateError) {
         console.error('Generation error:', generateError);
+        const errorMessage = generateError?.message || '';
+        const isQuotaError = errorMessage.includes('429') || 
+                            errorMessage.includes('quota') || 
+                            errorMessage.includes('insufficient_quota') ||
+                            errorMessage.includes('rate_limit');
+        
+        if (isQuotaError) {
+          toast.error('OpenAI API credits have been exhausted. Please update your API key.');
+          setCreatingIndex(null);
+          return;
+        }
         throw generateError;
       }
       
@@ -189,6 +212,17 @@ export function CurriculumGenerationDialog({
 
           if (generateError) {
             console.error('Generation error:', generateError);
+            const errorMessage = generateError?.message || '';
+            const isQuotaError = errorMessage.includes('429') || 
+                                errorMessage.includes('quota') || 
+                                errorMessage.includes('insufficient_quota') ||
+                                errorMessage.includes('rate_limit');
+            
+            if (isQuotaError) {
+              toast.error('OpenAI API credits exhausted. Cannot create remaining assignments.');
+              setCreatingAll(false);
+              return;
+            }
             throw generateError;
           }
           
