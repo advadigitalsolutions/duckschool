@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Sparkles, Check } from 'lucide-react';
+import { Sparkles, Check, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { StandardsSelector } from './StandardsSelector';
@@ -43,6 +43,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [showApiKeyError, setShowApiKeyError] = useState(false);
 
   const toggleCourse = (courseId: string) => {
     setSelectedCourses(prev => 
@@ -178,8 +179,20 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
         setIsCreated(false);
       }, 1500);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create assignment');
-      console.error(error);
+      console.error('Assignment creation error:', error);
+      
+      // Check if this is an OpenAI quota/rate limit error
+      const errorMessage = error?.message?.toLowerCase() || '';
+      const isQuotaError = errorMessage.includes('429') || 
+                          errorMessage.includes('quota') || 
+                          errorMessage.includes('insufficient_quota') ||
+                          errorMessage.includes('rate_limit');
+      
+      if (isQuotaError) {
+        setShowApiKeyError(true);
+      } else {
+        toast.error(error.message || 'Failed to create assignment');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -203,7 +216,36 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
             Describe what you want students to learn, and AI will generate a complete assignment with objectives, instructions, rubric, and more.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        
+        {showApiKeyError ? (
+          <div className="text-center py-8 space-y-6">
+            <div className="flex justify-center">
+              <div className="rounded-full bg-destructive/10 p-4">
+                <Info className="h-12 w-12 text-destructive" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-2">OpenAI API Credits Exhausted</h3>
+              <p className="text-muted-foreground">
+                Your OpenAI API key has run out of credits. Please update your API key with one that has available credits to continue generating assignments.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                onClick={() => {
+                  setShowApiKeyError(false);
+                  setOpen(false);
+                }}
+                variant="outline"
+                size="lg"
+                className="min-w-[200px]"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Select Course(s)</Label>
             <p className="text-xs text-muted-foreground mb-2">
@@ -377,6 +419,7 @@ export function AddAssignmentDialog({ courses, studentId, onAssignmentAdded }: A
             )}
           </Button>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );
