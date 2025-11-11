@@ -59,6 +59,27 @@ export function RichTextEditor({ content, onChange, placeholder, debounceMs = 20
       attributes: {
         class: 'prose prose-sm max-w-none min-h-[300px] focus:outline-none p-4',
       },
+      handlePaste: (view, event) => {
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+
+        for (const item of Array.from(items)) {
+          if (item.type.startsWith('image/')) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const base64 = reader.result as string;
+                view.state.tr.doc && editor?.chain().focus().setImage({ src: base64 }).run();
+              };
+              reader.readAsDataURL(file);
+            }
+            return true;
+          }
+        }
+        return false;
+      },
     },
   });
 
@@ -80,26 +101,6 @@ export function RichTextEditor({ content, onChange, placeholder, debounceMs = 20
     input.click();
   }, [editor]);
 
-  const handlePaste = useCallback((e: ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items || !editor) return;
-
-    for (const item of Array.from(items)) {
-      if (item.type.startsWith('image/')) {
-        e.preventDefault();
-        const file = item.getAsFile();
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const base64 = reader.result as string;
-            editor.chain().focus().setImage({ src: base64 }).run();
-          };
-          reader.readAsDataURL(file);
-        }
-      }
-    }
-  }, [editor]);
-
   // Sync content prop with editor when it changes (e.g., loading from database)
   useEffect(() => {
     if (editor && content) {
@@ -110,19 +111,6 @@ export function RichTextEditor({ content, onChange, placeholder, debounceMs = 20
       }
     }
   }, [editor, content]);
-
-  // Add paste listener
-  useEffect(() => {
-    if (editor?.view?.dom) {
-      const dom = editor.view.dom;
-      dom.addEventListener('paste', handlePaste as any);
-      return () => {
-        if (dom) {
-          dom.removeEventListener('paste', handlePaste as any);
-        }
-      };
-    }
-  }, [editor, handlePaste]);
 
   // Cleanup and save on unmount
   useEffect(() => {
