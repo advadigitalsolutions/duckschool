@@ -113,7 +113,7 @@ export function RichTextEditor({ content, onChange, placeholder, debounceMs = 20
 
   // Add paste listener
   useEffect(() => {
-    if (editor?.view.dom) {
+    if (editor?.view?.dom) {
       const dom = editor.view.dom;
       dom.addEventListener('paste', handlePaste as any);
       return () => dom.removeEventListener('paste', handlePaste as any);
