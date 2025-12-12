@@ -13,6 +13,7 @@ import { ConfettiCelebration } from "@/components/ConfettiCelebration";
 import { FocusJourneyBar } from "@/components/FocusJourneyBar";
 import { FocusJourneyProvider } from "@/contexts/FocusJourneyContext";
 import { FocusDuckWizard } from "@/components/FocusDuckWizard";
+import { ActivityTrackerProvider } from "@/components/ActivityTrackerProvider";
 import { LearningWizardTutorial } from "@/components/LearningWizardTutorial";
 import { SmartCalendarWizard } from "@/components/SmartCalendarWizard";
 import { XPSystemWizard } from "@/components/XPSystemWizard";
@@ -73,6 +74,7 @@ import ParentProfile from "./pages/ParentProfile";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentDetail from "./pages/StudentDetail";
 import StudentXP from "./pages/StudentXP";
+import Leaderboard from "./pages/Leaderboard";
 import StudentRewards from "./pages/StudentRewards";
 import StudentMastery from "./pages/StudentMastery";
 import StudentMasteryJourney from "./pages/StudentMasteryJourney";
@@ -202,37 +204,39 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <FocusJourneyProvider studentId={student?.id}>
-      <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
-      
-      <div className="flex min-h-screen w-full">
-        {!isPublicRoute && <AppSidebar />}
-        <div className="flex-1 flex flex-col pb-16 md:pb-0">
-          {!isPublicRoute && !isStudentRoute && (
-            <header className="h-14 border-b flex items-center gap-4 px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-              <SidebarTrigger className="h-9 w-9" />
-              <h2 className="font-semibold text-lg">Parent Dashboard</h2>
-            </header>
-          )}
-          
-          {isStudentRoute && headerSettings && student && (
-            <>
-              <CustomizableHeader
-                student={student}
-                settings={headerSettings}
-                onSaveSettings={saveHeaderSettings}
-                onSignOut={handleSignOut}
-                onDemoCelebration={() => setShowConfetti(true)}
-              />
-              {showFocusDuck && <FocusJourneyBar studentId={student.id} />}
-            </>
-          )}
-          
-          <main className="flex-1 overflow-auto">
-            {children}
-          </main>
+      <ActivityTrackerProvider studentId={isStudentRoute ? student?.id : undefined}>
+        <ConfettiCelebration active={showConfetti} onComplete={() => setShowConfetti(false)} />
+        
+        <div className="flex min-h-screen w-full">
+          {!isPublicRoute && <AppSidebar />}
+          <div className="flex-1 flex flex-col pb-16 md:pb-0">
+            {!isPublicRoute && !isStudentRoute && (
+              <header className="h-14 border-b flex items-center gap-4 px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+                <SidebarTrigger className="h-9 w-9" />
+                <h2 className="font-semibold text-lg">Parent Dashboard</h2>
+              </header>
+            )}
+            
+            {isStudentRoute && headerSettings && student && (
+              <>
+                <CustomizableHeader
+                  student={student}
+                  settings={headerSettings}
+                  onSaveSettings={saveHeaderSettings}
+                  onSignOut={handleSignOut}
+                  onDemoCelebration={() => setShowConfetti(true)}
+                />
+                {showFocusDuck && <FocusJourneyBar studentId={student.id} />}
+              </>
+            )}
+            
+            <main className="flex-1 overflow-auto">
+              {children}
+            </main>
+          </div>
+          {!isPublicRoute && <MobileBottomNav />}
         </div>
-        {!isPublicRoute && <MobileBottomNav />}
-      </div>
+      </ActivityTrackerProvider>
     </FocusJourneyProvider>
   );
 };
@@ -322,6 +326,8 @@ const App = () => (
                       <Route path="/student/chores" element={<AuthGuard><StudentChores /></AuthGuard>} />
                       <Route path="/student/diagnostic/:assessmentId" element={<AuthGuard><DiagnosticAssessment /></AuthGuard>} />
                       <Route path="/student/xp" element={<AuthGuard><StudentXP /></AuthGuard>} />
+                      <Route path="/student/leaderboard" element={<AuthGuard><Leaderboard /></AuthGuard>} />
+                      <Route path="/leaderboard" element={<AuthGuard><Leaderboard /></AuthGuard>} />
                       <Route path="/student/rewards" element={<AuthGuard><StudentRewards /></AuthGuard>} />
                       <Route path="/student/mastery" element={<AuthGuard><StudentMastery /></AuthGuard>} />
                       <Route path="/student/mastery-journey" element={<AuthGuard><StudentMasteryJourney /></AuthGuard>} />
