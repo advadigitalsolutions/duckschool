@@ -1154,6 +1154,41 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_activity_minutes: {
+        Row: {
+          active_seconds: number
+          created_at: string
+          date: string
+          id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          active_seconds?: number
+          created_at?: string
+          date?: string
+          id?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          active_seconds?: number
+          created_at?: string
+          date?: string
+          id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_activity_minutes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_goals: {
         Row: {
           completed: boolean

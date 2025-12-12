@@ -15,7 +15,8 @@ import {
   CheckSquare,
   Timer,
   ListChecks,
-  Settings
+  Settings,
+  Medal
 } from 'lucide-react';
 import {
   Sidebar,
@@ -230,6 +231,12 @@ export function EducatorSidebar() {
               <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton onClick={() => navigate('/leaderboard')}>
+                        <Medal className="h-4 w-4" />
+                        <span>Leaderboard</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton onClick={() => navigate('/parent?tab=xp')}>
                         <Award className="h-4 w-4" />
