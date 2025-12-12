@@ -571,28 +571,45 @@ ${diagnosticMastery.slice(0, 10).map(m =>
 COURSE GOALS:
 ${courseGoals}
 
-Your task is to generate assignment recommendations that:
+🚨 CRITICAL TIME CONSTRAINT - NON-NEGOTIABLE 🚨
+Every assignment MUST be completable in 10-20 MINUTES MAXIMUM.
+Students with ADHD get OVERWHELMED by long, complex projects.
+Small wins build confidence and momentum.
+
+DO NOT CREATE:
+❌ Multi-hour projects or elaborate presentations
+❌ Complex research projects requiring extensive reading
+❌ Assignments with many steps or dependencies
+
+DO CREATE:
+✅ Simple worksheet-style exercises (5-10 questions)
+✅ Quick skill practice focusing on ONE concept
+✅ Single-focus activities that can be finished in one sitting
+
+Your task is to generate SIMPLE, FOCUSED assignment recommendations that:
 1. Work toward achieving the stated course goals
-2. Address identified weaknesses and gaps (prioritize these!)
-3. Build on demonstrated strengths
-4. Match the student's learning style and interests
-5. Follow the specified pedagogy
-6. Are engaging and developmentally appropriate
-7. Include clear learning objectives and estimated time
-8. Progress logically toward the course goals
+2. Take only 10-20 minutes each to complete
+3. Address identified weaknesses with bite-sized practice
+4. Build on demonstrated strengths
+5. Match the student's learning style and interests
+6. Follow the specified pedagogy
+7. Are simple, clear, and achievable
+8. Progress logically toward the course goals (many small steps!)
 
-CRITICAL: If the student has shown weakness in specific areas, prioritize creating curriculum that addresses those gaps with additional practice and scaffolding.`;
+CRITICAL: Break complex topics into MULTIPLE SMALL 10-20 minute assignments. Small wins build confidence.`;
 
-      userPrompt = `Generate 3-5 high-quality assignment recommendations that will help the student work toward the course goals: "${courseGoals}"
+      userPrompt = `Generate 5-8 SIMPLE, SHORT worksheet-style assignments (10-20 min each) that will help the student work toward the course goals: "${courseGoals}"
+
+CRITICAL: Each assignment must be completable in 10-20 minutes. Think simple worksheets, not elaborate projects.
 
 ${performanceContext.weakStandards.length > 0 ? `
 PRIORITY: The student has shown weakness in: ${performanceContext.weakStandards.slice(0, 5).join(', ')}
-Address these gaps first with targeted practice and support.` : ''}
+Break these into small, focused practice exercises (one skill per assignment).` : ''}
 
 ${performanceContext.strongStandards.length > 0 ? `
 Build on their strengths in: ${performanceContext.strongStandards.slice(0, 5).join(', ')}` : ''}
 
-Consider what foundational knowledge and skills the student needs to achieve these goals, create a logical progression of assignments, and adapt based on their actual performance data.`;
+Create many small steps rather than few big ones. Each assignment = ONE focused skill or concept.`;
     } else {
       // Standards-based generation
       const priorityStandards = uncoveredStandards.slice(0, 5);
@@ -713,28 +730,47 @@ ${diagnosticMastery.slice(0, 10).map(m =>
 ).join('\n')}
 ` : ''}
 
-Your task is to generate assignment recommendations that:
-1. Target specific uncovered standards
-2. Address identified weaknesses and gaps (prioritize these!)
-3. Build on demonstrated strengths
-4. Match the student's learning style and interests
-5. Follow the specified pedagogy
-6. Are engaging and developmentally appropriate
-7. Include clear learning objectives and estimated time
+🚨 CRITICAL TIME CONSTRAINT - NON-NEGOTIABLE 🚨
+Every assignment MUST be completable in 10-20 MINUTES MAXIMUM.
+Students with ADHD get OVERWHELMED by long, complex projects.
+Small wins build confidence and momentum.
 
-CRITICAL: If targeting standards where the student has shown weakness, provide extra scaffolding, practice, and support.`;
+DO NOT CREATE:
+❌ Multi-hour projects or elaborate presentations
+❌ Complex research projects requiring extensive reading
+❌ Assignments with many steps or dependencies
+❌ Long essays or creative writing projects
 
-      userPrompt = `Generate assignment recommendations for the following uncovered standards (ordered by priority based on student's identified gaps):
+DO CREATE:
+✅ Simple worksheet-style exercises (5-10 questions)
+✅ Quick skill practice focusing on ONE concept
+✅ Short passages with a few comprehension questions
+✅ Single-focus activities that can be finished in one sitting
+
+Your task is to generate SIMPLE, FOCUSED assignment recommendations that:
+1. Target 1-2 specific standards per assignment (not more!)
+2. Take only 10-20 minutes to complete
+3. Address identified weaknesses with bite-sized practice
+4. Build on demonstrated strengths
+5. Match the student's learning style and interests
+6. Follow the specified pedagogy
+7. Are simple, clear, and achievable
+8. Include exactly ONE main learning objective
+
+CRITICAL: If targeting standards where the student has shown weakness, break it into MULTIPLE SMALL assignments rather than one big one. Small wins build confidence.`;
+
+      userPrompt = `Generate SIMPLE, SHORT (10-20 min each) worksheet-style assignments for the following uncovered standards:
 
 ${sortedUncovered.slice(0, 5).map((s: any, i: number) => {
   const isWeak = performanceContext.weakStandards.includes(s.code);
-  return `${i + 1}. ${s.code}: ${s.text}${isWeak ? ' ⚠️ IDENTIFIED WEAKNESS - needs reinforcement' : ''}`;
+  return `${i + 1}. ${s.code}: ${s.text}${isWeak ? ' ⚠️ WEAKNESS - break into multiple small exercises' : ''}`;
 }).join('\n\n')}
 
-For each standard, suggest 1-2 high-quality assignments that would effectively cover that standard while:
-- Addressing any identified weaknesses with appropriate scaffolding
-- Building on demonstrated strengths
-- Matching the student's profile and pedagogy`;
+CRITICAL REQUIREMENTS:
+- Each assignment = 10-20 minutes MAX (think worksheet, not project)
+- ONE focused skill or concept per assignment
+- 5-10 practice questions per assignment
+- For weak areas, create 2-3 small practice sets instead of 1 big lesson`;
     }
 
     // ⚠️ CRITICAL: MUST USE OPENAI - NOT LOVABLE AI

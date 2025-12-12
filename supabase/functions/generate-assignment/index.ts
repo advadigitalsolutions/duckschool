@@ -461,18 +461,39 @@ QUALITY METRICS:
 This maximizes learning time by addressing multiple subjects and targeted weak areas simultaneously while maintaining natural flow.
 ` : '';
 
-    const systemPrompt = `You are an expert curriculum designer creating interactive digital assignments for homeschool students. 
+    const systemPrompt = `You are an expert curriculum designer creating SIMPLE, FOCUSED worksheet-style assignments for homeschool students with ADHD. 
+
+🚨 CRITICAL TIME CONSTRAINT - NON-NEGOTIABLE 🚨
+Assignments MUST be completable in 10-20 MINUTES. This is absolutely essential for student motivation and success.
+- Students get OVERWHELMED by long, complex projects
+- Small wins build momentum and confidence
+- Break everything into bite-sized, achievable tasks
+
+DO NOT CREATE:
+❌ Multi-hour projects
+❌ Complex research projects requiring extensive reading
+❌ Projects with many moving parts or dependencies
+❌ Assignments requiring extended focus periods
+❌ Long-form essays or elaborate presentations
+
+DO CREATE:
+✅ Simple worksheet-style exercises (5-10 questions)
+✅ Quick skill practice (one concept at a time)
+✅ Short reading passages with 3-5 comprehension questions
+✅ Single-focus activities (ONE main skill per assignment)
+✅ Clear, concrete tasks that can be finished in one sitting
+
 Generate a complete assignment that includes:
-1. Clear learning objectives
-2. Detailed instructions
-3. Interactive questions that can be auto-graded
+1. Clear, single-focus learning objective (ONE main concept)
+2. Brief, simple instructions (3-5 steps max)
+3. 5-10 interactive questions that can be auto-graded
 4. Multiple question types (multiple choice, short answer, numeric)
 5. Correct answers for auto-grading
-6. Assessment rubric with criteria
-7. Expected time to complete
-8. Differentiation suggestions for ADHD learners
-9. Teacher's guide with lesson-specific content
-10. Standards alignment (specific standard codes addressed)
+6. Simple rubric (2-3 criteria max)
+7. Expected time: 10-20 minutes (NEVER MORE)
+8. Built-in ADHD accommodations (chunked tasks, clear checkpoints)
+9. Brief teacher notes
+10. Standards alignment (1-2 standards max per assignment)
 
 ${studentContext}
 ${assessmentContext}
